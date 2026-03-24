@@ -6,6 +6,7 @@ import HomeBackground from '@/src/components/home/HomeBackground';
 import HomeHeader from '@/src/components/home/HomeHeader';
 import SecurityFooter from '@/src/components/home/SecurityFooter';
 import SocialLoginSection from '@/src/components/home/SocialLoginSection';
+import { Colors } from '@/src/constants/theme';
 
 /**
  * 초기 진입 홈 화면 (Home)
@@ -48,7 +49,7 @@ export default function Home() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: Colors.primary.soulBlack,
     paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
   container: {

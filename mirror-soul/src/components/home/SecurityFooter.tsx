@@ -2,6 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 // SVG 파일을 컴포넌트로 활용
 import ProtectIcon from "../../../assets/images/common/Protect.svg";
+import { Colors } from '@/src/constants/theme';
 
 /**
  * 하단 보안 알림 렌더링 컴포넌트
@@ -23,7 +24,7 @@ const styles = StyleSheet.create({
     gap: 6.5,
   },
   text: {
-    color: '#6A7282',
+    color: Colors.neutral.darkGray,
     fontSize: 12,
     fontWeight: '400',
     lineHeight: 16,

@@ -1,5 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, ViewStyle } from 'react-native';
+import { Colors } from '@/src/constants/theme';
 
 interface ActionCardProps {
   title: string;
@@ -27,19 +28,19 @@ const styles = StyleSheet.create({
     padding: 32,
     borderRadius: 24,
     borderWidth: 0.6,
-    borderColor: 'rgba(255, 255, 255, 0.10)',
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderColor: Colors.glass.white10,
+    backgroundColor: Colors.glass.white5,
     gap: 12,
   },
   title: {
-    color: '#FFFFFF',
+    color: Colors.neutral.pureWhite,
     fontSize: 24,
     fontWeight: '500',
     lineHeight: 32,
     letterSpacing: 0.07,
   },
   description: {
-    color: '#99A1AF',
+    color: Colors.neutral.lightGray,
     fontSize: 14,
     fontWeight: '400',
     lineHeight: 20,

@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import MaskedView from '@react-native-masked-view/masked-view';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Colors } from '@/src/constants/theme';
 
 /**
  * HomeHeader 컴포넌트
@@ -21,7 +22,7 @@ export default function HomeHeader() {
           }
         >
           <LinearGradient
-            colors={['#00D3F3', '#C27AFF']}
+            colors={Colors.gradient.cyanToPurple}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={StyleSheet.absoluteFill}
@@ -61,7 +62,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 14,
-    color: '#99A1AF',
+    color: Colors.neutral.lightGray,
     fontWeight: '400',
     letterSpacing: -0.15,
   }

@@ -4,6 +4,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import AppleIcon from '@/assets/images/social_login/Apple_Button.svg';
 import GoogleIcon from '@/assets/images/social_login/Google_Button.svg';
 import KakaoIcon from '@/assets/images/social_login/Kakao_Button.svg';
+import { Colors } from '@/src/constants/theme';
 
 /**
  * 소셜 로그인 섹션 컴포넌트
@@ -50,10 +51,10 @@ const styles = StyleSheet.create({
   line: {
     flex: 1,
     height: 0.6,
-    backgroundColor: 'rgba(255, 255, 255, 0.10)',
+    backgroundColor: Colors.glass.white10,
   },
   dividerText: {
-    color: '#6A7282',
+    color: Colors.neutral.darkGray,
     fontSize: 12,
     fontWeight: '400',
     paddingHorizontal: 16,
