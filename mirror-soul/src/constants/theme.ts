@@ -22,7 +22,10 @@ export const Colors = {
     white20: 'rgba(255, 255, 255, 0.20)',
     white30: 'rgba(255, 255, 255, 0.30)',
     cyan18: 'rgba(0, 255, 255, 0.18)',
+    cyan20: 'rgba(0, 211, 243, 0.20)',
     purple18: 'rgba(147, 51, 234, 0.18)',
     purple08: 'rgba(142, 85, 236, 0.08)',
+    purple20: 'rgba(194, 122, 255, 0.20)',
+    purple30: 'rgba(194, 122, 255, 0.30)',
   }
 };

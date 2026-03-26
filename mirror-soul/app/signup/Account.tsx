@@ -7,6 +7,7 @@ import PrimaryButton from '@/src/components/signup/common/PrimaryButton';
 import OnboardingSteps from '@/src/components/signup/common/OnboardingSteps';
 import { Colors } from '@/src/constants/theme';
 import React, { useState } from 'react';
+import { router } from 'expo-router';
 import { KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, StatusBar, StyleSheet, View } from 'react-native';
 
 export default function AccountScreen() {
@@ -20,7 +21,7 @@ export default function AccountScreen() {
 
   const handleContinue = () => {
     if (isFormValid) {
-      console.log('Proceed to next step');
+      router.push('/signup/profile');
     }
   };
 
