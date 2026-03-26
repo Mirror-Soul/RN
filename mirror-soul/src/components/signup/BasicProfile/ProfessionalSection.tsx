@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import ProfileSectionTitle from './ProfileSectionTitle';
 import SelectDropdown from './SelectDropdown';
 import CustomInput from '@/src/components/signup/common/CustomInput';
@@ -7,21 +7,38 @@ import { Colors } from '@/src/constants/theme';
 import ProfessionalIcon from '@/assets/images/common/Professional.svg';
 import Complete2Icon from '@/assets/images/common/Complete2.svg';
 import VerifySendIcon from '@/assets/images/common/Verify_send.svg';
+import JobCategoryDropdown from './Professional/JobCategoryDropdown';
 
 export default function ProfessionalSection() {
+  const [isOpen, setIsOpen] = useState(false);
+  const [selectedJob, setSelectedJob] = useState('');
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, isOpen && styles.containerOpen]}>
       <ProfileSectionTitle 
         title="Professional Information" 
         icon={<ProfessionalIcon width={24} height={24} />} 
       />
       
       <View style={styles.formGroup}>
-        <SelectDropdown 
-          label="Job Category"
-          placeholder="Select your field"
-          onPress={() => console.log('Job category pressed')}
-        />
+        {/* 드롭다운이 오버레이될 수 있도록 relative 컨테이너 제공 */}
+        <View style={styles.dropdownWrapper}>
+          <SelectDropdown 
+            label="Job Category"
+            placeholder={selectedJob || "Select your field"}
+            onPress={() => setIsOpen(!isOpen)}
+            isOpen={isOpen}
+          />
+          {isOpen && (
+            <JobCategoryDropdown 
+              onSelect={(job) => {
+                setSelectedJob(job);
+                setIsOpen(false);
+              }}
+              onClose={() => setIsOpen(false)}
+            />
+          )}
+        </View>
         
         <CustomInput 
           label="Job Title (Optional)"
@@ -60,10 +77,20 @@ const styles = StyleSheet.create({
   container: {
     width: '100%',
     marginBottom: 40,
+    ...(Platform.OS === 'ios' ? { zIndex: 1 } : { elevation: 1 }),
+  },
+  containerOpen: {
+    ...(Platform.OS === 'ios' ? { zIndex: 100 } : { elevation: 100 }),
   },
   formGroup: {
     width: '100%',
     gap: 24,
+  },
+  dropdownWrapper: {
+    position: 'relative',
+    width: '100%',
+    // iOS/Android 오버레이를 위해 zIndex를 강제 부여하여 Job Title Input을 덮도록 설정
+    ...(Platform.OS === 'ios' ? { zIndex: 10 } : { elevation: 10 }),
   },
   verifyCard: {
     width: '100%',
