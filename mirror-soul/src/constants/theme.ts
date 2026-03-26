@@ -19,6 +19,7 @@ export const Colors = {
   glass: {
     white5: 'rgba(255, 255, 255, 0.05)',
     white10: 'rgba(255, 255, 255, 0.10)',
+    white20: 'rgba(255, 255, 255, 0.20)',
     white30: 'rgba(255, 255, 255, 0.30)',
     cyan18: 'rgba(0, 255, 255, 0.18)',
     purple18: 'rgba(147, 51, 234, 0.18)',
