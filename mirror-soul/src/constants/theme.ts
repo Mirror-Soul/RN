@@ -13,11 +13,15 @@ export const Colors = {
     pureWhite: '#FFFFFF',
     lightGray: '#99A1AF',
     darkGray: '#6A7282',
+    disabledText: '#4A5565',
+    lightGrayText: '#D1D5DC',
   },
   glass: {
     white5: 'rgba(255, 255, 255, 0.05)',
     white10: 'rgba(255, 255, 255, 0.10)',
+    white30: 'rgba(255, 255, 255, 0.30)',
     cyan18: 'rgba(0, 255, 255, 0.18)',
     purple18: 'rgba(147, 51, 234, 0.18)',
+    purple08: 'rgba(142, 85, 236, 0.08)',
   }
 };

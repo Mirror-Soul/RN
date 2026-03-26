@@ -1,5 +1,6 @@
 import React from 'react';
 import { Platform, SafeAreaView, StatusBar, StyleSheet, View } from 'react-native';
+import { router } from 'expo-router';
 
 import ActionCard from '@/src/components/common/ActionCard';
 import HomeBackground from '@/src/components/home/HomeBackground';
@@ -27,7 +28,7 @@ export default function Home() {
           <ActionCard
             title="Create a New Mirror"
             description="Start the journey to find your soul's reflection"
-            onPress={() => console.log('Create a New Mirror clicked')}
+            onPress={() => router.push('/signup/Account')}
           />
           <ActionCard
             title="Awaken My Mirror"
