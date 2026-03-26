@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ViewStyle } from 'react-native';
 import { Colors } from '@/src/constants/theme';
-import CompleteIcon from '@/assets/images/common/Complete.svg';
+import BottomNarrowIcon from '@/assets/images/common/Bottom_narrow.svg';
 
 interface SelectDropdownProps {
   label: string;
@@ -23,7 +23,7 @@ export default function SelectDropdown({ label, placeholder, onPress, style }: S
         onPress={onPress}
       >
         <Text style={styles.placeholder}>{placeholder}</Text>
-        <CompleteIcon width={24} height={24} /> 
+        <BottomNarrowIcon width={24} height={24} /> 
       </TouchableOpacity>
     </View>
   );
