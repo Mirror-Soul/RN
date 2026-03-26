@@ -4,6 +4,7 @@ import SignupHeader from '@/src/components/signup/Account/SignupHeader';
 import TermsCheckbox from '@/src/components/signup/Account/TermsCheckbox';
 import CustomInput from '@/src/components/signup/common/CustomInput';
 import PrimaryButton from '@/src/components/signup/common/PrimaryButton';
+import OnboardingSteps from '@/src/components/signup/common/OnboardingSteps';
 import { Colors } from '@/src/constants/theme';
 import React, { useState } from 'react';
 import { KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, StatusBar, StyleSheet, View } from 'react-native';
@@ -38,6 +39,9 @@ export default function AccountScreen() {
         >
           {/* Main Content Container */}
           <View style={styles.container}>
+            <View style={styles.stepsWrapper}>
+              <OnboardingSteps />
+            </View>
             <SignupHeader />
 
             {/* Form Body */}
@@ -109,6 +113,11 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 345, // Figma layout width matching
     alignItems: 'center',
+  },
+  stepsWrapper: {
+    width: '100%',
+    alignItems: 'center',
+    marginBottom: 8,
   },
   formContainer: {
     width: '100%',

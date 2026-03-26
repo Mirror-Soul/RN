@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 // SVG 파일을 컴포넌트로 활용
-import ProtectIcon from "../../../assets/images/common/Protect.svg";
+import ProtectIcon from "@/assets/images/common/Protect.svg";
 import { Colors } from '@/src/constants/theme';
 
 /**
