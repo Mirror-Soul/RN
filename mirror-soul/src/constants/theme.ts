@@ -29,5 +29,6 @@ export const Colors = {
     purple30: 'rgba(194, 122, 255, 0.30)',
     green10: 'rgba(5, 223, 114, 0.10)',
     green20: 'rgba(5, 223, 114, 0.20)',
+    slate95: 'rgba(16, 24, 40, 0.95)',
   }
 };

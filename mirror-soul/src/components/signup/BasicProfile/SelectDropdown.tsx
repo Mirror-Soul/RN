@@ -2,18 +2,20 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ViewStyle } from 'react-native';
 import { Colors } from '@/src/constants/theme';
 import BottomNarrowIcon from '@/assets/images/common/Bottom_narrow.svg';
+import TopNarrowIcon from '@/assets/images/common/Top_narrow.svg';
 
 interface SelectDropdownProps {
   label: string;
   placeholder: string;
   onPress: () => void;
   style?: ViewStyle;
+  isOpen?: boolean;
 }
 
 /**
  * Basic Profile 드롭다운 인풋 모조 컴포넌트
  */
-export default function SelectDropdown({ label, placeholder, onPress, style }: SelectDropdownProps) {
+export default function SelectDropdown({ label, placeholder, onPress, style, isOpen = false }: SelectDropdownProps) {
   return (
     <View style={[styles.container, style]}>
       <Text style={styles.label}>{label}</Text>
@@ -23,7 +25,11 @@ export default function SelectDropdown({ label, placeholder, onPress, style }: S
         onPress={onPress}
       >
         <Text style={styles.placeholder}>{placeholder}</Text>
-        <BottomNarrowIcon width={24} height={24} /> 
+        {isOpen ? (
+          <TopNarrowIcon width={24} height={24} />
+        ) : (
+          <BottomNarrowIcon width={24} height={24} /> 
+        )}
       </TouchableOpacity>
     </View>
   );
