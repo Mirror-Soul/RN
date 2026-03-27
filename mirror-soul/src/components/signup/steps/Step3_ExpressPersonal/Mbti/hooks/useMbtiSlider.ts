@@ -20,6 +20,14 @@ export const useMbtiSlider = ({
   const valueRef = useRef(value);
   const lastHapticValueRef = useRef(value);
 
+  // ── 콜백을 ref로 래핑: PanResponder 클로저에서 항상 최신 함수를 참조 ──
+  const onChangeRef = useRef(onChange);
+  const onDragStartRef = useRef(onDragStart);
+  const onDragEndRef = useRef(onDragEnd);
+  onChangeRef.current = onChange;
+  onDragStartRef.current = onDragStart;
+  onDragEndRef.current = onDragEnd;
+
   // Sync valueRef with external value
   useEffect(() => {
     valueRef.current = value;
@@ -50,7 +58,7 @@ export const useMbtiSlider = ({
       onMoveShouldSetPanResponder: (_, gs) => Math.abs(gs.dx) > Math.abs(gs.dy),
       onStartShouldSetPanResponder: () => true,
       onPanResponderGrant: () => {
-        onDragStart?.();
+        onDragStartRef.current?.();
       },
       onPanResponderMove: (_, gs) => {
         const width = sliderWidthRef.current;
@@ -63,15 +71,15 @@ export const useMbtiSlider = ({
         if (newValue !== valueRef.current) {
           valueRef.current = newValue;
           animValue.setValue(newValue);
-          onChange(newValue);
+          onChangeRef.current(newValue);
           triggerHaptics(newValue);
         }
       },
       onPanResponderRelease: () => {
-        onDragEnd?.();
+        onDragEndRef.current?.();
       },
       onPanResponderTerminate: () => {
-        onDragEnd?.();
+        onDragEndRef.current?.();
       },
     })
   ).current;
