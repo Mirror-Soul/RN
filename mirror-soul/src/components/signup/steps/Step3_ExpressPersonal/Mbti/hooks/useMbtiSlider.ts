@@ -28,18 +28,15 @@ export const useMbtiSlider = ({
   onDragStartRef.current = onDragStart;
   onDragEndRef.current = onDragEnd;
 
-  // Sync valueRef with external value
-  useEffect(() => {
-    valueRef.current = value;
-  }, [value]);
-
   // Handle position animation (0 to 100)
   const animValue = useRef(new Animated.Value(value)).current;
-  
-  // Update animation value when external value changes
+
+  // 외부 value 변경 시 내부 상태 및 애니메이션 동기화
   useEffect(() => {
+    valueRef.current = value;
     animValue.setValue(value);
-  }, [value]);
+    lastHapticValueRef.current = value; // 햅틱 기준값도 동기화하여 오작동 방지
+  }, [value, animValue]);
 
   const triggerHaptics = (newVal: number) => {
     const prev = lastHapticValueRef.current;
