@@ -35,9 +35,11 @@ export default function MbtiSlider({
 
   const percentage = Math.round(value);
   const percentText =
-    value < 50
-      ? `${100 - percentage}% ${leftLabel}`
-      : `${percentage}% ${rightLabel}`;
+    value === 50
+      ? '-'
+      : value < 50
+        ? `${100 - percentage}% ${leftLabel}`
+        : `${percentage}% ${rightLabel}`;
 
   return (
     <View style={styles.container}>
