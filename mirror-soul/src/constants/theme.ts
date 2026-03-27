@@ -27,6 +27,14 @@ export const Colors = {
     purple08: 'rgba(142, 85, 236, 0.08)',
     purple20: 'rgba(194, 122, 255, 0.20)',
     purple30: 'rgba(194, 122, 255, 0.30)',
+    // MBTI Specific (9333EA based)
+    purple80: 'rgba(147, 51, 234, 0.80)',
+    purple30_mbti: 'rgba(147, 51, 234, 0.30)',
+    purple10_mbti: 'rgba(147, 51, 234, 0.10)',
+    // MBTI Specific (00FFFF based)
+    cyan80: 'rgba(0, 255, 255, 0.80)',
+    cyan30: 'rgba(0, 255, 255, 0.30)',
+    cyan10: 'rgba(0, 255, 255, 0.10)',
     green10: 'rgba(5, 223, 114, 0.10)',
     green20: 'rgba(5, 223, 114, 0.20)',
     slate95: 'rgba(16, 24, 40, 0.95)',

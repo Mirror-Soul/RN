@@ -12,6 +12,8 @@ export default function ExpressYourselfScreen() {
   const router = useRouter();
   const [mbti, setMbti] = useState('ENFJ');
   const [description, setDescription] = useState('');
+  // MBTI 슬라이더 드래그 중에는 ScrollView 스크롤 비활성화
+  const [isSliding, setIsSliding] = useState(false);
   
   const handleContinue = () => {
     console.log('Final signup steps or next phase');
@@ -26,6 +28,7 @@ export default function ExpressYourselfScreen() {
       <ScrollView 
         contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
+        scrollEnabled={!isSliding}
       >
         <View style={styles.container}>
           <StepHeader 
@@ -34,7 +37,11 @@ export default function ExpressYourselfScreen() {
           />
 
           <View style={styles.body}>
-            <MbtiSelector onMbtiChange={setMbti} />
+            <MbtiSelector 
+              onMbtiChange={setMbti}
+              onDragStart={() => setIsSliding(true)}
+              onDragEnd={() => setIsSliding(false)}
+            />
             
             <SelfDescriptionInput 
               value={description}
@@ -43,7 +50,7 @@ export default function ExpressYourselfScreen() {
           </View>
 
           <PrimaryButton 
-            text="Continue" 
+            title="Continue" 
             onPress={handleContinue} 
             style={styles.button}
           />

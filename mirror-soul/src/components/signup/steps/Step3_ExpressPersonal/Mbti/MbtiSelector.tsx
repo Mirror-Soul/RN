@@ -1,15 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import MbtiSlider from './MbtiSlider';
+import { Colors } from '@/src/constants/theme';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 import MbtiBadge from './MbtiBadge';
-import StepSectionTitle from '../../../common/StepSectionTitle';
+import MbtiSlider from './MbtiSlider';
 
 interface Props {
   onMbtiChange: (mbti: string) => void;
+  onDragStart?: () => void;
+  onDragEnd?: () => void;
 }
 
-export default function MbtiSelector({ onMbtiChange }: Props) {
-  const [ie, setIe] = useState(100); // 0: I, 100: E (Default provided in user prompt was 100% Extravert)
+export default function MbtiSelector({ onMbtiChange, onDragStart, onDragEnd }: Props) {
+  const [ie, setIe] = useState(50);
   const [sn, setSn] = useState(50);
   const [tf, setTf] = useState(50);
   const [pj, setPj] = useState(50);
@@ -37,25 +39,29 @@ export default function MbtiSelector({ onMbtiChange }: Props) {
       </View>
 
       <View style={styles.slidersContainer}>
-        <MbtiSlider 
-          leftLabel="내향적" rightLabel="외향적" 
+        <MbtiSlider
+          leftLabel="내향적" rightLabel="외향적"
           leftChar="I" rightChar="E"
-          value={ie} onChange={setIe} 
+          value={ie} onChange={setIe}
+          onDragStart={onDragStart} onDragEnd={onDragEnd}
         />
-        <MbtiSlider 
-          leftLabel="감각적" rightLabel="직관적" 
-          leftChar="S" rightChar="N" 
-          value={sn} onChange={setSn} 
+        <MbtiSlider
+          leftLabel="감각적" rightLabel="직관적"
+          leftChar="S" rightChar="N"
+          value={sn} onChange={setSn}
+          onDragStart={onDragStart} onDragEnd={onDragEnd}
         />
-        <MbtiSlider 
-          leftLabel="사고적" rightLabel="감정적" 
-          leftChar="T" rightChar="F" 
-          value={tf} onChange={setTf} 
+        <MbtiSlider
+          leftLabel="사고적" rightLabel="감정적"
+          leftChar="T" rightChar="F"
+          value={tf} onChange={setTf}
+          onDragStart={onDragStart} onDragEnd={onDragEnd}
         />
-        <MbtiSlider 
-          leftLabel="인식적" rightLabel="판단적" 
-          leftChar="P" rightChar="J" 
-          value={pj} onChange={setPj} 
+        <MbtiSlider
+          leftLabel="인식적" rightLabel="판단적"
+          leftChar="P" rightChar="J"
+          value={pj} onChange={setPj}
+          onDragStart={onDragStart} onDragEnd={onDragEnd}
         />
       </View>
     </View>
@@ -74,7 +80,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   sectionTitle: {
-    color: '#FFF',
+    color: Colors.neutral.pureWhite,
     fontSize: 18,
     fontWeight: '500',
     lineHeight: 28,
