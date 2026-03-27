@@ -41,7 +41,8 @@ const styles = StyleSheet.create({
     letterSpacing: 0.396,
   },
   subtitleWrapper: {
-    paddingRight: 33.742,
+    width: '100%',
+    flexShrink: 1,
   },
   subtitle: {
     color: Colors.neutral.lightGray,
