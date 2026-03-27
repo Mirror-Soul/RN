@@ -1,12 +1,14 @@
-import React from 'react';
-import { View, StyleSheet, Animated, Platform } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Colors } from '@/src/constants/theme';
+import { LinearGradient } from 'expo-linear-gradient';
+import React from 'react';
+import { Animated, Platform, StyleSheet, View } from 'react-native';
+
+import type { GestureResponderHandlers, ViewStyle } from 'react-native';
 
 interface Props {
-  panHandlers: any;
+  panHandlers: GestureResponderHandlers;
   onLayout: (width: number) => void;
-  measureContainer: (ref: any) => void;
+  measureContainer: (ref: View | null) => void;
   animValue: Animated.Value;
 }
 
@@ -66,7 +68,7 @@ const glowStyle = Platform.select({
     shadowRadius: 10,
   },
   android: { elevation: 5 },
-}) as object;
+}) as ViewStyle;
 
 const styles = StyleSheet.create({
   trackWrapper: {
