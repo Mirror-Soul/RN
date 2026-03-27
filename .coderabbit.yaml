@@ -74,6 +74,10 @@ reviews:
   auto_review:
     # PR이 생성됐을 때 자동으로 리뷰를 시작합니다.
     enabled: true
+    # 리뷰를 자동으로 수행할 대상 브랜치 목록입니다.
+    base_branches:
+      - main
+      - dev
     # 이미 리뷰가 진행된 PR에 새로운 커밋이 추가될 때마다 자동으로 리뷰를 진행합니다.
     auto_incremental_review: true
 
