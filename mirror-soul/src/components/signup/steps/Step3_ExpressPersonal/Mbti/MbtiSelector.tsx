@@ -18,10 +18,10 @@ export default function MbtiSelector({ onMbtiChange, onDragStart, onDragEnd }: P
 
   const calculateMbti = () => {
     let result = '';
-    result += ie < 50 ? 'I' : 'E';
-    result += sn < 50 ? 'S' : 'N';
-    result += tf < 50 ? 'T' : 'F';
-    result += pj < 50 ? 'P' : 'J';
+    result += ie === 50 ? '-' : (ie < 50 ? 'I' : 'E');
+    result += sn === 50 ? '-' : (sn < 50 ? 'S' : 'N');
+    result += tf === 50 ? '-' : (tf < 50 ? 'T' : 'F');
+    result += pj === 50 ? '-' : (pj < 50 ? 'P' : 'J');
     return result;
   };
 

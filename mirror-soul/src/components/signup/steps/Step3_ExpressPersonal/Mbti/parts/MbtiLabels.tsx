@@ -34,7 +34,7 @@ export default function MbtiLabels({
 
       <View style={styles.labelGroup}>
         <Text style={styles.labelText}>{rightLabel}</Text>
-        <View style={[styles.charBox, value >= 50 && styles.charBoxActiveRight]}>
+        <View style={[styles.charBox, value > 50 && styles.charBoxActiveRight]}>
           <Text style={styles.charText}>{rightChar}</Text>
         </View>
       </View>
