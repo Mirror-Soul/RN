@@ -4,7 +4,7 @@ import { Colors } from '@/src/constants/theme';
 import BottomNarrowIcon from '@/assets/images/common/Bottom_narrow.svg';
 import TopNarrowIcon from '@/assets/images/common/Top_narrow.svg';
 
-interface SelectDropdownProps {
+interface Props {
   label: string;
   placeholder: string;
   onPress: () => void;
@@ -13,9 +13,9 @@ interface SelectDropdownProps {
 }
 
 /**
- * Basic Profile 드롭다운 인풋 모조 컴포넌트
+ * 회원가입 단계에서 공통으로 사용하는 드롭다운 선택 필드 모조 컴포넌트
  */
-export default function SelectDropdown({ label, placeholder, onPress, style, isOpen = false }: SelectDropdownProps) {
+export default function StepSelectDropdown({ label, placeholder, onPress, style, isOpen = false }: Props) {
   return (
     <View style={[styles.container, style]}>
       <Text style={styles.label}>{label}</Text>

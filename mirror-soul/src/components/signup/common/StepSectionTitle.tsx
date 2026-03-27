@@ -2,15 +2,15 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Colors } from '@/src/constants/theme';
 
-interface ProfileSectionTitleProps {
+interface Props {
   title: string;
   icon?: React.ReactNode;
 }
 
 /**
- * Basic Profile 내의 각 섹션 제목 렌더링 컴포넌트
+ * 회원가입 각 단계 내의 섹션 제목을 렌더링하는 공통 컴포넌트
  */
-export default function ProfileSectionTitle({ title, icon }: ProfileSectionTitleProps) {
+export default function StepSectionTitle({ title, icon }: Props) {
   return (
     <View style={styles.container}>
       {icon}

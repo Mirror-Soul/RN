@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, Platform } from 'react-native';
-import ProfileSectionTitle from './ProfileSectionTitle';
-import SelectDropdown from './SelectDropdown';
+import StepSectionTitle from '../../common/StepSectionTitle';
+import StepSelectDropdown from '../../common/StepSelectDropdown';
 import LocationIcon from '@/assets/images/common/Location.svg';
 import LocationDropdown from './Location/LocationDropdown';
 
@@ -11,11 +11,11 @@ export default function LocationSection() {
 
   return (
     <View style={[styles.container, isOpen && styles.containerOpen]}>
-      <ProfileSectionTitle 
+      <StepSectionTitle 
         title="Location" 
         icon={<LocationIcon width={24} height={24} />} 
       />
-      <SelectDropdown 
+      <StepSelectDropdown 
         label="Your Location"
         placeholder={selectedLocation || "Select your location"}
         onPress={() => setIsOpen(!isOpen)}

@@ -1,6 +1,6 @@
 import SecurityFooter from '@/src/components/home/SecurityFooter';
-import SignupHeader from '@/src/components/signup/Account/SignupHeader';
-import TermsCheckbox from '@/src/components/signup/Account/TermsCheckbox';
+import SignupHeader from '@/src/components/signup/steps/Step1_Account/SignupHeader';
+import TermsCheckbox from '@/src/components/signup/steps/Step1_Account/TermsCheckbox';
 import CustomInput from '@/src/components/signup/common/CustomInput';
 import PrimaryButton from '@/src/components/signup/common/PrimaryButton';
 import { Colors } from '@/src/constants/theme';
