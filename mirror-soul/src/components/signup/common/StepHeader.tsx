@@ -2,19 +2,23 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Colors } from '@/src/constants/theme';
 
-interface ProfileHeaderProps {
+interface Props {
   title: string;
   subtitle: string;
 }
 
 /**
- * Basic Profile 등 타이틀과 캡션이 들어가는 헤더 공통 컴포넌트
+ * 회원가입 각 단계의 제목과 부제목을 렌더링하는 공통 헤더
  */
-export default function ProfileHeader({ title, subtitle }: ProfileHeaderProps) {
+export default function StepHeader({ title, subtitle }: Props) {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{title}</Text>
-      <Text style={styles.subtitle}>{subtitle}</Text>
+      <View style={styles.titleWrapper}>
+        <Text style={styles.title}>{title}</Text>
+      </View>
+      <View style={styles.subtitleWrapper}>
+        <Text style={styles.subtitle}>{subtitle}</Text>
+      </View>
     </View>
   );
 }
@@ -26,12 +30,19 @@ const styles = StyleSheet.create({
     gap: 8,
     marginTop: 40,
   },
+  titleWrapper: {
+    width: '100%',
+  },
   title: {
     color: Colors.neutral.pureWhite,
     fontSize: 30,
     fontWeight: '500',
     lineHeight: 36,
     letterSpacing: 0.396,
+  },
+  subtitleWrapper: {
+    width: '100%',
+    flexShrink: 1,
   },
   subtitle: {
     color: Colors.neutral.lightGray,

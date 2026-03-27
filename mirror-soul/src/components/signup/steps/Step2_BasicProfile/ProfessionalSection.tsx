@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
-import ProfileSectionTitle from './ProfileSectionTitle';
-import SelectDropdown from './SelectDropdown';
+import StepSectionTitle from '../../common/StepSectionTitle';
+import StepSelectDropdown from '../../common/StepSelectDropdown';
 import CustomInput from '@/src/components/signup/common/CustomInput';
 import { Colors } from '@/src/constants/theme';
 import ProfessionalIcon from '@/assets/images/common/Professional.svg';
@@ -15,7 +15,7 @@ export default function ProfessionalSection() {
 
   return (
     <View style={[styles.container, isOpen && styles.containerOpen]}>
-      <ProfileSectionTitle 
+      <StepSectionTitle 
         title="Professional Information" 
         icon={<ProfessionalIcon width={24} height={24} />} 
       />
@@ -23,7 +23,7 @@ export default function ProfessionalSection() {
       <View style={styles.formGroup}>
         {/* 드롭다운이 오버레이될 수 있도록 relative 컨테이너 제공 */}
         <View style={styles.dropdownWrapper}>
-          <SelectDropdown 
+          <StepSelectDropdown 
             label="Job Category"
             placeholder={selectedJob || "Select your field"}
             onPress={() => setIsOpen(!isOpen)}

@@ -1,9 +1,9 @@
-import React from 'react';
-import { SafeAreaView, StatusBar, StyleSheet, Platform, View } from 'react-native';
-import { Slot, usePathname } from 'expo-router';
-import { Colors } from '@/src/constants/theme';
-import SignupBackground from '@/src/components/signup/Account/SignupBackground';
 import OnboardingSteps from '@/src/components/signup/common/OnboardingSteps';
+import SignupBackground from '@/src/components/signup/steps/Step1_Account/SignupBackground';
+import { Colors } from '@/src/constants/theme';
+import { Slot, usePathname } from 'expo-router';
+import React from 'react';
+import { Platform, SafeAreaView, StatusBar, StyleSheet, View } from 'react-native';
 
 export default function SignupLayout() {
   const pathname = usePathname();
@@ -12,8 +12,9 @@ export default function SignupLayout() {
   // /signup or /signup/  -> Step 1
   // /signup/profile      -> Step 2
   const getCurrentStep = () => {
-    if (pathname === '/signup' || pathname === '/signup/') return 1;
-    if (pathname.includes('/profile')) return 2;
+    if (pathname === '/signup') return 1;
+    if (pathname === '/signup/profile') return 2;
+    if (pathname === '/signup/express') return 3;
     return 1;
   };
 

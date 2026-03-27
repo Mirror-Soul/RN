@@ -1,5 +1,5 @@
 import VerificationProtectIcon from '@/assets/images/common/Verification_protect_icon.svg';
-import ProfileSectionTitle from '@/src/components/signup/BasicProfile/ProfileSectionTitle';
+import StepSectionTitle from '../../common/StepSectionTitle';
 import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import UnverifiedCard from './PassVerification/UnverifiedCard';
@@ -10,7 +10,7 @@ export default function PassVerificationCard() {
 
   return (
     <View style={styles.wrapper}>
-      <ProfileSectionTitle
+      <StepSectionTitle
         title="Identity Verification"
         icon={<VerificationProtectIcon width={24} height={24} />}
       />

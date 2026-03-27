@@ -1,18 +1,22 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, Platform, KeyboardAvoidingView, ScrollView } from 'react-native';
 import { Colors } from '@/src/constants/theme';
-import ProfileHeader from '@/src/components/signup/BasicProfile/ProfileHeader';
-import PassVerificationCard from '@/src/components/signup/BasicProfile/PassVerificationCard';
-import LocationSection from '@/src/components/signup/BasicProfile/LocationSection';
-import ProfessionalSection from '@/src/components/signup/BasicProfile/ProfessionalSection';
+import StepHeader from '@/src/components/signup/common/StepHeader';
+import PassVerificationCard from '@/src/components/signup/steps/Step2_BasicProfile/PassVerificationCard';
+import LocationSection from '@/src/components/signup/steps/Step2_BasicProfile/LocationSection';
+import ProfessionalSection from '@/src/components/signup/steps/Step2_BasicProfile/ProfessionalSection';
 import PrimaryButton from '@/src/components/signup/common/PrimaryButton';
 import SecurityFooter from '@/src/components/home/SecurityFooter';
+import { useRouter } from 'expo-router';
 
 export default function BasicProfileScreen() {
   const [isFormValid, setIsFormValid] = useState(true); // 임시 활성화 (기본 상태)
+  const router = useRouter();
 
   const handleContinue = () => {
-    console.log('Proceed to step 3');
+    if (isFormValid) {
+      router.push('/signup/express');
+    }
   };
 
   return (
@@ -26,7 +30,7 @@ export default function BasicProfileScreen() {
       >
         {/* Main Content Container */}
         <View style={styles.container}>
-          <ProfileHeader 
+          <StepHeader 
             title="Basic Profile" 
             subtitle="Help us find your perfect matches nearby" 
           />
