@@ -28,7 +28,7 @@ export default function Home() {
           <ActionCard
             title="Create a New Mirror"
             description="Start the journey to find your soul's reflection"
-            onPress={() => router.push('/signup/Account')}
+            onPress={() => router.push('/signup')}
           />
           <ActionCard
             title="Awaken My Mirror"
