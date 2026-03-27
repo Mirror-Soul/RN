@@ -53,7 +53,7 @@ export const useMbtiSlider = ({
   const panResponder = useRef(
     PanResponder.create({
       onMoveShouldSetPanResponder: (_, gs) => Math.abs(gs.dx) > Math.abs(gs.dy),
-      onStartShouldSetPanResponder: () => true,
+      onStartShouldSetPanResponder: () => false,
       onPanResponderGrant: () => {
         onDragStartRef.current?.();
       },
