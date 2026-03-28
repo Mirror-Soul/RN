@@ -31,6 +31,7 @@ export default function ExpressYourselfScreen() {
         contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
         scrollEnabled={!isSliding}
+        keyboardShouldPersistTaps="handled"
       >
         <View style={styles.container}>
           <StepHeader

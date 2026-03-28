@@ -27,12 +27,13 @@ export default function BasicProfileScreen() {
       <ScrollView
         contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
         {/* Main Content Container */}
         <View style={styles.container}>
-          <StepHeader 
-            title="Basic Profile" 
-            subtitle="Help us find your perfect matches nearby" 
+          <StepHeader
+            title="Basic Profile"
+            subtitle="Help us find your perfect matches nearby"
           />
 
           {/* Profile Forms Body */}
@@ -40,7 +41,7 @@ export default function BasicProfileScreen() {
             <PassVerificationCard />
             <LocationSection />
             <ProfessionalSection />
-            
+
             {/* Submit Button */}
             <View style={styles.buttonWrapper}>
               <PrimaryButton
@@ -68,11 +69,11 @@ const styles = StyleSheet.create({
   scrollContainer: {
     flexGrow: 1,
     alignItems: 'center',
-    paddingBottom: 50, 
+    paddingBottom: 50,
   },
   container: {
     width: '100%',
-    maxWidth: 345, 
+    maxWidth: 345,
     alignItems: 'center',
   },
   formContainer: {

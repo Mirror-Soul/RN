@@ -3,7 +3,6 @@ import SignupHeader from '@/src/components/signup/steps/Step1_Account/SignupHead
 import TermsCheckbox from '@/src/components/signup/steps/Step1_Account/TermsCheckbox';
 import CustomInput from '@/src/components/signup/common/CustomInput';
 import PrimaryButton from '@/src/components/signup/common/PrimaryButton';
-import { Colors } from '@/src/constants/theme';
 import React, { useState } from 'react';
 import { router } from 'expo-router';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
@@ -31,6 +30,7 @@ export default function AccountScreen() {
       <ScrollView
         contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
         <View style={styles.container}>
           <SignupHeader />
@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
   },
   container: {
     width: '100%',
-    maxWidth: 345, 
+    maxWidth: 345,
     alignItems: 'center',
   },
   formContainer: {
