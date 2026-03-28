@@ -3,7 +3,12 @@ import { View, Text, StyleSheet } from 'react-native';
 import { Colors } from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 
-export default function InterviewAIBox() {
+interface InterviewAIBoxProps {
+  category: string;
+  question: string;
+}
+
+export default function InterviewAIBox({ category, question }: InterviewAIBoxProps) {
   return (
     <LinearGradient
       colors={[Colors.glass.cyan10, Colors.glass.purple10_mbti]}
@@ -18,14 +23,12 @@ export default function InterviewAIBox() {
         </View>
         
         <View style={styles.badgeWrapper}>
-          <Text style={styles.badgeText}>외향성 (Extraversion)</Text>
+          <Text style={styles.badgeText}>{category}</Text>
         </View>
       </View>
 
       <View style={styles.paragraphWrapper}>
-        <Text style={styles.paragraphText}>
-          금요일 저녁입니다. 활기찬 파티에 초대받았지만, 이번 주는 정말 힘들었어요. 사람들을 만나며 에너지를 충전하시나요, 아니면 집에서 혼자 쉬며 재충전하시나요?
-        </Text>
+        <Text style={styles.paragraphText}>{question}</Text>
       </View>
     </LinearGradient>
   );
@@ -77,7 +80,7 @@ const styles = StyleSheet.create({
     paddingRight: 9.926,
     paddingBottom: 3.996,
     paddingLeft: 12.604,
-    borderRadius: 20, // Rounded pill
+    borderRadius: 20,
     borderWidth: 0.612,
     borderColor: Colors.glass.purple30_mbti,
     backgroundColor: Colors.glass.purple20,

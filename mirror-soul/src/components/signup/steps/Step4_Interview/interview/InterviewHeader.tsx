@@ -1,12 +1,24 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { Text, StyleSheet, View } from 'react-native';
 import { Colors } from '@/src/constants/theme';
 
-export default function InterviewHeader() {
+interface InterviewHeaderProps {
+  title: string;
+  currentQuestion: number;
+  totalQuestions: number;
+}
+
+export default function InterviewHeader({
+  title,
+  currentQuestion,
+  totalQuestions,
+}: InterviewHeaderProps) {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>The Soul Capture</Text>
-      <Text style={styles.subtitle}>Question 1 of 5</Text>
+      <Text style={styles.title}>{title}</Text>
+      <Text style={styles.subtitle}>
+        Question {currentQuestion} of {totalQuestions}
+      </Text>
     </View>
   );
 }
@@ -17,7 +29,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: 8,
     marginTop: 40,
-    marginBottom: 24, // spacing to the avatar
+    marginBottom: 24,
   },
   title: {
     color: Colors.neutral.pureWhite,

@@ -20,7 +20,7 @@ export default function InterviewControls({ onRecordPress, onNextPress }: Props)
         style={styles.recordButtonWrapper}
       >
         <LinearGradient
-          colors={['#00D3F3', '#51A2FF', '#C27AFF']}
+          colors={Colors.gradient.cyanBluePurple}
           start={{ x: 0, y: 0.5 }}
           end={{ x: 1, y: 0.5 }}
           style={styles.recordGradient}

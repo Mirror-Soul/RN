@@ -5,10 +5,11 @@ import { useRouter } from 'expo-router';
 
 // Step 4 Components
 import InterviewHeader from '@/src/components/signup/steps/Step4_Interview/interview/InterviewHeader';
+import InterviewAvatar from '@/src/components/signup/steps/Step4_Interview/interview/InterviewAvatar';
 import InterviewAIBox from '@/src/components/signup/steps/Step4_Interview/interview/InterviewAIBox';
 import InterviewAnswerBox from '@/src/components/signup/steps/Step4_Interview/interview/InterviewAnswerBox';
 import InterviewControls from '@/src/components/signup/steps/Step4_Interview/interview/InterviewControls';
-import InterviewFooter from '@/src/components/signup/steps/Step4_Interview/InterviewFooter';
+import InterviewFooter from '@/src/components/signup/steps/Step4_Interview/interview/InterviewFooter';
 
 export default function InterviewScreen() {
   const router = useRouter();
@@ -34,13 +35,20 @@ export default function InterviewScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.container}>
-          <InterviewHeader />
+          <InterviewHeader
+            title="The Soul Capture"
+            currentQuestion={1}
+            totalQuestions={5}
+          />
 
-          {/* 3D Avatar Area Placeholder */}
-          <View style={styles.avatarPlaceholder} />
+          {/* 3D Avatar Model */}
+          <InterviewAvatar />
 
           <View style={styles.body}>
-            <InterviewAIBox />
+            <InterviewAIBox
+              category="외향성 (Extraversion)"
+              question="금요일 저녁입니다. 활기찬 파티에 초대받았지만, 이번 주는 정말 힘들었어요. 사람들을 만나며 에너지를 충전하시나요, 아니면 집에서 혼자 쉬며 재충전하시나요?"
+            />
             
             <View style={styles.answerWrapper}>
               <InterviewAnswerBox />
@@ -80,12 +88,6 @@ const styles = StyleSheet.create({
     maxWidth: 345, // Figma design width scale base
     alignItems: 'center',
     paddingHorizontal: 16,
-  },
-  avatarPlaceholder: {
-    width: 256,
-    height: 256,
-    // Just a transparent or faint placeholder for now since 3D will go here
-    marginVertical: 16,
   },
   body: {
     width: '100%',

@@ -8,6 +8,7 @@ export const Colors = {
   gradient: {
     // Array format for expo-linear-gradient
     cyanToPurple: ['#00D3F3', '#C27AFF'] as [string, string],
+    cyanBluePurple: ['#00D3F3', '#51A2FF', '#C27AFF'] as [string, string, string], // 녹음 버튼용
   },
   neutral: {
     pureWhite: '#FFFFFF',
@@ -38,5 +39,6 @@ export const Colors = {
     green10: 'rgba(5, 223, 114, 0.10)',
     green20: 'rgba(5, 223, 114, 0.20)',
     slate95: 'rgba(16, 24, 40, 0.95)',
+    black40: 'rgba(0, 0, 0, 0.40)', // 답변 박스 배경
   }
 };
