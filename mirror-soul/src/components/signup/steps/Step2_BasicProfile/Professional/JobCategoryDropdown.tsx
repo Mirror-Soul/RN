@@ -25,6 +25,7 @@ export default function JobCategoryDropdown({ onSelect, onClose }: Props) {
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
           {jobCategories.map((job) => (
             <TouchableOpacity

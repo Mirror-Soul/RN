@@ -1,5 +1,6 @@
 import OnboardingSteps from '@/src/components/signup/common/OnboardingSteps';
 import SignupBackground from '@/src/components/signup/steps/Step1_Account/SignupBackground';
+import { SIGNUP_STEP_MAP } from '@/src/constants/routes/signupRoutes';
 import { Colors } from '@/src/constants/theme';
 import { Slot, usePathname } from 'expo-router';
 import React from 'react';
@@ -8,14 +9,8 @@ import { Platform, SafeAreaView, StatusBar, StyleSheet, View } from 'react-nativ
 export default function SignupLayout() {
   const pathname = usePathname();
 
-  // 현재 경로에 따라 Step 결정
-  // /signup or /signup/  -> Step 1
-  // /signup/profile      -> Step 2
   const getCurrentStep = () => {
-    if (pathname === '/signup') return 1;
-    if (pathname === '/signup/profile') return 2;
-    if (pathname === '/signup/express') return 3;
-    return 1;
+    return SIGNUP_STEP_MAP[pathname] || 1;
   };
 
   return (

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import Svg, { Defs, RadialGradient as SvgRadialGradient, Circle, Stop } from 'react-native-svg';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors } from '@/src/constants/theme';
@@ -16,6 +16,10 @@ const STEPS = [
 interface OnboardingStepsProps {
   currentStep?: number;
 }
+
+// 화면 사이즈를 계산하여 작은 다바이스(가로 360px 이하)에서는 일관된 작은 폰트를 적용
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const DYNAMIC_FONT_SIZE = SCREEN_WIDTH <= 360 ? 10 : 12;
 
 /**
  * 회원가입 상단 스텝 진행도 인디케이터
@@ -93,10 +97,12 @@ export default function OnboardingSteps({ currentStep = 1 }: OnboardingStepsProp
             <View style={styles.labelContainer}>
               <Text style={[
                   styles.labelText, 
+                  { fontSize: DYNAMIC_FONT_SIZE }, // Apply dynamic font size
                   (!isActive && !isCompleted) && { color: Colors.neutral.disabledText },
                   isActive && { color: Colors.primary.electricCyan },
                   isCompleted && { color: Colors.neutral.lightGray }
                 ]}
+                numberOfLines={1}
               >
                 {step.label}
               </Text>
@@ -117,9 +123,9 @@ const styles = StyleSheet.create({
     height: 64,
   },
   stepContainer: {
+    flex: 1,
     alignItems: 'center',
     gap: 8,
-    width: 60,
   },
   labelContainer: {
     height: 16,
@@ -127,9 +133,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   labelText: {
-    fontSize: 12,
     fontWeight: '400',
     lineHeight: 16,
+    textAlign: 'center',
   },
   circleWrapper: {
     width: 44, 
@@ -164,3 +170,4 @@ const styles = StyleSheet.create({
     letterSpacing: -0.15,
   }
 });
+

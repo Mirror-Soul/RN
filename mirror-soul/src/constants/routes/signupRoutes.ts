@@ -1,0 +1,11 @@
+export const SIGNUP_ROUTES = {
+  ACCOUNT: '/signup',
+  PROFILE: '/signup/profile',
+  EXPRESS: '/signup/express',
+} as const;
+
+export const SIGNUP_STEP_MAP: Record<string, number> = {
+  [SIGNUP_ROUTES.ACCOUNT]: 1,
+  [SIGNUP_ROUTES.PROFILE]: 2,
+  [SIGNUP_ROUTES.EXPRESS]: 3,
+};

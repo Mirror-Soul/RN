@@ -79,6 +79,7 @@ export default function LocationDropdown({ onSelect, onClose }: LocationDropdown
           style={styles.listContainer}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
           {currentList.map((item) => (
             <TouchableOpacity
