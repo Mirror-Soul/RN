@@ -18,8 +18,7 @@ export default function ExpressYourselfScreen() {
   const isFormValid = !mbti.includes('-') && description.trim().length > 0;
 
   const handleContinue = () => {
-    console.log('Final signup steps or next phase');
-    // router.push('/signup/next');
+    router.push('/signup/interview');
   };
 
   return (
