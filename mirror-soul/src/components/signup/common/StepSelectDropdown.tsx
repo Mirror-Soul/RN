@@ -19,16 +19,20 @@ export default function StepSelectDropdown({ label, placeholder, onPress, style,
   return (
     <View style={[styles.container, style]}>
       <Text style={styles.label}>{label}</Text>
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.button}
         activeOpacity={0.8}
         onPress={onPress}
+        accessible={true}
+        accessibilityRole="button"
+        accessibilityState={{ expanded: isOpen }}
+        accessibilityLabel={label}
       >
         <Text style={styles.placeholder}>{placeholder}</Text>
         {isOpen ? (
           <TopNarrowIcon width={24} height={24} />
         ) : (
-          <BottomNarrowIcon width={24} height={24} /> 
+          <BottomNarrowIcon width={24} height={24} />
         )}
       </TouchableOpacity>
     </View>
