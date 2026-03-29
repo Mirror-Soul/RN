@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
 import { Asset } from 'expo-asset';
+import { useEffect, useState } from 'react';
 
 /**
  * 3D 모델 에셋을 로드하고 로컬 URI를 관리하는 커스텀 훅
@@ -14,10 +14,11 @@ export function useInterviewModel(module: any) {
 
     async function loadAsset() {
       try {
+        setError(null);
         setIsLoading(true);
         const asset = Asset.fromModule(module);
         await asset.downloadAsync();
-        
+
         if (isMounted) {
           if (asset.localUri) {
             setModelUri(asset.localUri);
