@@ -3,31 +3,43 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Colors } from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import VoiceIcon from '@/assets/images/common/Voice_icon.svg';
+import VoiceIconWhite from '@/assets/images/common/Voice_icon_white.svg';
 import ContinueIcon from '@/assets/images/common/Continue_icon.svg';
 
 interface Props {
+  isRecording?: boolean;
   onRecordPress: () => void;
   onNextPress: () => void;
 }
 
-export default function InterviewControls({ onRecordPress, onNextPress }: Props) {
+export default function InterviewControls({ isRecording = false, onRecordPress, onNextPress }: Props) {
   return (
     <View style={styles.container}>
-      {/* 1. 녹음 시작 시작 버튼 */}
+      {/* 1. 녹음 버튼 (상태에 따라 스타일 변화) */}
       <TouchableOpacity
         activeOpacity={0.8}
         onPress={onRecordPress}
-        style={styles.recordButtonWrapper}
+        style={[
+          styles.recordButtonWrapper,
+          isRecording && styles.recordingButtonActive
+        ]}
       >
-        <LinearGradient
-          colors={Colors.gradient.cyanBluePurple}
-          start={{ x: 0, y: 0.5 }}
-          end={{ x: 1, y: 0.5 }}
-          style={styles.recordGradient}
-        >
-          <VoiceIcon width={24} height={24} />
-          <Text style={styles.recordText}>녹음 시작</Text>
-        </LinearGradient>
+        {isRecording ? (
+          <View style={styles.recordingContent}>
+            <VoiceIconWhite width={24.821} height={24.821} />
+            <Text style={styles.recordingText}>녹음 중지</Text>
+          </View>
+        ) : (
+          <LinearGradient
+            colors={Colors.gradient.cyanBluePurple}
+            start={{ x: 0, y: 0.5 }}
+            end={{ x: 1, y: 0.5 }}
+            style={styles.recordGradient}
+          >
+            <VoiceIcon width={24} height={24} />
+            <Text style={styles.recordText}>녹음 시작</Text>
+          </LinearGradient>
+        )}
       </TouchableOpacity>
 
       {/* 2. 다음 버튼 */}
@@ -49,7 +61,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 16,
-    height: 72, // roughly matching Figma 71.656px
+    height: 72,
   },
   recordButtonWrapper: {
     flex: 1,
@@ -61,6 +73,14 @@ const styles = StyleSheet.create({
     shadowRadius: 50,
     elevation: 10,
   },
+  recordingButtonActive: {
+    backgroundColor: Colors.primary.recordingRed,
+    shadowColor: Colors.primary.recordingRed,
+    // 유저 요청: box-shadow: 0 25px 50px -12px rgba(251, 44, 54, 0.30);
+    shadowOffset: { width: 0, height: 25 }, 
+    shadowOpacity: 0.30,
+    shadowRadius: 50,
+  },
   recordGradient: {
     flex: 1,
     flexDirection: 'row',
@@ -70,8 +90,23 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingHorizontal: 20,
   },
+  recordingContent: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 11.582,
+    borderRadius: 16,
+  },
   recordText: {
     color: Colors.primary.soulBlack,
+    fontSize: 18,
+    fontWeight: '600',
+    lineHeight: 28,
+    letterSpacing: -0.439,
+  },
+  recordingText: {
+    color: Colors.neutral.pureWhite,
     fontSize: 18,
     fontWeight: '600',
     lineHeight: 28,
@@ -97,3 +132,4 @@ const styles = StyleSheet.create({
     letterSpacing: -0.439,
   },
 });
+
