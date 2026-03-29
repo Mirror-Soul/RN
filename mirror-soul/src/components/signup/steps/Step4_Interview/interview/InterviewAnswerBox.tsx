@@ -11,10 +11,11 @@ interface InterviewAnswerBoxProps {
 export default function InterviewAnswerBox({ answerText, isRecording = false }: InterviewAnswerBoxProps) {
   // 깜빡이는 빨간 점 애니메이션
   const blinkAnim = useRef(new Animated.Value(0.6712)).current;
+  const loopAnim = useRef<Animated.CompositeAnimation | null>(null);
 
   useEffect(() => {
     if (isRecording) {
-      Animated.loop(
+      loopAnim.current = Animated.loop(
         Animated.sequence([
           Animated.timing(blinkAnim, {
             toValue: 0.2,
@@ -27,10 +28,21 @@ export default function InterviewAnswerBox({ answerText, isRecording = false }: 
             useNativeDriver: true,
           }),
         ])
-      ).start();
+      );
+      loopAnim.current.start();
     } else {
+      if (loopAnim.current) {
+        loopAnim.current.stop();
+      }
       blinkAnim.setValue(0.6712);
     }
+
+    return () => {
+      // 컴포넌트 언마운트 시 메모리 누수 방지
+      if (loopAnim.current) {
+        loopAnim.current.stop();
+      }
+    };
   }, [isRecording, blinkAnim]);
 
   return (
