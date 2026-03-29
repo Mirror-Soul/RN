@@ -2,6 +2,7 @@ import { Colors } from '@/src/constants/theme';
 import { Canvas, useLoader } from '@react-three/fiber/native';
 import React, { Suspense, useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import * as THREE from 'three';
 import { GLTFLoader } from 'three-stdlib';
 import { useInterviewModel } from '../hooks/useInterviewModel';
 
@@ -42,7 +43,8 @@ function RobotModel({ uri, onLoad }: { uri: string; onLoad: () => void }) {
       object={gltf.scene}
       scale={[2.5, 2.5, 2.5]}
       position={[0, 0, 0]}
-      rotation={[0, 155.5, 0]}
+      rotation={[0, THREE.MathUtils.degToRad(270), 0]}
+
     />
   );
 }
