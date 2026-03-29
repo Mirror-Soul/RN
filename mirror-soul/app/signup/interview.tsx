@@ -11,16 +11,17 @@ import InterviewAnswerBox from '@/src/components/signup/steps/Step4_Interview/in
 import InterviewControls from '@/src/components/signup/steps/Step4_Interview/interview/InterviewControls';
 import InterviewFooter from '@/src/components/signup/steps/Step4_Interview/interview/InterviewFooter';
 
+import { useInterviewSpeech } from '@/src/components/signup/steps/Step4_Interview/hooks/useInterviewSpeech';
+
 export default function InterviewScreen() {
   const router = useRouter();
+  const { isRecording, toggleRecording } = useInterviewSpeech();
 
   const handleRecordPress = () => {
-    console.log('Voice recording started...');
-    // TODO: implement recording logic
+    toggleRecording();
   };
 
   const handleNextPress = () => {
-    console.log('Going to next step...');
     // router.push('/signup/nextStep');
   };
 
@@ -51,11 +52,12 @@ export default function InterviewScreen() {
             />
             
             <View style={styles.answerWrapper}>
-              <InterviewAnswerBox />
+              <InterviewAnswerBox isRecording={isRecording} />
             </View>
 
             <View style={styles.controlsWrapper}>
               <InterviewControls 
+                isRecording={isRecording}
                 onRecordPress={handleRecordPress}
                 onNextPress={handleNextPress}
               />

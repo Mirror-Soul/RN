@@ -4,6 +4,8 @@ export const Colors = {
     vividPurple: '#C27AFF', // Brand Purple
     soulBlack: '#000000',
     successGreen: '#05DF72', // Verification Success Green
+    recordingRed: '#FB2C36', // 녹음 중 버튼 및 포인트 컬러
+    activeRedText: '#FF6467', // "실시간 음성 인식 중" 텍스트 컬러
   },
   gradient: {
     // Array format for expo-linear-gradient
@@ -40,5 +42,6 @@ export const Colors = {
     green20: 'rgba(5, 223, 114, 0.20)',
     slate95: 'rgba(16, 24, 40, 0.95)',
     black40: 'rgba(0, 0, 0, 0.40)', // 답변 박스 배경
+    recordingBg: ['rgba(0, 211, 243, 0.05)', 'rgba(194, 122, 255, 0.05)'] as [string, string], // 웨이브폼 배경
   }
 };
