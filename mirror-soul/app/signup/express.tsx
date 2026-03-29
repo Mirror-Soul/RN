@@ -7,6 +7,8 @@ import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 
+import { SIGNUP_ROUTES } from '@/src/constants/routes/signupRoutes';
+
 export default function ExpressYourselfScreen() {
   const router = useRouter();
   const [mbti, setMbti] = useState('ENFJ');
@@ -18,8 +20,7 @@ export default function ExpressYourselfScreen() {
   const isFormValid = !mbti.includes('-') && description.trim().length > 0;
 
   const handleContinue = () => {
-    console.log('Final signup steps or next phase');
-    // router.push('/signup/next');
+    router.push(SIGNUP_ROUTES.INTERVIEW);
   };
 
   return (

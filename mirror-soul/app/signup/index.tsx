@@ -7,6 +7,8 @@ import React, { useState } from 'react';
 import { router } from 'expo-router';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 
+import { SIGNUP_ROUTES } from '@/src/constants/routes/signupRoutes';
+
 export default function AccountScreen() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -18,7 +20,7 @@ export default function AccountScreen() {
 
   const handleContinue = () => {
     if (isFormValid) {
-      router.push('/signup/profile');
+      router.push(SIGNUP_ROUTES.PROFILE);
     }
   };
 

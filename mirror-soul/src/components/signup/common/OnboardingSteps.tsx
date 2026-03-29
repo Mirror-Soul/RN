@@ -70,7 +70,7 @@ export default function OnboardingSteps({ currentStep = 1 }: OnboardingStepsProp
                 {/* 배경 컬러 렌더링 */}
                 {(isActive || isCompleted) && (
                   <LinearGradient
-                    colors={isCompleted ? Colors.gradient.cyanToPurple : ['rgba(0, 211, 243, 0.20)', 'rgba(194, 122, 255, 0.20)']}
+                    colors={isCompleted ? Colors.gradient.cyanToPurple : [Colors.glass.cyan20, Colors.glass.purple20]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                     style={StyleSheet.absoluteFill}

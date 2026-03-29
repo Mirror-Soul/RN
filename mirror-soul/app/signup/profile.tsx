@@ -9,13 +9,15 @@ import PrimaryButton from '@/src/components/signup/common/PrimaryButton';
 import SecurityFooter from '@/src/components/home/SecurityFooter';
 import { useRouter } from 'expo-router';
 
+import { SIGNUP_ROUTES } from '@/src/constants/routes/signupRoutes';
+
 export default function BasicProfileScreen() {
   const [isFormValid, setIsFormValid] = useState(true); // 임시 활성화 (기본 상태)
   const router = useRouter();
 
   const handleContinue = () => {
     if (isFormValid) {
-      router.push('/signup/express');
+      router.push(SIGNUP_ROUTES.EXPRESS);
     }
   };
 
