@@ -12,6 +12,7 @@ import InterviewControls from '@/src/components/signup/steps/Step4_Interview/int
 import InterviewFooter from '@/src/components/signup/steps/Step4_Interview/interview/InterviewFooter';
 
 import { useInterviewSpeech } from '@/src/components/signup/steps/Step4_Interview/hooks/useInterviewSpeech';
+import { useInterviewSTT } from '@/src/components/signup/steps/Step4_Interview/hooks/useInterviewSTT';
 import MicPermissionModal from '@/src/components/signup/steps/Step4_Interview/interview/parts/MicPermissionModal';
 import { AudioModule } from 'expo-audio';
 
@@ -25,6 +26,8 @@ export default function InterviewScreen() {
     stopRecording,
   } = useInterviewSpeech();
 
+  const { transcript, startListening, stopListening } = useInterviewSTT('ko-KR');
+
   const [showPermissionModal, setShowPermissionModal] = React.useState(false);
 
   const handleRecordPress = async () => {
@@ -36,8 +39,10 @@ export default function InterviewScreen() {
 
     if (isRecording) {
       await stopRecording();
+      stopListening();
     } else {
       await startRecording();
+      await startListening();
     }
   };
 
@@ -84,7 +89,7 @@ export default function InterviewScreen() {
             />
             
             <View style={styles.answerWrapper}>
-              <InterviewAnswerBox isRecording={isRecording} />
+              <InterviewAnswerBox isRecording={isRecording} transcript={transcript} />
             </View>
 
             <View style={styles.controlsWrapper}>
