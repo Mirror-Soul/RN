@@ -1,6 +1,6 @@
-import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated } from 'react-native';
 import { Colors } from '@/src/constants/theme';
+import React, { useEffect, useRef } from 'react';
+import { Animated, StyleSheet, Text, View } from 'react-native';
 import VoiceWaveform from './parts/VoiceWaveform';
 
 interface InterviewAnswerBoxProps {
@@ -52,7 +52,7 @@ export default function InterviewAnswerBox({ answerText, isRecording = false }: 
         {isRecording && (
           <View style={styles.recordingIndicator}>
             <Animated.View style={[styles.redDot, { opacity: blinkAnim }]} />
-            <Text style={styles.recordingText}>실시간 음성 인식 중 ... </Text>
+            <Text style={styles.recordingText}>실시간 음성 인식 중 ...</Text>
           </View>
         )}
       </View>

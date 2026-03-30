@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, Platform, KeyboardAvoidingView, ScrollView } from 'react-native';
+import { View, StyleSheet, Platform, KeyboardAvoidingView, ScrollView, Linking } from 'react-native';
 import { Colors } from '@/src/constants/theme';
 import { useRouter } from 'expo-router';
 
@@ -12,13 +12,45 @@ import InterviewControls from '@/src/components/signup/steps/Step4_Interview/int
 import InterviewFooter from '@/src/components/signup/steps/Step4_Interview/interview/InterviewFooter';
 
 import { useInterviewSpeech } from '@/src/components/signup/steps/Step4_Interview/hooks/useInterviewSpeech';
+import MicPermissionModal from '@/src/components/signup/steps/Step4_Interview/interview/parts/MicPermissionModal';
+import { AudioModule } from 'expo-audio';
 
 export default function InterviewScreen() {
   const router = useRouter();
-  const { isRecording, toggleRecording } = useInterviewSpeech();
+  const {
+    isRecording,
+    recordingUri,
+    hasPermission,
+    startRecording,
+    stopRecording,
+  } = useInterviewSpeech();
 
-  const handleRecordPress = () => {
-    toggleRecording();
+  const [showPermissionModal, setShowPermissionModal] = React.useState(false);
+
+  const handleRecordPress = async () => {
+    // 권한이 없으면 모달 표시
+    if (hasPermission === false) {
+      setShowPermissionModal(true);
+      return;
+    }
+
+    if (isRecording) {
+      await stopRecording();
+    } else {
+      await startRecording();
+    }
+  };
+
+  const handleRequestPermission = async () => {
+    const status = await AudioModule.requestRecordingPermissionsAsync();
+    if (status.granted) {
+      setShowPermissionModal(false);
+    } else {
+      // iOS는 한 번 거부하면 시스템 다이얼로그를 다시 표시하지 않으므로
+      // 설정 화면으로 자동 이동시킵니다.
+      Linking.openSettings();
+      setShowPermissionModal(false);
+    }
   };
 
   const handleNextPress = () => {
@@ -70,6 +102,13 @@ export default function InterviewScreen() {
 
         </View>
       </ScrollView>
+
+      {/* 마이크 권한 요청 모달 */}
+      <MicPermissionModal
+        visible={showPermissionModal}
+        onRequestPermission={handleRequestPermission}
+        onClose={() => setShowPermissionModal(false)}
+      />
     </KeyboardAvoidingView>
   );
 }
