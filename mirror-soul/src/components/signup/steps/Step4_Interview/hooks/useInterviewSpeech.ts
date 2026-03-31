@@ -77,9 +77,11 @@ export function useInterviewSpeech() {
       setRecordingUri(null); // 이전 녹음 URI 초기화
       await audioRecorder.prepareToRecordAsync();
       audioRecorder.record();
+      return true;
     } catch (error) {
       console.error('녹음 시작 실패:', error);
       Alert.alert('녹음 오류', '녹음을 시작할 수 없습니다. 다시 시도해주세요.');
+      return false;
     }
   }, [hasPermission, audioRecorder]);
 

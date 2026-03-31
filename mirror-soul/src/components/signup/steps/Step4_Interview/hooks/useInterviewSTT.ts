@@ -29,9 +29,11 @@ export function useInterviewSTT(lang: SupportedLanguage = 'ko-KR') {
   });
 
   useSpeechRecognitionEvent('result', (event) => {
-    // 가장 최근 인식 결과를 transcript에 반영
-    const latestResult = event.results[0]?.transcript ?? '';
-    setTranscript(latestResult);
+    // 모든 인식 결과를 결합하여 transcript에 반영 (말이 끊겨도 유지됨)
+    const currentTranscript = event.results
+      .map((result) => result.transcript)
+      .join(' ');
+    setTranscript(currentTranscript);
   });
 
   useSpeechRecognitionEvent('error', (event) => {

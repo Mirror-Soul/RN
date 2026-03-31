@@ -1,19 +1,21 @@
-import React from 'react';
-import { View, StyleSheet, Platform, KeyboardAvoidingView, ScrollView, Linking, Alert } from 'react-native';
 import { Colors } from '@/src/constants/theme';
 import { useRouter } from 'expo-router';
+import React from 'react';
+import { Alert, KeyboardAvoidingView, Linking, Platform, ScrollView, StyleSheet, View } from 'react-native';
 
 // Step 4 Components
-import InterviewHeader from '@/src/components/signup/steps/Step4_Interview/interview/InterviewHeader';
-import InterviewAvatar from '@/src/components/signup/steps/Step4_Interview/interview/InterviewAvatar';
 import InterviewAIBox from '@/src/components/signup/steps/Step4_Interview/interview/InterviewAIBox';
 import InterviewAnswerBox from '@/src/components/signup/steps/Step4_Interview/interview/InterviewAnswerBox';
+import InterviewAvatar from '@/src/components/signup/steps/Step4_Interview/interview/InterviewAvatar';
 import InterviewControls from '@/src/components/signup/steps/Step4_Interview/interview/InterviewControls';
 import InterviewFooter from '@/src/components/signup/steps/Step4_Interview/interview/InterviewFooter';
+import InterviewHeader from '@/src/components/signup/steps/Step4_Interview/interview/InterviewHeader';
 
 import { useInterviewSpeech } from '@/src/components/signup/steps/Step4_Interview/hooks/useInterviewSpeech';
 import { useInterviewSTT } from '@/src/components/signup/steps/Step4_Interview/hooks/useInterviewSTT';
 import MicPermissionModal from '@/src/components/signup/steps/Step4_Interview/interview/parts/MicPermissionModal';
+import { AudioModule } from 'expo-audio';
+import { ExpoSpeechRecognitionModule } from 'expo-speech-recognition';
 
 export default function InterviewScreen() {
   const router = useRouter();
@@ -21,7 +23,6 @@ export default function InterviewScreen() {
     isRecording,
     recordingUri,
     hasPermission,
-    requestPermission,
     startRecording,
     stopRecording,
   } = useInterviewSpeech();
@@ -31,31 +32,30 @@ export default function InterviewScreen() {
   const [showPermissionModal, setShowPermissionModal] = React.useState(false);
 
   const handleRecordPress = async () => {
-    // 권한 확인 중인 경우 안내 표시
-    if (hasPermission === null) {
-      Alert.alert('권한 확인 중', '마이크 및 음성 인식 권한을 확인하고 있습니다. 잠시만 기다려 주세요.');
-      return;
-    }
-
-    // 권한이 없으면 모달 표시
-    if (hasPermission === false) {
+    // 권한이 없거나 아직 확인되지 않았으면 모달 표시
+    if (!hasPermission) {
       setShowPermissionModal(true);
       return;
     }
 
     if (isRecording) {
+      stopListening(); // STT를 먼저 중단
       await stopRecording();
-      stopListening();
     } else {
-      await startRecording();
-      await startListening();
+      const success = await startRecording();
+      if (success) {
+        startListening();
+      }
     }
   };
 
   const handleRequestPermission = async () => {
-    const granted = await requestPermission();
+    const [audioStatus, sttStatus] = await Promise.all([
+      AudioModule.requestRecordingPermissionsAsync(),
+      ExpoSpeechRecognitionModule.requestPermissionsAsync(),
+    ]);
 
-    if (granted) {
+    if (audioStatus.granted && sttStatus.granted) {
       setShowPermissionModal(false);
     } else {
       // 권한이 거부된 경우 (iOS 등에서는 설정창 유도)
@@ -93,13 +93,13 @@ export default function InterviewScreen() {
               category="외향성 (Extraversion)"
               question="금요일 저녁입니다. 활기찬 파티에 초대받았지만, 이번 주는 정말 힘들었어요. 사람들을 만나며 에너지를 충전하시나요, 아니면 집에서 혼자 쉬며 재충전하시나요?"
             />
-            
+
             <View style={styles.answerWrapper}>
               <InterviewAnswerBox isRecording={isRecording} transcript={transcript} />
             </View>
 
             <View style={styles.controlsWrapper}>
-              <InterviewControls 
+              <InterviewControls
                 isRecording={isRecording}
                 onRecordPress={handleRecordPress}
                 onNextPress={handleNextPress}
