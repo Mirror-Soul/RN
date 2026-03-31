@@ -1,14 +1,15 @@
-import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated } from 'react-native';
 import { Colors } from '@/src/constants/theme';
+import React, { useEffect, useRef } from 'react';
+import { Animated, StyleSheet, Text, View } from 'react-native';
 import VoiceWaveform from './parts/VoiceWaveform';
 
 interface InterviewAnswerBoxProps {
   answerText?: string;
   isRecording?: boolean;
+  transcript?: string;
 }
 
-export default function InterviewAnswerBox({ answerText, isRecording = false }: InterviewAnswerBoxProps) {
+export default function InterviewAnswerBox({ answerText, isRecording = false, transcript = '' }: InterviewAnswerBoxProps) {
   // 깜빡이는 빨간 점 애니메이션
   const blinkAnim = useRef(new Animated.Value(0.6712)).current;
   const loopAnim = useRef<Animated.CompositeAnimation | null>(null);
@@ -52,13 +53,22 @@ export default function InterviewAnswerBox({ answerText, isRecording = false }: 
         {isRecording && (
           <View style={styles.recordingIndicator}>
             <Animated.View style={[styles.redDot, { opacity: blinkAnim }]} />
-            <Text style={styles.recordingText}>실시간 음성 인식 중 ... </Text>
+            <Text style={styles.recordingText}>실시간 음성 인식 중 ...</Text>
           </View>
         )}
       </View>
 
       {isRecording ? (
-        <VoiceWaveform />
+        <View style={styles.recordingContent}>
+          <VoiceWaveform />
+          {transcript ? (
+            <Text style={styles.transcriptText}>{transcript}</Text>
+          ) : (
+            <Text style={styles.transcriptPlaceholder}>말씀해 주세요...</Text>
+          )}
+        </View>
+      ) : transcript ? (
+        <Text style={styles.answerText}>{transcript}</Text>
       ) : answerText ? (
         <Text style={styles.answerText}>{answerText}</Text>
       ) : (
@@ -128,6 +138,24 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     lineHeight: 26,
     letterSpacing: -0.312,
+  },
+  recordingContent: {
+    gap: 12,
+  },
+  transcriptText: {
+    color: Colors.neutral.pureWhite,
+    fontSize: 15,
+    fontWeight: '400',
+    lineHeight: 24,
+    letterSpacing: -0.2,
+  },
+  transcriptPlaceholder: {
+    color: Colors.neutral.darkGray,
+    fontSize: 15,
+    fontStyle: 'italic',
+    fontWeight: '400',
+    lineHeight: 24,
+    letterSpacing: -0.2,
   },
 });
 
