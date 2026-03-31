@@ -14,8 +14,6 @@ import InterviewHeader from '@/src/components/signup/steps/Step4_Interview/inter
 import { useInterviewSpeech } from '@/src/components/signup/steps/Step4_Interview/hooks/useInterviewSpeech';
 import { useInterviewSTT } from '@/src/components/signup/steps/Step4_Interview/hooks/useInterviewSTT';
 import MicPermissionModal from '@/src/components/signup/steps/Step4_Interview/interview/parts/MicPermissionModal';
-import { AudioModule } from 'expo-audio';
-import { ExpoSpeechRecognitionModule } from 'expo-speech-recognition';
 
 export default function InterviewScreen() {
   const router = useRouter();
@@ -23,6 +21,7 @@ export default function InterviewScreen() {
     isRecording,
     recordingUri,
     hasPermission,
+    requestPermission, // 통합 권한 요청 함수 추가
     startRecording,
     stopRecording,
   } = useInterviewSpeech();
@@ -50,12 +49,9 @@ export default function InterviewScreen() {
   };
 
   const handleRequestPermission = async () => {
-    const [audioStatus, sttStatus] = await Promise.all([
-      AudioModule.requestRecordingPermissionsAsync(),
-      ExpoSpeechRecognitionModule.requestPermissionsAsync(),
-    ]);
+    const granted = await requestPermission(); // 훅의 통합 함수 사용
 
-    if (audioStatus.granted && sttStatus.granted) {
+    if (granted) {
       setShowPermissionModal(false);
     } else {
       // 권한이 거부된 경우 (iOS 등에서는 설정창 유도)
