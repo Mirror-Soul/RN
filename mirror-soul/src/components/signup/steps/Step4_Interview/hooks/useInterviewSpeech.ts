@@ -23,12 +23,12 @@ export function useInterviewSpeech() {
   const [recordingUri, setRecordingUri] = useState<string | null>(null);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null); // null = 아직 요청 안함
 
-  // ─── 마운트 시 권한 요청 및 오디오 모드 설정 ───
+  // ─── 마운트 시 권한 상태 확인 (조용히) ───
   useEffect(() => {
     (async () => {
       const [audioStatus, sttStatus] = await Promise.all([
-        AudioModule.requestRecordingPermissionsAsync(),
-        ExpoSpeechRecognitionModule.requestPermissionsAsync(),
+        AudioModule.getRecordingPermissionsAsync(),
+        ExpoSpeechRecognitionModule.getPermissionsAsync(),
       ]);
 
       const allGranted = audioStatus.granted && sttStatus.granted;
@@ -41,6 +41,26 @@ export function useInterviewSpeech() {
         });
       }
     })();
+  }, []);
+
+  // ─── 통합 권한 요청 함수 ───
+  const requestPermission = useCallback(async () => {
+    const [audioStatus, sttStatus] = await Promise.all([
+      AudioModule.requestRecordingPermissionsAsync(),
+      ExpoSpeechRecognitionModule.requestPermissionsAsync(),
+    ]);
+
+    const allGranted = audioStatus.granted && sttStatus.granted;
+    setHasPermission(allGranted);
+
+    if (allGranted) {
+      await setAudioModeAsync({
+        playsInSilentMode: true,
+        allowsRecording: true,
+      });
+    }
+
+    return allGranted;
   }, []);
 
   // ─── 녹음 시작 ───
@@ -84,6 +104,7 @@ export function useInterviewSpeech() {
     recordingUri,
     durationMs: recorderState.durationMillis ?? 0,
     hasPermission,
+    requestPermission,
     startRecording,
     stopRecording,
   };
