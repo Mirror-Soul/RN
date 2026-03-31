@@ -12,17 +12,27 @@
  */
 import { RecordingPresets, IOSOutputFormat, AudioQuality } from 'expo-audio';
 import type { RecordingOptions } from 'expo-audio';
+import { Platform } from 'react-native';
 
 export const INTERVIEW_RECORDING_PRESET: RecordingOptions = {
   ...RecordingPresets.HIGH_QUALITY,
-  extension: '.wav',
+  extension: Platform.select({
+    ios: '.wav',
+    android: '.m4a',
+    default: '.m4a',
+  }),
   sampleRate: 44100,
   numberOfChannels: 1, // 모노 (음성 녹음에 최적, 파일 크기 절반)
-  bitRate: 705600, // 44100 * 16 * 1 (무손실)
+  bitRate: Platform.select({
+    ios: 705600, // 44100 * 16 * 1 (무손실 WAV 용)
+    android: 128000, // AAC 고음질
+    default: 128000,
+  }),
   android: {
-    outputFormat: 'default' as const,
-    audioEncoder: 'default' as const,
+    outputFormat: 'mpeg4' as const,
+    audioEncoder: 'aac' as const,
     sampleRate: 44100,
+    audioSource: 'voice_recognition' as const, // 음성 인식 최적화 소스 사용
   },
   ios: {
     outputFormat: IOSOutputFormat.LINEARPCM,
