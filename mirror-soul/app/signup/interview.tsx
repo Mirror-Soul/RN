@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, Platform, KeyboardAvoidingView, ScrollView, Linking } from 'react-native';
+import { View, StyleSheet, Platform, KeyboardAvoidingView, ScrollView, Linking, Alert } from 'react-native';
 import { Colors } from '@/src/constants/theme';
 import { useRouter } from 'expo-router';
 
@@ -15,6 +15,7 @@ import { useInterviewSpeech } from '@/src/components/signup/steps/Step4_Intervie
 import { useInterviewSTT } from '@/src/components/signup/steps/Step4_Interview/hooks/useInterviewSTT';
 import MicPermissionModal from '@/src/components/signup/steps/Step4_Interview/interview/parts/MicPermissionModal';
 import { AudioModule } from 'expo-audio';
+import { ExpoSpeechRecognitionModule } from 'expo-speech-recognition';
 
 export default function InterviewScreen() {
   const router = useRouter();
@@ -31,6 +32,12 @@ export default function InterviewScreen() {
   const [showPermissionModal, setShowPermissionModal] = React.useState(false);
 
   const handleRecordPress = async () => {
+    // 권한 확인 중인 경우 안내 표시
+    if (hasPermission === null) {
+      Alert.alert('권한 확인 중', '마이크 및 음성 인식 권한을 확인하고 있습니다. 잠시만 기다려 주세요.');
+      return;
+    }
+
     // 권한이 없으면 모달 표시
     if (hasPermission === false) {
       setShowPermissionModal(true);
@@ -47,12 +54,15 @@ export default function InterviewScreen() {
   };
 
   const handleRequestPermission = async () => {
-    const status = await AudioModule.requestRecordingPermissionsAsync();
-    if (status.granted) {
+    const [audioStatus, sttStatus] = await Promise.all([
+      AudioModule.requestRecordingPermissionsAsync(),
+      ExpoSpeechRecognitionModule.requestPermissionsAsync(),
+    ]);
+
+    if (audioStatus.granted && sttStatus.granted) {
       setShowPermissionModal(false);
     } else {
-      // iOS는 한 번 거부하면 시스템 다이얼로그를 다시 표시하지 않으므로
-      // 설정 화면으로 자동 이동시킵니다.
+      // 권한이 거부된 경우 (iOS 등에서는 설정창 유도)
       Linking.openSettings();
       setShowPermissionModal(false);
     }

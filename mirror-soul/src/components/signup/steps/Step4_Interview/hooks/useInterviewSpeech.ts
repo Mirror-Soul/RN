@@ -5,6 +5,7 @@ import {
   useAudioRecorderState,
   setAudioModeAsync,
 } from 'expo-audio';
+import { ExpoSpeechRecognitionModule } from 'expo-speech-recognition';
 import { Alert } from 'react-native';
 import { INTERVIEW_RECORDING_PRESET } from '@/src/constants/audio';
 
@@ -25,10 +26,15 @@ export function useInterviewSpeech() {
   // ─── 마운트 시 권한 요청 및 오디오 모드 설정 ───
   useEffect(() => {
     (async () => {
-      const status = await AudioModule.requestRecordingPermissionsAsync();
-      setHasPermission(status.granted);
+      const [audioStatus, sttStatus] = await Promise.all([
+        AudioModule.requestRecordingPermissionsAsync(),
+        ExpoSpeechRecognitionModule.requestPermissionsAsync(),
+      ]);
 
-      if (status.granted) {
+      const allGranted = audioStatus.granted && sttStatus.granted;
+      setHasPermission(allGranted);
+
+      if (allGranted) {
         await setAudioModeAsync({
           playsInSilentMode: true,
           allowsRecording: true,

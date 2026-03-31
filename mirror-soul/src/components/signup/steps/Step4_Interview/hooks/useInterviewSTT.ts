@@ -41,12 +41,6 @@ export function useInterviewSTT(lang: SupportedLanguage = 'ko-KR') {
 
   // ─── 음성 인식 시작 ───
   const startListening = useCallback(async () => {
-    const result = await ExpoSpeechRecognitionModule.requestPermissionsAsync();
-    if (!result.granted) {
-      console.warn('음성 인식 권한이 거부되었습니다.');
-      return;
-    }
-
     setTranscript(''); // 이전 텍스트 초기화
 
     ExpoSpeechRecognitionModule.start({
