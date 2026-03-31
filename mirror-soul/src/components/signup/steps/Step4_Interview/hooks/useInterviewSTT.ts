@@ -16,7 +16,8 @@ type SupportedLanguage = 'ko-KR' | 'en-US';
  * - useInterviewSpeech(녹음)와 독립적으로 동작하여 관심사를 분리합니다.
  */
 export function useInterviewSTT(lang: SupportedLanguage = 'ko-KR') {
-  const [transcript, setTranscript] = useState('');
+  const [finalizedTranscript, setFinalizedTranscript] = useState('');
+  const [interimTranscript, setInterimTranscript] = useState('');
   const [isListening, setIsListening] = useState(false);
 
   // ─── 이벤트 리스너 등록 ───
@@ -29,11 +30,20 @@ export function useInterviewSTT(lang: SupportedLanguage = 'ko-KR') {
   });
 
   useSpeechRecognitionEvent('result', (event) => {
-    // 모든 인식 결과를 결합하여 transcript에 반영 (말이 끊겨도 유지됨)
-    const currentTranscript = event.results
-      .map((result) => result.transcript)
-      .join(' ');
-    setTranscript(currentTranscript);
+    // 가장 신뢰도 높은 결과(0번 인덱스)를 사용
+    const latestResult = event.results[0]?.transcript ?? '';
+
+    if (event.isFinal) {
+      // 문장이 확정된 경우 finalizedTranscript에 추가하고 interim을 비움
+      setFinalizedTranscript((prev) => {
+        const separator = prev.length > 0 ? ' ' : '';
+        return prev + separator + latestResult;
+      });
+      setInterimTranscript('');
+    } else {
+      // 인식 중인 상태면 interimTranscript만 업데이트
+      setInterimTranscript(latestResult);
+    }
   });
 
   useSpeechRecognitionEvent('error', (event) => {
@@ -43,7 +53,8 @@ export function useInterviewSTT(lang: SupportedLanguage = 'ko-KR') {
 
   // ─── 음성 인식 시작 ───
   const startListening = useCallback(async () => {
-    setTranscript(''); // 이전 텍스트 초기화
+    setFinalizedTranscript(''); // 이전 텍스트 초기화
+    setInterimTranscript('');
 
     ExpoSpeechRecognitionModule.start({
       lang,
@@ -57,10 +68,16 @@ export function useInterviewSTT(lang: SupportedLanguage = 'ko-KR') {
     ExpoSpeechRecognitionModule.stop();
   }, []);
 
-  // ─── 언어 전환 시 텍스트 초기화 ───
+  // ─── 초기화 ───
   const resetTranscript = useCallback(() => {
-    setTranscript('');
+    setFinalizedTranscript('');
+    setInterimTranscript('');
   }, []);
+
+  // 두 상태를 합쳐서 최종 텍스트 노출
+  const transcript = (
+    finalizedTranscript + (interimTranscript ? ' ' + interimTranscript : '')
+  ).trim();
 
   return {
     transcript,
