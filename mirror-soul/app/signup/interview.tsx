@@ -1,7 +1,7 @@
 import { Colors } from '@/src/constants/theme';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { Alert, KeyboardAvoidingView, Linking, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Linking, Platform, ScrollView, StyleSheet, View } from 'react-native';
 
 // Step 4 Components
 import InterviewAIBox from '@/src/components/signup/steps/Step4_Interview/interview/InterviewAIBox';
@@ -87,7 +87,7 @@ export default function InterviewScreen() {
           <View style={styles.body}>
             <InterviewAIBox
               category="외향성 (Extraversion)"
-              question="금요일 저녁입니다. 활기찬 파티에 초대받았지만, 이번 주는 정말 힘들었어요. 사람들을 만나며 에너지를 충전하시나요, 아니면 집에서 혼자 쉬며 재충전하시나요?"
+              question="가장 소중한 사람과 의견 차이로 크게 다퉜을 때, 당신은 보통 어떻게 행동하나요?"
             />
 
             <View style={styles.answerWrapper}>

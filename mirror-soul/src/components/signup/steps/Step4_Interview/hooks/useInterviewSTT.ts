@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import {
   ExpoSpeechRecognitionModule,
   useSpeechRecognitionEvent,
@@ -66,6 +66,19 @@ export function useInterviewSTT(lang: SupportedLanguage = 'ko-KR') {
   // ─── 음성 인식 중지 ───
   const stopListening = useCallback(() => {
     ExpoSpeechRecognitionModule.stop();
+  }, []);
+
+  // ─── 언마운트 시 컴포넌트 정리 (Cleanup) ───
+  useEffect(() => {
+    return () => {
+      // 컴포넌트가 사라질 때 엔진 강제 중단 및 리소스 반환
+      try {
+        ExpoSpeechRecognitionModule.abort?.();
+        ExpoSpeechRecognitionModule.stop?.();
+      } catch (error) {
+        // 이미 중지되었을 경우의 오류 무시
+      }
+    };
   }, []);
 
   // ─── 초기화 ───
