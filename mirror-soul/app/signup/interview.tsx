@@ -1,6 +1,6 @@
 import { Colors } from '@/src/constants/theme';
 import { useRouter } from 'expo-router';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { KeyboardAvoidingView, Linking, Platform, ScrollView, StyleSheet, View } from 'react-native';
 
 // Step 4 Components
@@ -31,6 +31,11 @@ export default function InterviewScreen() {
   const { currentQuestion, currentQuestionIndex, totalQuestions, isLastQuestion, goToNextQuestion } = useInterviewQuestions();
 
   const [showPermissionModal, setShowPermissionModal] = React.useState(false);
+
+  // [의견 반영] 인덱스가 변경될 때마다(질문이 넘어갈 때마다) 일관되게 텍스트를 초기화하는 상태 동기화 처리
+  useEffect(() => {
+    resetTranscript();
+  }, [currentQuestionIndex, resetTranscript]);
 
   const handleRecordPress = async () => {
     // 권한이 없거나 아직 확인되지 않았으면 모달 표시
@@ -68,9 +73,6 @@ export default function InterviewScreen() {
       stopListening();
       await stopRecording();
     }
-
-    // [의견 반영] 서버로 즉시 전송했다고 가정하고 비우기만 함
-    resetTranscript();
 
     if (isLastQuestion) {
       // 마지막 단계이면 다음 페이지로 이동
