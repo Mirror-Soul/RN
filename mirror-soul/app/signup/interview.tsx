@@ -4,16 +4,17 @@ import React from 'react';
 import { KeyboardAvoidingView, Linking, Platform, ScrollView, StyleSheet, View } from 'react-native';
 
 // Step 4 Components
-import InterviewAIBox from '@/src/components/signup/steps/Step4_Interview/interview/InterviewAIBox';
-import InterviewAnswerBox from '@/src/components/signup/steps/Step4_Interview/interview/InterviewAnswerBox';
-import InterviewAvatar from '@/src/components/signup/steps/Step4_Interview/interview/InterviewAvatar';
-import InterviewControls from '@/src/components/signup/steps/Step4_Interview/interview/InterviewControls';
-import InterviewFooter from '@/src/components/signup/steps/Step4_Interview/interview/InterviewFooter';
-import InterviewHeader from '@/src/components/signup/steps/Step4_Interview/interview/InterviewHeader';
+import InterviewAIBox from '@/src/components/signup/steps/Step4_Interview/components/InterviewAIBox';
+import InterviewAnswerBox from '@/src/components/signup/steps/Step4_Interview/components/InterviewAnswerBox';
+import InterviewAvatar from '@/src/components/signup/steps/Step4_Interview/components/InterviewAvatar';
+import InterviewControls from '@/src/components/signup/steps/Step4_Interview/components/InterviewControls';
+import InterviewFooter from '@/src/components/signup/steps/Step4_Interview/components/InterviewFooter';
+import InterviewHeader from '@/src/components/signup/steps/Step4_Interview/components/InterviewHeader';
 
 import { useInterviewSpeech } from '@/src/components/signup/steps/Step4_Interview/hooks/useInterviewSpeech';
 import { useInterviewSTT } from '@/src/components/signup/steps/Step4_Interview/hooks/useInterviewSTT';
-import MicPermissionModal from '@/src/components/signup/steps/Step4_Interview/interview/parts/MicPermissionModal';
+import { useInterviewQuestions } from '@/src/components/signup/steps/Step4_Interview/hooks/useInterviewQuestions';
+import MicPermissionModal from '@/src/components/signup/steps/Step4_Interview/components/parts/MicPermissionModal';
 
 export default function InterviewScreen() {
   const router = useRouter();
@@ -26,7 +27,8 @@ export default function InterviewScreen() {
     stopRecording,
   } = useInterviewSpeech();
 
-  const { transcript, startListening, stopListening } = useInterviewSTT('ko-KR');
+  const { transcript, startListening, stopListening, resetTranscript } = useInterviewSTT('ko-KR');
+  const { currentQuestion, currentQuestionIndex, totalQuestions, isLastQuestion, goToNextQuestion } = useInterviewQuestions();
 
   const [showPermissionModal, setShowPermissionModal] = React.useState(false);
 
@@ -60,8 +62,23 @@ export default function InterviewScreen() {
     }
   };
 
-  const handleNextPress = () => {
-    // router.push('/signup/nextStep');
+  const handleNextPress = async () => {
+    // 녹음 중이면 안전하게 중단
+    if (isRecording) {
+      stopListening();
+      await stopRecording();
+    }
+
+    // [의견 반영] 서버로 즉시 전송했다고 가정하고 비우기만 함
+    resetTranscript();
+
+    if (isLastQuestion) {
+      // 마지막 단계이면 다음 페이지로 이동
+      // router.push('/signup/nextStep'); // 실제 다음 스텝으로 변경 필요
+      console.log('인터뷰 완료! 다음 단계로 이동합니다.');
+    } else {
+      goToNextQuestion();
+    }
   };
 
   return (
@@ -77,8 +94,8 @@ export default function InterviewScreen() {
         <View style={styles.container}>
           <InterviewHeader
             title="The Soul Capture"
-            currentQuestion={1}
-            totalQuestions={5}
+            currentQuestion={currentQuestionIndex + 1}
+            totalQuestions={totalQuestions}
           />
 
           {/* 3D Avatar Model */}
@@ -86,8 +103,8 @@ export default function InterviewScreen() {
 
           <View style={styles.body}>
             <InterviewAIBox
-              category="외향성 (Extraversion)"
-              question="가장 소중한 사람과 의견 차이로 크게 다퉜을 때, 당신은 보통 어떻게 행동하나요?"
+              category={currentQuestion.category}
+              question={currentQuestion.question}
             />
 
             <View style={styles.answerWrapper}>
@@ -97,6 +114,7 @@ export default function InterviewScreen() {
             <View style={styles.controlsWrapper}>
               <InterviewControls
                 isRecording={isRecording}
+                isLastQuestion={isLastQuestion}
                 onRecordPress={handleRecordPress}
                 onNextPress={handleNextPress}
               />
