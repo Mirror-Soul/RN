@@ -8,11 +8,12 @@ import ContinueIcon from '@/assets/images/common/Continue_icon.svg';
 
 interface Props {
   isRecording?: boolean;
+  isLastQuestion?: boolean;
   onRecordPress: () => void;
   onNextPress: () => void;
 }
 
-export default function InterviewControls({ isRecording = false, onRecordPress, onNextPress }: Props) {
+export default function InterviewControls({ isRecording = false, isLastQuestion = false, onRecordPress, onNextPress }: Props) {
   return (
     <View style={styles.container}>
       {/* 1. 녹음 버튼 (상태에 따라 스타일 변화) */}
@@ -42,13 +43,13 @@ export default function InterviewControls({ isRecording = false, onRecordPress, 
         )}
       </TouchableOpacity>
 
-      {/* 2. 다음 버튼 */}
+      {/* 2. 다음/완료 버튼 */}
       <TouchableOpacity
         activeOpacity={0.8}
         onPress={onNextPress}
         style={styles.nextButton}
       >
-        <Text style={styles.nextText}>다음</Text>
+        <Text style={styles.nextText}>{isLastQuestion ? '완료' : '다음'}</Text>
         <ContinueIcon width={24} height={24} />
       </TouchableOpacity>
     </View>

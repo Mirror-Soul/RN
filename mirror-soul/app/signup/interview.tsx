@@ -1,19 +1,20 @@
 import { Colors } from '@/src/constants/theme';
 import { useRouter } from 'expo-router';
-import React from 'react';
-import { KeyboardAvoidingView, Linking, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import React, { useEffect } from 'react';
+import { Alert, KeyboardAvoidingView, Linking, Platform, ScrollView, StyleSheet, View } from 'react-native';
 
 // Step 4 Components
-import InterviewAIBox from '@/src/components/signup/steps/Step4_Interview/interview/InterviewAIBox';
-import InterviewAnswerBox from '@/src/components/signup/steps/Step4_Interview/interview/InterviewAnswerBox';
-import InterviewAvatar from '@/src/components/signup/steps/Step4_Interview/interview/InterviewAvatar';
-import InterviewControls from '@/src/components/signup/steps/Step4_Interview/interview/InterviewControls';
-import InterviewFooter from '@/src/components/signup/steps/Step4_Interview/interview/InterviewFooter';
-import InterviewHeader from '@/src/components/signup/steps/Step4_Interview/interview/InterviewHeader';
+import InterviewAIBox from '@/src/components/signup/steps/Step4_Interview/components/InterviewAIBox';
+import InterviewAnswerBox from '@/src/components/signup/steps/Step4_Interview/components/InterviewAnswerBox';
+import InterviewAvatar from '@/src/components/signup/steps/Step4_Interview/components/InterviewAvatar';
+import InterviewControls from '@/src/components/signup/steps/Step4_Interview/components/InterviewControls';
+import InterviewFooter from '@/src/components/signup/steps/Step4_Interview/components/InterviewFooter';
+import InterviewHeader from '@/src/components/signup/steps/Step4_Interview/components/InterviewHeader';
 
 import { useInterviewSpeech } from '@/src/components/signup/steps/Step4_Interview/hooks/useInterviewSpeech';
 import { useInterviewSTT } from '@/src/components/signup/steps/Step4_Interview/hooks/useInterviewSTT';
-import MicPermissionModal from '@/src/components/signup/steps/Step4_Interview/interview/parts/MicPermissionModal';
+import { useInterviewQuestions } from '@/src/components/signup/steps/Step4_Interview/hooks/useInterviewQuestions';
+import MicPermissionModal from '@/src/components/signup/steps/Step4_Interview/components/parts/MicPermissionModal';
 
 export default function InterviewScreen() {
   const router = useRouter();
@@ -26,9 +27,15 @@ export default function InterviewScreen() {
     stopRecording,
   } = useInterviewSpeech();
 
-  const { transcript, startListening, stopListening } = useInterviewSTT('ko-KR');
+  const { transcript, startListening, stopListening, resetTranscript } = useInterviewSTT('ko-KR');
+  const { currentQuestion, currentQuestionIndex, totalQuestions, isLastQuestion, goToNextQuestion } = useInterviewQuestions();
 
   const [showPermissionModal, setShowPermissionModal] = React.useState(false);
+
+  // [의견 반영] 인덱스가 변경될 때마다(질문이 넘어갈 때마다) 일관되게 텍스트를 초기화하는 상태 동기화 처리
+  useEffect(() => {
+    resetTranscript();
+  }, [currentQuestionIndex, resetTranscript]);
 
   const handleRecordPress = async () => {
     // 권한이 없거나 아직 확인되지 않았으면 모달 표시
@@ -37,14 +44,17 @@ export default function InterviewScreen() {
       return;
     }
 
-    if (isRecording) {
-      stopListening(); // STT를 먼저 중단
-      await stopRecording();
-    } else {
-      const success = await startRecording();
-      if (success) {
+    try {
+      if (isRecording) {
+        stopListening(); // STT를 먼저 중단
+        await stopRecording();
+      } else {
+        await startRecording();
         startListening();
       }
+    } catch (error) {
+      console.error('녹음 제어 오류:', error);
+      Alert.alert('녹음 오류', error instanceof Error ? error.message : '오디오 시스템에 문제가 발생했습니다.');
     }
   };
 
@@ -60,8 +70,29 @@ export default function InterviewScreen() {
     }
   };
 
-  const handleNextPress = () => {
-    // router.push('/signup/nextStep');
+  const handleNextPress = async () => {
+    try {
+      // 1. 녹음 중이면 안전하게 중단 대기
+      if (isRecording) {
+        stopListening();
+        await stopRecording();
+      }
+
+      // 2. 서버로 전송 대기
+      // TODO: 실제 서버 전송 로직 구현 필요 (예: await submitAnswer(currentQuestion.id, transcript, recordingUri))
+
+      // 3. 마지막 단계 확인 및 다음 로직
+      if (isLastQuestion) {
+        // 마지막 단계이면 다음 페이지로 이동
+        // router.push('/signup/nextStep'); // 실제 다음 스텝으로 변경 필요
+        console.log('인터뷰 완료! 다음 단계로 이동합니다.');
+      } else {
+        goToNextQuestion();
+      }
+    } catch (error) {
+      console.error('다음 단계 이동 중 오류:', error);
+      Alert.alert('오류 발생', '답변을 처리하는 중 문제가 발생했습니다. 다시 시도해주세요.');
+    }
   };
 
   return (
@@ -77,8 +108,8 @@ export default function InterviewScreen() {
         <View style={styles.container}>
           <InterviewHeader
             title="The Soul Capture"
-            currentQuestion={1}
-            totalQuestions={5}
+            currentQuestion={currentQuestionIndex + 1}
+            totalQuestions={totalQuestions}
           />
 
           {/* 3D Avatar Model */}
@@ -86,8 +117,8 @@ export default function InterviewScreen() {
 
           <View style={styles.body}>
             <InterviewAIBox
-              category="외향성 (Extraversion)"
-              question="가장 소중한 사람과 의견 차이로 크게 다퉜을 때, 당신은 보통 어떻게 행동하나요?"
+              category={currentQuestion.category}
+              question={currentQuestion.question}
             />
 
             <View style={styles.answerWrapper}>
@@ -97,6 +128,7 @@ export default function InterviewScreen() {
             <View style={styles.controlsWrapper}>
               <InterviewControls
                 isRecording={isRecording}
+                isLastQuestion={isLastQuestion}
                 onRecordPress={handleRecordPress}
                 onNextPress={handleNextPress}
               />
