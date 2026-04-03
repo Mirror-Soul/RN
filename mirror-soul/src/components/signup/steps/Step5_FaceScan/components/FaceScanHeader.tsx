@@ -2,11 +2,18 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Colors } from '@/src/constants/theme';
 
-export default function FaceScanHeader() {
+interface FaceScanHeaderProps {
+  /** 스캔 중 방향 안내 메시지 (없으면 기본 서브타이틀) */
+  guideMessage?: string;
+}
+
+export default function FaceScanHeader({ guideMessage }: FaceScanHeaderProps) {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>3D Face Scan</Text>
-      <Text style={styles.subTitle}>Position your face in the center</Text>
+      <Text style={styles.subTitle}>
+        {guideMessage ?? 'Position your face in the center'}
+      </Text>
     </View>
   );
 }

@@ -12,7 +12,8 @@
       "supportsTablet": true,
       "infoPlist": {
         "NSSpeechRecognitionUsageDescription": "Mirror Soul에서 실시간 음성 인식을 위해 권한이 필요합니다.",
-        "NSMicrophoneUsageDescription": "Mirror Soul에서 음성 인터뷰를 위해 마이크 접근이 필요합니다."
+        "NSMicrophoneUsageDescription": "Mirror Soul에서 음성 인터뷰를 위해 마이크 접근이 필요합니다.",
+        "NSCameraUsageDescription": "Mirror Soul에서 3D 얼굴 스캔을 위해 카메라 접근이 필요합니다."
       },
       "bundleIdentifier": "com.anonymous.mirror-soul"
     },
@@ -27,7 +28,8 @@
       "predictiveBackGestureEnabled": false,
       "permissions": [
         "android.permission.RECORD_AUDIO",
-        "android.permission.MODIFY_AUDIO_SETTINGS"
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.CAMERA"
       ]
     },
     "web": {
@@ -54,6 +56,17 @@
         {
           "microphonePermission": "Mirror Soul에서 음성 인터뷰를 위해 마이크 접근이 필요합니다.",
           "speechRecognitionPermission": "Mirror Soul에서 실시간 음성 인식을 위해 권한이 필요합니다."
+        }
+      ],
+      ["react-native-vision-camera", {
+        "cameraPermissionText": "Mirror Soul에서 3D 얼굴 스캔을 위해 카메라 접근이 필요합니다."
+      }],
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "deploymentTarget": "15.5"
+          }
         }
       ]
     ],
