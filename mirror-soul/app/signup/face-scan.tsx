@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet, Platform, Animated } from 'react-native';
 import { Colors } from '@/src/constants/theme';
 import { useRouter } from 'expo-router';
-import { Camera } from 'react-native-vision-camera';
+import { useCameraDevice } from 'react-native-vision-camera';
 
 // Step5 Component Imports
 import FaceScanGlow from '@/src/components/signup/steps/Step5_FaceScan/components/FaceScanGlow';
@@ -10,26 +10,41 @@ import FaceScanHeader from '@/src/components/signup/steps/Step5_FaceScan/compone
 import FaceScanBody from '@/src/components/signup/steps/Step5_FaceScan/components/FaceScanBody';
 import FaceScanButton from '@/src/components/signup/steps/Step5_FaceScan/components/FaceScanButton';
 import FaceGuideOverlay from '@/src/components/signup/steps/Step5_FaceScan/components/FaceGuideOverlay';
+import FaceCameraView from '@/src/components/signup/steps/Step5_FaceScan/components/FaceCameraView';
 
-// Hook Import
+// Hook Imports
 import { useFaceScan } from '@/src/components/signup/steps/Step5_FaceScan/hooks/useFaceScan';
+import { useFaceProcessor } from '@/src/components/signup/steps/Step5_FaceScan/hooks/useFaceProcessor';
 
+/**
+ * 3D Face Scan 메인 화면
+ *
+ * 이 화면은 상단 안내(Header), 중앙 스캔 영역(Body), 하단 제어(Button)로 구성됩니다.
+ * useFaceScan 훅을 통해 상태를 관리하고, useFaceProcessor 훅을 통해 고성능 카메라 엔진을 구동합니다.
+ */
 export default function FaceScanScreen() {
   const router = useRouter();
+  const device = useCameraDevice('front');
 
+  // 1. 상태 및 비즈니스 로직 관리
   const {
     cameraRef,
-    device,
     phase,
     currentDirection,
     currentDirectionIndex,
     completedDirections,
     isDirectionMatching,
     startScan,
-    frameProcessor,
+    handleFaceDetection,
   } = useFaceScan();
 
-  // --- 완료 애니메이션 ---
+  // 2. 고성능 카메라 프레임 프로세서 엔진 (Ref Pattern 적용으로 Stale Closure 문제 해결)
+  const { frameProcessor } = useFaceProcessor({
+    onFaceDetected: handleFaceDetection,
+    isActive: phase === 'scanning',
+  });
+
+  // --- 완료 애니메이션 제어 ---
   const completionAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -45,13 +60,13 @@ export default function FaceScanScreen() {
     }
   }, [phase, completionAnim]);
 
-  // --- 다음 단계 이동 핸들러 ---
+  // --- 이벤트 핸들러 ---
   const handleNext = () => {
-    // TODO: 다음 스텝 라우트가 정해지면 변경
+    // TODO: 프로퍼 파일 설정 후 다음 단계로 이동
     console.log('스캔 완료! 다음 단계로 이동합니다.');
   };
 
-  // --- 방향 안내 메시지 결정 ---
+  // --- 텍스트 결정 로직 ---
   const guideMessage =
     phase === 'scanning'
       ? currentDirection.guideMessage
@@ -63,28 +78,25 @@ export default function FaceScanScreen() {
     <View style={styles.baseContainer}>
       <FaceScanGlow />
       <View style={styles.contentContainer}>
-        {/* 헤더: 타이틀 + 동적 서브타이틀 */}
+        {/* 헤더 섹션 */}
         <View style={styles.headerWrapper}>
           <FaceScanHeader guideMessage={guideMessage} />
         </View>
 
-        {/* 바디: 카메라 또는 플레이스홀더 */}
+        {/* 메인 스캔 영역 (Body) */}
         <View style={styles.bodyWrapper}>
           <FaceScanBody phase={phase}>
-            {/* scanning 일 때만 렌더링되는 카메라 */}
+            {/* 카메라 뷰: 스캔 중일 때만 표시 */}
             {device && phase === 'scanning' && (
-              <Camera
+              <FaceCameraView
                 ref={cameraRef}
                 device={device}
-                isActive={phase === 'scanning'}
-                video={true}
-                audio={false}
-                style={StyleSheet.absoluteFill}
+                isActive={true}
                 frameProcessor={frameProcessor}
               />
             )}
 
-            {/* 스캔 중 가이드 오버레이 */}
+            {/* 가이드 오버레이 */}
             {phase === 'scanning' && (
               <FaceGuideOverlay
                 currentDirection={currentDirection}
@@ -94,7 +106,7 @@ export default function FaceScanScreen() {
               />
             )}
 
-            {/* 완료 애니메이션 */}
+            {/* 완료 체크마크 애니메이션 */}
             {phase === 'completed' && (
               <Animated.View
                 style={[
@@ -113,7 +125,7 @@ export default function FaceScanScreen() {
           </FaceScanBody>
         </View>
 
-        {/* 버튼: Start Scan / 다음 */}
+        {/* 하단 제어 섹션 */}
         <View style={styles.buttonWrapper}>
           <FaceScanButton
             phase={phase}

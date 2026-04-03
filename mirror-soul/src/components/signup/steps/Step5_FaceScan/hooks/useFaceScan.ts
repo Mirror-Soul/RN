@@ -1,51 +1,22 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import {
-  Camera as VisionCamera,
-  useCameraDevice,
-  useFrameProcessor,
-} from 'react-native-vision-camera';
-import { Worklets } from 'react-native-worklets-core';
+import { Camera as VisionCamera } from 'react-native-vision-camera';
 import { Alert } from 'react-native';
-import { useFaceDetector } from 'react-native-vision-camera-face-detector';
-import type { Face } from 'react-native-vision-camera-face-detector';
-import { ScanPhase, FaceDirection } from '../types/faceScan';
+import { Face } from 'react-native-vision-camera-face-detector';
+import { ScanPhase } from '../types/faceScan';
 import {
   SCAN_DIRECTIONS,
   DIRECTION_HOLD_DURATION,
-  FACE_ANGLE_THRESHOLDS,
 } from '../constants/faceScanConfig';
+import { classifyDirection } from '../utils/faceDirection';
 
 /**
- * 얼굴 방향 판별 유틸 함수
- * yaw/pitch 각도로부터 현재 얼굴이 바라보는 방향을 분류합니다.
- */
-function classifyDirection(yaw: number, pitch: number): FaceDirection | null {
-  const t = FACE_ANGLE_THRESHOLDS;
-
-  if (Math.abs(yaw) < t.frontRange && Math.abs(pitch) < t.frontRange) {
-    return 'front';
-  }
-  if (yaw < t.yawLeft) return 'right';  // 미러링된 화면에서의 좌/우 반전
-  if (yaw > t.yawRight) return 'left';
-  if (pitch < t.pitchUp) return 'down'; // 기기별 센서 축 반전
-  if (pitch > t.pitchDown) return 'up';
-
-  return null;
-}
-
-/**
- * Face Scan 상태 머신 훅
+ * Face Scan 상태 컨트롤러 훅
  *
- * 카메라 권한, 영상 녹화, 얼굴 방향 감지, 자동 전환 로직을 통합 관리합니다.
+ * 이 훅은 스캔의 전체 시나리오(Phase), 현재 진행 중인 방향, 영상 녹화 등을 관리합니다.
+ * 실제 카메라 프레임 분석 엔진은 useFaceProcessor로 분리되어 프레임 데이터를 수신합니다.
  */
 export function useFaceScan() {
   const cameraRef = useRef<VisionCamera>(null);
-  const device = useCameraDevice('front');
-  const { detectFaces } = useFaceDetector({
-    performanceMode: 'fast',
-    classificationMode: 'none',
-    contourMode: 'none',
-  });
 
   // --- 상태 ---
   const [phase, setPhase] = useState<ScanPhase>('idle');
@@ -54,71 +25,63 @@ export function useFaceScan() {
     SCAN_DIRECTIONS.map(() => false)
   );
   const [videoUri, setVideoUri] = useState<string | null>(null);
-  const [hasPermission, setHasPermission] = useState(false);
   const [isDirectionMatching, setIsDirectionMatching] = useState(false);
 
   // --- Refs (타이머 및 홀드 상태 관리) ---
   const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isHoldingRef = useRef(false);
 
-  // --- 권한 요청 ---
-  const requestPermission = useCallback(async () => {
-    const status = await VisionCamera.requestCameraPermission();
-    const granted = status === 'granted';
-    setHasPermission(granted);
-    return granted;
-  }, []);
-
-  // --- 스캔 시작 ---
+  // --- 권한 및 스캔 시작 ---
   const startScan = useCallback(async () => {
     try {
-      const granted = await requestPermission();
-      if (!granted) {
-        Alert.alert(
-          '카메라 권한 필요',
-          '설정에서 카메라 권한을 허용해주세요.'
-        );
+      const status = await VisionCamera.requestCameraPermission();
+      if (status !== 'granted') {
+        Alert.alert('카메라 권한 필요', '설정에서 카메라 권한을 허용해주세요.');
         return;
       }
 
-      // 상태 초기화
+      // 상태 초기화 -> 카메라 마운트 유도
       setPhase('scanning');
       setCurrentDirectionIndex(0);
       setCompletedDirections(SCAN_DIRECTIONS.map(() => false));
       setVideoUri(null);
       setIsDirectionMatching(false);
       isHoldingRef.current = false;
-
-      // 영상 녹화 시작
-      if (!cameraRef.current) {
-        Alert.alert('카메라 오류', '카메라가 준비되지 않았습니다. 다시 시도해주세요.');
-        setPhase('idle');
-        return;
-      }
-
-      cameraRef.current.startRecording({
-        onRecordingFinished: (video) => {
-          setVideoUri(video.path);
-          // TODO: 서버 전송 로직 구현 필요 (예: await uploadVideo(video.path))
-        },
-        onRecordingError: (error) => {
-          console.error('녹화 오류:', error);
-          Alert.alert('녹화 오류', '영상 녹화 중 문제가 발생했습니다.');
-          setPhase('idle');
-        },
-      });
     } catch (error) {
       console.error('스캔 시작 오류:', error);
       Alert.alert('오류 발생', '스캔을 시작하는 중 문제가 발생했습니다.');
       setPhase('idle');
     }
-  }, [requestPermission]);
+  }, []);
 
-  // --- 얼굴 감지 콜백 (JS 스레드 실행) ---
+  // --- 카메라 마운트 후 녹화 시작 로직 ---
+  useEffect(() => {
+    if (phase === 'scanning' && cameraRef.current && !videoUri) {
+      try {
+        cameraRef.current.startRecording({
+          onRecordingFinished: (video) => {
+            setVideoUri(video.path);
+          },
+          onRecordingError: (error) => {
+            console.error('녹화 오류:', error);
+            Alert.alert('녹화 오류', '영상 녹화 중 문제가 발생했습니다.');
+            setPhase('idle');
+          },
+        });
+      } catch (err) {
+        console.error('녹화 시작 시점 예외:', err);
+      }
+    }
+  }, [phase, videoUri]); // cameraRef는 외부 ref이므로 의존성에 넣지 않음 (phase 전환 시점 시도)
+
+  /**
+   * [핸들러] 얼굴 감지 데이터가 들어오면 호출되는 JS 로직
+   * useFaceProcessor에 의해 호출됩니다.
+   */
   const handleFaceDetection = useCallback(
     (faces: Face[]) => {
+      // 1. 얼굴 미감지 또는 스캔 중 아님 → 홀드 리컬
       if (phase !== 'scanning' || faces.length === 0) {
-        // 얼굴 미감지 또는 스캔 중 아님 → 홀드 리셋
         setIsDirectionMatching(false);
         if (holdTimerRef.current) {
           clearTimeout(holdTimerRef.current);
@@ -132,15 +95,14 @@ export function useFaceScan() {
       const detected = classifyDirection(face.yawAngle, face.pitchAngle);
       const targetDirection = SCAN_DIRECTIONS[currentDirectionIndex]?.direction;
 
+      // 2. 방향 일치 여부 확인
       if (detected === targetDirection) {
-        // 올바른 방향 감지 → UI 피드백
         setIsDirectionMatching(true);
 
         if (!isHoldingRef.current) {
-          // 홀드 타이머 시작
           isHoldingRef.current = true;
           holdTimerRef.current = setTimeout(() => {
-            // 방향 유지 완료!
+            // 방향 유지 성공! 단계 전환
             setCompletedDirections((prev) => {
               const next = [...prev];
               next[currentDirectionIndex] = true;
@@ -149,11 +111,10 @@ export function useFaceScan() {
 
             const nextIndex = currentDirectionIndex + 1;
             if (nextIndex >= SCAN_DIRECTIONS.length) {
-              // 전체 방향 완료 → 녹화 중단
+              // 전체 완료 시 녹화 중단 및 완료 상페 전환
               cameraRef.current?.stopRecording();
               setPhase('completed');
             } else {
-              // 다음 방향으로 이동
               setCurrentDirectionIndex(nextIndex);
             }
 
@@ -162,7 +123,7 @@ export function useFaceScan() {
           }, DIRECTION_HOLD_DURATION);
         }
       } else {
-        // 잘못된 방향 → 홀드 리셋
+        // 방향 불일치 시 리셋
         setIsDirectionMatching(false);
         if (holdTimerRef.current) {
           clearTimeout(holdTimerRef.current);
@@ -174,18 +135,7 @@ export function useFaceScan() {
     [phase, currentDirectionIndex]
   );
 
-  // JS 스레드 브릿징 콜백
-  const runOnJs = Worklets.createRunOnJS(handleFaceDetection);
-
-  // --- Frame Processor ---
-  const frameProcessor = useFrameProcessor((frame) => {
-    'worklet';
-    // JS 런타임으로 전달하기 위해 stringify
-    const faces = JSON.stringify(detectFaces(frame));
-    runOnJs(JSON.parse(faces));
-  }, [detectFaces, runOnJs]);
-
-  // --- 클린업 ---
+  // 클린업
   useEffect(() => {
     return () => {
       if (holdTimerRef.current) {
@@ -194,23 +144,18 @@ export function useFaceScan() {
     };
   }, []);
 
-  // --- 파생 값 ---
-  const currentDirection =
-    SCAN_DIRECTIONS[currentDirectionIndex] ?? SCAN_DIRECTIONS[0];
-  const totalDirections = SCAN_DIRECTIONS.length;
+  // 파생 값
+  const currentDirection = SCAN_DIRECTIONS[currentDirectionIndex] ?? SCAN_DIRECTIONS[0];
 
   return {
     cameraRef,
-    device,
     phase,
     currentDirection,
     currentDirectionIndex,
-    totalDirections,
     completedDirections,
-    videoUri,
-    hasPermission,
     isDirectionMatching,
     startScan,
-    frameProcessor,
+    handleFaceDetection,
+    videoUri,
   };
 }
