@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
+import * as Haptics from 'expo-haptics';
 import { Camera as VisionCamera } from 'react-native-vision-camera';
 import { Alert } from 'react-native';
 import { Face } from 'react-native-vision-camera-face-detector';
@@ -122,6 +123,9 @@ export function useFaceScan() {
               next[indexRef.current] = true;
               return next;
             });
+            
+            // 한 방향 스캔 성공 시 가벼운 진동 피드백
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
 
             const nextIndex = indexRef.current + 1;
             if (nextIndex >= SCAN_DIRECTIONS.length) {
