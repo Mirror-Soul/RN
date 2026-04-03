@@ -2,18 +2,34 @@ import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors } from '@/src/constants/theme';
+import { ScanPhase } from '../types/faceScan';
 
-export default function FaceScanBody() {
+interface FaceScanBodyProps {
+  /** 현재 스캔 단계 */
+  phase: ScanPhase;
+  /** phase가 idle이 아닐 때 렌더링할 자식 요소 (Camera + Overlay) */
+  children?: React.ReactNode;
+}
+
+/**
+ * Face Scan 바디 영역 컴포넌트
+ *
+ * - idle: 기존 LinearGradient 플레이스홀더
+ * - scanning/completed: children(카메라 + 가이드 오버레이) 렌더링
+ */
+export default function FaceScanBody({ phase, children }: FaceScanBodyProps) {
   return (
     <View style={styles.container}>
-      <LinearGradient
-        // #101828 is equivalent to rgb(16,24,40). Using slate95 which is rgba(16,24,40,0.95)
-        colors={[Colors.glass.slate95, Colors.primary.soulBlack]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }} // 135deg approximation
-        style={styles.gradientBackground}
-      />
-      {/* 추후 카메라 뷰 연결될 공간 */}
+      {phase === 'idle' ? (
+        <LinearGradient
+          colors={[Colors.glass.slate95, Colors.primary.soulBlack]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.placeholder}
+        />
+      ) : (
+        children
+      )}
     </View>
   );
 }
@@ -21,13 +37,13 @@ export default function FaceScanBody() {
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    height: 460, // approx 459.916px
+    height: 460,
     borderRadius: 24,
     borderWidth: 0.612,
     borderColor: Colors.glass.white10,
-    overflow: 'hidden', // to keep gradient inside rounded corners
+    overflow: 'hidden',
   },
-  gradientBackground: {
+  placeholder: {
     flex: 1,
     width: '100%',
     height: '100%',
