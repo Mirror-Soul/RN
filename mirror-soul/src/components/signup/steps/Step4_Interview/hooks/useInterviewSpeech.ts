@@ -6,7 +6,6 @@ import {
   setAudioModeAsync,
 } from 'expo-audio';
 import { ExpoSpeechRecognitionModule } from 'expo-speech-recognition';
-import { Alert } from 'react-native';
 import { INTERVIEW_RECORDING_PRESET } from '@/src/constants/audio';
 
 /**
@@ -66,11 +65,7 @@ export function useInterviewSpeech() {
   // ─── 녹음 시작 ───
   const startRecording = useCallback(async () => {
     if (!hasPermission) {
-      Alert.alert(
-        '마이크 권한 필요',
-        '녹음을 시작하려면 마이크 접근 권한이 필요합니다. 설정에서 권한을 허용해주세요.'
-      );
-      return;
+      throw new Error('마이크 권한이 필요합니다.');
     }
 
     try {
@@ -80,8 +75,7 @@ export function useInterviewSpeech() {
       return true;
     } catch (error) {
       console.error('녹음 시작 실패:', error);
-      Alert.alert('녹음 오류', '녹음을 시작할 수 없습니다. 다시 시도해주세요.');
-      return false;
+      throw error;
     }
   }, [hasPermission, audioRecorder]);
 
@@ -97,7 +91,7 @@ export function useInterviewSpeech() {
       }
     } catch (error) {
       console.error('녹음 중지 실패:', error);
-      Alert.alert('녹음 오류', '녹음을 저장하는 중 문제가 발생했습니다.');
+      throw error;
     }
   }, [audioRecorder]);
 

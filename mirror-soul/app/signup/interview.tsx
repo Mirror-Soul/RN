@@ -1,7 +1,7 @@
 import { Colors } from '@/src/constants/theme';
 import { useRouter } from 'expo-router';
 import React, { useEffect } from 'react';
-import { KeyboardAvoidingView, Linking, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, Linking, Platform, ScrollView, StyleSheet, View } from 'react-native';
 
 // Step 4 Components
 import InterviewAIBox from '@/src/components/signup/steps/Step4_Interview/components/InterviewAIBox';
@@ -44,14 +44,17 @@ export default function InterviewScreen() {
       return;
     }
 
-    if (isRecording) {
-      stopListening(); // STT를 먼저 중단
-      await stopRecording();
-    } else {
-      const success = await startRecording();
-      if (success) {
+    try {
+      if (isRecording) {
+        stopListening(); // STT를 먼저 중단
+        await stopRecording();
+      } else {
+        await startRecording();
         startListening();
       }
+    } catch (error) {
+      console.error('녹음 제어 오류:', error);
+      Alert.alert('녹음 오류', error instanceof Error ? error.message : '오디오 시스템에 문제가 발생했습니다.');
     }
   };
 
@@ -68,18 +71,27 @@ export default function InterviewScreen() {
   };
 
   const handleNextPress = async () => {
-    // 녹음 중이면 안전하게 중단
-    if (isRecording) {
-      stopListening();
-      await stopRecording();
-    }
+    try {
+      // 1. 녹음 중이면 안전하게 중단 대기
+      if (isRecording) {
+        stopListening();
+        await stopRecording();
+      }
 
-    if (isLastQuestion) {
-      // 마지막 단계이면 다음 페이지로 이동
-      // router.push('/signup/nextStep'); // 실제 다음 스텝으로 변경 필요
-      console.log('인터뷰 완료! 다음 단계로 이동합니다.');
-    } else {
-      goToNextQuestion();
+      // 2. 서버로 전송 대기
+      // TODO: 실제 서버 전송 로직 구현 필요 (예: await submitAnswer(currentQuestion.id, transcript, recordingUri))
+
+      // 3. 마지막 단계 확인 및 다음 로직
+      if (isLastQuestion) {
+        // 마지막 단계이면 다음 페이지로 이동
+        // router.push('/signup/nextStep'); // 실제 다음 스텝으로 변경 필요
+        console.log('인터뷰 완료! 다음 단계로 이동합니다.');
+      } else {
+        goToNextQuestion();
+      }
+    } catch (error) {
+      console.error('다음 단계 이동 중 오류:', error);
+      Alert.alert('오류 발생', '답변을 처리하는 중 문제가 발생했습니다. 다시 시도해주세요.');
     }
   };
 
