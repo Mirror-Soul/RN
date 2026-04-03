@@ -138,8 +138,18 @@ export function useFaceScan() {
   // 클린업
   useEffect(() => {
     return () => {
+      // 1. 진행 중인 타이머 정리
       if (holdTimerRef.current) {
         clearTimeout(holdTimerRef.current);
+      }
+      
+      // 2. 언마운트 시 네이티브 녹화 프로세스가 실행 중이면 안전하게 중단
+      try {
+        if (cameraRef.current) {
+          cameraRef.current.stopRecording();
+        }
+      } catch (error) {
+        console.error('클린업 중 녹화 중단 에러 (무시됨):', error);
       }
     };
   }, []);
