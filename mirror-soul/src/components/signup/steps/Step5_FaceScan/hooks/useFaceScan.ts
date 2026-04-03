@@ -26,6 +26,7 @@ export function useFaceScan() {
   );
   const [videoUri, setVideoUri] = useState<string | null>(null);
   const [isDirectionMatching, setIsDirectionMatching] = useState(false);
+  const [isCameraReady, setIsCameraReady] = useState(false);
 
   // --- 상태 동기화용 Refs (동시성 경합 방어) ---
   const phaseRef = useRef<ScanPhase>('idle');
@@ -50,6 +51,7 @@ export function useFaceScan() {
       setCompletedDirections(SCAN_DIRECTIONS.map(() => false));
       setVideoUri(null);
       setIsDirectionMatching(false);
+      setIsCameraReady(false); // 새로운 스캔 세션 시작 시 카메라 준비 상태 초기화
       isHoldingRef.current = false;
     } catch (error) {
       console.error('스캔 시작 오류:', error);
@@ -58,9 +60,9 @@ export function useFaceScan() {
     }
   }, []);
 
-  // --- 카메라 마운트 후 녹화 시작 로직 ---
+  // --- 카메라 마운트 및 하드웨어 초기화 완료 후 녹화 시작 로직 ---
   useEffect(() => {
-    if (phase === 'scanning' && cameraRef.current && !videoUri) {
+    if (phase === 'scanning' && isCameraReady && cameraRef.current && !videoUri) {
       try {
         cameraRef.current.startRecording({
           onRecordingFinished: (video) => {
@@ -77,7 +79,14 @@ export function useFaceScan() {
         console.error('녹화 시작 시점 예외:', err);
       }
     }
-  }, [phase, videoUri]); // cameraRef는 외부 ref이므로 의존성에 넣지 않음 (phase 전환 시점 시도)
+  }, [phase, isCameraReady, videoUri]); // cameraRef는 외부 ref이므로 의존성에 넣지 않음 (phase 전환 시점 시도)
+
+  /**
+   * [핸들러] 카메라 하드웨어 초기화 완료 시 호출
+   */
+  const onCameraInitialized = useCallback(() => {
+    setIsCameraReady(true);
+  }, []);
 
   /**
    * [핸들러] 얼굴 감지 데이터가 들어오면 호출되는 JS 로직
@@ -170,6 +179,7 @@ export function useFaceScan() {
     completedDirections,
     isDirectionMatching,
     startScan,
+    onCameraInitialized,
     handleFaceDetection,
     videoUri,
   };

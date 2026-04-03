@@ -35,6 +35,7 @@ export default function FaceScanScreen() {
     completedDirections,
     isDirectionMatching,
     startScan,
+    onCameraInitialized,
     handleFaceDetection,
   } = useFaceScan();
 
@@ -110,6 +111,7 @@ export default function FaceScanScreen() {
                 device={device}
                 isActive={true}
                 frameProcessor={frameProcessor}
+                onInitialized={onCameraInitialized}
               />
             )}
 
