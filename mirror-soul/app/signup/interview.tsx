@@ -84,8 +84,8 @@ export default function InterviewScreen() {
       // 3. 마지막 단계 확인 및 다음 로직
       if (isLastQuestion) {
         // 마지막 단계이면 다음 페이지로 이동
-        // router.push('/signup/nextStep'); // 실제 다음 스텝으로 변경 필요
-        console.log('인터뷰 완료! 다음 단계로 이동합니다.');
+        router.push('/signup/face-scan');
+        console.log('인터뷰 완료! 페이스 스캔 화면으로 이동합니다.');
       } else {
         goToNextQuestion();
       }
