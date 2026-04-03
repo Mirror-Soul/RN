@@ -25,10 +25,10 @@ function classifyDirection(yaw: number, pitch: number): FaceDirection | null {
   if (Math.abs(yaw) < t.frontRange && Math.abs(pitch) < t.frontRange) {
     return 'front';
   }
-  if (yaw < t.yawLeft) return 'left';
-  if (yaw > t.yawRight) return 'right';
-  if (pitch < t.pitchUp) return 'up';
-  if (pitch > t.pitchDown) return 'down';
+  if (yaw < t.yawLeft) return 'right';  // 미러링된 화면에서의 좌/우 반전
+  if (yaw > t.yawRight) return 'left';
+  if (pitch < t.pitchUp) return 'down'; // 기기별 센서 축 반전
+  if (pitch > t.pitchDown) return 'up';
 
   return null;
 }
@@ -125,9 +125,6 @@ export function useFaceScan() {
       const face = faces[0];
       const detected = classifyDirection(face.yawAngle, face.pitchAngle);
       const targetDirection = SCAN_DIRECTIONS[currentDirectionIndex]?.direction;
-
-      // [DEBUG] 실시간 로그 출력
-      console.log(`[Face Scan] Yaw: ${face.yawAngle.toFixed(2)}, Pitch: ${face.pitchAngle.toFixed(2)} => 감지방향: ${detected || '없음'} | 목표: ${targetDirection}`);
 
       if (detected === targetDirection) {
         // 올바른 방향 감지 → UI 피드백

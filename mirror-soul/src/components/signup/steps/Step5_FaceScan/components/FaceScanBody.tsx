@@ -1,7 +1,7 @@
+import { Colors } from '@/src/constants/theme';
+import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Colors } from '@/src/constants/theme';
 import { ScanPhase } from '../types/faceScan';
 
 interface FaceScanBodyProps {

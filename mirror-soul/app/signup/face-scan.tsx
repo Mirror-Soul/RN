@@ -71,8 +71,8 @@ export default function FaceScanScreen() {
         {/* 바디: 카메라 또는 플레이스홀더 */}
         <View style={styles.bodyWrapper}>
           <FaceScanBody phase={phase}>
-            {/* scanning/completed 일 때 렌더링되는 children */}
-            {device && (
+            {/* scanning 일 때만 렌더링되는 카메라 */}
+            {device && phase === 'scanning' && (
               <Camera
                 ref={cameraRef}
                 device={device}
