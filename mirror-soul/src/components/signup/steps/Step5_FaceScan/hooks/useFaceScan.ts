@@ -149,13 +149,26 @@ export function useFaceScan() {
     [phase, currentDirectionIndex]
   );
 
-  // 클린업
+  // --- 1. 상태 기반 타이머 클린업 (오류/완료 등으로 인한 중단 방어) ---
+  useEffect(() => {
+    if (phase !== 'scanning') {
+      if (holdTimerRef.current) {
+        clearTimeout(holdTimerRef.current);
+        holdTimerRef.current = null;
+      }
+      isHoldingRef.current = false;
+    }
+  }, [phase]);
+
+  // --- 2. 컴포넌트 언마운트 클린업 ---
   useEffect(() => {
     return () => {
       // 1. 진행 중인 타이머 정리
       if (holdTimerRef.current) {
         clearTimeout(holdTimerRef.current);
+        holdTimerRef.current = null;
       }
+      isHoldingRef.current = false;
       
       // 2. 언마운트 시 네이티브 녹화 프로세스가 실행 중이면 안전하게 중단
       try {
