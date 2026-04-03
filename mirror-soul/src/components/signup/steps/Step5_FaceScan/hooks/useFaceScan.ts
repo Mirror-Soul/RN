@@ -27,6 +27,10 @@ export function useFaceScan() {
   const [videoUri, setVideoUri] = useState<string | null>(null);
   const [isDirectionMatching, setIsDirectionMatching] = useState(false);
 
+  // --- 상태 동기화용 Refs (동시성 경합 방어) ---
+  const phaseRef = useRef<ScanPhase>('idle');
+  const indexRef = useRef(0);
+
   // --- Refs (타이머 및 홀드 상태 관리) ---
   const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isHoldingRef = useRef(false);
@@ -41,8 +45,8 @@ export function useFaceScan() {
       }
 
       // 상태 초기화 -> 카메라 마운트 유도
-      setPhase('scanning');
-      setCurrentDirectionIndex(0);
+      setPhase('scanning'); phaseRef.current = 'scanning';
+      setCurrentDirectionIndex(0); indexRef.current = 0;
       setCompletedDirections(SCAN_DIRECTIONS.map(() => false));
       setVideoUri(null);
       setIsDirectionMatching(false);
@@ -50,7 +54,7 @@ export function useFaceScan() {
     } catch (error) {
       console.error('스캔 시작 오류:', error);
       Alert.alert('오류 발생', '스캔을 시작하는 중 문제가 발생했습니다.');
-      setPhase('idle');
+      setPhase('idle'); phaseRef.current = 'idle';
     }
   }, []);
 
@@ -61,11 +65,12 @@ export function useFaceScan() {
         cameraRef.current.startRecording({
           onRecordingFinished: (video) => {
             setVideoUri(video.path);
+            setPhase('completed'); phaseRef.current = 'completed'; // 비디오 저장이 완료되면 진짜 완료 상태!
           },
           onRecordingError: (error) => {
             console.error('녹화 오류:', error);
             Alert.alert('녹화 오류', '영상 녹화 중 문제가 발생했습니다.');
-            setPhase('idle');
+            setPhase('idle'); phaseRef.current = 'idle';
           },
         });
       } catch (err) {
@@ -81,7 +86,7 @@ export function useFaceScan() {
   const handleFaceDetection = useCallback(
     (faces: Face[]) => {
       // 1. 얼굴 미감지 또는 스캔 중 아님 → 홀드 리컬
-      if (phase !== 'scanning' || faces.length === 0) {
+      if (phaseRef.current !== 'scanning' || faces.length === 0) {
         setIsDirectionMatching(false);
         if (holdTimerRef.current) {
           clearTimeout(holdTimerRef.current);
@@ -93,7 +98,7 @@ export function useFaceScan() {
 
       const face = faces[0];
       const detected = classifyDirection(face.yawAngle, face.pitchAngle);
-      const targetDirection = SCAN_DIRECTIONS[currentDirectionIndex]?.direction;
+      const targetDirection = SCAN_DIRECTIONS[indexRef.current]?.direction;
 
       // 2. 방향 일치 여부 확인
       if (detected === targetDirection) {
@@ -105,17 +110,17 @@ export function useFaceScan() {
             // 방향 유지 성공! 단계 전환
             setCompletedDirections((prev) => {
               const next = [...prev];
-              next[currentDirectionIndex] = true;
+              next[indexRef.current] = true;
               return next;
             });
 
-            const nextIndex = currentDirectionIndex + 1;
+            const nextIndex = indexRef.current + 1;
             if (nextIndex >= SCAN_DIRECTIONS.length) {
-              // 전체 완료 시 녹화 중단 및 완료 상페 전환
+              // 1. 얼굴 각도 패턴 전부 달성 -> 파일 저장 대기 상태로 전환
+              setPhase('finalizing'); phaseRef.current = 'finalizing';
               cameraRef.current?.stopRecording();
-              setPhase('completed');
             } else {
-              setCurrentDirectionIndex(nextIndex);
+              setCurrentDirectionIndex(nextIndex); indexRef.current = nextIndex;
             }
 
             isHoldingRef.current = false;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors } from '@/src/constants/theme';
 import CameraIcon from '@/assets/images/common/Camera_icon.svg';
@@ -19,6 +19,7 @@ interface FaceScanButtonProps {
  *
  * - idle: "Start Scan" (카메라 아이콘 + 그라데이션)
  * - scanning: 숨김 (스캔 중에는 버튼 불필요)
+ * - finalizing: "영상 처리 중..." (스피너 아이콘, 클릭 불가)
  * - completed: "다음" (다음 단계로 이동)
  */
 export default function FaceScanButton({
@@ -30,22 +31,25 @@ export default function FaceScanButton({
   if (phase === 'scanning') return null;
 
   const isCompleted = phase === 'completed';
+  const isFinalizing = phase === 'finalizing';
 
   return (
     <TouchableOpacity
       activeOpacity={0.8}
       onPress={isCompleted ? onNext : onStartScan}
-      style={styles.container}
+      disabled={isFinalizing}
+      style={[styles.container, isFinalizing && styles.disabledContainer]}
     >
       <LinearGradient
-        colors={Colors.gradient.cyanToPurple}
+        colors={isFinalizing ? [Colors.glass.slate95, Colors.glass.slate95] : Colors.gradient.cyanToPurple}
         start={{ x: 0, y: 0.5 }}
         end={{ x: 1, y: 0.5 }}
         style={styles.gradient}
       >
-        {!isCompleted && <CameraIcon width={24} height={24} />}
-        <Text style={styles.text}>
-          {isCompleted ? '다음' : 'Start Scan'}
+        {!isCompleted && !isFinalizing && <CameraIcon width={24} height={24} />}
+        {isFinalizing && <ActivityIndicator color={Colors.primary.electricCyan} />}
+        <Text style={[styles.text, isFinalizing && styles.disabledText]}>
+          {isFinalizing ? '영상 데이터 처리 중...' : isCompleted ? '다음' : 'Start Scan'}
         </Text>
       </LinearGradient>
     </TouchableOpacity>
@@ -74,5 +78,11 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     lineHeight: 24,
     letterSpacing: -0.312,
+  },
+  disabledContainer: {
+    opacity: 0.7,
+  },
+  disabledText: {
+    color: Colors.glass.white30,
   },
 });

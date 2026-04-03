@@ -3,7 +3,7 @@
  */
 
 /** 스캔 진행 단계 */
-export type ScanPhase = 'idle' | 'scanning' | 'completed';
+export type ScanPhase = 'idle' | 'scanning' | 'finalizing' | 'completed';
 
 /** 사용자에게 요청할 얼굴 방향 */
 export type FaceDirection = 'front' | 'left' | 'right' | 'up' | 'down';

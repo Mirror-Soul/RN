@@ -70,9 +70,26 @@ export default function FaceScanScreen() {
   const guideMessage =
     phase === 'scanning'
       ? currentDirection.guideMessage
-      : phase === 'completed'
-        ? '스캔이 완료되었습니다!'
-        : undefined;
+      : phase === 'finalizing'
+        ? '스캔 데이터를 저장 중입니다...'
+        : phase === 'completed'
+          ? '스캔이 완료되었습니다!'
+          : undefined;
+
+  // --- Finalizing 애니메이션 ---
+  const pulseAnim = useRef(new Animated.Value(0.8)).current;
+  useEffect(() => {
+    if (phase === 'finalizing') {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, { toValue: 1.1, duration: 800, useNativeDriver: true }),
+          Animated.timing(pulseAnim, { toValue: 0.8, duration: 800, useNativeDriver: true }),
+        ])
+      ).start();
+    } else {
+      pulseAnim.stopAnimation();
+    }
+  }, [phase, pulseAnim]);
 
   return (
     <View style={styles.baseContainer}>
@@ -86,8 +103,8 @@ export default function FaceScanScreen() {
         {/* 메인 스캔 영역 (Body) */}
         <View style={styles.bodyWrapper}>
           <FaceScanBody phase={phase}>
-            {/* 카메라 뷰: 스캔 중일 때만 표시 */}
-            {device && phase === 'scanning' && (
+            {/* 카메라 뷰: 스캔 및 처리 중일 때만 표시 (마운트 유지를 통해 콜백 수신) */}
+            {device && (phase === 'scanning' || phase === 'finalizing') && (
               <FaceCameraView
                 ref={cameraRef}
                 device={device}
@@ -104,6 +121,18 @@ export default function FaceScanScreen() {
                 completedDirections={completedDirections}
                 isDirectionMatching={isDirectionMatching}
               />
+            )}
+
+            {/* Finalizing (저장 중) 애니메이션 오버레이: 카메라 화면 완전 가림 */}
+            {phase === 'finalizing' && (
+              <View style={[styles.completionOverlay, { backgroundColor: Colors.primary.soulBlack }]}>
+                <Animated.View
+                  style={[
+                    styles.processingCircle,
+                    { transform: [{ scale: pulseAnim }] },
+                  ]}
+                />
+              </View>
             )}
 
             {/* 완료 체크마크 애니메이션 */}
@@ -169,6 +198,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.6)',
+  },
+  processingCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    borderWidth: 4,
+    borderColor: Colors.primary.electricCyan,
+    borderStyle: 'dashed',
   },
   checkmarkCircle: {
     width: 100,
