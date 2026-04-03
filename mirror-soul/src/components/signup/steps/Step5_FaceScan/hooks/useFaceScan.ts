@@ -90,7 +90,13 @@ export function useFaceScan() {
       isHoldingRef.current = false;
 
       // 영상 녹화 시작
-      cameraRef.current?.startRecording({
+      if (!cameraRef.current) {
+        Alert.alert('카메라 오류', '카메라가 준비되지 않았습니다. 다시 시도해주세요.');
+        setPhase('idle');
+        return;
+      }
+
+      cameraRef.current.startRecording({
         onRecordingFinished: (video) => {
           setVideoUri(video.path);
           // TODO: 서버 전송 로직 구현 필요 (예: await uploadVideo(video.path))
