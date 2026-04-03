@@ -1,8 +1,4 @@
-export interface InterviewQuestion {
-  id: number;
-  category: string;
-  question: string;
-}
+import { InterviewQuestion } from '../types/interview';
 
 export const INTERVIEW_QUESTIONS: InterviewQuestion[] = [
   {
