@@ -1,48 +1,58 @@
-import React from 'react';
-import { Platform, SafeAreaView, StatusBar, StyleSheet, View } from 'react-native';
-import { router } from 'expo-router';
+import React, { useState } from 'react';
+import { Keyboard, KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, StatusBar, StyleSheet, TouchableWithoutFeedback, View } from 'react-native';
 
-import ActionCard from '@/src/components/common/ActionCard';
 import HomeBackground from '@/src/components/home/HomeBackground';
-import HomeHeader from '@/src/components/home/HomeHeader';
 import SecurityFooter from '@/src/components/home/SecurityFooter';
 import SocialLoginSection from '@/src/components/home/SocialLoginSection';
-import { Colors } from '@/src/constants/theme';
+import AuthForm from '@/src/components/login/AuthForm';
+import AuthTabToggle from '@/src/components/login/AuthTabToggle';
+import LoginHeader from '@/src/components/login/LoginHeader';
 
 /**
- * 초기 진입 홈 화면 (Home)
- * 기존 dummy 데이터를 삭제하고 단일 책임 컴포넌트들을 조립하여 렌더링.
+ * 초기 진입 홈 화면 (Home / Login)
+ * 새로운 디자인 가이드에 맞춰 로그인/회원가입 폼 중심의 화면으로 개편.
  */
 export default function Home() {
+  const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="light-content" backgroundColor="#000" />
       <HomeBackground />
 
-      <View style={styles.container}>
-        {/* Header Section */}
-        <HomeHeader />
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardView}
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            bounces={false}
+          >
+            <View style={styles.container}>
+              {/* Header: Title & Subtitle */}
+              <LoginHeader />
 
-        {/* Action Cards Section */}
-        <View style={styles.cardsContainer}>
-          <ActionCard
-            title="Create a New Mirror"
-            description="Start the journey to find your soul's reflection"
-            onPress={() => router.push('/signup')}
-          />
-          <ActionCard
-            title="Awaken My Mirror"
-            description="Sync back with your existing digital twin"
-            onPress={() => console.log('Awaken My Mirror clicked')}
-          />
-        </View>
+              {/* Tab Selector: Login / Signup */}
+              <View style={styles.tabWrapper}>
+                <AuthTabToggle activeTab={activeTab} onTabChange={setActiveTab} />
+              </View>
 
-        {/* Social Login & Footer (Bottom) */}
-        <View style={styles.bottomContainer}>
-          <SocialLoginSection />
-          <SecurityFooter />
-        </View>
-      </View>
+              {/* Dynamic Auth Form */}
+              <AuthForm activeTab={activeTab} />
+
+              {/* Social Login Section */}
+              <View style={styles.socialContainer}>
+                <SocialLoginSection />
+              </View>
+
+              {/* Footer */}
+              <SecurityFooter />
+            </View>
+          </ScrollView>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -50,25 +60,33 @@ export default function Home() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: Colors.primary.soulBlack,
-    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+    backgroundColor: '#000',
+  },
+  keyboardView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
   },
   container: {
-    flex: 1,
-    paddingHorizontal: 24,
-    paddingBottom: 24,
-    paddingTop: 65,
-    justifyContent: 'space-between',
-    zIndex: 1, // 백그라운드 위로 올라오도록 보장
-
-  },
-  cardsContainer: {
-    gap: 24,
-    flex: 1,
+    width: 344.94,
+    minHeight: 595.57,
+    alignItems: 'center',
     justifyContent: 'center',
+    gap: 32, // Overall section spacing
+    zIndex: 1,
   },
-  bottomContainer: {
-    gap: 40,
-    paddingTop: 24,
+  tabWrapper: {
+    marginTop: 8,
+  },
+  socialContainer: {
+    width: '100%',
+    alignItems: 'center',
+    gap: 24,
+    marginTop: 16,
   }
 });
+
