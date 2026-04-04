@@ -104,9 +104,5 @@ const styles = StyleSheet.create({
     letterSpacing: -0.15,
     textAlign: 'center',
   },
-  dividerWrapper: {
-    marginTop: 40,
-    width: '100%',
-  },
 });
 
