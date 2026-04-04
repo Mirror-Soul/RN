@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, TextInput, StyleSheet, TouchableOpacity, Text } from 'react-native';
-import { Colors } from '@/src/constants/theme';
+import { Colors, Radii } from '@/src/constants/theme';
 import EmailIcon from '@/assets/images/common/login/login_email.svg';
 import PasswordIcon from '@/assets/images/common/login/login_password.svg';
 import SeePasswordIcon from '@/assets/images/common/login/login_SeePassword.svg';
@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: 16,
+    borderRadius: Radii.lg,
     borderWidth: 0.612,
     borderColor: 'rgba(255, 255, 255, 0.10)',
     paddingLeft: 48,

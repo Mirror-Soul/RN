@@ -45,3 +45,18 @@ export const Colors = {
     recordingBg: ['rgba(0, 211, 243, 0.05)', 'rgba(194, 122, 255, 0.05)'] as [string, string], // 웨이브폼 배경
   }
 };
+
+/**
+ * 둥근 모서리(BorderRadius) 수치 시스템
+ * 프로젝트 전역의 모서리 곡률 일관성을 위해 사용합니다.
+ */
+export const Radii = {
+  none: 0,
+  xs: 4,
+  sm: 8,
+  md: 12,
+  lg: 16,     // 기본 입력창, 카드 등 (가장 많이 사용됨)
+  xl: 24,
+  full: 9999,  // Pill 형태 또는 완벽한 원형을 구현할 때 사용
+} as const;
+

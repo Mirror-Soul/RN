@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Colors } from '@/src/constants/theme';
+import { Colors, Radii } from '@/src/constants/theme';
 import AuthInput from './AuthInput';
 import ContinueIcon from '@/assets/images/common/Continue_icon.svg';
 
@@ -81,7 +81,7 @@ const styles = StyleSheet.create({
   loginButtonWrapper: {
     width: 344.94,
     height: 56,
-    borderRadius: 16,
+    borderRadius: Radii.lg,
     // iOS Shadow
     shadowColor: 'rgba(173, 70, 255, 0.3)',
     shadowOffset: { width: 0, height: 10 },
@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 16,
+    borderRadius: Radii.lg,
     gap: 8,
   },
   loginText: {
@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: Colors.glass.white10,
-    borderRadius: 16,
+    borderRadius: Radii.lg,
     borderStyle: 'dashed',
   },
   placeholderText: {

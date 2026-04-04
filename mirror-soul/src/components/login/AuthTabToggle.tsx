@@ -1,12 +1,15 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Colors } from '@/src/constants/theme';
+import { Colors, Radii } from '@/src/constants/theme';
 
 interface AuthTabToggleProps {
   activeTab: 'login' | 'signup';
   onTabChange: (tab: 'login' | 'signup') => void;
 }
+
+const TAB_HEIGHT = 53.2;
+const TAB_CONTAINER_RADIUS = TAB_HEIGHT / 2;
 
 /**
  * AuthTabToggle 컴포넌트
@@ -68,9 +71,9 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     width: 344.94,
-    height: 53.2,
+    height: TAB_HEIGHT,
     padding: 4,
-    borderRadius: 26.6, // Approximate for large round corner
+    borderRadius: TAB_CONTAINER_RADIUS,
     borderWidth: 0.612,
     borderColor: 'rgba(255, 255, 255, 0.10)',
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
@@ -86,7 +89,7 @@ const styles = StyleSheet.create({
   activeTab: {
     width: 167.86,
     height: '100%',
-    borderRadius: 20536500, // Explicit from spec
+    borderRadius: Radii.full,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -113,3 +116,4 @@ const styles = StyleSheet.create({
     letterSpacing: -0.15,
   },
 });
+
