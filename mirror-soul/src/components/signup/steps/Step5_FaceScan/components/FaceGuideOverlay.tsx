@@ -1,8 +1,50 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withSpring,
+  withSequence,
+} from 'react-native-reanimated';
 import { Colors } from '@/src/constants/theme';
 import { DirectionConfig } from '../types/faceScan';
 import { SCAN_DIRECTIONS } from '../constants/faceScanConfig';
+
+/**
+ * 팝업 애니메이션이 적용된 개별 진행 Dot 컴포넌트
+ */
+const DotItem = ({ isCompleted, isCurrent }: { isCompleted: boolean; isCurrent: boolean }) => {
+  const scale = useSharedValue(1);
+
+  useEffect(() => {
+    if (isCompleted) {
+      scale.value = withSequence(
+        withSpring(1.8, { damping: 10, stiffness: 100 }),
+        withSpring(1, { damping: 12, stiffness: 120 })
+      );
+    } else if (isCurrent) {
+      scale.value = withSpring(1.3);
+    } else {
+      scale.value = withTiming(1);
+    }
+  }, [isCompleted, isCurrent, scale]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  return (
+    <Animated.View
+      style={[
+        styles.dot,
+        isCompleted && styles.dotCompleted,
+        isCurrent && !isCompleted && styles.dotCurrent,
+        animatedStyle,
+      ]}
+    />
+  );
+};
 
 interface FaceGuideOverlayProps {
   currentDirection: DirectionConfig;
@@ -11,14 +53,6 @@ interface FaceGuideOverlayProps {
   isDirectionMatching: boolean;
 }
 
-/**
- * 얼굴 가이드 오버레이 컴포넌트
- *
- * 카메라 위에 오버레이되어 사용자에게 얼굴 방향을 안내합니다.
- * - 중앙 원형 가이드 테두리
- * - 방향 안내 메시지
- * - 하단 방향 진행 dots
- */
 export default function FaceGuideOverlay({
   currentDirection,
   currentDirectionIndex,
@@ -31,10 +65,12 @@ export default function FaceGuideOverlay({
 
   return (
     <View style={styles.container}>
-      {/* 방향 안내 메시지 */}
-      <Text style={styles.guideMessage}>{currentDirection.guideMessage}</Text>
+      {/* 방향 안내 메시지: 일치 시 "유지해주세요" 표시 */}
+      <Text style={styles.guideMessage}>
+        {isDirectionMatching ? '유지해주세요' : currentDirection.guideMessage}
+      </Text>
 
-      {/* 중앙 원형 가이드 */}
+      {/* 중앙 원형 가이드 (기존 디자인 복구) */}
       <View
         style={[
           styles.guideCircle,
@@ -42,7 +78,6 @@ export default function FaceGuideOverlay({
           isDirectionMatching && styles.guideCircleMatching,
         ]}
       >
-        {/* 방향 라벨 */}
         <Text
           style={[
             styles.directionLabel,
@@ -53,23 +88,15 @@ export default function FaceGuideOverlay({
         </Text>
       </View>
 
-      {/* 하단 진행 dots */}
+      {/* 하단 스텝 진행 인디케이터 (애니메이션 유지) */}
       <View style={styles.dotsContainer}>
-        {SCAN_DIRECTIONS.map((dir, index) => {
-          const isCompleted = completedDirections[index];
-          const isCurrent = index === currentDirectionIndex;
-
-          return (
-            <View
-              key={dir.direction}
-              style={[
-                styles.dot,
-                isCompleted && styles.dotCompleted,
-                isCurrent && !isCompleted && styles.dotCurrent,
-              ]}
-            />
-          );
-        })}
+        {SCAN_DIRECTIONS.map((dir, index) => (
+          <DotItem
+            key={dir.direction}
+            isCompleted={completedDirections[index]}
+            isCurrent={index === currentDirectionIndex}
+          />
+        ))}
       </View>
     </View>
   );
@@ -136,3 +163,4 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary.electricCyan,
   },
 });
+
