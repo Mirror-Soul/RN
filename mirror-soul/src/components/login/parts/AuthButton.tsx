@@ -1,5 +1,5 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, View, ViewStyle } from 'react-native';
+import { TouchableOpacity, Text, StyleSheet, View, ViewStyle, StyleProp } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors, Radii } from '@/src/constants/theme';
 import ContinueIcon from '@/assets/images/common/Continue_icon.svg';
@@ -7,7 +7,7 @@ import ContinueIcon from '@/assets/images/common/Continue_icon.svg';
 interface AuthButtonProps {
   title: string;
   onPress: () => void;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
 }
 
 /**
