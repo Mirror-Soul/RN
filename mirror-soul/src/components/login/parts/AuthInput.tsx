@@ -41,6 +41,10 @@ export default function AuthInput({ type, value, onChangeText, placeholder }: Au
         <TouchableOpacity
           style={styles.seePasswordContainer}
           onPress={() => setIsPasswordVisible(!isPasswordVisible)}
+          accessibilityRole="button"
+          accessibilityLabel="비밀번호 표시 설정"
+          accessibilityHint={isPasswordVisible ? "비밀번호를 숨깁니다" : "비밀번호를 표시합니다"}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
         >
           <SeePasswordIcon width={20} height={20} />
         </TouchableOpacity>

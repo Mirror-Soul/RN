@@ -1,8 +1,8 @@
-import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, View, ViewStyle, StyleProp } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Colors, Radii } from '@/src/constants/theme';
 import ContinueIcon from '@/assets/images/common/Continue_icon.svg';
+import { Colors, Radii } from '@/src/constants/theme';
+import { LinearGradient } from 'expo-linear-gradient';
+import React from 'react';
+import { StyleProp, StyleSheet, Text, TouchableOpacity, ViewStyle } from 'react-native';
 
 interface AuthButtonProps {
   title: string;
