@@ -1,8 +1,8 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ViewStyle } from 'react-native';
-import { Colors } from '@/src/constants/theme';
 import BottomNarrowIcon from '@/assets/images/common/Bottom_narrow.svg';
 import TopNarrowIcon from '@/assets/images/common/Top_narrow.svg';
+import { Colors } from '@/src/constants/theme';
+import React from 'react';
+import { StyleSheet, Text, TouchableOpacity, View, ViewStyle } from 'react-native';
 
 interface Props {
   label: string;
@@ -44,7 +44,6 @@ const styles = StyleSheet.create({
     width: '100%',
     flexDirection: 'column',
     alignItems: 'flex-start',
-    gap: 8,
   },
   label: {
     color: Colors.neutral.lightGray,

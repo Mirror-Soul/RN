@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   dropdownPanel: {
-    marginTop: SCREEN_HEIGHT + 120,
+    marginTop: SCREEN_HEIGHT + 70, // Adjusted from 120 to align directly below input
     marginHorizontal: 100,
     height: 303.5,
     padding: 0.612,
