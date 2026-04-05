@@ -106,11 +106,12 @@ export default function InterviewScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.container}>
-          <InterviewHeader
-            title="The Soul Capture"
-            currentQuestion={currentQuestionIndex + 1}
-            totalQuestions={totalQuestions}
-          />
+          <View style={styles.headerWrapper}>
+            <InterviewHeader
+              currentQuestion={currentQuestionIndex + 1}
+              totalQuestions={totalQuestions}
+            />
+          </View>
 
           {/* 3D Avatar Model */}
           <InterviewAvatar />
@@ -142,6 +143,7 @@ export default function InterviewScreen() {
         </View>
       </ScrollView>
 
+
       {/* 마이크 권한 요청 모달 */}
       <MicPermissionModal
         visible={showPermissionModal}
@@ -164,11 +166,14 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    width: '100%',
-    maxWidth: 345, // Figma design width scale base
+    width: 344.94,
     alignItems: 'center',
-    paddingHorizontal: 16,
+    marginTop: 25,
   },
+  headerWrapper: {
+    marginBottom: 40,
+  },
+
   body: {
     width: '100%',
     alignItems: 'center',
