@@ -23,17 +23,19 @@ export function useStep2Form() {
   // 닉네임 중복 확인 처리 (Mock logic)
   const handleNicknameCheck = useCallback(() => {
     if (state.nickname.length >= 2) {
-      console.log('Checking nickname availability:', state.nickname);
+      if (__DEV__) {
+        console.debug('Checking nickname availability');
+      }
       // Mock: 2자 이상이면 무조건 사용 가능한 것으로 처리
       updateState({ isNicknameVerified: true });
-    } else {
-      console.log('Nickname too short');
     }
   }, [state.nickname, updateState]);
 
   // 직업 인증 처리 (Mock logic)
   const handleJobVerify = useCallback(() => {
-    console.log('Job verification requested');
+    if (__DEV__) {
+      console.debug('Job verification requested');
+    }
     // Mock: 인증 시도 시 성공 처리
     updateState({ isJobVerified: true });
   }, [updateState]);
