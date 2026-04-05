@@ -34,6 +34,13 @@ export default function EmailVerificationModal({ isVisible, email, onClose, onVe
     }
   }, [isVisible, opacity]);
 
+  // 모달이 닫힐 때 입력된 코드를 초기화 (보안 및 UX 개선)
+  useEffect(() => {
+    if (!isVisible) {
+      setCode('');
+    }
+  }, [isVisible]);
+
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
   }));
