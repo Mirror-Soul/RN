@@ -34,6 +34,10 @@ export default function PasswordSection({ state, onChange }: SectionProps) {
             style={styles.toggleIcon}
             onPress={() => onChange({ isPasswordVisible: !state.isPasswordVisible })}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            accessibilityRole="button"
+            accessibilityLabel={state.isPasswordVisible ? '비밀번호 숨기기' : '비밀번호 보기'}
+            accessibilityHint="비밀번호 입력값 표시 상태를 전환합니다"
+            accessibilityState={{ selected: state.isPasswordVisible }}
           >
             <SeePasswordIcon width={20} height={20} />
           </TouchableOpacity>
@@ -65,6 +69,10 @@ export default function PasswordSection({ state, onChange }: SectionProps) {
             style={styles.toggleIcon}
             onPress={() => onChange({ isPasswordConfirmVisible: !state.isPasswordConfirmVisible })}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            accessibilityRole="button"
+            accessibilityLabel={state.isPasswordConfirmVisible ? '비밀번호 확인 숨기기' : '비밀번호 확인 보기'}
+            accessibilityHint="비밀번호 확인 입력값 표시 상태를 전환합니다"
+            accessibilityState={{ pressed: state.isPasswordConfirmVisible }}
           >
             <SeePasswordIcon width={20} height={20} />
           </TouchableOpacity>
