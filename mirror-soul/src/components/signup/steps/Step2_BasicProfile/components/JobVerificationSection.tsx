@@ -33,7 +33,10 @@ export default function JobVerificationSection({ state, onChange, onVerify }: Jo
         {isOpen && (
           <JobCategoryDropdown
             onSelect={(job) => {
-              onChange({ jobCategory: job });
+              onChange({ 
+                jobCategory: job,
+                isJobVerified: false 
+              });
               setIsOpen(false);
             }}
             onClose={() => setIsOpen(false)}
