@@ -48,6 +48,10 @@ export default function EmailSection({
             style={styles.sendButton} 
             onPress={onSendCode}
             disabled={!state.email.includes('@')}
+            accessibilityRole="button"
+            accessibilityLabel="인증 코드 발송"
+            accessibilityHint="입력한 이메일 주소로 인증 코드를 전송합니다"
+            accessibilityState={{ disabled: !state.email.includes('@') }}
           >
             <Text style={styles.sendButtonText}>인증 코드 발송</Text>
           </TouchableOpacity>
