@@ -1,6 +1,7 @@
 import SecurityFooter from '@/src/components/home/SecurityFooter';
 import PrimaryButton from '@/src/components/signup/common/PrimaryButton';
 import { SIGNUP_ROUTES } from '@/src/constants/routes/signupRoutes';
+import { Layout } from '@/src/constants/theme';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
@@ -104,7 +105,8 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   container: {
-    width: 344.94,
+    width: '100%',
+    maxWidth: Layout.MAX_CONTENT_WIDTH,
     alignItems: 'center',
     marginTop: 25,
   },

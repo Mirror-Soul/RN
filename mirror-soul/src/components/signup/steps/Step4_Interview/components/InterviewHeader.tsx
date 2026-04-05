@@ -30,7 +30,7 @@ export default function InterviewHeader({
 
 const styles = StyleSheet.create({
   header: {
-    width: 344.94,
+    width: '100%',
     height: 63.986,
     flexDirection: 'column',
     alignItems: 'flex-start',

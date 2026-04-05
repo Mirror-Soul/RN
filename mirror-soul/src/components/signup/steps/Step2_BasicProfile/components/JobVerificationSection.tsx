@@ -89,7 +89,7 @@ export default function JobVerificationSection({ state, onChange, onVerify }: Jo
 
 const styles = StyleSheet.create({
   container: {
-    width: 344.94,
+    width: '100%',
     alignSelf: 'stretch',
     ...(Platform.OS === 'ios' ? { zIndex: 5 } : { elevation: 5 }),
   },

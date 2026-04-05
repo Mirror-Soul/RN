@@ -1,6 +1,7 @@
-import React from 'react';
-import { KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
 import Step1AccountContainer from '@/src/components/signup/steps/Step1_Account/Step1AccountContainer';
+import { Layout } from '@/src/constants/theme';
+import React from 'react';
+import { KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
 
 /**
  * AccountScreen (Signup Step 1)
@@ -13,7 +14,9 @@ export default function AccountScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.keyboardView}
     >
-      <Step1AccountContainer />
+      <View style={styles.container}>
+        <Step1AccountContainer />
+      </View>
     </KeyboardAvoidingView>
   );
 }
@@ -21,7 +24,15 @@ export default function AccountScreen() {
 const styles = StyleSheet.create({
   keyboardView: {
     flex: 1,
-    backgroundColor: '#000', // 배경색 명시 (Mirror Soul 테마)
+    backgroundColor: '#000',
+    alignItems: 'center',
+  },
+  container: {
+    flex: 1,
+    width: '100%',
+    maxWidth: Layout.MAX_CONTENT_WIDTH,
+    alignItems: 'center',
   }
 });
+
 

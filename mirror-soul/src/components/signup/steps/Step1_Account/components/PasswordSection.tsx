@@ -72,7 +72,7 @@ export default function PasswordSection({ state, onChange }: SectionProps) {
             accessibilityRole="button"
             accessibilityLabel={state.isPasswordConfirmVisible ? '비밀번호 확인 숨기기' : '비밀번호 확인 보기'}
             accessibilityHint="비밀번호 확인 입력값 표시 상태를 전환합니다"
-            accessibilityState={{ pressed: state.isPasswordConfirmVisible }}
+            accessibilityState={{ selected: state.isPasswordConfirmVisible }}
           >
             <SeePasswordIcon width={20} height={20} />
           </TouchableOpacity>
@@ -95,7 +95,7 @@ export default function PasswordSection({ state, onChange }: SectionProps) {
 
 const styles = StyleSheet.create({
   container: {
-    width: 344.94,
+    width: '100%',
     flexDirection: 'column',
     alignItems: 'flex-start',
     gap: 10, // Reduced from 24 to manage space better

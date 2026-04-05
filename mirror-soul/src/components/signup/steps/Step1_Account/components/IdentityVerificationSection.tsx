@@ -56,7 +56,7 @@ export default function IdentityVerificationSection({ state, onVerify }: Identit
 
 const styles = StyleSheet.create({
   container: {
-    width: 344.94,
+    width: '100%',
     flexDirection: 'column',
     alignItems: 'flex-start',
     gap: 10,
@@ -67,7 +67,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 7.995,
-    paddingRight: 258.949,
     alignSelf: 'stretch',
   },
   headingTitle: {
@@ -86,7 +85,6 @@ const styles = StyleSheet.create({
   },
   gradient: {
     flex: 1,
-    paddingHorizontal: 108.627,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -101,7 +99,7 @@ const styles = StyleSheet.create({
   },
   successBox: {
     height: 73.215,
-    paddingLeft: 15.999,
+    paddingLeft: 16,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,

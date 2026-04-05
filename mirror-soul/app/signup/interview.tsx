@@ -1,4 +1,4 @@
-import { Colors } from '@/src/constants/theme';
+import { Colors, Layout } from '@/src/constants/theme';
 import { useRouter } from 'expo-router';
 import React, { useEffect } from 'react';
 import { Alert, KeyboardAvoidingView, Linking, Platform, ScrollView, StyleSheet, View } from 'react-native';
@@ -166,10 +166,12 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    width: 344.94,
+    width: '100%',
+    maxWidth: Layout.MAX_CONTENT_WIDTH,
     alignItems: 'center',
     marginTop: 25,
   },
+
   headerWrapper: {
     marginBottom: 40,
   },

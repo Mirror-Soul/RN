@@ -44,23 +44,21 @@ export default function LoginHeader() {
 
 const styles = StyleSheet.create({
   container: {
-    width: 344.94,
+    width: '100%',
     height: 67.98,
     flexDirection: 'column',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     gap: 7.995,
   },
   heading1: {
     alignSelf: 'stretch',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 78, // Approximate from spec 78.148 ~ 79.792
   },
   paragraph: {
     alignSelf: 'stretch',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 96, // Approximate from spec 96.192 ~ 96.747
   },
   titleWrapper: {
     position: 'relative',

@@ -20,7 +20,7 @@ export default function Step2Header() {
 
 const styles = StyleSheet.create({
   header: {
-    width: 344.94,
+    width: '100%',
     height: 63.986,
     flexDirection: 'column',
     alignItems: 'flex-start',
@@ -42,7 +42,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.396,
   },
   subtitleContainer: {
-    paddingHorizontal: 49.015, // Approx to balance Container/Header/SubTitle spacing
+    paddingHorizontal: 16, // Approx to balance Container/Header/SubTitle spacing
     alignSelf: 'stretch',
     justifyContent: 'center',
     alignItems: 'center',

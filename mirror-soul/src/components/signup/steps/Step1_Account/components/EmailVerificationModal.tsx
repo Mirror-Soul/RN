@@ -209,7 +209,6 @@ const styles = StyleSheet.create({
     gap: 7.995,
   },
   labelContainer: {
-    paddingRight: 288.716,
     alignSelf: 'stretch',
   },
   label: {

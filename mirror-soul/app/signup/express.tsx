@@ -3,6 +3,7 @@ import PrimaryButton from '@/src/components/signup/common/PrimaryButton';
 import Step3Header from '@/src/components/signup/steps/Step3_ExpressPersonal/components/Step3Header';
 import SelfDescriptionInput from '@/src/components/signup/steps/Step3_ExpressPersonal/Description/SelfDescriptionInput';
 import MbtiSelector from '@/src/components/signup/steps/Step3_ExpressPersonal/Mbti/MbtiSelector';
+import { Layout } from '@/src/constants/theme';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
@@ -78,9 +79,10 @@ const styles = StyleSheet.create({
     paddingBottom: 50,
   },
   container: {
-    width: 344.94, // Standard width for all signup steps
+    width: '100%',
+    maxWidth: Layout.MAX_CONTENT_WIDTH,
     alignItems: 'center',
-    marginTop: 25, // Align with Step 1, 2
+    marginTop: 25,
   },
   headerWrapper: {
     marginBottom: 40, // 40px gap between header and content

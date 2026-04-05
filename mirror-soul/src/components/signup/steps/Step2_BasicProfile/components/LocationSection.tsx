@@ -41,7 +41,7 @@ export default function LocationSection({ state, onChange }: SectionProps) {
 
 const styles = StyleSheet.create({
   container: {
-    width: 344.94,
+    width: '100%',
     ...(Platform.OS === 'ios' ? { zIndex: 10 } : { elevation: 10 }),
   },
   containerOpen: {

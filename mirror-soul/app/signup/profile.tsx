@@ -1,4 +1,5 @@
 import React from 'react';
+import { StyleSheet, View } from 'react-native';
 import Step2BasicProfileContainer from '@/src/components/signup/steps/Step2_BasicProfile/Step2BasicProfileContainer';
 
 /**
@@ -7,6 +8,18 @@ import Step2BasicProfileContainer from '@/src/components/signup/steps/Step2_Basi
  * 모든 로직은 Step2BasicProfileContainer 내부에 캡슐화되어 있습니다.
  */
 export default function BasicProfileScreen() {
-  return <Step2BasicProfileContainer />;
+  return (
+    <View style={styles.container}>
+      <Step2BasicProfileContainer />
+    </View>
+  );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#000',
+  }
+});
+
 

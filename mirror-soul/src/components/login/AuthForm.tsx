@@ -75,8 +75,8 @@ export default function AuthForm({ activeTab }: AuthFormProps) {
 
 const styles = StyleSheet.create({
   container: {
-    width: 344.94,
-    height: 242.41,
+    width: '100%',
+    minHeight: 242.41,
     alignItems: 'center',
     justifyContent: 'flex-start',
   },

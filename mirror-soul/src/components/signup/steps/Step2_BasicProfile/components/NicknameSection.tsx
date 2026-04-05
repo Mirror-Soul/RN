@@ -51,7 +51,7 @@ export default function NicknameSection({ state, onChange, onCheck }: NicknameSe
 
 const styles = StyleSheet.create({
   container: {
-    width: 344.94,
+    width: '100%',
     flexDirection: 'column',
     alignItems: 'flex-start',
     gap: 12, // Standard label-to-field gap
@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
   },
   textInput: {
-    width: 252.838,
+    flex: 3,
     height: 49.202,
     paddingHorizontal: 16,
     paddingVertical: 12,

@@ -33,7 +33,7 @@ export default function EmailSection({
         <TextInput
           style={[
             styles.emailInput, 
-            state.isEmailVerified && { width: 344.94, borderColor: Colors.glass.white10 }
+            state.isEmailVerified && { width: '100%', borderColor: Colors.glass.white10 }
           ]}
           value={state.email}
           onChangeText={(text) => onChange({ email: text })}
@@ -75,7 +75,7 @@ export default function EmailSection({
 
 const styles = StyleSheet.create({
   container: {
-    width: 344.94,
+    width: '100%',
     flexDirection: 'column',
     alignItems: 'flex-start',
     gap: 7.995,

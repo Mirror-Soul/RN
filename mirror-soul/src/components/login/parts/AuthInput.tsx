@@ -55,7 +55,7 @@ export default function AuthInput({ type, value, onChangeText, placeholder }: Au
 
 const styles = StyleSheet.create({
   container: {
-    width: 344.94,
+    width: '100%',
     height: 57.21,
     position: 'relative',
     justifyContent: 'center',
