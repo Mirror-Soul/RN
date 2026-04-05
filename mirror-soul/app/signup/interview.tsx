@@ -1,7 +1,7 @@
 import { Colors, Layout } from '@/src/constants/theme';
 import { useRouter } from 'expo-router';
 import React, { useEffect } from 'react';
-import { Alert, KeyboardAvoidingView, Linking, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, Linking, Platform, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 
 // Step 4 Components
 import InterviewAIBox from '@/src/components/signup/steps/Step4_Interview/components/InterviewAIBox';
@@ -17,6 +17,8 @@ import { useInterviewQuestions } from '@/src/components/signup/steps/Step4_Inter
 import MicPermissionModal from '@/src/components/signup/steps/Step4_Interview/components/parts/MicPermissionModal';
 
 export default function InterviewScreen() {
+  const { width: windowWidth } = useWindowDimensions();
+  const containerWidth = Math.min(windowWidth - 32, Layout.MAX_CONTENT_WIDTH);
   const router = useRouter();
   const {
     isRecording,
@@ -105,7 +107,7 @@ export default function InterviewScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={styles.container}>
+        <View style={[styles.container, { width: containerWidth }]}>
           <View style={styles.headerWrapper}>
             <InterviewHeader
               currentQuestion={currentQuestionIndex + 1}

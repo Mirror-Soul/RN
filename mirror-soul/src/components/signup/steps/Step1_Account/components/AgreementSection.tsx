@@ -40,9 +40,23 @@ export default function AgreementSection({ state, onChange }: SectionProps) {
 
       <View style={styles.textContainer}>
         <Text style={styles.baseText}>
-          <Text style={styles.link} onPress={() => console.log('Terms')}>서비스 이용약관</Text>
+          <Text 
+            style={styles.link} 
+            onPress={() => console.log('Terms')}
+            accessibilityRole="link"
+            accessibilityLabel="서비스 이용약관 보기"
+          >
+            서비스 이용약관
+          </Text>
           <Text style={styles.baseText}> 및 </Text>
-          <Text style={styles.link} onPress={() => console.log('Privacy')}>개인정보 처리방침</Text>
+          <Text 
+            style={styles.link} 
+            onPress={() => console.log('Privacy')}
+            accessibilityRole="link"
+            accessibilityLabel="개인정보 처리방침 보기"
+          >
+            개인정보 처리방침
+          </Text>
           <Text style={styles.baseText}>에 동의합니다.</Text>
         </Text>
       </View>
