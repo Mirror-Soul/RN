@@ -35,7 +35,9 @@ export function useStep1Form() {
 
   // 이메일 인증 확인 처리 (모달 확인 클릭)
   const handleVerifyEmail = useCallback((code: string) => {
-    console.log('Verifying email code:', code);
+    if (__DEV__) {
+      console.debug('Verifying email code length:', code.length);
+    }
     // Mock logic: 6자리 코드면 무조건 성공 처리
     if (code.length === 6) {
       updateState({ isEmailVerified: true });
