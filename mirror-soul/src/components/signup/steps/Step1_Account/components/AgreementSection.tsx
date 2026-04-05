@@ -20,6 +20,9 @@ export default function AgreementSection({ state, onChange }: SectionProps) {
         style={styles.checkboxWrapper} 
         onPress={toggleAgreed}
         activeOpacity={0.8}
+        accessibilityRole="checkbox"
+        accessibilityState={{ checked: state.agreedToTerms }}
+        accessibilityLabel="서비스 이용약관 및 개인정보 처리방침에 동의"
       >
         {state.agreedToTerms ? (
           <LinearGradient
