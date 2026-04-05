@@ -1,6 +1,6 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
 import { Colors } from '@/src/constants/theme';
+import React from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 
 interface FaceScanHeaderProps {
   /** 스캔 중 방향 안내 메시지 (없으면 기본 서브타이틀) */
@@ -10,9 +10,9 @@ interface FaceScanHeaderProps {
 export default function FaceScanHeader({ guideMessage }: FaceScanHeaderProps) {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>3D Face Scan</Text>
+      <Text style={styles.title}>나의 아바타 만들기</Text>
       <Text style={styles.subTitle}>
-        {guideMessage ?? 'Position your face in the center'}
+        {guideMessage ?? '얼굴을 화면에 알맞게 위치시켜주세요.'}
       </Text>
     </View>
   );
