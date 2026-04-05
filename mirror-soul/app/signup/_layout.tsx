@@ -43,7 +43,7 @@ const styles = StyleSheet.create({
   stepsWrapper: {
     width: '100%',
     alignItems: 'center', // 내부 OnboardingSteps를 위해 센터링 유지
-    paddingTop: 50,
+    paddingTop: 20,
     paddingHorizontal: 24,
     marginBottom: 8,
     zIndex: 10,

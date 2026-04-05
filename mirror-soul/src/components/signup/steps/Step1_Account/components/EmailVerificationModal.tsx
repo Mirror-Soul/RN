@@ -1,0 +1,264 @@
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, Modal, TextInput, TouchableOpacity, Dimensions } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import Animated, { 
+  useSharedValue, 
+  useAnimatedStyle, 
+  withSpring, 
+  withTiming, 
+  Easing 
+} from 'react-native-reanimated';
+import { Colors, Radii } from '@/src/constants/theme';
+import { VerificationModalProps } from '../types/step1';
+import VerifyEmailIcon from '@/assets/images/common/veritfy_email_icon.svg';
+
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+
+/**
+ * EmailVerificationModal 컴포넌트 (SRP)
+ * 이메일로 발송된 6자리 코드를 입력받는 모달입니다.
+ */
+export default function EmailVerificationModal({ isVisible, email, onClose, onVerify }: VerificationModalProps) {
+  const [code, setCode] = useState('');
+  
+  // 애니메이션 공유값 (심플한 페이드 전용)
+  const opacity = useSharedValue(0);
+
+  useEffect(() => {
+    if (isVisible) {
+      // 모달이 나타날 때 (심플하게 페이드 인)
+      opacity.value = withTiming(1, { duration: 300 });
+    } else {
+      // 모달이 사라질 때
+      opacity.value = withTiming(0, { duration: 200 });
+    }
+  }, [isVisible, opacity]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+  }));
+
+  const handleConfirm = () => {
+    if (code.length === 6) {
+      if (onVerify(code)) {
+        onClose();
+      }
+    }
+  };
+
+  return (
+    <Modal
+      transparent
+      visible={isVisible}
+      animationType="none"
+      onRequestClose={onClose}
+    >
+      <View style={styles.overlay}>
+        <Animated.View style={[styles.modalContainer, animatedStyle]}>
+          {/* Header */}
+          <View style={styles.header}>
+            <View style={styles.headerRow}>
+              <View style={styles.iconCircle}>
+                <LinearGradient
+                  colors={['rgba(0, 211, 243, 0.20)', 'rgba(194, 122, 255, 0.20)']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={StyleSheet.absoluteFill}
+                />
+                <VerifyEmailIcon width={24} height={24} />
+              </View>
+              <View style={styles.headerTextCol}>
+                <Text style={styles.title}>이메일 인증</Text>
+                <Text style={styles.subtitle}>인증 코드를 확인해주세요</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Body */}
+          <View style={styles.body}>
+            {/* Email Info Box */}
+            <View style={styles.infoBox}>
+              <Text style={styles.infoEmail}>{email}</Text>
+              <Text style={styles.infoText}>위 이메일로 6자리 인증 코드를 발송했습니다.</Text>
+            </View>
+
+            {/* Code Input Section */}
+            <View style={styles.inputSection}>
+              <View style={styles.labelContainer}>
+                <Text style={styles.label}>인증 코드</Text>
+              </View>
+              <TextInput
+                style={styles.codeTextInput}
+                value={code}
+                onChangeText={setCode}
+                placeholder="000000"
+                placeholderTextColor="#6A7282"
+                keyboardType="number-pad"
+                maxLength={6}
+                autoFocus
+              />
+            </View>
+
+            {/* Buttons Row */}
+            <View style={styles.buttonRow}>
+              <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
+                <Text style={styles.cancelText}>취소</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.confirmButton, code.length === 6 && styles.confirmButtonActive]} 
+                onPress={handleConfirm}
+              >
+                <Text style={[styles.confirmText, code.length === 6 && { color: '#FFF' }]}>인증 확인</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Animated.View>
+      </View>
+    </Modal>
+  );
+}
+
+const styles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)', // 딤 처리된 배경
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    width: 391.703, // Spec: 392.927 padding 처리 전후 조율
+    height: 463.502,
+    borderRadius: Radii.xl,
+    borderWidth: 0.612,
+    borderColor: 'rgba(255, 255, 255, 0.10)',
+    backgroundColor: 'rgba(16, 24, 40, 0.95)',
+    overflow: 'hidden',
+  },
+  header: {
+    padding: 23.994,
+    borderBottomWidth: 0.612,
+    borderBottomColor: 'rgba(255, 255, 255, 0.10)',
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 11.992,
+  },
+  iconCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 9999, // Pill 형태
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+  headerTextCol: {
+    justifyContent: 'center',
+  },
+  title: {
+    color: '#FFF',
+    fontFamily: 'Inter',
+    fontSize: 20,
+    fontWeight: '500',
+    lineHeight: 28,
+    letterSpacing: -0.449,
+  },
+  subtitle: {
+    color: Colors.neutral.lightGray,
+    fontFamily: 'Inter',
+    fontSize: 14,
+    fontWeight: '400',
+    lineHeight: 20,
+    letterSpacing: -0.15,
+  },
+  body: {
+    padding: 23.994,
+    gap: 24,
+  },
+  infoBox: {
+    padding: 16.611,
+    borderRadius: 16,
+    borderWidth: 0.612,
+    borderColor: 'rgba(0, 211, 243, 0.20)',
+    backgroundColor: 'rgba(0, 211, 243, 0.10)',
+    gap: 2,
+  },
+  infoEmail: {
+    color: '#00D3F3',
+    fontFamily: 'Inter',
+    fontSize: 14,
+    fontWeight: '500',
+    lineHeight: 22.75,
+    letterSpacing: -0.15,
+  },
+  infoText: {
+    color: Colors.neutral.lightGrayText,
+    fontFamily: 'Inter',
+    fontSize: 14,
+    fontWeight: '400',
+    lineHeight: 22.75,
+    letterSpacing: -0.15,
+  },
+  inputSection: {
+    gap: 7.995,
+  },
+  labelContainer: {
+    paddingRight: 288.716,
+    alignSelf: 'stretch',
+  },
+  label: {
+    color: Colors.neutral.lightGray,
+    fontFamily: 'Inter',
+    fontSize: 14,
+    fontWeight: '500',
+    lineHeight: 20,
+  },
+  codeTextInput: {
+    height: 57.197,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 16,
+    borderWidth: 0.612,
+    borderColor: 'rgba(255, 255, 255, 0.10)',
+    paddingHorizontal: 16,
+    color: '#FFF',
+    textAlign: 'center',
+    fontFamily: 'Menlo', // 고정 폭 폰트
+    fontSize: 24,
+    letterSpacing: 2.4, // Spec: 2.4px
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    gap: 11.992,
+  },
+  cancelButton: {
+    flex: 1,
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cancelText: {
+    color: '#FFF',
+    fontFamily: 'Inter',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  confirmButton: {
+    flex: 1,
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  confirmButtonActive: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)', // 살짝 밝게
+  },
+  confirmText: {
+    color: '#4A5565', // 비활성 컬러
+    fontFamily: 'Inter',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+});
