@@ -1,6 +1,6 @@
 import SecurityFooter from '@/src/components/home/SecurityFooter';
 import PrimaryButton from '@/src/components/signup/common/PrimaryButton';
-import StepHeader from '@/src/components/signup/common/StepHeader';
+import Step3Header from '@/src/components/signup/steps/Step3_ExpressPersonal/components/Step3Header';
 import SelfDescriptionInput from '@/src/components/signup/steps/Step3_ExpressPersonal/Description/SelfDescriptionInput';
 import MbtiSelector from '@/src/components/signup/steps/Step3_ExpressPersonal/Mbti/MbtiSelector';
 import { useRouter } from 'expo-router';
@@ -35,10 +35,10 @@ export default function ExpressYourselfScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.container}>
-          <StepHeader
-            title="Express Yourself"
-            subtitle="Help us understand your digital personality"
-          />
+          {/* Header Section */}
+          <View style={styles.headerWrapper}>
+            <Step3Header />
+          </View>
 
           <View style={styles.body}>
             <MbtiSelector
@@ -53,12 +53,14 @@ export default function ExpressYourselfScreen() {
             />
           </View>
 
-          <PrimaryButton
-            title="Continue"
-            onPress={handleContinue}
-            disabled={!isFormValid}
-            style={styles.button}
-          />
+          <View style={styles.buttonWrapper}>
+            <PrimaryButton
+              title="Continue"
+              onPress={handleContinue}
+              disabled={!isFormValid}
+              style={styles.button}
+            />
+          </View>
           <SecurityFooter />
         </View>
       </ScrollView>
@@ -76,17 +78,23 @@ const styles = StyleSheet.create({
     paddingBottom: 50,
   },
   container: {
-    width: '100%',
-    maxWidth: 345,
+    width: 344.94, // Standard width for all signup steps
     alignItems: 'center',
+    marginTop: 25, // Align with Step 1, 2
+  },
+  headerWrapper: {
+    marginBottom: 40, // 40px gap between header and content
   },
   body: {
     width: '100%',
-    marginTop: 40,
     gap: 40,
   },
-  button: {
+  buttonWrapper: {
+    width: '100%',
     marginTop: 40,
+  },
+  button: {
     marginBottom: 24,
   }
 });
+

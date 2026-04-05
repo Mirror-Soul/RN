@@ -34,7 +34,7 @@ export default function MbtiSelector({ onMbtiChange, onDragStart, onDragEnd }: P
   return (
     <View style={styles.container}>
       <View style={styles.headerRow}>
-        <Text style={styles.sectionTitle}>Your Personality Type</Text>
+        <Text style={styles.sectionTitle}>MBTI 검사 유형</Text>
         <MbtiBadge mbti={currentMbti} />
       </View>
 
