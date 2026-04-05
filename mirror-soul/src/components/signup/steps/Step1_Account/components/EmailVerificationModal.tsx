@@ -1,16 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Modal, TextInput, TouchableOpacity, Dimensions } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { 
-  useSharedValue, 
-  useAnimatedStyle, 
-  withSpring, 
-  withTiming, 
-  Easing 
-} from 'react-native-reanimated';
-import { Colors, Radii } from '@/src/constants/theme';
-import { VerificationModalProps } from '../types/step1';
 import VerifyEmailIcon from '@/assets/images/common/veritfy_email_icon.svg';
+import { Colors, Radii } from '@/src/constants/theme';
+import { LinearGradient } from 'expo-linear-gradient';
+import React, { useEffect, useState } from 'react';
+import { Dimensions, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming
+} from 'react-native-reanimated';
+import { VerificationModalProps } from '../types/step1';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -20,7 +18,7 @@ const { height: SCREEN_HEIGHT } = Dimensions.get('window');
  */
 export default function EmailVerificationModal({ isVisible, email, onClose, onVerify }: VerificationModalProps) {
   const [code, setCode] = useState('');
-  
+
   // 애니메이션 공유값 (심플한 페이드 전용)
   const opacity = useSharedValue(0);
 
@@ -111,8 +109,8 @@ export default function EmailVerificationModal({ isVisible, email, onClose, onVe
               <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
                 <Text style={styles.cancelText}>취소</Text>
               </TouchableOpacity>
-              <TouchableOpacity 
-                style={[styles.confirmButton, code.length === 6 && styles.confirmButtonActive]} 
+              <TouchableOpacity
+                style={[styles.confirmButton, code.length === 6 && styles.confirmButtonActive]}
                 onPress={handleConfirm}
               >
                 <Text style={[styles.confirmText, code.length === 6 && { color: '#FFF' }]}>인증 확인</Text>
@@ -133,7 +131,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalContainer: {
-    width: 391.703, // Spec: 392.927 padding 처리 전후 조율
+    width: '85%',
+    maxWidth: 392,
     height: 463.502,
     borderRadius: Radii.xl,
     borderWidth: 0.612,
