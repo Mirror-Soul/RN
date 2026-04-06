@@ -1,6 +1,7 @@
 import SecurityFooter from '@/src/components/home/SecurityFooter';
 import PrimaryButton from '@/src/components/signup/common/PrimaryButton';
 import { SIGNUP_ROUTES } from '@/src/constants/routes/signupRoutes';
+import { Layout } from '@/src/constants/theme';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
@@ -105,6 +106,9 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
+    width: '100%',
+    maxWidth: Layout.MAX_CONTENT_WIDTH,
+    alignSelf: 'center',
     alignItems: 'center',
     paddingBottom: 40,
   },
