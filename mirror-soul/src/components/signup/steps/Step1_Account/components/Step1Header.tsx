@@ -1,35 +1,26 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-
-interface InterviewHeaderProps {
-  currentQuestion: number;
-  totalQuestions: number;
-}
+import { View, Text, StyleSheet } from 'react-native';
+import { Colors } from '@/src/constants/theme';
 
 /**
- * InterviewHeader 컴포넌트 (SRP)
- * 회원가입 4단계의 타이틀과 인터뷰 진행률(서브타이틀)을 렌더링합니다.
+ * Step1Header 컴포넌트
+ * 계정 생성 타이틀과 안전 인증 문구를 표시합니다.
  */
-export default function InterviewHeader({
-  currentQuestion,
-  totalQuestions,
-}: InterviewHeaderProps) {
+export default function Step1Header() {
   return (
-    <View style={styles.header}>
+    <View style={styles.container}>
       <View style={styles.titleContainer}>
-        <Text style={styles.title}>음성 인터뷰</Text>
+        <Text style={styles.title}>계정 생성</Text>
       </View>
       <View style={styles.subtitleContainer}>
-        <Text style={styles.subtitle}>
-          질문 {currentQuestion} / {totalQuestions}
-        </Text>
+        <Text style={styles.subtitle}>안전한 계정 생성을 위해 본인인증이 필요합니다</Text>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  header: {
+  container: {
     width: '100%',
     height: 63.986,
     flexDirection: 'column',
@@ -39,10 +30,10 @@ const styles = StyleSheet.create({
   titleContainer: {
     height: 35.995,
     alignSelf: 'stretch',
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: 'flex-start',
   },
   title: {
+    flex: 1,
     color: '#FFF',
     textAlign: 'center',
     fontFamily: 'Inter',
@@ -52,19 +43,18 @@ const styles = StyleSheet.create({
     letterSpacing: 0.396,
   },
   subtitleContainer: {
-    paddingHorizontal: 49.015,
-    alignSelf: 'stretch',
+    paddingHorizontal: 35.015,
     justifyContent: 'center',
     alignItems: 'center',
+    alignSelf: 'stretch',
   },
   subtitle: {
-    color: '#99A1AF',
+    color: Colors.neutral.lightGray,
     textAlign: 'center',
     fontFamily: 'Inter',
     fontSize: 14,
     fontWeight: '400',
     lineHeight: 20,
     letterSpacing: -0.15,
-  },
+  }
 });
-

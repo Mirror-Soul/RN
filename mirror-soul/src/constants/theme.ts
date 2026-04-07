@@ -60,3 +60,11 @@ export const Radii = {
   full: 9999,  // Pill 형태 또는 완벽한 원형을 구현할 때 사용
 } as const;
 
+/**
+ * 레이아웃 관련 상수 시스템
+ */
+export const Layout = {
+  MAX_CONTENT_WIDTH: 345,
+} as const;
+
+

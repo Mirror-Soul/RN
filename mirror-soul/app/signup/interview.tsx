@@ -1,7 +1,7 @@
-import { Colors } from '@/src/constants/theme';
+import { Colors, Layout } from '@/src/constants/theme';
 import { useRouter } from 'expo-router';
 import React, { useEffect } from 'react';
-import { Alert, KeyboardAvoidingView, Linking, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, Linking, Platform, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 
 // Step 4 Components
 import InterviewAIBox from '@/src/components/signup/steps/Step4_Interview/components/InterviewAIBox';
@@ -17,6 +17,8 @@ import { useInterviewQuestions } from '@/src/components/signup/steps/Step4_Inter
 import MicPermissionModal from '@/src/components/signup/steps/Step4_Interview/components/parts/MicPermissionModal';
 
 export default function InterviewScreen() {
+  const { width: windowWidth } = useWindowDimensions();
+  const containerWidth = Math.min(windowWidth - 32, Layout.MAX_CONTENT_WIDTH);
   const router = useRouter();
   const {
     isRecording,
@@ -105,12 +107,13 @@ export default function InterviewScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={styles.container}>
-          <InterviewHeader
-            title="The Soul Capture"
-            currentQuestion={currentQuestionIndex + 1}
-            totalQuestions={totalQuestions}
-          />
+        <View style={[styles.container, { width: containerWidth }]}>
+          <View style={styles.headerWrapper}>
+            <InterviewHeader
+              currentQuestion={currentQuestionIndex + 1}
+              totalQuestions={totalQuestions}
+            />
+          </View>
 
           {/* 3D Avatar Model */}
           <InterviewAvatar />
@@ -142,6 +145,7 @@ export default function InterviewScreen() {
         </View>
       </ScrollView>
 
+
       {/* 마이크 권한 요청 모달 */}
       <MicPermissionModal
         visible={showPermissionModal}
@@ -165,10 +169,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     width: '100%',
-    maxWidth: 345, // Figma design width scale base
+    maxWidth: Layout.MAX_CONTENT_WIDTH,
     alignItems: 'center',
-    paddingHorizontal: 16,
+    marginTop: 25,
   },
+
+  headerWrapper: {
+    marginBottom: 40,
+  },
+
   body: {
     width: '100%',
     alignItems: 'center',

@@ -1,6 +1,5 @@
 import React from 'react';
-import { View, Text, TextInput, StyleSheet } from 'react-native';
-import { Colors } from '@/src/constants/theme';
+import { StyleSheet, Text, TextInput, View } from 'react-native';
 
 interface Props {
   value: string;
@@ -12,12 +11,12 @@ export default function SelfDescriptionInput({ value, onChangeText }: Props) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Describe yourself in one sentence</Text>
-      
+      <Text style={styles.title}>자신을 소개해주세요.</Text>
+
       <View style={styles.inputWrapper}>
         <TextInput
           style={styles.input}
-          placeholder="I'm someone who..."
+          placeholder="저는 말이죠.."
           placeholderTextColor="#6A7282"
           multiline
           maxLength={160}
@@ -27,7 +26,7 @@ export default function SelfDescriptionInput({ value, onChangeText }: Props) {
         />
       </View>
 
-      <Text style={styles.countText}>{charCount} characters</Text>
+      <Text style={styles.countText}>{charCount} 자</Text>
     </View>
   );
 }

@@ -7,6 +7,7 @@ import SocialLoginSection from '@/src/components/home/SocialLoginSection';
 import AuthForm from '@/src/components/login/AuthForm';
 import AuthTabToggle from '@/src/components/login/AuthTabToggle';
 import LoginHeader from '@/src/components/login/LoginHeader';
+import { Layout } from '@/src/constants/theme';
 
 /**
  * 초기 진입 홈 화면 (Home / Login)
@@ -72,13 +73,16 @@ const styles = StyleSheet.create({
     paddingVertical: 40,
   },
   container: {
-    width: 344.94,
+    width: '100%',
+    maxWidth: Layout.MAX_CONTENT_WIDTH,
     minHeight: 595.57,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 16,
     gap: 32, // Overall section spacing
     zIndex: 1,
   },
+
   tabWrapper: {
     marginTop: 8,
   },

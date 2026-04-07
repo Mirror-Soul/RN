@@ -1,93 +1,25 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, Platform, KeyboardAvoidingView, ScrollView } from 'react-native';
-import { Colors } from '@/src/constants/theme';
-import StepHeader from '@/src/components/signup/common/StepHeader';
-import PassVerificationCard from '@/src/components/signup/steps/Step2_BasicProfile/PassVerificationCard';
-import LocationSection from '@/src/components/signup/steps/Step2_BasicProfile/LocationSection';
-import ProfessionalSection from '@/src/components/signup/steps/Step2_BasicProfile/ProfessionalSection';
-import PrimaryButton from '@/src/components/signup/common/PrimaryButton';
-import SecurityFooter from '@/src/components/home/SecurityFooter';
-import { useRouter } from 'expo-router';
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
+import Step2BasicProfileContainer from '@/src/components/signup/steps/Step2_BasicProfile/Step2BasicProfileContainer';
 
-import { SIGNUP_ROUTES } from '@/src/constants/routes/signupRoutes';
-
+/**
+ * BasicProfileScreen (Step 2)
+ * 닉네임, 지역, 직업 정보를 입력받는 화면입니다.
+ * 모든 로직은 Step2BasicProfileContainer 내부에 캡슐화되어 있습니다.
+ */
 export default function BasicProfileScreen() {
-  const [isFormValid, setIsFormValid] = useState(true); // 임시 활성화 (기본 상태)
-  const router = useRouter();
-
-  const handleContinue = () => {
-    if (isFormValid) {
-      router.push(SIGNUP_ROUTES.EXPRESS);
-    }
-  };
-
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.keyboardView}
-    >
-      <ScrollView
-        contentContainerStyle={styles.scrollContainer}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-      >
-        {/* Main Content Container */}
-        <View style={styles.container}>
-          <StepHeader
-            title="Basic Profile"
-            subtitle="Help us find your perfect matches nearby"
-          />
-
-          {/* Profile Forms Body */}
-          <View style={styles.formContainer}>
-            <PassVerificationCard />
-            <LocationSection />
-            <ProfessionalSection />
-
-            {/* Submit Button */}
-            <View style={styles.buttonWrapper}>
-              <PrimaryButton
-                title="Continue"
-                disabled={!isFormValid}
-                onPress={handleContinue}
-              />
-            </View>
-          </View>
-
-          {/* Footer */}
-          <View style={styles.footerContainer}>
-            <SecurityFooter />
-          </View>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+    <View style={styles.container}>
+      <Step2BasicProfileContainer />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  keyboardView: {
-    flex: 1,
-  },
-  scrollContainer: {
-    flexGrow: 1,
-    alignItems: 'center',
-    paddingBottom: 50,
-  },
   container: {
-    width: '100%',
-    maxWidth: 345,
-    alignItems: 'center',
-  },
-  formContainer: {
-    width: '100%',
-  },
-  buttonWrapper: {
-    marginTop: 8,
-    width: '100%',
-  },
-  footerContainer: {
-    marginTop: 40,
-    width: '100%',
-    alignItems: 'center',
+    flex: 1,
+    backgroundColor: '#000',
   }
 });
+
+
