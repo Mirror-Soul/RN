@@ -43,7 +43,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     alignItems: 'center',
-    paddingBottom: 24,
+    paddingBottom: 140, // Floating BottomNavbar 높이만큼 여유 공간 확보
   },
   dashboard: {
     width: '100%',

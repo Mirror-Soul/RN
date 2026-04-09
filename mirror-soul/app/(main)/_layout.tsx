@@ -19,26 +19,21 @@ export default function MainLayout() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.container}>
       <View style={styles.content}>
         <Slot />
       </View>
-      <View style={styles.navbarWrapper}>
-        <BottomNavbar activeTab={activeTab} onTabPress={handleTabPress} />
-      </View>
-    </SafeAreaView>
+      <BottomNavbar activeTab={activeTab} onTabPress={handleTabPress} />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  container: {
     flex: 1,
     backgroundColor: Colors.primary.soulBlack,
   },
   content: {
     flex: 1,
-  },
-  navbarWrapper: {
-    paddingBottom: 16,
   },
 });

@@ -3,9 +3,10 @@ import HeartIcon from '@/assets/images/common/bottomNavbar/Heart.svg';
 import HistoryIcon from '@/assets/images/common/bottomNavbar/History_button.svg';
 import ProfileIcon from '@/assets/images/common/bottomNavbar/Profile.svg';
 import SimilarityIcon from '@/assets/images/common/main/Similarity.svg';
-import { Colors, Radii } from '@/src/constants/theme';
+import { Colors, Layout, Radii } from '@/src/constants/theme';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export type BottomTabId = 'history' | 'grow' | 'discover' | 'match' | 'profile';
 
@@ -29,13 +30,14 @@ interface BottomNavbarProps {
 }
 
 /**
- * BottomNavbar 컴포넌트 (SRP)
- * 메인 화면의 하단 네비게이션 바를 렌더링합니다.
- * 활성 탭은 cyan 색상으로 표시됩니다.
+ * BottomNavbar 컴포넌트
+ * 메인 화면의 하단 네비게이션 바를 부유형(Floating)으로 렌더링합니다.
  */
 export default function BottomNavbar({ activeTab = 'discover', onTabPress }: BottomNavbarProps) {
+  const insets = useSafeAreaInsets();
+
   return (
-    <View style={styles.wrapper}>
+    <View style={[styles.wrapper, { bottom: insets.bottom + 16 }]}>
       <View style={styles.bar}>
         {TABS.map((tab) => {
           const isActive = tab.id === activeTab;
@@ -62,9 +64,12 @@ export default function BottomNavbar({ activeTab = 'discover', onTabPress }: Bot
 
 const styles = StyleSheet.create({
   wrapper: {
+    position: 'absolute',
     width: '100%',
+    maxWidth: Layout.MAX_CONTENT_WIDTH + 48, // Padding 24 * 2 포함
     paddingHorizontal: 24,
-    paddingBottom: 0,
+    alignSelf: 'center',
+    zIndex: 1000,
   },
   bar: {
     flexDirection: 'row',
@@ -73,25 +78,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: Radii.full,
-    borderWidth: 0.612,
-    borderColor: Colors.glass.white20,
-    backgroundColor: Colors.glass.white10,
+    borderWidth: 1, // 선명도를 위해 약간 두껍게 조정
+    borderColor: 'rgba(255, 255, 255, 0.15)', // Glassmorphism 경계 강조
+    backgroundColor: 'rgba(20, 20, 20, 0.85)', // 내부가 살짝 비치되 메인 색상 유지
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 25 },
-    shadowOpacity: 0.25,
-    shadowRadius: 50,
-    elevation: 10,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 15,
   },
   tabItem: {
-    width: 60,
+    flex: 1, // 균등 배분
     alignItems: 'center',
     gap: 4,
   },
   tabLabel: {
     fontFamily: 'Inter',
-    fontSize: 12,
+    fontSize: 10, // 텍스트 겹침 방지를 위해 약간 축소
     fontWeight: '500',
-    lineHeight: 16,
+    lineHeight: 14,
     textAlign: 'center',
   },
 });
