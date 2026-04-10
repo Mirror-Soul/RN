@@ -1,9 +1,9 @@
 import { Colors } from '@/src/constants/theme';
+import { useLayout } from '@/src/hooks/useLayout';
 import React, { useRef, useState } from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View, ViewToken } from 'react-native';
-import RecommendCard, { RecommendCardData } from './RecommendCard';
 import RecommendStepIndicator from '../RecommendStepIndicator';
-import { useLayout } from '@/src/hooks/useLayout';
+import RecommendCard, { RecommendCardData } from './RecommendCard';
 
 // Mock 데이터 — 추후 API 연동 시 교체
 const MOCK_CARDS: RecommendCardData[] = [
@@ -68,7 +68,9 @@ export default function RecommendSection({
   onInfo,
 }: RecommendSectionProps) {
   const [activeIndex, setActiveIndex] = useState(0);
-  const { contentWidth } = useLayout();
+  const { cardWidth, contentWidth } = useLayout();
+  const CARD_GAP = 12; // 카드 사이 간격
+  const sidePadding = (contentWidth - cardWidth) / 2; // 중앙 정렬을 위한 양옆 패딩 (24px)
 
   const onViewableItemsChanged = useRef(
     ({ viewableItems }: { viewableItems: ViewToken[] }) => {
@@ -100,7 +102,7 @@ export default function RecommendSection({
         data={MOCK_CARDS}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <View style={[styles.cardWrapper, { width: contentWidth }]}>
+          <View style={[styles.cardWrapper, { width: cardWidth, marginHorizontal: CARD_GAP / 2 }]}>
             <RecommendCard
               data={item}
               onPass={onPass}
@@ -110,12 +112,13 @@ export default function RecommendSection({
           </View>
         )}
         horizontal
-        pagingEnabled
+        contentContainerStyle={{ paddingHorizontal: sidePadding - (CARD_GAP / 2) }}
+        snapToInterval={cardWidth + CARD_GAP}
+        decelerationRate="fast"
         showsHorizontalScrollIndicator={false}
         onViewableItemsChanged={onViewableItemsChanged}
         viewabilityConfig={viewabilityConfig}
-        snapToAlignment="start"
-        decelerationRate="fast"
+        snapToAlignment="center"
       />
 
       {/* 페이지 인디케이터 */}
