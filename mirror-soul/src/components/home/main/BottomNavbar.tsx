@@ -52,7 +52,7 @@ export default function BottomNavbar({ activeTab = 'discover', onTabPress }: Bot
               accessibilityLabel={tab.label}
               accessibilityState={{ selected: isActive }}
             >
-              <tab.Icon width={24} height={24} />
+              <tab.Icon width={24} height={24} color={color} />
               <Text style={[styles.tabLabel, { color }]}>{tab.label}</Text>
             </TouchableOpacity>
           );
