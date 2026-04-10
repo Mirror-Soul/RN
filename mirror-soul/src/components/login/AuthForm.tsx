@@ -20,7 +20,8 @@ export default function AuthForm({ activeTab }: AuthFormProps) {
   const [password, setPassword] = useState('');
 
   const handleLogin = () => {
-    console.log('Login logic here:', email, password);
+    // TODO: 실제 로그인 API 연동 후 인증 성공 시 이동
+    router.push('/(main)');
   };
 
   const handleStartSignup = () => {

@@ -42,6 +42,8 @@ export const Colors = {
     green20: 'rgba(5, 223, 114, 0.20)',
     slate95: 'rgba(16, 24, 40, 0.95)',
     black40: 'rgba(0, 0, 0, 0.40)', // 답변 박스 배경
+    black50: 'rgba(0, 0, 0, 0.50)', // 추천 카드 배지 배경
+    black80: 'rgba(0, 0, 0, 0.80)', // 추천 카드 정보 그라디언트
     recordingBg: ['rgba(0, 211, 243, 0.05)', 'rgba(194, 122, 255, 0.05)'] as [string, string], // 웨이브폼 배경
   }
 };
@@ -65,6 +67,7 @@ export const Radii = {
  */
 export const Layout = {
   MAX_CONTENT_WIDTH: 345,
+  SCREEN_PADDING: 24,
 } as const;
 
 

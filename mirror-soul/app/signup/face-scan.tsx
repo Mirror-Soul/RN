@@ -63,8 +63,7 @@ export default function FaceScanScreen() {
 
   // --- 이벤트 핸들러 ---
   const handleNext = () => {
-    // TODO: 프로퍼 파일 설정 후 다음 단계로 이동
-    console.log('스캔 완료! 다음 단계로 이동합니다.');
+    router.replace('/');
   };
 
   // --- 텍스트 결정 로직 ---
