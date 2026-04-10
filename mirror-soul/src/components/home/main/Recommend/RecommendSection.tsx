@@ -3,6 +3,7 @@ import React, { useRef, useState } from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View, ViewToken } from 'react-native';
 import RecommendCard, { RecommendCardData } from './RecommendCard';
 import RecommendStepIndicator from '../RecommendStepIndicator';
+import { useLayout } from '@/src/hooks/useLayout';
 
 // Mock 데이터 — 추후 API 연동 시 교체
 const MOCK_CARDS: RecommendCardData[] = [
@@ -67,6 +68,7 @@ export default function RecommendSection({
   onInfo,
 }: RecommendSectionProps) {
   const [activeIndex, setActiveIndex] = useState(0);
+  const { contentWidth } = useLayout();
 
   const onViewableItemsChanged = useRef(
     ({ viewableItems }: { viewableItems: ViewToken[] }) => {
@@ -98,7 +100,7 @@ export default function RecommendSection({
         data={MOCK_CARDS}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <View style={styles.cardWrapper}>
+          <View style={[styles.cardWrapper, { width: contentWidth }]}>
             <RecommendCard
               data={item}
               onPass={onPass}
@@ -155,7 +157,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   cardWrapper: {
-    width: 345, // Layout.MAX_CONTENT_WIDTH 와 동일
     paddingRight: 0,
   },
 });

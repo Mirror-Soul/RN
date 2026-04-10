@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet, Platform, Animated } from 'react-native';
-import { Colors } from '@/src/constants/theme';
+import { Colors, Layout } from '@/src/constants/theme';
 import { useRouter } from 'expo-router';
 import { useCameraDevice } from 'react-native-vision-camera';
 
@@ -182,16 +182,16 @@ const styles = StyleSheet.create({
   },
   headerWrapper: {
     width: '100%',
-    maxWidth: 345,
+    maxWidth: Layout.MAX_CONTENT_WIDTH,
   },
   bodyWrapper: {
     width: '100%',
-    maxWidth: 345,
+    maxWidth: Layout.MAX_CONTENT_WIDTH,
     marginTop: 32,
   },
   buttonWrapper: {
     width: '100%',
-    maxWidth: 345,
+    maxWidth: Layout.MAX_CONTENT_WIDTH,
     marginTop: 40,
   },
   completionOverlay: {
