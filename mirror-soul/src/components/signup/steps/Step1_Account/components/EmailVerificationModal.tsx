@@ -16,7 +16,15 @@ const { height: SCREEN_HEIGHT } = Dimensions.get('window');
  * EmailVerificationModal 컴포넌트 (SRP)
  * 이메일로 발송된 6자리 코드를 입력받는 모달입니다.
  */
-export default function EmailVerificationModal({ isVisible, email, onClose, onVerify }: VerificationModalProps) {
+export default function EmailVerificationModal({ 
+  isVisible, 
+  email, 
+  onClose, 
+  onVerify,
+  timeLeft = 180,
+  formattedTime = '03:00',
+  onResend,
+}: VerificationModalProps) {
   const [code, setCode] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -95,6 +103,9 @@ export default function EmailVerificationModal({ isVisible, email, onClose, onVe
             <View style={styles.inputSection}>
               <View style={styles.labelContainer}>
                 <Text style={styles.label}>인증 코드</Text>
+                <Text style={[styles.timerText, timeLeft === 0 && styles.timerTextExpired]}>
+                  {formattedTime}
+                </Text>
               </View>
               <TextInput
                 style={[styles.codeTextInput, errorMessage ? styles.codeTextInputError : null]}
@@ -108,6 +119,7 @@ export default function EmailVerificationModal({ isVisible, email, onClose, onVe
                 keyboardType="number-pad"
                 maxLength={6}
                 autoFocus
+                editable={timeLeft > 0}
               />
               {!!errorMessage && (
                 <Text accessibilityRole="alert" style={styles.errorText}>
@@ -121,12 +133,20 @@ export default function EmailVerificationModal({ isVisible, email, onClose, onVe
               <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
                 <Text style={styles.cancelText}>취소</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.confirmButton, code.length === 6 && styles.confirmButtonActive]}
-                onPress={handleConfirm}
-              >
-                <Text style={[styles.confirmText, code.length === 6 && { color: '#FFF' }]}>인증 확인</Text>
-              </TouchableOpacity>
+              
+              {timeLeft === 0 ? (
+                <TouchableOpacity style={styles.resendButton} onPress={onResend}>
+                  <Text style={styles.resendText}>재발송</Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  style={[styles.confirmButton, code.length === 6 && styles.confirmButtonActive]}
+                  onPress={handleConfirm}
+                  disabled={code.length !== 6}
+                >
+                  <Text style={[styles.confirmText, code.length === 6 && { color: '#FFF' }]}>인증 확인</Text>
+                </TouchableOpacity>
+              )}
             </View>
           </View>
         </Animated.View>
@@ -221,6 +241,9 @@ const styles = StyleSheet.create({
     gap: 7.995,
   },
   labelContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     alignSelf: 'stretch',
   },
   label: {
@@ -290,5 +313,30 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     textAlign: 'center',
     marginTop: 4,
+  },
+  timerText: {
+    color: Colors.primary.electricCyan,
+    fontFamily: 'Inter',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  timerTextExpired: {
+    color: Colors.primary.activeRedText,
+  },
+  resendButton: {
+    flex: 1,
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: 'rgba(0, 211, 243, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 211, 243, 0.3)',
+  },
+  resendText: {
+    color: Colors.primary.electricCyan,
+    fontFamily: 'Inter',
+    fontSize: 16,
+    fontWeight: '500',
   },
 });

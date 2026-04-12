@@ -16,6 +16,9 @@ export interface VerificationModalProps {
   email: string;
   onClose: () => void;
   onVerify: (code: string) => boolean;
+  timeLeft?: number;
+  formattedTime?: string;
+  onResend?: () => void;
 }
 
 export interface SectionProps {
