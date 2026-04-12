@@ -51,6 +51,9 @@ export default function EmailSection({
           keyboardType="email-address"
           autoCapitalize="none"
           editable={!state.isEmailVerified}
+          accessibilityLabel="이메일 입력란"
+          accessibilityHint="가입에 사용할 유효한 이메일 주소를 입력해 주세요"
+          accessibilityState={{ disabled: state.isEmailVerified }}
         />
         {!state.isEmailVerified && (
           <TouchableOpacity 
