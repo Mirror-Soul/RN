@@ -39,7 +39,13 @@ export function useStep1Form() {
     if (__DEV__) {
       console.debug('Verifying email code length:', code.length);
     }
-    // Mock logic: 6자리 코드면 무조건 성공 처리
+    
+    // UI 테스트용 임시 Mock: '111111' 입력 시 무조건 실패 처리하여 에러 화면 확인
+    if (code === '111111') {
+      return false;
+    }
+
+    // Mock logic: 그 외 6자리 코드면 무조건 성공 처리
     if (code.length === 6) {
       updateState({ isEmailVerified: true });
       return true;
