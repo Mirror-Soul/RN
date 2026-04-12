@@ -5,6 +5,7 @@ import { SectionProps } from '../types/step1';
 import FormLabel from '@/src/components/signup/common/FormLabel';
 import CompleteCheck from './CompleteCheck';
 import EmailVerificationModal from './EmailVerificationModal';
+import { isValidEmail } from '@/src/utils/validation';
 
 interface EmailSectionProps extends SectionProps {
   isModalVisible: boolean;
@@ -47,11 +48,11 @@ export default function EmailSection({
           <TouchableOpacity 
             style={styles.sendButton} 
             onPress={onSendCode}
-            disabled={!state.email.includes('@')}
+            disabled={!isValidEmail(state.email)}
             accessibilityRole="button"
             accessibilityLabel="인증 코드 발송"
             accessibilityHint="입력한 이메일 주소로 인증 코드를 전송합니다"
-            accessibilityState={{ disabled: !state.email.includes('@') }}
+            accessibilityState={{ disabled: !isValidEmail(state.email) }}
           >
             <Text style={styles.sendButtonText}>인증 코드 발송</Text>
           </TouchableOpacity>

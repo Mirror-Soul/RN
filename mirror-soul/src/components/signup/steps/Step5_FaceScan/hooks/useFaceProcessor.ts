@@ -1,7 +1,7 @@
-import { useRef, useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useFrameProcessor } from 'react-native-vision-camera';
+import { Face, useFaceDetector } from 'react-native-vision-camera-face-detector';
 import { Worklets } from 'react-native-worklets-core';
-import { useFaceDetector, Face } from 'react-native-vision-camera-face-detector';
 
 interface UseFaceProcessorProps {
   /** 얼굴 감지 시 실행할 JS 핸들러 */
@@ -34,7 +34,7 @@ export function useFaceProcessor({ onFaceDetected, isActive }: UseFaceProcessorP
     contourMode: 'none',
   });
 
-  // [중요] JS 스레드 브릿칭 함수는 한 번만 생성
+  // JS 스레드 브릿칭 함수는 한 번만 생성
   const runOnJs = useMemo(
     () =>
       Worklets.createRunOnJS((faces: Face[]) => {

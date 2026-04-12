@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { Step1State } from '../types/step1';
+import { isValidEmail } from '@/src/utils/validation';
 
 /**
  * useStep1Form 훅
@@ -26,7 +27,7 @@ export function useStep1Form() {
 
   // 이메일 인증 발송 처리 (모달 팝업)
   const handleSendEmailCode = useCallback(() => {
-    if (state.email.includes('@')) {
+    if (isValidEmail(state.email)) {
       setIsModalVisible(true);
     } else {
       console.log('Invalid email');
