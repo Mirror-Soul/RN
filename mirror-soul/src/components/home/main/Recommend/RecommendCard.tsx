@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     lineHeight: 20,
     letterSpacing: -0.15,
-    width: 290,
+    width: '100%',
   },
   actionRow: {
     flexDirection: 'row',
