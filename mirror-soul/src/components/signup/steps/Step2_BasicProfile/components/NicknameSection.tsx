@@ -1,8 +1,9 @@
-import React from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
-import FormLabel from '@/src/components/signup/common/FormLabel';
-import { SectionProps } from '../types/step2';
 import VerificationSuccessIcon from '@/assets/images/common/Verification_sucess.svg';
+import FormLabel from '@/src/components/signup/common/FormLabel';
+import { Radii } from '@/src/constants/theme';
+import React from 'react';
+import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { SectionProps } from '../types/step2';
 
 interface NicknameSectionProps extends SectionProps {
   onCheck: () => void;
@@ -16,7 +17,7 @@ export default function NicknameSection({ state, onChange, onCheck }: NicknameSe
   return (
     <View style={styles.container}>
       <FormLabel label="닉네임" />
-      
+
       <View style={styles.infoRow}>
         <TextInput
           style={styles.textInput}
@@ -26,9 +27,9 @@ export default function NicknameSection({ state, onChange, onCheck }: NicknameSe
           placeholderTextColor="#6A7282"
           autoCapitalize="none"
         />
-        
-        <TouchableOpacity 
-          style={styles.checkButton} 
+
+        <TouchableOpacity
+          style={styles.checkButton}
           onPress={onCheck}
           activeOpacity={0.8}
         >
@@ -69,7 +70,7 @@ const styles = StyleSheet.create({
     height: 49.202,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    borderRadius: 16,
+    borderRadius: Radii.lg,
     borderWidth: 0.612,
     borderColor: 'rgba(255, 255, 255, 0.10)',
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
@@ -86,7 +87,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 16,
+    borderRadius: Radii.lg,
     backgroundColor: 'rgba(255, 255, 255, 0.10)',
   },
   checkButtonText: {

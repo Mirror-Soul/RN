@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
   iconCircle: {
     width: 40,
     height: 40,
-    borderRadius: 20,
+    borderRadius: Radii.lg2,
     backgroundColor: 'rgba(5, 223, 114, 0.14)', // Success base green
     justifyContent: 'center',
     alignItems: 'center',
@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     gap: 6,
-    borderRadius: 12,
+    borderRadius: Radii.md,
     borderWidth: 0.612,
     borderColor: 'rgba(194, 122, 255, 0.3)',
     backgroundColor: 'rgba(194, 122, 255, 0.1)',

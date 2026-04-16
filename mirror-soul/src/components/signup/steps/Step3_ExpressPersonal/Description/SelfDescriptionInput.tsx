@@ -1,5 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
+import { Colors, Radii } from '@/src/constants/theme';
 
 interface Props {
   value: string;
@@ -48,7 +49,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 121,
     padding: 16,
-    borderRadius: 16,
+    borderRadius: Radii.lg,
     borderWidth: 0.612,
     borderColor: 'rgba(255, 255, 255, 0.10)',
     backgroundColor: 'rgba(255, 255, 255, 0.05)',

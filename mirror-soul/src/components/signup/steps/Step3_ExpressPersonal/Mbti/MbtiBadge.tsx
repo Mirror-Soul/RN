@@ -1,7 +1,7 @@
-import React from 'react';
-import { View, Text, StyleSheet, Platform } from 'react-native';
-import { Colors } from '@/src/constants/theme';
+import { Colors, Radii } from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
+import React from 'react';
+import { Platform, StyleSheet, Text, View } from 'react-native';
 
 // StyleSheet 바깥에서 Platform 분기 → React Compiler 호환
 const monospaceFont = Platform.OS === 'ios' ? 'Menlo' : 'monospace';
@@ -28,7 +28,7 @@ export default function MbtiBadge({ mbti }: Props) {
 const styles = StyleSheet.create({
   container: {
     padding: 1.225,
-    borderRadius: 8,
+    borderRadius: Radii.sm,
     backgroundColor: Colors.glass.white10,
     alignSelf: 'center',
   },

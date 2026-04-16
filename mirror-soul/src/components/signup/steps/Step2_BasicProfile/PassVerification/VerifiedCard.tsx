@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Colors } from '@/src/constants/theme';
+import { Colors, Radii } from '@/src/constants/theme';
 import VerificationSuccessIcon from '@/assets/images/common/Verification_sucess.svg';
 import VerifiedDataBox from './VerifiedDataBox';
 
@@ -22,7 +22,7 @@ export default function VerifiedCard({ userData }: Props) {
         colors={[Colors.glass.green10, 'rgba(0, 211, 243, 0.10)']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={[StyleSheet.absoluteFill, { borderRadius: 16 }]}
+        style={[StyleSheet.absoluteFill, { borderRadius: Radii.lg }]}
       />
       
       {/* Header Info */}
@@ -56,7 +56,7 @@ export default function VerifiedCard({ userData }: Props) {
 const styles = StyleSheet.create({
   cardContainer: {
     width: '100%',
-    borderRadius: 16,
+    borderRadius: Radii.lg,
     borderWidth: 0.612,
     borderColor: Colors.glass.cyan20,
     paddingTop: 24.6,
@@ -74,7 +74,7 @@ const styles = StyleSheet.create({
   iconWrapper: {
     width: 48,
     height: 48,
-    borderRadius: 24,
+    borderRadius: Radii.xl,
     backgroundColor: Colors.glass.green20,
     justifyContent: 'center',
     alignItems: 'center',
@@ -100,7 +100,7 @@ const styles = StyleSheet.create({
   badgeWrapper: {
     paddingVertical: 2.6,
     paddingHorizontal: 8,
-    borderRadius: 20,
+    borderRadius: Radii.lg2,
     backgroundColor: Colors.glass.green20,
     justifyContent: 'center',
     alignItems: 'center',

@@ -1,4 +1,4 @@
-import { Colors } from '@/src/constants/theme';
+import { Colors, Radii } from '@/src/constants/theme';
 import React, { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
 import VoiceWaveform from './parts/VoiceWaveform';
@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
     width: '100%',
     padding: 24.606,
     paddingBottom: 44.932,
-    borderRadius: 24,
+    borderRadius: Radii.xl,
     borderWidth: 0.612,
     borderColor: Colors.glass.white10,
     backgroundColor: Colors.glass.black40,
@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
   redDot: {
     width: 7.995,
     height: 7.995,
-    borderRadius: 8, // circle
+    borderRadius: Radii.sm, // circle
     backgroundColor: Colors.primary.recordingRed,
   },
   recordingText: {

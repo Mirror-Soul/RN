@@ -25,7 +25,7 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     alignItems: 'flex-start',
     gap: 4,
-    borderRadius: 14,
+    borderRadius: Radii.md2,
     borderWidth: 0.612,
     borderColor: Colors.glass.white10,
     backgroundColor: Colors.glass.white5,

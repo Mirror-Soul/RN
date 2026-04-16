@@ -1,4 +1,4 @@
-import { Colors } from '@/src/constants/theme';
+import { Colors, Radii } from '@/src/constants/theme';
 import React, { useState } from 'react';
 import { Dimensions, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { locationData } from './locationData';
@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
     height: 303.5,
     padding: 0.612,
     flexDirection: 'column',
-    borderRadius: 16,
+    borderRadius: Radii.lg,
     borderWidth: 0.612,
     borderColor: Colors.glass.white10,
     backgroundColor: Colors.glass.slate95,
@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingVertical: 11.4,
     paddingHorizontal: 16,
-    borderRadius: 14,
+    borderRadius: Radii.md2,
   },
   listItemText: {
     color: Colors.neutral.pureWhite,

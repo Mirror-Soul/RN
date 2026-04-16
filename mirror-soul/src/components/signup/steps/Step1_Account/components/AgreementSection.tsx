@@ -1,9 +1,9 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Colors } from '@/src/constants/theme';
-import { SectionProps } from '../types/step1';
 import CompleteIcon from '@/assets/images/common/Complete.svg';
+import { Colors, Radii } from '@/src/constants/theme';
+import { LinearGradient } from 'expo-linear-gradient';
+import React from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SectionProps } from '../types/step1';
 
 /**
  * AgreementSection 컴포넌트 (SRP)
@@ -16,8 +16,8 @@ export default function AgreementSection({ state, onChange }: SectionProps) {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity 
-        style={styles.checkboxWrapper} 
+      <TouchableOpacity
+        style={styles.checkboxWrapper}
         onPress={toggleAgreed}
         activeOpacity={0.8}
         accessibilityRole="checkbox"
@@ -40,8 +40,8 @@ export default function AgreementSection({ state, onChange }: SectionProps) {
 
       <View style={styles.textContainer}>
         <Text style={styles.baseText}>
-          <Text 
-            style={styles.link} 
+          <Text
+            style={styles.link}
             onPress={() => console.log('Terms')}
             accessibilityRole="link"
             accessibilityLabel="서비스 이용약관 보기"
@@ -49,8 +49,8 @@ export default function AgreementSection({ state, onChange }: SectionProps) {
             서비스 이용약관
           </Text>
           <Text style={styles.baseText}> 및 </Text>
-          <Text 
-            style={styles.link} 
+          <Text
+            style={styles.link}
             onPress={() => console.log('Privacy')}
             accessibilityRole="link"
             accessibilityLabel="개인정보 처리방침 보기"
@@ -75,7 +75,7 @@ const styles = StyleSheet.create({
   checkboxWrapper: {
     width: 20,
     height: 20,
-    borderRadius: 4,
+    borderRadius: Radii.xs,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.1)',
     justifyContent: 'center',
@@ -85,7 +85,7 @@ const styles = StyleSheet.create({
   gradientCheck: {
     width: 20,
     height: 20,
-    borderRadius: 4,
+    borderRadius: Radii.xs,
     justifyContent: 'center',
     alignItems: 'center',
   },

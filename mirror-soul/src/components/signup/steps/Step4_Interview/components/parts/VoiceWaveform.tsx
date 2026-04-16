@@ -1,7 +1,7 @@
-import React, { useEffect, useRef } from 'react';
-import { View, StyleSheet, Animated } from 'react-native';
-import { Colors } from '@/src/constants/theme';
+import { Colors, Radii } from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
+import React, { useEffect, useRef } from 'react';
+import { Animated, StyleSheet, View } from 'react-native';
 
 /**
  * 실시간 음성 파동을 시각화하는 컴포넌트.
@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
   container: {
     width: '100%',
     height: 80, // 유저 요청: 79.995px
-    borderRadius: 16,
+    borderRadius: Radii.lg,
     borderWidth: 0.612,
     borderColor: Colors.glass.white10,
     justifyContent: 'center',

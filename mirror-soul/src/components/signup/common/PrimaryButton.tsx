@@ -1,5 +1,5 @@
 import ContinueIcon from '@/assets/images/common/Continue_icon.svg';
-import { Colors } from '@/src/constants/theme';
+import { Colors, Radii } from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, ViewStyle } from 'react-native';
@@ -31,7 +31,7 @@ export default function PrimaryButton({ title, onPress, disabled, style }: Prima
           colors={Colors.gradient.cyanToPurple}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
-          style={[StyleSheet.absoluteFill, { borderRadius: 16 }]}
+          style={[StyleSheet.absoluteFill, { borderRadius: Radii.lg }]}
         />
       )}
       <Text style={[styles.title, disabled ? styles.titleDisabled : styles.titleActive]}>
@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     gap: 8,
-    borderRadius: 16,
+    borderRadius: Radii.lg,
     overflow: 'hidden',
   },
   buttonDisabled: {

@@ -1,6 +1,6 @@
 import GreenCheckIcon from '@/assets/images/common/Green_check.svg';
 import ProtectIcon from '@/assets/images/common/Verification_protect_icon.svg';
-import { Colors } from '@/src/constants/theme';
+import { Colors, Radii } from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
   },
   verifyButton: {
     height: 55.992,
-    borderRadius: 16,
+    borderRadius: Radii.lg,
     overflow: 'hidden',
     alignSelf: 'stretch',
   },
@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    borderRadius: 16,
+    borderRadius: Radii.lg,
     borderWidth: 0.612,
     borderColor: 'rgba(0, 201, 80, 0.30)',
     backgroundColor: 'rgba(0, 201, 80, 0.10)',
@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
   iconCircle: {
     width: 39.993,
     height: 39.993,
-    borderRadius: 9999, // Pill 형태
+    borderRadius: Radii.full, // Pill 형태
     backgroundColor: 'rgba(0, 201, 80, 0.20)',
     justifyContent: 'center',
     alignItems: 'center',

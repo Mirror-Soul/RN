@@ -1,4 +1,4 @@
-import { Colors } from '@/src/constants/theme';
+import { Colors, Radii } from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { Animated, Platform, StyleSheet, View } from 'react-native';
@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
   track: {
     width: '100%',
     height: 8,
-    borderRadius: 4,
+    borderRadius: Radii.xs,
     backgroundColor: Colors.glass.white10,
     position: 'relative',
     alignItems: 'center',
@@ -89,14 +89,14 @@ const styles = StyleSheet.create({
     left: 0,
     width: '50%',
     height: '100%',
-    borderRadius: 4,
+    borderRadius: Radii.xs,
   },
   gradientRight: {
     position: 'absolute',
     right: 0,
     width: '50%',
     height: '100%',
-    borderRadius: 4,
+    borderRadius: Radii.xs,
   },
   centerLine: {
     position: 'absolute',
@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
   handle: {
     width: 24,
     height: 24,
-    borderRadius: 12,
+    borderRadius: Radii.md,
     backgroundColor: Colors.neutral.pureWhite,
     borderWidth: 1.836,
     borderColor: Colors.primary.electricCyan,
@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
   handleInner: {
     width: 8,
     height: 8,
-    borderRadius: 4,
+    borderRadius: Radii.xs,
     backgroundColor: Colors.primary.electricCyan,
   },
 });

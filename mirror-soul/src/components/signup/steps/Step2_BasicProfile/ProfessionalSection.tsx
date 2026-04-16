@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
   verifyCard: {
     width: '100%',
     padding: 16,
-    borderRadius: 16,
+    borderRadius: Radii.lg,
     borderWidth: 0.612,
     borderColor: Colors.glass.white10,
     backgroundColor: Colors.glass.white5,
@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     gap: 8,
-    borderRadius: 14,
+    borderRadius: Radii.md2,
     borderWidth: 0.612,
     borderColor: Colors.glass.purple30,
     backgroundColor: Colors.glass.purple20,
