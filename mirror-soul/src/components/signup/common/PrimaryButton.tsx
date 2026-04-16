@@ -1,8 +1,8 @@
-import React from 'react';
-import { Text, TouchableOpacity, StyleSheet, ViewStyle } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Colors } from '@/src/constants/theme';
 import ContinueIcon from '@/assets/images/common/Continue_icon.svg';
+import { Colors } from '@/src/constants/theme';
+import { LinearGradient } from 'expo-linear-gradient';
+import React from 'react';
+import { StyleSheet, Text, TouchableOpacity, ViewStyle } from 'react-native';
 
 interface PrimaryButtonProps {
   title: string;
@@ -16,12 +16,12 @@ interface PrimaryButtonProps {
  */
 export default function PrimaryButton({ title, onPress, disabled, style }: PrimaryButtonProps) {
   return (
-    <TouchableOpacity 
+    <TouchableOpacity
       activeOpacity={0.8}
       onPress={onPress}
       disabled={disabled}
       style={[
-        styles.button, 
+        styles.button,
         disabled ? styles.buttonDisabled : undefined,
         style
       ]}
@@ -53,7 +53,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 8,
     borderRadius: 16,
-    overflow: 'hidden', // background gradient bleeding cutoff
+    overflow: 'hidden',
   },
   buttonDisabled: {
     backgroundColor: Colors.glass.white5,
@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     lineHeight: 24,
     letterSpacing: -0.312,
-    zIndex: 1, // ensures text stays above absolute linear gradient
+    zIndex: 1,
   },
   titleDisabled: {
     color: Colors.neutral.disabledText,

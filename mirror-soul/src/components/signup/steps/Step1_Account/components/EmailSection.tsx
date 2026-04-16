@@ -5,12 +5,17 @@ import { SectionProps } from '../types/step1';
 import FormLabel from '@/src/components/signup/common/FormLabel';
 import CompleteCheck from './CompleteCheck';
 import EmailVerificationModal from './EmailVerificationModal';
+import { isValidEmail } from '@/src/utils/validation';
 
 interface EmailSectionProps extends SectionProps {
   isModalVisible: boolean;
   setIsModalVisible: (visible: boolean) => void;
   onSendCode: () => void;
   onVerify: (code: string) => boolean;
+  timeLeft?: number;
+  isTimerActive?: boolean;
+  formattedTime?: string;
+  onResendCode?: () => void;
 }
 
 /**
@@ -23,8 +28,26 @@ export default function EmailSection({
   isModalVisible, 
   setIsModalVisible, 
   onSendCode, 
-  onVerify 
+  onVerify,
+  timeLeft = 0,
+  isTimerActive = false,
+  formattedTime = '00:00',
+  onResendCode = onSendCode
 }: EmailSectionProps) {
+  
+  // 버튼 텍스트 및 접근성 동기화를 위한 렌더링 전 상태 처리 (DRY/SRP 유지보수)
+  const sendButtonText = isTimerActive && timeLeft > 0
+    ? '인증 코드 입력'
+    : isTimerActive && timeLeft === 0
+      ? '재발송'
+      : '인증 코드 발송';
+
+  const sendButtonA11yHint = isTimerActive && timeLeft > 0
+    ? '다시 이메일 인증 코드를 입력할 수 있는 팝업 창을 엽니다'
+    : isTimerActive && timeLeft === 0
+      ? '유효시간이 초과되어 인증 코드를 다시 이메일로 발송합니다'
+      : '입력한 이메일 주소로 인증 코드를 전송합니다';
+
   return (
     <View style={[styles.container, state.isEmailVerified && { height: 77 }]}>
       <FormLabel label="이메일" />
@@ -42,21 +65,33 @@ export default function EmailSection({
           keyboardType="email-address"
           autoCapitalize="none"
           editable={!state.isEmailVerified}
+          accessibilityLabel="이메일 입력란"
+          accessibilityHint="가입에 사용할 유효한 이메일 주소를 입력해 주세요"
+          accessibilityState={{ disabled: state.isEmailVerified }}
         />
         {!state.isEmailVerified && (
           <TouchableOpacity 
             style={styles.sendButton} 
-            onPress={onSendCode}
-            disabled={!state.email.includes('@')}
+            onPress={isTimerActive && timeLeft === 0 ? onResendCode : onSendCode}
+            disabled={!isValidEmail(state.email)}
             accessibilityRole="button"
-            accessibilityLabel="인증 코드 발송"
-            accessibilityHint="입력한 이메일 주소로 인증 코드를 전송합니다"
-            accessibilityState={{ disabled: !state.email.includes('@') }}
+            accessibilityLabel={sendButtonText}
+            accessibilityHint={sendButtonA11yHint}
+            accessibilityState={{ disabled: !isValidEmail(state.email) }}
           >
-            <Text style={styles.sendButtonText}>인증 코드 발송</Text>
+            <Text style={styles.sendButtonText}>
+              {sendButtonText}
+            </Text>
           </TouchableOpacity>
         )}
       </View>
+
+      {/* 남은 시간 표시 (버튼 하단) */}
+      {isTimerActive && timeLeft > 0 && !state.isEmailVerified && (
+        <View style={styles.timerOutsideRow}>
+          <Text style={styles.timerOutsideText}>남은 시간: {formattedTime}</Text>
+        </View>
+      )}
 
       {state.isEmailVerified && (
         <Text style={styles.successText}>이메일 인증이 완료되었습니다.</Text>
@@ -68,6 +103,9 @@ export default function EmailSection({
         email={state.email}
         onClose={() => setIsModalVisible(false)}
         onVerify={onVerify}
+        timeLeft={timeLeft}
+        formattedTime={formattedTime}
+        onResend={onResendCode}
       />
     </View>
   );
@@ -80,6 +118,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: 7.995,
     alignSelf: 'stretch',
+    position: 'relative', // absolute 자식을 기준잡기 위해 추가
   },
   inputRow: {
     height: 49.202,
@@ -126,6 +165,17 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter',
     fontSize: 12,
     marginTop: 4,
+  },
+  timerOutsideRow: {
+    position: 'absolute',
+    bottom: -22, // 컴포넌트 하단 바깥(여백 공간)으로 띄움으로써 UI 밀림 원천 차단
+    right: 0, // 컨테이너 우측 끝 정렬 (버튼 우측 끝과 일치)
+  },
+  timerOutsideText: {
+    color: Colors.primary.electricCyan,
+    fontFamily: 'Inter',
+    fontSize: 12,
+    fontWeight: '400',
   },
 });
 

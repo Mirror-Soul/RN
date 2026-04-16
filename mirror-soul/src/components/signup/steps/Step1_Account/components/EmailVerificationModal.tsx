@@ -16,8 +16,17 @@ const { height: SCREEN_HEIGHT } = Dimensions.get('window');
  * EmailVerificationModal 컴포넌트 (SRP)
  * 이메일로 발송된 6자리 코드를 입력받는 모달입니다.
  */
-export default function EmailVerificationModal({ isVisible, email, onClose, onVerify }: VerificationModalProps) {
+export default function EmailVerificationModal({ 
+  isVisible, 
+  email, 
+  onClose, 
+  onVerify,
+  timeLeft = 180,
+  formattedTime = '03:00',
+  onResend,
+}: VerificationModalProps) {
   const [code, setCode] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
 
   // 애니메이션 공유값 (심플한 페이드 전용)
   const opacity = useSharedValue(0);
@@ -32,10 +41,11 @@ export default function EmailVerificationModal({ isVisible, email, onClose, onVe
     }
   }, [isVisible, opacity]);
 
-  // 모달이 닫힐 때 입력된 코드를 초기화 (보안 및 UX 개선)
+  // 모달이 닫힐 때 입력된 코드와 에러를 초기화 (보안 및 UX 개선)
   useEffect(() => {
     if (!isVisible) {
       setCode('');
+      setErrorMessage('');
     }
   }, [isVisible]);
 
@@ -47,6 +57,8 @@ export default function EmailVerificationModal({ isVisible, email, onClose, onVe
     if (code.length === 6) {
       if (onVerify(code)) {
         onClose();
+      } else {
+        setErrorMessage('인증 코드가 일치하지 않습니다. 다시 확인해주세요.');
       }
     }
   };
@@ -91,17 +103,29 @@ export default function EmailVerificationModal({ isVisible, email, onClose, onVe
             <View style={styles.inputSection}>
               <View style={styles.labelContainer}>
                 <Text style={styles.label}>인증 코드</Text>
+                <Text style={[styles.timerText, timeLeft === 0 && styles.timerTextExpired]}>
+                  {formattedTime}
+                </Text>
               </View>
               <TextInput
-                style={styles.codeTextInput}
+                style={[styles.codeTextInput, errorMessage ? styles.codeTextInputError : null]}
                 value={code}
-                onChangeText={setCode}
+                onChangeText={(text) => {
+                  setCode(text);
+                  if (errorMessage) setErrorMessage('');
+                }}
                 placeholder="000000"
                 placeholderTextColor="#6A7282"
                 keyboardType="number-pad"
                 maxLength={6}
                 autoFocus
+                editable={timeLeft > 0}
               />
+              {!!errorMessage && (
+                <Text accessibilityRole="alert" style={styles.errorText}>
+                  {errorMessage}
+                </Text>
+              )}
             </View>
 
             {/* Buttons Row */}
@@ -109,12 +133,20 @@ export default function EmailVerificationModal({ isVisible, email, onClose, onVe
               <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
                 <Text style={styles.cancelText}>취소</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.confirmButton, code.length === 6 && styles.confirmButtonActive]}
-                onPress={handleConfirm}
-              >
-                <Text style={[styles.confirmText, code.length === 6 && { color: '#FFF' }]}>인증 확인</Text>
-              </TouchableOpacity>
+              
+              {timeLeft === 0 ? (
+                <TouchableOpacity style={styles.resendButton} onPress={onResend}>
+                  <Text style={styles.resendText}>재발송</Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  style={[styles.confirmButton, code.length === 6 && styles.confirmButtonActive]}
+                  onPress={handleConfirm}
+                  disabled={code.length !== 6}
+                >
+                  <Text style={[styles.confirmText, code.length === 6 && { color: '#FFF' }]}>인증 확인</Text>
+                </TouchableOpacity>
+              )}
             </View>
           </View>
         </Animated.View>
@@ -133,7 +165,7 @@ const styles = StyleSheet.create({
   modalContainer: {
     width: '85%',
     maxWidth: 392,
-    height: 463.502,
+    height: 'auto',
     borderRadius: Radii.xl,
     borderWidth: 0.612,
     borderColor: 'rgba(255, 255, 255, 0.10)',
@@ -209,6 +241,9 @@ const styles = StyleSheet.create({
     gap: 7.995,
   },
   labelContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     alignSelf: 'stretch',
   },
   label: {
@@ -262,6 +297,44 @@ const styles = StyleSheet.create({
   },
   confirmText: {
     color: '#4A5565', // 비활성 컬러
+    fontFamily: 'Inter',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  codeTextInputError: {
+    borderColor: Colors.primary.activeRedText,
+    borderWidth: 1.5,
+  },
+  errorText: {
+    color: Colors.primary.activeRedText,
+    fontFamily: 'Inter',
+    fontSize: 12,
+    fontWeight: '400',
+    lineHeight: 16,
+    textAlign: 'center',
+    marginTop: 4,
+  },
+  timerText: {
+    color: Colors.primary.electricCyan,
+    fontFamily: 'Inter',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  timerTextExpired: {
+    color: Colors.primary.activeRedText,
+  },
+  resendButton: {
+    flex: 1,
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: 'rgba(0, 211, 243, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 211, 243, 0.3)',
+  },
+  resendText: {
+    color: Colors.primary.electricCyan,
     fontFamily: 'Inter',
     fontSize: 16,
     fontWeight: '500',

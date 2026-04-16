@@ -29,6 +29,10 @@ export default function Step1AccountContainer() {
     handleVerifyEmail,
     handlePassVerification,
     isFormValid,
+    timeLeft,
+    isTimerActive,
+    formattedTime,
+    handleResendCode,
   } = useStep1Form();
 
   const handleContinue = () => {
@@ -61,6 +65,10 @@ export default function Step1AccountContainer() {
             setIsModalVisible={setIsModalVisible}
             onSendCode={handleSendEmailCode}
             onVerify={handleVerifyEmail}
+            timeLeft={timeLeft}
+            isTimerActive={isTimerActive}
+            formattedTime={formattedTime}
+            onResendCode={handleResendCode}
           />
 
           {/* Password Section */}

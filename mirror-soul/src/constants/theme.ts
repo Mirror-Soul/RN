@@ -8,7 +8,6 @@ export const Colors = {
     activeRedText: '#FF6467', // "실시간 음성 인식 중" 텍스트 컬러
   },
   gradient: {
-    // Array format for expo-linear-gradient
     cyanToPurple: ['#00D3F3', '#C27AFF'] as [string, string],
     cyanBluePurple: ['#00D3F3', '#51A2FF', '#C27AFF'] as [string, string, string], // 녹음 버튼용
   },
