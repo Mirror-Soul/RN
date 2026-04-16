@@ -1,7 +1,7 @@
-import { useState, useCallback } from 'react';
-import { Step1State } from '../types/step1';
-import { isValidEmail } from '@/src/utils/validation';
 import { useCountdown } from '@/src/hooks/useCountdown';
+import { isValidEmail } from '@/src/utils/validation';
+import { useCallback, useState } from 'react';
+import { Step1State } from '../types/step1';
 
 /**
  * useStep1Form 훅
@@ -49,9 +49,9 @@ export function useStep1Form() {
     if (__DEV__) {
       console.debug('Verifying email code length:', code.length);
     }
-    
+
     // UI 테스트용 임시 Mock: '111111' 입력 시 무조건 실패 처리하여 에러 화면 확인
-    if (code === '111111') {
+    if (__DEV__ && code === '111111') {
       return false;
     }
 
@@ -72,11 +72,11 @@ export function useStep1Form() {
   }, [updateState]);
 
   // 다음 단계 이동 가능 여부 체크
-  const isFormValid = 
-    state.isEmailVerified && 
-    state.password.length >= 8 && 
-    state.password === state.passwordConfirm && 
-    state.isIdentityVerified && 
+  const isFormValid =
+    state.isEmailVerified &&
+    state.password.length >= 8 &&
+    state.password === state.passwordConfirm &&
+    state.isIdentityVerified &&
     state.agreedToTerms;
 
   return {
