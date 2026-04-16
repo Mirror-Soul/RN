@@ -34,6 +34,20 @@ export default function EmailSection({
   formattedTime = '00:00',
   onResendCode = onSendCode
 }: EmailSectionProps) {
+  
+  // 버튼 텍스트 및 접근성 동기화를 위한 렌더링 전 상태 처리 (DRY/SRP 유지보수)
+  const sendButtonText = isTimerActive && timeLeft > 0
+    ? '인증 코드 입력'
+    : isTimerActive && timeLeft === 0
+      ? '재발송'
+      : '인증 코드 발송';
+
+  const sendButtonA11yHint = isTimerActive && timeLeft > 0
+    ? '다시 이메일 인증 코드를 입력할 수 있는 팝업 창을 엽니다'
+    : isTimerActive && timeLeft === 0
+      ? '유효시간이 초과되어 인증 코드를 다시 이메일로 발송합니다'
+      : '입력한 이메일 주소로 인증 코드를 전송합니다';
+
   return (
     <View style={[styles.container, state.isEmailVerified && { height: 77 }]}>
       <FormLabel label="이메일" />
@@ -61,12 +75,12 @@ export default function EmailSection({
             onPress={isTimerActive && timeLeft === 0 ? onResendCode : onSendCode}
             disabled={!isValidEmail(state.email)}
             accessibilityRole="button"
-            accessibilityLabel="인증 코드 발송"
-            accessibilityHint="입력한 이메일 주소로 인증 코드를 전송합니다"
+            accessibilityLabel={sendButtonText}
+            accessibilityHint={sendButtonA11yHint}
             accessibilityState={{ disabled: !isValidEmail(state.email) }}
           >
             <Text style={styles.sendButtonText}>
-              {isTimerActive && timeLeft > 0 ? '인증 코드 입력' : isTimerActive && timeLeft === 0 ? '재발송' : '인증 코드 발송'}
+              {sendButtonText}
             </Text>
           </TouchableOpacity>
         )}
