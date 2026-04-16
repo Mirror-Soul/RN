@@ -1,6 +1,6 @@
+import { Colors, Radii } from '@/src/constants/theme';
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import { Colors } from '@/src/constants/theme';
+import { StyleSheet, View } from 'react-native';
 import { useMbtiSlider } from './hooks/useMbtiSlider';
 import MbtiLabels from './parts/MbtiLabels';
 import MbtiTrack from './parts/MbtiTrack';
@@ -68,7 +68,7 @@ const styles = StyleSheet.create({
   container: {
     width: '100%',
     padding: 20,
-    borderRadius: 16,
+    borderRadius: Radii.lg,
     borderWidth: 0.612,
     borderColor: Colors.glass.white10,
     backgroundColor: Colors.glass.white5,

@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     height: 46,
-    borderRadius: 14,
+    borderRadius: Radii.md2,
     borderWidth: 0.612,
     borderColor: Colors.glass.white20,
     backgroundColor: Colors.glass.white10,
@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
   },
   likeButtonGradient: {
     flex: 1,
-    borderRadius: 14,
+    borderRadius: Radii.md2,
     borderWidth: 0.612,
     borderColor: 'rgba(0,211,243,0.30)',
     overflow: 'hidden',

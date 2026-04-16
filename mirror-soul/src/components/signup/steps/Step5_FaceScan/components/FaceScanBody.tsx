@@ -1,4 +1,4 @@
-import { Colors } from '@/src/constants/theme';
+import { Colors, Radii } from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -38,7 +38,7 @@ const styles = StyleSheet.create({
   container: {
     width: '100%',
     height: 460,
-    borderRadius: 24,
+    borderRadius: Radii.xl,
     borderWidth: 0.612,
     borderColor: Colors.glass.white10,
     overflow: 'hidden',

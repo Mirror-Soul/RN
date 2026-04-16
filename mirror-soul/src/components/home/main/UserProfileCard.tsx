@@ -44,7 +44,7 @@ export default function UserProfileCard({
 const styles = StyleSheet.create({
   container: {
     alignSelf: 'stretch',
-    borderRadius: 14,
+    borderRadius: Radii.md2,
     borderWidth: 0.612,
     borderColor: Colors.glass.white10,
     backgroundColor: Colors.glass.white5,

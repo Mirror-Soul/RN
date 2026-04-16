@@ -39,7 +39,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16.6,
     paddingTop: 16.6,
     paddingBottom: 16.6, // Adjusted slightly from 0.612 to be vertically balanced
-    borderRadius: 16,
+    borderRadius: Radii.lg,
     borderWidth: 0.6,
     borderColor: Colors.glass.white10,
     backgroundColor: Colors.glass.white5,
@@ -50,7 +50,7 @@ const styles = StyleSheet.create({
   checkbox: {
     width: 20,
     height: 20,
-    borderRadius: 4,
+    borderRadius: Radii.xs,
     borderWidth: 1.8,
     borderColor: Colors.glass.white30,
     backgroundColor: Colors.glass.white5,

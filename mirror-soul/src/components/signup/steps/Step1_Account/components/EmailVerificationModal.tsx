@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
   iconCircle: {
     width: 48,
     height: 48,
-    borderRadius: 9999, // Pill 형태
+    borderRadius: Radii.full, // Pill 형태
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
@@ -215,7 +215,7 @@ const styles = StyleSheet.create({
   },
   infoBox: {
     padding: 16.611,
-    borderRadius: 16,
+    borderRadius: Radii.lg,
     borderWidth: 0.612,
     borderColor: 'rgba(0, 211, 243, 0.20)',
     backgroundColor: 'rgba(0, 211, 243, 0.10)',
@@ -256,7 +256,7 @@ const styles = StyleSheet.create({
   codeTextInput: {
     height: 57.197,
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: 16,
+    borderRadius: Radii.lg,
     borderWidth: 0.612,
     borderColor: 'rgba(255, 255, 255, 0.10)',
     paddingHorizontal: 16,
@@ -273,7 +273,7 @@ const styles = StyleSheet.create({
   cancelButton: {
     flex: 1,
     height: 48,
-    borderRadius: 14,
+    borderRadius: Radii.md2,
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
     justifyContent: 'center',
     alignItems: 'center',
@@ -287,7 +287,7 @@ const styles = StyleSheet.create({
   confirmButton: {
     flex: 1,
     height: 48,
-    borderRadius: 14,
+    borderRadius: Radii.md2,
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
     justifyContent: 'center',
     alignItems: 'center',
@@ -326,7 +326,7 @@ const styles = StyleSheet.create({
   resendButton: {
     flex: 1,
     height: 48,
-    borderRadius: 14,
+    borderRadius: Radii.md2,
     backgroundColor: 'rgba(0, 211, 243, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',

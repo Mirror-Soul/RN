@@ -1,8 +1,8 @@
-import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Colors } from '@/src/constants/theme';
 import CameraIcon from '@/assets/images/common/Camera_icon.svg';
+import { Colors, Radii } from '@/src/constants/theme';
+import { LinearGradient } from 'expo-linear-gradient';
+import React from 'react';
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import { ScanPhase } from '../types/faceScan';
 
 interface FaceScanButtonProps {
@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
   container: {
     width: '100%',
     height: 56,
-    borderRadius: 16,
+    borderRadius: Radii.lg,
     overflow: 'hidden',
   },
   gradient: {

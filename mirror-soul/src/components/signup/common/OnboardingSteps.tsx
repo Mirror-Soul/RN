@@ -1,9 +1,9 @@
-import React from 'react';
-import { View, Text, StyleSheet, Dimensions } from 'react-native';
-import Svg, { Defs, RadialGradient as SvgRadialGradient, Circle, Stop } from 'react-native-svg';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Colors } from '@/src/constants/theme';
 import CompleteIcon from '@/assets/images/common/Complete.svg';
+import { Colors, Radii } from '@/src/constants/theme';
+import { LinearGradient } from 'expo-linear-gradient';
+import React from 'react';
+import { Dimensions, StyleSheet, Text, View } from 'react-native';
+import Svg, { Circle, Defs, Stop, RadialGradient as SvgRadialGradient } from 'react-native-svg';
 
 const STEPS = [
   { id: 1, label: '계정 설정' },
@@ -30,33 +30,33 @@ export default function OnboardingSteps({ currentStep = 1 }: OnboardingStepsProp
       {STEPS.map((step) => {
         const isActive = step.id === currentStep;
         const isCompleted = step.id < currentStep;
-        
+
         return (
           <View key={step.id} style={styles.stepContainer}>
             {/* Circle Wrapper (Placed ABOVE text) */}
             <View style={styles.circleWrapper}>
-              
+
               {/* Glow Effect only for Active or Completed */}
               {(isActive || isCompleted) && (
                 <View style={[styles.glowContainer, { opacity: isCompleted ? 0.3324 : 0.8 }]}>
-                   <Svg height="44" width="44" viewBox="0 0 44 44">
-                     <Defs>
-                       <SvgRadialGradient id={`glow-${step.id}`} cx="50%" cy="50%" rx="50%" ry="50%" fx="50%" fy="50%">
-                         <Stop offset="0%" stopColor={Colors.primary.electricCyan} stopOpacity="0.5" />
-                         <Stop offset="100%" stopColor={Colors.primary.vividPurple} stopOpacity="0" />
-                       </SvgRadialGradient>
-                     </Defs>
-                     <Circle cx="22" cy="22" r="22" fill={`url(#glow-${step.id})`} />
-                   </Svg>
+                  <Svg height="44" width="44" viewBox="0 0 44 44">
+                    <Defs>
+                      <SvgRadialGradient id={`glow-${step.id}`} cx="50%" cy="50%" rx="50%" ry="50%" fx="50%" fy="50%">
+                        <Stop offset="0%" stopColor={Colors.primary.electricCyan} stopOpacity="0.5" />
+                        <Stop offset="100%" stopColor={Colors.primary.vividPurple} stopOpacity="0" />
+                      </SvgRadialGradient>
+                    </Defs>
+                    <Circle cx="22" cy="22" r="22" fill={`url(#glow-${step.id})`} />
+                  </Svg>
                 </View>
               )}
 
               {/* Inner Circle */}
               <View style={[
-                styles.innerCircle, 
+                styles.innerCircle,
                 // 비활성(Inactive) 상태
-                (!isActive && !isCompleted) && { 
-                  borderColor: Colors.glass.white20, 
+                (!isActive && !isCompleted) && {
+                  borderColor: Colors.glass.white20,
                   backgroundColor: Colors.glass.white5,
                   shadowOpacity: 0
                 },
@@ -66,7 +66,7 @@ export default function OnboardingSteps({ currentStep = 1 }: OnboardingStepsProp
                   shadowOpacity: 0,
                 }
               ]}>
-                
+
                 {/* 배경 컬러 렌더링 */}
                 {(isActive || isCompleted) && (
                   <LinearGradient
@@ -76,16 +76,16 @@ export default function OnboardingSteps({ currentStep = 1 }: OnboardingStepsProp
                     style={StyleSheet.absoluteFill}
                   />
                 )}
-                
+
                 {/* 텍스트 또는 완료 아이콘 렌더링 */}
                 {isCompleted ? (
-                   <CompleteIcon width={20} height={20} />
+                  <CompleteIcon width={20} height={20} />
                 ) : (
                   <Text style={[
-                      styles.stepNumber, 
-                      !isActive && { color: Colors.neutral.darkGray },
-                      isActive && { color: Colors.primary.electricCyan }
-                    ]}
+                    styles.stepNumber,
+                    !isActive && { color: Colors.neutral.darkGray },
+                    isActive && { color: Colors.primary.electricCyan }
+                  ]}
                   >
                     {step.id}
                   </Text>
@@ -96,12 +96,12 @@ export default function OnboardingSteps({ currentStep = 1 }: OnboardingStepsProp
             {/* Label (Placed BELOW the circle) */}
             <View style={styles.labelContainer}>
               <Text style={[
-                  styles.labelText, 
-                  { fontSize: DYNAMIC_FONT_SIZE }, // Apply dynamic font size
-                  (!isActive && !isCompleted) && { color: Colors.neutral.disabledText },
-                  isActive && { color: Colors.primary.electricCyan },
-                  isCompleted && { color: Colors.neutral.lightGray }
-                ]}
+                styles.labelText,
+                { fontSize: DYNAMIC_FONT_SIZE }, // Apply dynamic font size
+                (!isActive && !isCompleted) && { color: Colors.neutral.disabledText },
+                isActive && { color: Colors.primary.electricCyan },
+                isCompleted && { color: Colors.neutral.lightGray }
+              ]}
                 numberOfLines={1}
               >
                 {step.label}
@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   circleWrapper: {
-    width: 44, 
+    width: 44,
     height: 44,
     justifyContent: 'center',
     alignItems: 'center',
@@ -151,10 +151,10 @@ const styles = StyleSheet.create({
   innerCircle: {
     width: 40,
     height: 40,
-    borderRadius: 20,
+    borderRadius: Radii.lg2,
     borderWidth: 1.836,
     borderColor: Colors.primary.electricCyan,
-    overflow: 'hidden', 
+    overflow: 'hidden',
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: Colors.primary.electricCyan,

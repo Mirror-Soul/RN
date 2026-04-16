@@ -1,6 +1,6 @@
+import { Colors, Radii } from '@/src/constants/theme';
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, Linking } from 'react-native';
-import { Colors } from '@/src/constants/theme';
+import { Linking, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 interface MicPermissionModalProps {
   visible: boolean;
@@ -85,7 +85,7 @@ const styles = StyleSheet.create({
   container: {
     width: '85%',
     maxWidth: 340,
-    borderRadius: 24,
+    borderRadius: Radii.xl,
     borderWidth: 0.612,
     borderColor: Colors.glass.white10,
     backgroundColor: 'rgba(20, 20, 30, 0.95)',
@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
   iconCircle: {
     width: 64,
     height: 64,
-    borderRadius: 32,
+    borderRadius: Radii.xxl,
     backgroundColor: Colors.glass.cyan10,
     justifyContent: 'center',
     alignItems: 'center',
@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
   primaryButton: {
     width: '100%',
     height: 48,
-    borderRadius: 14,
+    borderRadius: Radii.md2,
     backgroundColor: Colors.primary.electricCyan,
     justifyContent: 'center',
     alignItems: 'center',
@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
   secondaryButton: {
     width: '100%',
     height: 48,
-    borderRadius: 14,
+    borderRadius: Radii.md2,
     borderWidth: 1,
     borderColor: Colors.glass.white20,
     backgroundColor: 'transparent',

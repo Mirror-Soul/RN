@@ -48,7 +48,7 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
     height: 46,
     paddingHorizontal: 12,
-    borderRadius: 14,
+    borderRadius: Radii.md2,
     borderWidth: 0.612,
     borderColor: Colors.glass.white10,
     backgroundColor: Colors.glass.white5,

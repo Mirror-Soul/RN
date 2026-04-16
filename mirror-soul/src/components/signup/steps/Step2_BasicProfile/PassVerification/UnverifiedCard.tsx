@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Colors } from '@/src/constants/theme';
+import { Colors, Radii } from '@/src/constants/theme';
 
 interface Props {
   onVerify: () => void;
@@ -15,7 +15,7 @@ export default function UnverifiedCard({ onVerify }: Props) {
         colors={['rgba(0, 211, 243, 0.10)', 'rgba(194, 122, 255, 0.10)']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={[StyleSheet.absoluteFill, { borderRadius: 16 }]}
+        style={[StyleSheet.absoluteFill, { borderRadius: Radii.lg }]}
       />
       
       <View style={styles.infoContainer}>
@@ -33,7 +33,7 @@ export default function UnverifiedCard({ onVerify }: Props) {
           colors={Colors.gradient.cyanToPurple}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
-          style={[StyleSheet.absoluteFill, { borderRadius: 14 }]}
+          style={[StyleSheet.absoluteFill, { borderRadius: Radii.md2 }]}
         />
         <Text style={styles.buttonText}>PASS 본인인증 하기</Text>
       </TouchableOpacity>
@@ -46,7 +46,7 @@ export default function UnverifiedCard({ onVerify }: Props) {
 const styles = StyleSheet.create({
   cardContainer: {
     width: '100%',
-    borderRadius: 16,
+    borderRadius: Radii.lg,
     borderWidth: 0.612,
     borderColor: Colors.glass.cyan20,
     padding: 24,
@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
     height: 56,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 14,
+    borderRadius: Radii.md2,
     marginBottom: 8,
     overflow: 'hidden', 
   },

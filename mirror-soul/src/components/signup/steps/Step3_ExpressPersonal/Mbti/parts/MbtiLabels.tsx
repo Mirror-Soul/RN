@@ -1,6 +1,6 @@
+import { Colors, Radii } from '@/src/constants/theme';
 import React from 'react';
-import { View, Text, StyleSheet, Platform } from 'react-native';
-import { Colors } from '@/src/constants/theme';
+import { Platform, StyleSheet, Text, View } from 'react-native';
 
 const monospaceFont = Platform.OS === 'ios' ? 'Menlo' : 'monospace';
 
@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
   charBox: {
     width: 32,
     height: 32,
-    borderRadius: 999,
+    borderRadius: Radii.full,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 0.612,

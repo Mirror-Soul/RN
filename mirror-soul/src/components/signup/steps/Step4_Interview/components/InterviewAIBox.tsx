@@ -1,7 +1,7 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { Colors } from '@/src/constants/theme';
+import { Colors, Radii } from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
+import React from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 
 interface InterviewAIBoxProps {
   category: string;
@@ -21,7 +21,7 @@ export default function InterviewAIBox({ category, question }: InterviewAIBoxPro
           <View style={styles.aiDot} />
           <Text style={styles.aiLabelText}>AI 인터뷰어</Text>
         </View>
-        
+
         <View style={styles.badgeWrapper}>
           <Text style={styles.badgeText}>{category}</Text>
         </View>
@@ -41,7 +41,7 @@ const styles = StyleSheet.create({
     paddingRight: 25.83,
     paddingBottom: 1.836,
     paddingLeft: 25.83,
-    borderRadius: 24,
+    borderRadius: Radii.xl,
     borderWidth: 1.836,
     borderColor: Colors.glass.white20,
     shadowColor: Colors.primary.soulBlack,
@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
   aiDot: {
     width: 8,
     height: 8,
-    borderRadius: 4,
+    borderRadius: Radii.xs,
     backgroundColor: Colors.primary.electricCyan,
   },
   aiLabelText: {
@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
     paddingRight: 9.926,
     paddingBottom: 3.996,
     paddingLeft: 12.604,
-    borderRadius: 20,
+    borderRadius: Radii.lg2,
     borderWidth: 0.612,
     borderColor: Colors.glass.purple30_mbti,
     backgroundColor: Colors.glass.purple20,

@@ -1,10 +1,10 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Colors } from '@/src/constants/theme';
-import { LinearGradient } from 'expo-linear-gradient';
+import ContinueIcon from '@/assets/images/common/Continue_icon.svg';
 import VoiceIcon from '@/assets/images/common/Voice_icon.svg';
 import VoiceIconWhite from '@/assets/images/common/Voice_icon_white.svg';
-import ContinueIcon from '@/assets/images/common/Continue_icon.svg';
+import { Colors, Radii } from '@/src/constants/theme';
+import { LinearGradient } from 'expo-linear-gradient';
+import React from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 interface Props {
   isRecording?: boolean;
@@ -67,7 +67,7 @@ const styles = StyleSheet.create({
   recordButtonWrapper: {
     flex: 1,
     height: '100%',
-    borderRadius: 16,
+    borderRadius: Radii.lg,
     shadowColor: Colors.primary.electricCyan,
     shadowOffset: { width: 0, height: 25 },
     shadowOpacity: 0.30,
@@ -78,7 +78,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary.recordingRed,
     shadowColor: Colors.primary.recordingRed,
     // 유저 요청: box-shadow: 0 25px 50px -12px rgba(251, 44, 54, 0.30);
-    shadowOffset: { width: 0, height: 25 }, 
+    shadowOffset: { width: 0, height: 25 },
     shadowOpacity: 0.30,
     shadowRadius: 50,
   },
@@ -88,7 +88,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     gap: 12,
-    borderRadius: 16,
+    borderRadius: Radii.lg,
     paddingHorizontal: 20,
   },
   recordingContent: {
@@ -97,7 +97,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     gap: 11.582,
-    borderRadius: 16,
+    borderRadius: Radii.lg,
   },
   recordText: {
     color: Colors.primary.soulBlack,
@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    borderRadius: 16,
+    borderRadius: Radii.lg,
     borderWidth: 1.836,
     borderColor: Colors.glass.white10,
     backgroundColor: Colors.glass.white5,

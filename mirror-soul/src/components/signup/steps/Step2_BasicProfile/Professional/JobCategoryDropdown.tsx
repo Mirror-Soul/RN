@@ -1,4 +1,4 @@
-import { Colors } from '@/src/constants/theme';
+import { Colors, Radii } from '@/src/constants/theme';
 import React from 'react';
 import { Dimensions, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { jobCategories } from './jobData';
@@ -62,7 +62,7 @@ const styles = StyleSheet.create({
     maxHeight: 240,
     padding: 8.607,
     flexDirection: 'column',
-    borderRadius: 16,
+    borderRadius: Radii.lg,
     borderWidth: 0.612,
     borderColor: Colors.glass.white10,
     backgroundColor: Colors.glass.slate95,
@@ -76,7 +76,7 @@ const styles = StyleSheet.create({
     height: 48,
     paddingVertical: 11.4,
     paddingHorizontal: 16,
-    borderRadius: 14,
+    borderRadius: Radii.md2,
     justifyContent: 'center',
   },
   listItemText: {

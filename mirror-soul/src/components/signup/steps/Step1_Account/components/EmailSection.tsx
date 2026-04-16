@@ -1,11 +1,10 @@
-import React from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
-import { Colors } from '@/src/constants/theme';
-import { SectionProps } from '../types/step1';
 import FormLabel from '@/src/components/signup/common/FormLabel';
-import CompleteCheck from './CompleteCheck';
-import EmailVerificationModal from './EmailVerificationModal';
+import { Colors, Radii } from '@/src/constants/theme';
 import { isValidEmail } from '@/src/utils/validation';
+import React from 'react';
+import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { SectionProps } from '../types/step1';
+import EmailVerificationModal from './EmailVerificationModal';
 
 interface EmailSectionProps extends SectionProps {
   isModalVisible: boolean;
@@ -22,19 +21,19 @@ interface EmailSectionProps extends SectionProps {
  * EmailSection 컴포넌트 (SRP)
  * 이메일 입력 및 인증 코드 발송 로직을 관리합니다.
  */
-export default function EmailSection({ 
-  state, 
-  onChange, 
-  isModalVisible, 
-  setIsModalVisible, 
-  onSendCode, 
+export default function EmailSection({
+  state,
+  onChange,
+  isModalVisible,
+  setIsModalVisible,
+  onSendCode,
   onVerify,
   timeLeft = 0,
   isTimerActive = false,
   formattedTime = '00:00',
   onResendCode = onSendCode
 }: EmailSectionProps) {
-  
+
   // 버튼 텍스트 및 접근성 동기화를 위한 렌더링 전 상태 처리 (DRY/SRP 유지보수)
   const sendButtonText = isTimerActive && timeLeft > 0
     ? '인증 코드 입력'
@@ -51,11 +50,11 @@ export default function EmailSection({
   return (
     <View style={[styles.container, state.isEmailVerified && { height: 77 }]}>
       <FormLabel label="이메일" />
-      
+
       <View style={styles.inputRow}>
         <TextInput
           style={[
-            styles.emailInput, 
+            styles.emailInput,
             state.isEmailVerified && { width: '100%', borderColor: Colors.glass.white10 }
           ]}
           value={state.email}
@@ -70,8 +69,8 @@ export default function EmailSection({
           accessibilityState={{ disabled: state.isEmailVerified }}
         />
         {!state.isEmailVerified && (
-          <TouchableOpacity 
-            style={styles.sendButton} 
+          <TouchableOpacity
+            style={styles.sendButton}
             onPress={isTimerActive && timeLeft === 0 ? onResendCode : onSendCode}
             disabled={!isValidEmail(state.email)}
             accessibilityRole="button"
@@ -132,7 +131,7 @@ const styles = StyleSheet.create({
     height: 49.202,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    borderRadius: 16,
+    borderRadius: Radii.lg,
     borderWidth: 0.612,
     borderColor: 'rgba(255, 255, 255, 0.10)',
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
@@ -145,10 +144,10 @@ const styles = StyleSheet.create({
   sendButton: {
     flex: 1,
     height: 49.202,
-    paddingVertical: 14.5, 
+    paddingVertical: 14.5,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 16,
+    borderRadius: Radii.lg,
     backgroundColor: 'rgba(255, 255, 255, 0.10)',
   },
   sendButtonText: {
