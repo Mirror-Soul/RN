@@ -1,6 +1,6 @@
 import { Colors, Radii } from '@/src/constants/theme';
 import React from 'react';
-import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Linking, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 interface MicPermissionModalProps {
   visible: boolean;
