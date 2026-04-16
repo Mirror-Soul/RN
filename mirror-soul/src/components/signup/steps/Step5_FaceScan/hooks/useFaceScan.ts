@@ -52,7 +52,7 @@ export function useFaceScan() {
       setCompletedDirections(SCAN_DIRECTIONS.map(() => false));
       setVideoUri(null);
       setIsDirectionMatching(false);
-      setIsCameraReady(false); // 새로운 스캔 세션 시작 시 카메라 준비 상태 초기화
+      setIsCameraReady(false); // ⚠️ 이전 세션의 stale ready 상태가 새 스캔 세션에 영향을 미치지 않도록 초기화
       isHoldingRef.current = false;
     } catch (error) {
       console.error('스캔 시작 오류:', error);
@@ -64,21 +64,25 @@ export function useFaceScan() {
   // --- 카메라 마운트 및 하드웨어 초기화 완료 후 녹화 시작 로직 ---
   useEffect(() => {
     if (phase === 'scanning' && isCameraReady && cameraRef.current && !videoUri) {
+      if (__DEV__) console.log('[FaceScan] 모든 조건 충족 - 녹화 시작');
       try {
         cameraRef.current.startRecording({
           onRecordingFinished: (video) => {
+            if (__DEV__) console.log('[FaceScan] 녹화 완료:', video.path);
             setVideoUri(video.path);
-            setPhase('completed'); phaseRef.current = 'completed'; // 비디오 저장이 완료되면 진짜 완료 상태!
+            setPhase('completed'); phaseRef.current = 'completed';
           },
           onRecordingError: (error) => {
-            console.error('녹화 오류:', error);
+            console.error('[FaceScan] 녹화 오류:', error);
             Alert.alert('녹화 오류', '영상 녹화 중 문제가 발생했습니다.');
             setPhase('idle'); phaseRef.current = 'idle';
           },
         });
       } catch (err) {
-        console.error('녹화 시작 시점 예외:', err);
+        console.error('[FaceScan] 녹화 시작 시점 예외:', err);
       }
+    } else if (phase === 'scanning' && !isCameraReady) {
+      if (__DEV__) console.log('[FaceScan] 카메라 준비 대기 중 (Race Condition 방어 중)...');
     }
   }, [phase, isCameraReady, videoUri]); // cameraRef는 외부 ref이므로 의존성에 넣지 않음 (phase 전환 시점 시도)
 
