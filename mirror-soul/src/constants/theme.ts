@@ -1,53 +1,75 @@
-/**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
- */
-
-import { Platform } from 'react-native';
-
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
-
 export const Colors = {
-  light: {
-    text: '#11181C',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
+  primary: {
+    electricCyan: '#00D3F3', // Brand Cyan
+    vividPurple: '#C27AFF', // Brand Purple
+    soulBlack: '#000000',
+    successGreen: '#05DF72', // Verification Success Green
+    recordingRed: '#FB2C36', // 녹음 중 버튼 및 포인트 컬러
+    activeRedText: '#FF6467', // "실시간 음성 인식 중" 텍스트 컬러
   },
-  dark: {
-    text: '#ECEDEE',
-    background: '#151718',
-    tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
+  gradient: {
+    cyanToPurple: ['#00D3F3', '#C27AFF'] as [string, string],
+    cyanBluePurple: ['#00D3F3', '#51A2FF', '#C27AFF'] as [string, string, string], // 녹음 버튼용
   },
+  neutral: {
+    pureWhite: '#FFFFFF',
+    lightGray: '#99A1AF',
+    darkGray: '#6A7282',
+    disabledText: '#4A5565',
+    lightGrayText: '#D1D5DC',
+  },
+  glass: {
+    white5: 'rgba(255, 255, 255, 0.05)',
+    white10: 'rgba(255, 255, 255, 0.10)',
+    white20: 'rgba(255, 255, 255, 0.20)',
+    white30: 'rgba(255, 255, 255, 0.30)',
+    cyan18: 'rgba(0, 255, 255, 0.18)',
+    cyan20: 'rgba(0, 211, 243, 0.20)',
+    purple18: 'rgba(147, 51, 234, 0.18)',
+    purple08: 'rgba(142, 85, 236, 0.08)',
+    purple20: 'rgba(194, 122, 255, 0.20)',
+    purple30: 'rgba(194, 122, 255, 0.30)',
+    // MBTI Specific (9333EA based)
+    purple80: 'rgba(147, 51, 234, 0.80)',
+    purple30_mbti: 'rgba(147, 51, 234, 0.30)',
+    purple10_mbti: 'rgba(147, 51, 234, 0.10)',
+    // MBTI Specific (00FFFF based)
+    cyan80: 'rgba(0, 255, 255, 0.80)',
+    cyan30: 'rgba(0, 255, 255, 0.30)',
+    cyan10: 'rgba(0, 255, 255, 0.10)',
+    green10: 'rgba(5, 223, 114, 0.10)',
+    green20: 'rgba(5, 223, 114, 0.20)',
+    slate95: 'rgba(16, 24, 40, 0.95)',
+    black40: 'rgba(0, 0, 0, 0.40)', // 답변 박스 배경
+    black50: 'rgba(0, 0, 0, 0.50)', // 추천 카드 배지 배경
+    black80: 'rgba(0, 0, 0, 0.80)', // 추천 카드 정보 그라디언트
+    recordingBg: ['rgba(0, 211, 243, 0.05)', 'rgba(194, 122, 255, 0.05)'] as [string, string], // 웨이브폼 배경
+  }
 };
 
-export const Fonts = Platform.select({
-  ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
-    sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
-    serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
-    rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
-    mono: 'ui-monospace',
-  },
-  default: {
-    sans: 'normal',
-    serif: 'serif',
-    rounded: 'normal',
-    mono: 'monospace',
-  },
-  web: {
-    sans: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-    serif: "Georgia, 'Times New Roman', serif",
-    rounded: "'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif",
-    mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
-  },
-});
+/**
+ * 둥근 모서리(BorderRadius) 수치 시스템
+ * 프로젝트 전역의 모서리 곡률 일관성을 위해 사용합니다.
+ */
+export const Radii = {
+  none: 0,
+  xs: 4,
+  sm: 8,
+  md: 12,
+  md2: 14,    // 버튼, 드롭다운, 카드 등 범용 (피그마 명칭 미정)
+  lg: 16,     // 기본 입력창, 카드 등 (가장 많이 사용됨)
+  lg2: 20,    // 카드, 섹션 컨테이너 (피그마 명칭 미정)
+  xl: 24,
+  xxl: 32,    // 대형 모달 (피그마 명칭 미정)
+  full: 9999,  // Pill 형태 또는 완벽한 원형을 구현할 때 사용
+} as const;
+
+/**
+ * 레이아웃 관련 상수 시스템
+ */
+export const Layout = {
+  MAX_CONTENT_WIDTH: 345,
+  SCREEN_PADDING: 24,
+} as const;
+
+
