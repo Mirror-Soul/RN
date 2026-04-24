@@ -1,5 +1,6 @@
-import BottomNavbar, { BottomTabId } from '@/src/components/home/main/BottomNavbar';
+import BottomNavbar from '@/src/components/home/main/BottomNavbar';
 import { Colors } from '@/src/constants/theme';
+import { ROUTE_TO_TAB, TAB_TO_ROUTE } from '@/src/constants/routes/mainRoutes';
 import { Tabs } from 'expo-router';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -17,15 +18,16 @@ export default function MainLayout() {
           headerShown: false,
         }}
         tabBar={({ state, navigation }) => {
-          // 현재 활성화된 라우트 이름을 BottomTabId로 매핑
+          // ROUTE_TO_TAB 상수를 사용하여 현재 활성화된 탭 ID를 결정
           const routeName = state.routes[state.index].name;
-          const activeTab: BottomTabId = routeName === 'index' ? 'discover' : (routeName as BottomTabId);
+          const activeTab = ROUTE_TO_TAB[routeName] ?? 'discover';
 
           return (
             <BottomNavbar
               activeTab={activeTab}
               onTabPress={(tab) => {
-                const destRoute = tab === 'discover' ? 'index' : tab;
+                // TAB_TO_ROUTE 상수를 사용하여 이동할 라우트명을 결정
+                const destRoute = TAB_TO_ROUTE[tab];
                 navigation.navigate(destRoute);
               }}
             />
