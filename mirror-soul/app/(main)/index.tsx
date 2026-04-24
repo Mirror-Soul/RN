@@ -5,6 +5,7 @@ import UserProfileCard from '@/src/components/home/main/UserProfileCard';
 import { Colors, Layout } from '@/src/constants/theme';
 import React from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 /**
  * 메인 홈 화면 (발견 탭)
@@ -12,13 +13,15 @@ import { ScrollView, StyleSheet, View } from 'react-native';
  * BottomNavbar는 (main)/_layout.tsx 에서 공유로 제공됩니다.
  */
 export default function MainHomeScreen() {
+  const insets = useSafeAreaInsets();
+
   return (
     <ScrollView
       style={styles.scrollView}
       contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
     >
-      <View style={styles.dashboard}>
+      <View style={[styles.dashboard, { paddingTop: Math.max(insets.top + 12, Layout.SCREEN_PADDING) }]}>
         {/* 헤더 */}
         <MainHeader />
 
@@ -49,7 +52,6 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: Layout.MAX_CONTENT_WIDTH,
     alignSelf: 'center',
-    paddingTop: Layout.SCREEN_PADDING,
     gap: Layout.SCREEN_PADDING,
   },
 });
