@@ -27,14 +27,14 @@ const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 12,
     paddingTop: 12,
-    paddingBottom: 1,
+    paddingBottom: 12,
     borderBottomWidth: 0.612,
     borderBottomColor: Colors.glass.purple20,
     backgroundColor: Colors.glass.purple10,
   },
   row: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     gap: 8,
     alignSelf: 'stretch',
   },

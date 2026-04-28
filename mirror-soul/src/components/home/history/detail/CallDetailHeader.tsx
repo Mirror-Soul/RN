@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 16,
     paddingTop: 16,
-    paddingBottom: 1,
+    paddingBottom: 16,
     borderBottomWidth: 0.612,
     borderBottomColor: Colors.glass.white10,
     backgroundColor: Colors.glass.black40,
