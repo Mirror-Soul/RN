@@ -55,6 +55,7 @@ export const Radii = {
   none: 0,
   xs: 4,
   sm: 8,
+  smmd: 10,   // 통화 서브 정보 등 추가분
   md: 12,
   md2: 14,    // 버튼, 드롭다운, 카드 등 범용 (피그마 명칭 미정)
   lg: 16,     // 기본 입력창, 카드 등 (가장 많이 사용됨)
@@ -70,6 +71,7 @@ export const Radii = {
 export const Layout = {
   MAX_CONTENT_WIDTH: 345,
   SCREEN_PADDING: 24,
+  MAIN_TAB_CONTENTS_BOTTOM_PADDING: 100, // BottomNavbar 높이에 대응하는 스크롤 하단 여백
 } as const;
 
 
