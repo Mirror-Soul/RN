@@ -2,7 +2,7 @@ import EditPencilIcon from '@/assets/images/common/history/call_history/call_edi
 import { Colors, Radii } from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View, TextInput } from 'react-native';
 import { ChatMessage } from '../../parts/HistoryCallCard';
 import ChatEditForm from './ChatEditForm';
 
@@ -18,7 +18,7 @@ interface ChatBubbleProps {
 
 /**
  * 단일 채팅 말풍선 컴포넌트 (SRP)
- * direction에 따라 상대방(RECEIVED) / 나(SENT) 스타일을 분기합니다.
+ * 레이아웃 넘침 방지(flexShrink) 및 반응형 메타 정보 배치를 지원합니다.
  */
 export default function ChatBubble({
   message,
@@ -31,20 +31,6 @@ export default function ChatBubble({
 }: ChatBubbleProps) {
   const isSent = message.direction === 'SENT';
   const isEditing = editingId === message.id;
-
-  // 수정 모드일 때
-  if (isEditing) {
-    return (
-      <View style={styles.rowRight}>
-        <ChatEditForm
-          value={editText}
-          onChangeText={onEditTextChange}
-          onSave={() => onEditSave(message.id)}
-          onCancel={onEditCancel}
-        />
-      </View>
-    );
-  }
 
   // 상대방 말풍선 (RECEIVED)
   if (!isSent) {
@@ -61,30 +47,53 @@ export default function ChatBubble({
   // 내 말풍선 (SENT)
   return (
     <View style={styles.rowRight}>
-      <LinearGradient
-        colors={[Colors.glass.purple20, Colors.glass.pink20]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={[styles.bubbleBase, styles.sentBubble]}
-      >
-        <Text style={styles.messageText}>{message.text}</Text>
+      {/* 왼쪽 메타 정보: [수정됨]이 [시간] 위에 오도록 세로 배치 */}
+      <View style={styles.metaLeft}>
+        {message.isEdited && <Text style={styles.editedLabel}>수정됨</Text>}
+        <Text style={styles.timestamp}>{message.timestamp}</Text>
+      </View>
 
-        {/* 편집 버튼 & 수정됨 레이블 */}
-        <View style={styles.editRow}>
-          {message.isEdited && (
-            <Text style={styles.editedLabel}>수정됨</Text>
+      {/* 말풍선 컨테이너 (flexShrink 적용으로 레이아웃 넘침 방지) */}
+      <View style={styles.sentBubbleContainer}>
+        <LinearGradient
+          colors={[Colors.glass.purple20, Colors.glass.pink20]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[styles.bubbleBase, styles.sentBubble]}
+        >
+          {isEditing ? (
+            // 수정 모드: TextInput이 가용한 가로 공간을 모두 채우도록 flex 적용
+            <View style={styles.editingContent}>
+              <TextInput
+                style={styles.textInput}
+                value={editText}
+                onChangeText={onEditTextChange}
+                multiline
+                autoFocus
+                placeholderTextColor={Colors.neutral.darkGray}
+              />
+              <ChatEditForm
+                onSave={() => onEditSave(message.id)}
+                onCancel={onEditCancel}
+              />
+            </View>
+          ) : (
+            // 일반 모드
+            <Text style={styles.messageText}>{message.text}</Text>
           )}
+        </LinearGradient>
+
+        {/* 수정 버튼: 평상시에만 노출하며 우측 상단 오버랩 */}
+        {!isEditing && (
           <TouchableOpacity
-            style={styles.editButton}
+            style={styles.editButtonAbsolute}
             onPress={() => onEditStart(message.id, message.text)}
-            activeOpacity={0.7}
-            accessibilityLabel="메시지 수정"
+            activeOpacity={0.8}
           >
             <EditPencilIcon width={12} height={12} />
           </TouchableOpacity>
-        </View>
-      </LinearGradient>
-      <Text style={[styles.timestamp, styles.timestampRight]}>{message.timestamp}</Text>
+        )}
+      </View>
     </View>
   );
 }
@@ -92,36 +101,54 @@ export default function ChatBubble({
 const styles = StyleSheet.create({
   rowLeft: {
     alignSelf: 'flex-start',
-    alignItems: 'flex-start',
-    gap: 4,
-    maxWidth: '75%',
+    alignItems: 'flex-end',
+    flexDirection: 'row',
+    gap: 8,
+    maxWidth: '85%',
   },
   rowRight: {
     alignSelf: 'flex-end',
     alignItems: 'flex-end',
-    gap: 4,
-    maxWidth: '75%',
+    flexDirection: 'row',
+    gap: 8,
+    maxWidth: '85%', // 기기 너비에 따른 동적 대응을 위한 퍼센트 너비
+  },
+  metaLeft: {
+    flexDirection: 'column',
+    alignItems: 'flex-end',
+    justifyContent: 'flex-end',
+    gap: 2,
+    minWidth: 40, // 메타 정보 공간 확보
+  },
+  sentBubbleContainer: {
+    position: 'relative',
+    flexShrink: 1, // 중요: 자식(말풍선)이 부모 너비를 넘지 않고 줄어들게 함 (잘림 방지)
   },
   bubbleBase: {
     paddingHorizontal: 12,
-    paddingTop: 12,
-    paddingBottom: 8,
+    paddingVertical: 12,
     borderWidth: 0.612,
   },
   receivedBubble: {
-    borderTopLeftRadius: Radii.bubble,   // 6 — 발신 기원 표시
-    borderTopRightRadius: Radii.lg,      // 16
+    borderTopLeftRadius: Radii.bubble,
+    borderTopRightRadius: Radii.lg,
     borderBottomRightRadius: Radii.lg,
     borderBottomLeftRadius: Radii.lg,
     borderColor: Colors.glass.white10,
     backgroundColor: Colors.glass.white10,
+    flexShrink: 1,
   },
   sentBubble: {
-    borderTopLeftRadius: Radii.lg,      // 16
-    borderTopRightRadius: Radii.bubble, // 6 — 발신 기원 표시
+    borderTopLeftRadius: Radii.lg,
+    borderTopRightRadius: Radii.bubble,
     borderBottomRightRadius: Radii.lg,
     borderBottomLeftRadius: Radii.lg,
     borderColor: Colors.glass.purple30,
+    alignSelf: 'flex-start', // 텍스트 길이에 맞춰 너비 조절
+  },
+  editingContent: {
+    alignSelf: 'stretch',
+    minWidth: 120, // 입력 시 최소 공간 확보
   },
   messageText: {
     color: Colors.neutral.pureWhite,
@@ -131,21 +158,20 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     letterSpacing: -0.15,
   },
-  editRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-    gap: 6,
-    marginTop: 4,
-  },
-  editedLabel: {
-    color: Colors.neutral.darkGray,
+  textInput: {
+    color: Colors.neutral.pureWhite,
     fontFamily: 'Inter',
-    fontSize: 12,
-    fontWeight: '400',
-    lineHeight: 16,
+    fontSize: 14,
+    lineHeight: 22,
+    letterSpacing: -0.15,
+    padding: 0,
+    textAlignVertical: 'top',
+    alignSelf: 'stretch',
   },
-  editButton: {
+  editButtonAbsolute: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
     width: 24,
     height: 24,
     justifyContent: 'center',
@@ -153,17 +179,21 @@ const styles = StyleSheet.create({
     borderRadius: Radii.full,
     borderWidth: 0.612,
     borderColor: Colors.glass.purple50,
-    backgroundColor: Colors.glass.purple30,
+    backgroundColor: 'rgba(20, 20, 20, 0.9)',
+    zIndex: 10,
   },
   timestamp: {
     color: Colors.neutral.darkGray,
     fontFamily: 'Inter',
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '400',
-    lineHeight: 16,
-    paddingHorizontal: 8,
+    lineHeight: 14,
   },
-  timestampRight: {
-    textAlign: 'right',
+  editedLabel: {
+    color: Colors.neutral.darkGray,
+    fontFamily: 'Inter',
+    fontSize: 11,
+    fontWeight: '400',
+    lineHeight: 14,
   },
 });
