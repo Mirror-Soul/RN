@@ -1,5 +1,4 @@
-import HistoryIcon from '@/assets/images/common/bottomNavbar/History_button.svg';
-import PuppleHeartIcon from '@/assets/images/common/history/puppleHeart.svg';
+import { default as HistoryIcon, default as PurpleHeartIcon } from '@/assets/images/common/bottomNavbar/History_button.svg';
 import { Colors, Radii } from '@/src/constants/theme';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
@@ -23,7 +22,7 @@ export default function CallSubInfo({
 
       {/* Twin Match */}
       <View style={styles.chip}>
-        <PuppleHeartIcon width={16} height={16} />
+        <PurpleHeartIcon width={16} height={16} />
         <Text style={styles.chipText}>{twinMatchLabel}</Text>
       </View>
     </View>

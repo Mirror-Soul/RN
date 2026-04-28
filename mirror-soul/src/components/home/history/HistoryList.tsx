@@ -12,6 +12,7 @@ const MOCK_CALL_HISTORY: HistoryCallItemData[] = [
     consistencyPercent: 94,
     dateStr: '오늘',
     timeStr: '14:30',
+    direction: 'SENT',
     callTypeDesc: '내가 시작한 통화',
     durationLabel: '8분 23초',
     twinMatchLabel: '상대 Twin 92%',
@@ -24,6 +25,7 @@ const MOCK_CALL_HISTORY: HistoryCallItemData[] = [
     consistencyPercent: 88,
     dateStr: '어제',
     timeStr: '21:15',
+    direction: 'RECEIVED',
     callTypeDesc: '상대방이 시작한 통화',
     durationLabel: '12분 40초',
     twinMatchLabel: '상대 Twin 85%',
@@ -36,12 +38,10 @@ interface HistoryListProps {
 }
 
 export default function HistoryList({ filter }: HistoryListProps) {
-  // TODO: filter에 따라 데이터 필터링 로직 추가 (API 연동 시 실제 필터링 사용)
+  // 필터링 로직: 표시 문자열이 아닌 도메인 데이터(direction)를 기준으로 판정
   const data = MOCK_CALL_HISTORY.filter((item) => {
     if (filter === 'ALL') return true;
-    if (filter === 'SENT' && item.callTypeDesc.includes('내가 시작한')) return true;
-    if (filter === 'RECEIVED' && item.callTypeDesc.includes('상대방이 시작한')) return true;
-    return false;
+    return item.direction === filter;
   });
 
   return (

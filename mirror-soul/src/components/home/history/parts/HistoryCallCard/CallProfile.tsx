@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
     letterSpacing: -0.439,
   },
   consistencyBadgeWrapper: {
-    borderRadius: 9999,
+    borderRadius: Radii.full,
     borderWidth: 0.612,
     borderColor: 'rgba(0, 211, 243, 0.30)',
     overflow: 'hidden',

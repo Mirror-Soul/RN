@@ -21,7 +21,10 @@ export default function HistoryScreen() {
   return (
     <ScrollView
       style={styles.scrollView}
-      contentContainerStyle={styles.scrollContent}
+      contentContainerStyle={[
+        styles.scrollContent,
+        { paddingBottom: insets.bottom + 100 }, // 네비바 높이 + 안전영역 대응
+      ]}
       showsVerticalScrollIndicator={false}
     >
       <View style={[styles.dashboard, { paddingTop: Math.max(insets.top + 12, Layout.SCREEN_PADDING) }]}>
@@ -51,7 +54,6 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     alignItems: 'center',
-    paddingBottom: 140, // Floating BottomNavbar 여백
   },
   dashboard: {
     width: '100%',

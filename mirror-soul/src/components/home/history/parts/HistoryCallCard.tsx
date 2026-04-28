@@ -13,6 +13,7 @@ export interface HistoryCallItemData {
   dateStr: string;
   timeStr: string;
   profileImageUrl?: string;
+  direction: 'SENT' | 'RECEIVED';
   callTypeDesc: string;
   durationLabel: string;
   twinMatchLabel: string;
