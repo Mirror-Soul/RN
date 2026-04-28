@@ -22,6 +22,8 @@ export default function ChatEditForm({ onSave, onCancel }: ChatEditFormProps) {
         style={styles.saveButtonWrapper}
         onPress={onSave}
         activeOpacity={0.8}
+        accessibilityRole="button"
+        accessibilityLabel="저장"
       >
         <LinearGradient
           colors={Colors.gradient.cyanToPurple}
@@ -39,6 +41,9 @@ export default function ChatEditForm({ onSave, onCancel }: ChatEditFormProps) {
         style={styles.cancelButton}
         onPress={onCancel}
         activeOpacity={0.8}
+        accessibilityRole="button"
+        accessibilityLabel="취소"
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
       >
         <CancelIcon width={12} height={12} />
       </TouchableOpacity>
