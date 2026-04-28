@@ -17,6 +17,7 @@ export const Colors = {
     darkGray: '#6A7282',
     disabledText: '#4A5565',
     lightGrayText: '#D1D5DC',
+    lavender: '#DAB2FF',           // 통화 상세 알림 텍스트
   },
   glass: {
     white5: 'rgba(255, 255, 255, 0.05)',
@@ -43,6 +44,9 @@ export const Colors = {
     black40: 'rgba(0, 0, 0, 0.40)', // 답변 박스 배경
     black50: 'rgba(0, 0, 0, 0.50)', // 추천 카드 배지 배경
     black80: 'rgba(0, 0, 0, 0.80)', // 추천 카드 정보 그라디언트
+    purple10: 'rgba(194, 122, 255, 0.10)', // 통화 상세 알림 배너 배경
+    purple50: 'rgba(194, 122, 255, 0.50)', // 편집 버튼 테두리
+    pink20: 'rgba(251, 100, 182, 0.20)',   // 내 말풍선 그라디언트 끝색
     recordingBg: ['rgba(0, 211, 243, 0.05)', 'rgba(194, 122, 255, 0.05)'] as [string, string], // 웨이브폼 배경
   }
 };
@@ -55,6 +59,7 @@ export const Radii = {
   none: 0,
   xs: 4,
   sm: 8,
+  bubble: 6, // 말풍선 origin 모서리 (진입 방향 표시용)
   smmd: 10,   // 통화 서브 정보 등 추가분
   md: 12,
   md2: 14,    // 버튼, 드롭다운, 카드 등 범용 (피그마 명칭 미정)
