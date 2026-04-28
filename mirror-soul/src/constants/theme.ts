@@ -71,6 +71,7 @@ export const Radii = {
 export const Layout = {
   MAX_CONTENT_WIDTH: 345,
   SCREEN_PADDING: 24,
+  MAIN_TAB_CONTENTS_BOTTOM_PADDING: 100, // BottomNavbar 높이에 대응하는 스크롤 하단 여백
 } as const;
 
 

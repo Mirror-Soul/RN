@@ -1,4 +1,5 @@
-import { default as HistoryIcon, default as PurpleHeartIcon } from '@/assets/images/common/bottomNavbar/History_button.svg';
+import HistoryIcon from '@/assets/images/common/bottomNavbar/History_button.svg';
+import PurpleHeartIcon from '@/assets/images/common/history/purpleHeart.svg';
 import { Colors, Radii } from '@/src/constants/theme';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';

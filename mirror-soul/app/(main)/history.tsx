@@ -23,7 +23,7 @@ export default function HistoryScreen() {
       style={styles.scrollView}
       contentContainerStyle={[
         styles.scrollContent,
-        { paddingBottom: insets.bottom + 100 }, // 네비바 높이 + 안전영역 대응
+        { paddingBottom: insets.bottom + Layout.MAIN_TAB_CONTENTS_BOTTOM_PADDING }, // 네비바 높이 + 안전영역 대응
       ]}
       showsVerticalScrollIndicator={false}
     >
