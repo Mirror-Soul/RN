@@ -89,6 +89,9 @@ export default function ChatBubble({
             style={styles.editButtonAbsolute}
             onPress={() => onEditStart(message.id, message.text)}
             activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel="메시지 수정"
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
             <EditPencilIcon width={12} height={12} />
           </TouchableOpacity>
