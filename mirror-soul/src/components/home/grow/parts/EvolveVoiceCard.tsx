@@ -54,7 +54,6 @@ const styles = StyleSheet.create({
     borderWidth: 0.612,
     borderColor: Colors.glass.pink30,
     gap: 10,
-    height: 123,
   },
   header: {
     flexDirection: 'row',
