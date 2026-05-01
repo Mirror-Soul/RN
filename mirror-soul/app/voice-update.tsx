@@ -1,7 +1,9 @@
 import VoiceUpdateButton, { VoiceUpdateStatus } from '@/src/components/home/grow/voice-update/VoiceUpdateButton';
 import VoiceUpdateHeader from '@/src/components/home/grow/voice-update/VoiceUpdateHeader';
 import VoiceUpdatePrompt from '@/src/components/home/grow/voice-update/VoiceUpdatePrompt';
-import { Colors, Layout } from '@/src/constants/theme';
+import VoiceUpdateTranscriptBox from '@/src/components/home/grow/voice-update/VoiceUpdateTranscriptBox';
+import { useSTT } from '@/src/hooks/useSTT';
+import { Colors } from '@/src/constants/theme';
 import React, { useState, useRef, useEffect } from 'react';
 import { StyleSheet, View, SafeAreaView } from 'react-native';
 
@@ -14,7 +16,7 @@ const SENTENCES = [
 
 /**
  * 목소리 업데이트 화면
- * 녹음 프로세스(Idle -> Recording -> Done)를 관리합니다.
+ * 녹음 프로세스 및 실시간 STT 인터랙션을 관리합니다.
  */
 export default function VoiceUpdateScreen() {
   const [status, setStatus] = useState<VoiceUpdateStatus>('idle');
@@ -22,6 +24,9 @@ export default function VoiceUpdateScreen() {
   const [sentenceIndex, setSentenceIndex] = useState(0);
   
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // STT 훅 연동
+  const { transcript, isListening, startListening, stopListening, resetTranscript } = useSTT('ko-KR');
 
   // 녹음 시작/중지 핸들러
   const handlePress = () => {
@@ -35,6 +40,8 @@ export default function VoiceUpdateScreen() {
   const startRecording = () => {
     setStatus('recording');
     setElapsed(0);
+    startListening(); // 실시간 음성 인식 시작
+    
     timerRef.current = setInterval(() => {
       setElapsed((prev) => prev + 0.1);
     }, 100);
@@ -44,22 +51,24 @@ export default function VoiceUpdateScreen() {
     if (timerRef.current) {
       clearInterval(timerRef.current);
     }
+    stopListening(); // 실시간 음성 인식 중단
     setStatus('done');
   };
 
   const handleRetry = () => {
-    // 다음 문장으로 넘어가며 다시 시작 모드로 변경
     setSentenceIndex((prev) => (prev + 1) % SENTENCES.length);
     setStatus('idle');
     setElapsed(0);
+    resetTranscript(); // 텍스트 초기화
   };
 
-  // 컴포넌트 언마운트 시 타이머 정리
+  // 컴포넌트 언마운트 시 타이머 및 STT 정리
   useEffect(() => {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
+      stopListening();
     };
-  }, []);
+  }, [stopListening]);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -68,6 +77,12 @@ export default function VoiceUpdateScreen() {
         
         <View style={styles.main}>
           <VoiceUpdatePrompt sentence={SENTENCES[sentenceIndex]} />
+          
+          {/* 실시간 STT 결과창: 빈 공간을 채우고 사용자에게 피드백 제공 */}
+          <VoiceUpdateTranscriptBox 
+            transcript={transcript} 
+            isRecording={status === 'recording'} 
+          />
           
           <VoiceUpdateButton
             status={status}
@@ -92,9 +107,9 @@ const styles = StyleSheet.create({
   },
   main: {
     flex: 1,
-    paddingVertical: 32,
-    justifyContent: 'space-between',
+    paddingVertical: 40,
+    justifyContent: 'center', // 중앙 집중형 배치
     alignItems: 'center',
-    paddingBottom: 48, // 하단 여백 확보
+    gap: 48, // 컴포넌트 간 충분한 간격 확보
   },
 });

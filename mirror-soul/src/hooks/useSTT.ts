@@ -7,15 +7,13 @@ import {
 type SupportedLanguage = 'ko-KR' | 'en-US';
 
 /**
- * 실시간 음성 인식(STT)을 관리하는 커스텀 훅.
+ * 실시간 음성 인식(STT)을 관리하는 공용 커스텀 훅.
  *
  * - expo-speech-recognition의 네이티브 STT 엔진을 사용합니다.
  * - 한국어(ko-KR)와 영어(en-US)를 지원합니다.
- * - interimResults로 중간 결과를 실시간 표시하고,
- *   녹음 중지 시 최종 결과를 확정합니다.
- * - useInterviewSpeech(녹음)와 독립적으로 동작하여 관심사를 분리합니다.
+ * - interimResults로 중간 결과를 실시간 표시하고, 녹음 중지 시 최종 결과를 확정합니다.
  */
-export function useInterviewSTT(lang: SupportedLanguage = 'ko-KR') {
+export function useSTT(lang: SupportedLanguage = 'ko-KR') {
   const [finalizedTranscript, setFinalizedTranscript] = useState('');
   const [interimTranscript, setInterimTranscript] = useState('');
   const [isListening, setIsListening] = useState(false);

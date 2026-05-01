@@ -12,7 +12,7 @@ import InterviewFooter from '@/src/components/signup/steps/Step4_Interview/compo
 import InterviewHeader from '@/src/components/signup/steps/Step4_Interview/components/InterviewHeader';
 
 import { useInterviewSpeech } from '@/src/components/signup/steps/Step4_Interview/hooks/useInterviewSpeech';
-import { useInterviewSTT } from '@/src/components/signup/steps/Step4_Interview/hooks/useInterviewSTT';
+import { useSTT } from '@/src/hooks/useSTT';
 import { useInterviewQuestions } from '@/src/components/signup/steps/Step4_Interview/hooks/useInterviewQuestions';
 import MicPermissionModal from '@/src/components/signup/steps/Step4_Interview/components/parts/MicPermissionModal';
 
@@ -29,7 +29,7 @@ export default function InterviewScreen() {
     stopRecording,
   } = useInterviewSpeech();
 
-  const { transcript, startListening, stopListening, resetTranscript } = useInterviewSTT('ko-KR');
+  const { transcript, startListening, stopListening, resetTranscript } = useSTT('ko-KR');
   const { currentQuestion, currentQuestionIndex, totalQuestions, isLastQuestion, goToNextQuestion } = useInterviewQuestions();
 
   const [showPermissionModal, setShowPermissionModal] = React.useState(false);
