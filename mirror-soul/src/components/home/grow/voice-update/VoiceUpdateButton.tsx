@@ -3,10 +3,11 @@ import StopIcon from '@/assets/images/common/evlove/voice-update/voice_update_st
 import VoiceIcon from '@/assets/images/common/Voice_icon_white.svg';
 import { Colors, Radii } from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-export type VoiceUpdateStatus = 'idle' | 'recording' | 'done';
+export type VoiceUpdateStatus = 'idle' | 'recording' | 'analyzing' | 'done';
 
 interface VoiceUpdateButtonProps {
   status: VoiceUpdateStatus;
@@ -17,7 +18,6 @@ interface VoiceUpdateButtonProps {
 
 /**
  * 목소리 업데이트 버튼 (SRP)
- * 상태(idle, recording, done)에 따라 UI를 동적으로 변경합니다.
  */
 export default function VoiceUpdateButton({
   status,
@@ -25,74 +25,97 @@ export default function VoiceUpdateButton({
   onPress,
   onRetry,
 }: VoiceUpdateButtonProps) {
+  const router = useRouter();
   const isIdle = status === 'idle';
   const isRecording = status === 'recording';
+  const isAnalyzing = status === 'analyzing';
   const isDone = status === 'done';
 
   // 상태별 그라디언트 및 그림자 스타일 결정
   const gradientColors = isIdle
     ? Colors.gradient.voiceStart
     : isRecording
-    ? Colors.gradient.recording
-    : Colors.gradient.done;
+      ? Colors.gradient.recording
+      : Colors.gradient.done; // analyzing과 done 모두 초록색 사용
 
   const shadowStyle = isIdle
     ? Colors.shadow.voiceStart
     : isRecording
-    ? Colors.shadow.recording
-    : Colors.shadow.done;
+      ? Colors.shadow.recording
+      : Colors.shadow.done;
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity
-        activeOpacity={0.8}
-        onPress={onPress}
-        style={[styles.buttonWrapper, shadowStyle]}
-        disabled={isDone} // 완료 상태에서는 버튼 자체는 비활성화 (아래 재시도 버튼 사용)
-      >
-        <LinearGradient
-          colors={gradientColors}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.button}
-        >
-          {isIdle && <VoiceIcon width={32} height={32} />}
-          {isRecording && <StopIcon width={32} height={32} />}
-          {isDone && <CompleteIcon width={32} height={32} />}
-        </LinearGradient>
-      </TouchableOpacity>
+      {status !== 'done' ? (
+        <>
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={onPress}
+            style={[styles.buttonWrapper, shadowStyle]}
+            disabled={isAnalyzing}
+          >
+            <LinearGradient
+              colors={gradientColors}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.button}
+            >
+              {isIdle && <VoiceIcon width={32} height={32} />}
+              {isRecording && <StopIcon width={32} height={32} />}
+              {isAnalyzing && <CompleteIcon width={32} height={32} />}
+            </LinearGradient>
+          </TouchableOpacity>
 
-      {/* 상태 텍스트 영역 */}
-      <View style={styles.infoArea}>
-        {isIdle && (
-          <View style={styles.idleInfo}>
-            <Text style={styles.statusText}>녹음 시작</Text>
-            <Text style={styles.footerText}>마이크 버튼을 눌러 녹음을 시작하세요</Text>
+          <View style={styles.infoArea}>
+            {isIdle && (
+              <View style={styles.idleInfo}>
+                <Text style={styles.statusText}>녹음 시작</Text>
+                <Text style={styles.footerText}>마이크 버튼을 눌러 녹음을 시작하세요</Text>
+              </View>
+            )}
+
+            {isRecording && (
+              <View style={styles.recordingInfo}>
+                <View style={styles.recordingStatusRow}>
+                  <View style={styles.recordingDot} />
+                  <Text style={styles.statusText}>녹음 중...</Text>
+                </View>
+                <Text style={styles.elapsedText}>{elapsedTime}초</Text>
+              </View>
+            )}
+
+            {isAnalyzing && (
+              <View style={styles.doneInfo}>
+                <Text style={[styles.statusText, { color: Colors.primary.successGreen, fontWeight: '600' }]}>
+                  목소리 분석 중...
+                </Text>
+                <Text style={styles.footerText}>인공지능이 당신의 말투를 학습하고 있습니다</Text>
+              </View>
+            )}
           </View>
-        )}
+        </>
+      ) : (
+        /* 최종 액션 유도 영역 - 미니멀 리팩토링 */
+        <View style={styles.finalActionArea}>
+          <View style={styles.actionRow}>
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={onRetry}
+              style={styles.actionChip}
+            >
+              <Text style={styles.actionChipText}>다른 문장 읽어보기</Text>
+            </TouchableOpacity>
 
-        {isRecording && (
-          <View style={styles.recordingInfo}>
-            <View style={styles.recordingStatusRow}>
-              <View style={styles.recordingDot} />
-              <Text style={styles.statusText}>녹음 중...</Text>
-            </View>
-            <Text style={styles.elapsedText}>{elapsedTime}초</Text>
-          </View>
-        )}
-
-        {isDone && (
-          <View style={styles.doneInfo}>
-            <Text style={[styles.statusText, { fontWeight: '500' }]}>완료 !</Text>
-            <Text style={styles.doneSubText}>목소리가 업데이트되었습니다</Text>
-            
-            {/* 방안 C: 다른 문장 말해보기 (재시도) */}
-            <TouchableOpacity onPress={onRetry} style={styles.retryButton}>
-              <Text style={styles.retryText}>다른 문장 읽어보기</Text>
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => router.back()}
+              style={[styles.actionChip, styles.primaryChip]}
+            >
+              <Text style={[styles.actionChipText, styles.primaryChipText]}>완료하기</Text>
             </TouchableOpacity>
           </View>
-        )}
-      </View>
+        </View>
+      )}
     </View>
   );
 }
@@ -102,6 +125,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 24,
     alignSelf: 'stretch',
+    minHeight: 180,
   },
   buttonWrapper: {
     width: 96,
@@ -116,7 +140,7 @@ const styles = StyleSheet.create({
   },
   infoArea: {
     alignItems: 'center',
-    height: 80, // 고정 높이로 레이아웃 흔들림 방지
+    height: 80,
   },
   idleInfo: {
     alignItems: 'center',
@@ -140,7 +164,7 @@ const styles = StyleSheet.create({
   },
   doneInfo: {
     alignItems: 'center',
-    gap: 4,
+    gap: 8,
   },
   statusText: {
     color: Colors.neutral.pureWhite,
@@ -160,16 +184,6 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     letterSpacing: -0.15,
   },
-  doneSubText: {
-    color: Colors.primary.successGreen,
-    textAlign: 'center',
-    fontFamily: 'Inter',
-    fontSize: 14,
-    fontWeight: '400',
-    lineHeight: 20,
-    letterSpacing: -0.15,
-    marginBottom: 12,
-  },
   footerText: {
     color: Colors.neutral.darkGray,
     textAlign: 'center',
@@ -178,17 +192,38 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     lineHeight: 16,
   },
-  retryButton: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: Radii.sm,
-    backgroundColor: Colors.glass.white10,
-    marginTop: 8,
+  finalActionArea: {
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: 10,
   },
-  retryText: {
+  actionRow: {
+    flexDirection: 'row',
+    gap: 12,
+    alignItems: 'center',
+  },
+  actionChip: {
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: Radii.full,
+    backgroundColor: Colors.glass.white10,
+    borderWidth: 0.6,
+    borderColor: Colors.glass.white20,
+  },
+  actionChipText: {
     color: Colors.neutral.lightGray,
-    fontFamily: 'Inter',
-    fontSize: 12,
+    fontSize: 15,
     fontWeight: '500',
+    letterSpacing: -0.3,
+  },
+  primaryChip: {
+    backgroundColor: 'rgba(0, 211, 243, 0.15)',
+    borderColor: 'rgba(0, 211, 243, 0.3)',
+  },
+  primaryChipText: {
+    color: Colors.primary.electricCyan,
+    fontWeight: '600',
   },
 });
+

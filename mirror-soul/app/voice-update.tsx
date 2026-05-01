@@ -24,6 +24,7 @@ export default function VoiceUpdateScreen() {
   const [sentenceIndex, setSentenceIndex] = useState(0);
   
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const finalizeRef = useRef<NodeJS.Timeout | null>(null);
 
   // STT 훅 연동
   const { transcript, isListening, startListening, stopListening, resetTranscript } = useSTT('ko-KR');
@@ -40,7 +41,7 @@ export default function VoiceUpdateScreen() {
   const startRecording = () => {
     setStatus('recording');
     setElapsed(0);
-    startListening(); // 실시간 음성 인식 시작
+    startListening();
     
     timerRef.current = setInterval(() => {
       setElapsed((prev) => prev + 0.1);
@@ -51,21 +52,28 @@ export default function VoiceUpdateScreen() {
     if (timerRef.current) {
       clearInterval(timerRef.current);
     }
-    stopListening(); // 실시간 음성 인식 중단
-    setStatus('done');
+    stopListening();
+    setStatus('analyzing'); // 명시적인 분석 상태로 전환
+
+    // 2.5초 뒤에 최종 완료 상태로 전환 (사용자 유도)
+    finalizeRef.current = setTimeout(() => {
+      setStatus('done');
+    }, 2500);
   };
 
   const handleRetry = () => {
+    if (finalizeRef.current) clearTimeout(finalizeRef.current);
     setSentenceIndex((prev) => (prev + 1) % SENTENCES.length);
     setStatus('idle');
     setElapsed(0);
-    resetTranscript(); // 텍스트 초기화
+    resetTranscript();
   };
 
-  // 컴포넌트 언마운트 시 타이머 및 STT 정리
+  // 컴포넌트 언마운트 시 모든 타이머 정리
   useEffect(() => {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
+      if (finalizeRef.current) clearTimeout(finalizeRef.current);
       stopListening();
     };
   }, [stopListening]);
