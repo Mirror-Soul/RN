@@ -6,6 +6,7 @@ export const Colors = {
     successGreen: '#05DF72', // Verification Success Green
     recordingRed: '#FB2C36', // 녹음 중 버튼 및 포인트 컬러
     activeRedText: '#FF6467', // "실시간 음성 인식 중" 텍스트 컬러
+    goldText: '#FFDF20',      // "NEW" 배지 텍스트 컬러
   },
   gradient: {
     cyanToPurple: ['#00D3F3', '#C27AFF'] as [string, string],
@@ -47,6 +48,11 @@ export const Colors = {
     purple10: 'rgba(194, 122, 255, 0.10)', // 통화 상세 알림 배너 배경
     purple50: 'rgba(194, 122, 255, 0.50)', // 편집 버튼 테두리
     pink20: 'rgba(251, 100, 182, 0.20)',   // 내 말풍선 그라디언트 끝색
+    pink30: 'rgba(251, 100, 182, 0.30)',   // 목소리 녹음 카드 테두리
+    red20: 'rgba(255, 100, 103, 0.20)',    // 목소리 녹음 카드 그라디언트 끝색
+    blue20: 'rgba(81, 162, 255, 0.20)',    // 얼굴 스캔 카드 그라디언트 끝색
+    gold20: 'rgba(253, 199, 0, 0.20)',     // "NEW" 배지 배경
+    gold40: 'rgba(253, 199, 0, 0.40)',     // "NEW" 배지 테두리
     recordingBg: ['rgba(0, 211, 243, 0.05)', 'rgba(194, 122, 255, 0.05)'] as [string, string], // 웨이브폼 배경
   }
 };
