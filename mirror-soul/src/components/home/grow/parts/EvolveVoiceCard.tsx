@@ -10,7 +10,13 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
  */
 export default function EvolveVoiceCard() {
   return (
-    <TouchableOpacity activeOpacity={0.85} style={styles.wrapper}>
+    <TouchableOpacity
+      activeOpacity={0.85}
+      style={styles.wrapper}
+      accessibilityRole="button"
+      accessibilityLabel="목소리 녹음 미션"
+      accessibilityHint="내 말투를 학습시키기 위한 목소리 녹음 화면으로 이동"
+    >
       <LinearGradient
         colors={[Colors.glass.pink20, Colors.glass.red20]}
         start={{ x: 0, y: 0 }}

@@ -9,7 +9,12 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
  */
 export default function EvolveMyselfCard() {
   return (
-    <TouchableOpacity activeOpacity={0.85}>
+    <TouchableOpacity
+      activeOpacity={0.85}
+      accessibilityRole="button"
+      accessibilityLabel="내 트윈과 대화하기 미션"
+      accessibilityHint="현재 학습된 트윈의 답변을 확인하기 위한 대화 화면으로 이동"
+    >
       <LinearGradient
         colors={['rgba(0, 211, 243, 0.10)', 'rgba(194, 122, 255, 0.10)', 'rgba(251, 100, 182, 0.10)']}
         start={{ x: 0, y: 0 }}

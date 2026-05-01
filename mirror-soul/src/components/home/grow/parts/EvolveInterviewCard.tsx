@@ -10,7 +10,12 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
  */
 export default function EvolveInterviewCard() {
   return (
-    <TouchableOpacity activeOpacity={0.85}>
+    <TouchableOpacity
+      activeOpacity={0.85}
+      accessibilityRole="button"
+      accessibilityLabel="나를 알아가는 인터뷰 미션"
+      accessibilityHint="AI와 대화하여 가치관을 공유하는 인터뷰 화면으로 이동"
+    >
       <LinearGradient
         colors={[Colors.glass.purple20, Colors.glass.pink20]}
         start={{ x: 0, y: 0 }}

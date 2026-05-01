@@ -10,7 +10,13 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
  */
 export default function EvolveFaceScanCard() {
   return (
-    <TouchableOpacity activeOpacity={0.85} style={styles.wrapper}>
+    <TouchableOpacity
+      activeOpacity={0.85}
+      style={styles.wrapper}
+      accessibilityRole="button"
+      accessibilityLabel="얼굴 스캔 미션"
+      accessibilityHint="표정과 감정을 학습시키기 위한 얼굴 스캔 화면으로 이동"
+    >
       <LinearGradient
         colors={[Colors.glass.cyan20, Colors.glass.blue20]}
         start={{ x: 0, y: 0 }}
