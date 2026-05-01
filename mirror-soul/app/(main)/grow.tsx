@@ -1,23 +1,94 @@
+import EvolveBodyTitle from '@/src/components/home/grow/EvolveBodyTitle';
+import EvolveFooter from '@/src/components/home/grow/EvolveFooter';
+import EvolveHeader from '@/src/components/home/grow/EvolveHeader';
+import EvolveTwinCard from '@/src/components/home/grow/EvolveTwinCard';
+import EvolveFaceScanCard from '@/src/components/home/grow/parts/EvolveFaceScanCard';
+import EvolveInterviewCard from '@/src/components/home/grow/parts/EvolveInterviewCard';
+import EvolveMyselfCard from '@/src/components/home/grow/parts/EvolveMyselfCard';
+import EvolveVoiceCard from '@/src/components/home/grow/parts/EvolveVoiceCard';
 import { Colors, Layout } from '@/src/constants/theme';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+/**
+ * 성장(Evolve) 탭 화면
+ * 내 트윈의 완성도를 높이기 위한 미션들을 관리합니다.
+ */
 export default function GrowScreen() {
+  const insets = useSafeAreaInsets();
+
+  // Mock 데이터 (추후 API 연동)
+  const mockProgress = {
+    completionPercent: 92,
+    remainingPercent: 8,
+  };
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.text}>성장 탭 (작업 예정)</Text>
-    </View>
+    <ScrollView
+      style={styles.scrollView}
+      contentContainerStyle={[
+        styles.scrollContent,
+        { paddingBottom: insets.bottom + Layout.MAIN_TAB_CONTENTS_BOTTOM_PADDING },
+      ]}
+      showsVerticalScrollIndicator={false}
+    >
+      <View style={[styles.container, { paddingTop: Math.max(insets.top + 12, Layout.SCREEN_PADDING) }]}>
+        <EvolveHeader />
+        
+        {/* 내 트윈 완성도 카드 */}
+        <EvolveTwinCard 
+          completionPercent={mockProgress.completionPercent}
+          remainingPercent={mockProgress.remainingPercent}
+        />
+
+        {/* 성장 미션 섹션 */}
+        <EvolveBodyTitle />
+        
+        <View style={styles.missionGrid}>
+          {/* 인터뷰 (Full Width) */}
+          <EvolveInterviewCard />
+          
+          {/* 얼굴 스캔 & 목소리 녹음 (Side by Side) */}
+          <View style={styles.row}>
+            <EvolveFaceScanCard />
+            <EvolveVoiceCard />
+          </View>
+
+          {/* 내 트윈과 대화하기 (Full Width) */}
+          <EvolveMyselfCard />
+        </View>
+
+        {/* 하단 푸터 안내 */}
+        <EvolveFooter />
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  scrollView: {
     flex: 1,
     backgroundColor: Colors.primary.soulBlack,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
-  text: {
-    color: Colors.neutral.lightGray,
+  scrollContent: {
+    flexGrow: 1,
+    alignItems: 'center',
+  },
+  container: {
+    width: '100%',
+    maxWidth: Layout.MAX_CONTENT_WIDTH,
+    alignSelf: 'center',
+    gap: 16,
+    paddingHorizontal: 4, // 양 끝 여유 공간
+  },
+  missionGrid: {
+    gap: 12,
+    alignSelf: 'stretch',
+  },
+  row: {
+    flexDirection: 'row',
+    gap: 12,
+    alignSelf: 'stretch',
   },
 });
