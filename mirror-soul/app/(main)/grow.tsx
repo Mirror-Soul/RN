@@ -21,7 +21,6 @@ export default function GrowScreen() {
   // Mock 데이터 (추후 API 연동)
   const mockProgress = {
     completionPercent: 92,
-    remainingPercent: 8,
   };
 
   return (
@@ -39,7 +38,6 @@ export default function GrowScreen() {
         {/* 내 트윈 완성도 카드 */}
         <EvolveTwinCard 
           completionPercent={mockProgress.completionPercent}
-          remainingPercent={mockProgress.remainingPercent}
         />
 
         {/* 성장 미션 섹션 */}

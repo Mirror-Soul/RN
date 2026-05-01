@@ -6,17 +6,21 @@ import { StyleSheet, Text, View } from 'react-native';
 
 interface EvolveTwinCardProps {
   completionPercent: number;
-  remainingPercent: number;
 }
 
 /**
  * 내 트윈 완성도 카드 (SRP)
  * 진행 바와 상태 정보를 렌더링합니다.
  */
-export default function EvolveTwinCard({
-  completionPercent,
-  remainingPercent,
-}: EvolveTwinCardProps) {
+export default function EvolveTwinCard({ completionPercent }: EvolveTwinCardProps) {
+  // 데이터 정규화: 0~100 사이의 유효한 값으로 보정 (Defensive Programming)
+  const safeCompletion = Number.isFinite(completionPercent)
+    ? Math.min(100, Math.max(0, completionPercent))
+    : 0;
+
+  // 단일 소스 원칙: completion을 기반으로 남은 퍼센트 자동 계산
+  const safeRemaining = 100 - safeCompletion;
+
   return (
     <LinearGradient
       colors={[Colors.glass.purple20, Colors.glass.cyan20]}
@@ -28,7 +32,7 @@ export default function EvolveTwinCard({
       <View style={styles.topRow}>
         <View style={styles.percentageInfo}>
           <Text style={styles.label}>내 트윈 완성도</Text>
-          <Text style={styles.percentText}>{completionPercent}%</Text>
+          <Text style={styles.percentText}>{safeCompletion}%</Text>
         </View>
         
         {/* 아이콘 배지 */}
@@ -48,7 +52,7 @@ export default function EvolveTwinCard({
           colors={Colors.gradient.cyanBluePurple}
           start={{ x: 0, y: 0.5 }}
           end={{ x: 1, y: 0.5 }}
-          style={[styles.progressBarDetail, { width: `${completionPercent}%` }]}
+          style={[styles.progressBarDetail, { width: `${safeCompletion}%` }]}
         />
       </View>
 
@@ -56,7 +60,7 @@ export default function EvolveTwinCard({
       <View style={styles.bottomRow}>
         <Text style={styles.bottomText}>
           <Text style={styles.highlightText}>100%</Text>
-          <Text style={styles.neutralText}> 완성까지 {remainingPercent}% 남았어요!</Text>
+          <Text style={styles.neutralText}> 완성까지 {safeRemaining}% 남았어요!</Text>
         </Text>
       </View>
     </LinearGradient>
