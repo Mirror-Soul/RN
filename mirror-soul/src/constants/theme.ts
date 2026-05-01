@@ -10,6 +10,9 @@ export const Colors = {
   },
   gradient: {
     cyanToPurple: ['#00D3F3', '#C27AFF'] as [string, string],
+    voiceStart: ['#F6339A', '#AD46FF'] as [string, string],
+    recording: ['#FB2C36', '#E7000B'] as [string, string],
+    done: ['#00C950', '#00BC7D'] as [string, string],
     cyanBluePurple: ['#00D3F3', '#51A2FF', '#C27AFF'] as [string, string, string], // 녹음 버튼용
   },
   neutral: {
@@ -54,7 +57,30 @@ export const Colors = {
     gold20: 'rgba(253, 199, 0, 0.20)',     // "NEW" 배지 배경
     gold40: 'rgba(253, 199, 0, 0.40)',     // "NEW" 배지 테두리
     recordingBg: ['rgba(0, 211, 243, 0.05)', 'rgba(194, 122, 255, 0.05)'] as [string, string], // 웨이브폼 배경
-  }
+  },
+  shadow: {
+    voiceStart: {
+      shadowColor: '#F6339A',
+      shadowOffset: { width: 0, height: 10 },
+      shadowOpacity: 0.5,
+      shadowRadius: 15,
+      elevation: 5,
+    },
+    recording: {
+      shadowColor: '#FB2C36',
+      shadowOffset: { width: 0, height: 10 },
+      shadowOpacity: 0.5,
+      shadowRadius: 15,
+      elevation: 5,
+    },
+    done: {
+      shadowColor: '#00C950',
+      shadowOffset: { width: 0, height: 10 },
+      shadowOpacity: 0.5,
+      shadowRadius: 15,
+      elevation: 5,
+    },
+  },
 };
 
 /**

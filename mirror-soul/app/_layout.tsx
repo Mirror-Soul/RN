@@ -8,6 +8,7 @@ export default function RootLayout() {
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" />
         <Stack.Screen name="call-detail" />
+        <Stack.Screen name="voice-update" />
       </Stack>
       <StatusBar style="light" />
     </>
