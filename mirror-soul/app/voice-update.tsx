@@ -5,7 +5,7 @@ import VoiceUpdateTranscriptBox from '@/src/components/home/grow/voice-update/Vo
 import { useSTT } from '@/src/hooks/useSTT';
 import { Colors } from '@/src/constants/theme';
 import React, { useState, useRef, useEffect } from 'react';
-import { StyleSheet, View, SafeAreaView } from 'react-native';
+import { StyleSheet, View, SafeAreaView, Alert } from 'react-native';
 
 const SENTENCES = [
   "주말에는 친구들과 영화를 보러 갈 예정이에요.",
@@ -25,9 +25,15 @@ export default function VoiceUpdateScreen() {
   
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const finalizeRef = useRef<NodeJS.Timeout | null>(null);
+  const transcriptRef = useRef(''); // 비동기 체크를 위한 transcript 참조용 Ref
 
   // STT 훅 연동
   const { transcript, isListening, startListening, stopListening, resetTranscript } = useSTT('ko-KR');
+
+  // transcript가 변경될 때마다 Ref 업데이트
+  useEffect(() => {
+    transcriptRef.current = transcript;
+  }, [transcript]);
 
   // 녹음 시작/중지 핸들러
   const handlePress = () => {
@@ -38,14 +44,19 @@ export default function VoiceUpdateScreen() {
     }
   };
 
-  const startRecording = () => {
-    setStatus('recording');
-    setElapsed(0);
-    startListening();
-    
-    timerRef.current = setInterval(() => {
-      setElapsed((prev) => prev + 0.1);
-    }, 100);
+  const startRecording = async () => {
+    try {
+      setElapsed(0);
+      await startListening(); // 시작 성공 보장 후 상태 전환
+      setStatus('recording');
+
+      timerRef.current = setInterval(() => {
+        setElapsed((prev) => prev + 0.1);
+      }, 100);
+    } catch (error) {
+      console.error('STT 시작 실패:', error);
+      setStatus('idle');
+    }
   };
 
   const stopRecording = () => {
@@ -55,9 +66,16 @@ export default function VoiceUpdateScreen() {
     stopListening();
     setStatus('analyzing'); // 명시적인 분석 상태로 전환
 
-    // 2.5초 뒤에 최종 완료 상태로 전환 (사용자 유도)
+    // 2.5초 뒤에 데이터 유무 확인 후 상태 전환
     finalizeRef.current = setTimeout(() => {
-      setStatus('done');
+      if (!transcriptRef.current.trim()) {
+        // 인식된 텍스트가 없는 경우
+        setStatus('idle');
+        Alert.alert('알림', '인식된 목소리가 없습니다.\n다시 시도해 주세요.');
+      } else {
+        // 정상 인식된 경우
+        setStatus('done');
+      }
     }, 2500);
   };
 

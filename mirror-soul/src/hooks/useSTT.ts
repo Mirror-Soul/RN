@@ -45,7 +45,12 @@ export function useSTT(lang: SupportedLanguage = 'ko-KR') {
   });
 
   useSpeechRecognitionEvent('error', (event) => {
-    console.error('STT 오류:', event.error, event.message);
+    if (event.error === 'no-speech') {
+      // 음성이 감지되지 않은 것은 단순 상태 정보이므로 경고로 처리하거나 무시합니다.
+      console.warn('STT 정보: 음성이 감지되지 않았습니다.');
+    } else {
+      console.error('STT 오류:', event.error, event.message);
+    }
     setIsListening(false);
   });
 
@@ -54,7 +59,8 @@ export function useSTT(lang: SupportedLanguage = 'ko-KR') {
     setFinalizedTranscript(''); // 이전 텍스트 초기화
     setInterimTranscript('');
 
-    ExpoSpeechRecognitionModule.start({
+    // await를 통해 모듈 시작이 완료되었음을 보장 (실패 시 예외 발생)
+    await ExpoSpeechRecognitionModule.start({
       lang,
       interimResults: true, // 중간 결과 실시간 표시
       continuous: true, // 사용자가 중지할 때까지 계속 인식

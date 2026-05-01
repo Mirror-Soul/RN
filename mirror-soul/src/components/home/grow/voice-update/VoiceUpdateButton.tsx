@@ -5,7 +5,7 @@ import { Colors, Radii } from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 
 export type VoiceUpdateStatus = 'idle' | 'recording' | 'analyzing' | 'done';
 
@@ -26,6 +26,12 @@ export default function VoiceUpdateButton({
   onRetry,
 }: VoiceUpdateButtonProps) {
   const router = useRouter();
+  const { width } = useWindowDimensions();
+  
+  // 기기 폭에 비례하는 동적 크기 계산 (기준 393px에서 96px은 약 24.4%)
+  // 너무 작아지거나 커지는 것을 방지하기 위해 clamp 적용
+  const dynamicButtonSize = Math.max(80, Math.min(width * 0.244, 112));
+
   const isIdle = status === 'idle';
   const isRecording = status === 'recording';
   const isAnalyzing = status === 'analyzing';
@@ -51,7 +57,11 @@ export default function VoiceUpdateButton({
           <TouchableOpacity
             activeOpacity={0.8}
             onPress={onPress}
-            style={[styles.buttonWrapper, shadowStyle]}
+            style={[
+              styles.buttonWrapper, 
+              shadowStyle, 
+              { width: dynamicButtonSize, height: dynamicButtonSize } // 동적 사이즈 적용
+            ]}
             disabled={isAnalyzing}
           >
             <LinearGradient
@@ -128,8 +138,7 @@ const styles = StyleSheet.create({
     minHeight: 180,
   },
   buttonWrapper: {
-    width: 96,
-    height: 96,
+    // width와 height는 컴포넌트 내부에서 동적으로 할당됨
     borderRadius: Radii.full,
   },
   button: {
