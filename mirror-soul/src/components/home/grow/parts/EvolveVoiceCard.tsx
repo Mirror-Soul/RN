@@ -1,14 +1,18 @@
-import VoiceIcon from '@/assets/images/common/evlove/evlove_voice.svg';
 import TimerIcon from '@/assets/images/common/evlove/evlove_timer.svg';
+import VoiceIcon from '@/assets/images/common/evlove/evlove_voice.svg';
 import { Colors, Radii } from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+
 
 /**
  * 목소리 녹음 카드 (SRP)
  */
 export default function EvolveVoiceCard() {
+  const router = useRouter();
+
   return (
     <TouchableOpacity
       activeOpacity={0.85}
@@ -16,6 +20,7 @@ export default function EvolveVoiceCard() {
       accessibilityRole="button"
       accessibilityLabel="목소리 녹음 미션"
       accessibilityHint="내 말투를 학습시키기 위한 목소리 녹음 화면으로 이동"
+      onPress={() => router.push('/voice-update')}
     >
       <LinearGradient
         colors={[Colors.glass.pink20, Colors.glass.red20]}
@@ -54,7 +59,6 @@ const styles = StyleSheet.create({
     borderWidth: 0.612,
     borderColor: Colors.glass.pink30,
     gap: 10,
-    height: 123,
   },
   header: {
     flexDirection: 'row',
