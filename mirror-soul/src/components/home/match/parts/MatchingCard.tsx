@@ -44,7 +44,7 @@ export default function MatchingCard({
           <View style={styles.profileRow}>
             {/* 프로필 이미지 (목업) */}
             <LinearGradient
-              colors={['rgba(255, 137, 4, 0.30)', 'rgba(255, 100, 103, 0.30)']}
+              colors={[Colors.glass.orange30, Colors.glass.red30]}
               style={styles.profileImage}
             />
             
@@ -94,7 +94,7 @@ export default function MatchingCard({
           <View style={styles.summaryList}>
             {summaries.map((item, index) => (
               <View key={index} style={styles.summaryItem}>
-                <CompleteIcon width={14} height={14} color="#D1D5DC" />
+                <CompleteIcon width={14} height={14} color={Colors.neutral.lightGrayText} />
                 <Text style={styles.summaryText}>{item}</Text>
               </View>
             ))}
@@ -122,7 +122,7 @@ export default function MatchingCard({
             style={StyleSheet.absoluteFill}
           />
           <SendCallIcon width={24} height={24} />
-          <Text style={[styles.actionText, { color: '#000' }]}>통화하기</Text>
+          <Text style={[styles.actionText, { color: Colors.primary.soulBlack }]}>통화하기</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
     borderRadius: Radii.lg,
     borderWidth: 0.612,
     borderColor: Colors.glass.white20,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: Colors.glass.white05,
     overflow: 'hidden',
   },
   cardHeader: {
@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
     lineHeight: 16,
   },
   satisfactionValue: {
-    color: '#FF8904',
+    color: Colors.primary.mirrorOrange,
     fontFamily: 'Inter',
     fontSize: 14,
     fontWeight: '500',
@@ -236,12 +236,12 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: Radii.md2,
     borderWidth: 0.612,
-    borderColor: 'rgba(255, 137, 4, 0.20)',
-    backgroundColor: 'rgba(255, 137, 4, 0.10)',
+    borderColor: Colors.glass.orange20,
+    backgroundColor: Colors.glass.orange10,
     marginBottom: 8,
   },
   messageText: {
-    color: '#E5E7EB',
+    color: Colors.neutral.softWhite,
     fontFamily: 'Inter',
     fontSize: 14,
     fontWeight: '400',
@@ -257,7 +257,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   summaryText: {
-    color: '#D1D5DC',
+    color: Colors.neutral.lightGrayText,
     fontFamily: 'Inter',
     fontSize: 14,
     fontWeight: '400',

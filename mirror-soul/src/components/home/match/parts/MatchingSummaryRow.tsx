@@ -15,9 +15,9 @@ export default function MatchingSummaryRow() {
       <TouchableOpacity activeOpacity={0.8} style={[styles.summaryButton, styles.meetButton]}>
         <View style={styles.buttonContent}>
           <MeetIcon width={20} height={20} />
-          <Text style={[styles.buttonText, { color: '#FF8904' }]}>만남 신청</Text>
-          <View style={[styles.badge, { backgroundColor: 'rgba(255, 137, 4, 0.30)' }]}>
-            <Text style={[styles.badgeText, { color: '#FF8904' }]}>2</Text>
+          <Text style={[styles.buttonText, { color: Colors.primary.mirrorOrange }]}>만남 신청</Text>
+          <View style={[styles.badge, { backgroundColor: Colors.glass.orange30 }]}>
+            <Text style={[styles.badgeText, { color: Colors.primary.mirrorOrange }]}>2</Text>
           </View>
         </View>
       </TouchableOpacity>
@@ -27,7 +27,7 @@ export default function MatchingSummaryRow() {
         <View style={styles.buttonContent}>
           <TwinCallIcon width={20} height={20} />
           <Text style={styles.buttonText}>Twin</Text>
-          <View style={[styles.badge, { backgroundColor: 'rgba(0, 211, 243, 0.30)' }]}>
+          <View style={[styles.badge, { backgroundColor: Colors.glass.cyan30 }]}>
             <Text style={styles.badgeText}>2</Text>
           </View>
         </View>
@@ -38,7 +38,7 @@ export default function MatchingSummaryRow() {
         <View style={styles.buttonContent}>
           <RecommendIcon width={20} height={20} />
           <Text style={styles.buttonText}>추천</Text>
-          <View style={[styles.badge, { backgroundColor: 'rgba(194, 122, 255, 0.30)' }]}>
+          <View style={[styles.badge, { backgroundColor: Colors.glass.purple30 }]}>
             <Text style={styles.badgeText}>2</Text>
           </View>
         </View>
@@ -64,8 +64,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   meetButton: {
-    borderColor: 'rgba(255, 137, 4, 0.30)',
-    backgroundColor: 'rgba(255, 137, 4, 0.20)',
+    borderColor: Colors.glass.orange30,
+    backgroundColor: Colors.glass.orange20,
   },
   buttonContent: {
     flexDirection: 'row',

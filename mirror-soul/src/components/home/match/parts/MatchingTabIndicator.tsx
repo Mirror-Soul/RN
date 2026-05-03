@@ -36,7 +36,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 6,
     borderRadius: Radii.full,
-    backgroundColor: '#FF8904',
+    backgroundColor: Colors.primary.mirrorOrange,
   },
   inactiveDot: {
     width: 6,
