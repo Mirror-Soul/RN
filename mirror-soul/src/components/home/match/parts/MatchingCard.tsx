@@ -32,7 +32,7 @@ export default function MatchingCard({
 }: Partial<MatchingCardProps>) {
   return (
     <View style={styles.container}>
-      {/* 1. 상단 프로필 카드 (Container1) */}
+      {/* 1. 상단 프로필 카드 (Container1) - 콘텐츠 기반 가변 높이 */}
       <View style={styles.mainContent}>
         {/* 헤드 영역 (그라디언트 배경) */}
         <LinearGradient
@@ -75,7 +75,7 @@ export default function MatchingCard({
           </View>
         </LinearGradient>
 
-        {/* 바디 영역 (메시지 및 요약) */}
+        {/* 바디 영역 (메시지 및 요약) - 가변 높이 적용 */}
         <View style={styles.cardBody}>
           {/* 메시지 섹션 */}
           <View style={styles.sectionHeader}>

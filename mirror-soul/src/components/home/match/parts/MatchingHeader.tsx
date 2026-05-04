@@ -1,25 +1,16 @@
-import BackIcon from '@/assets/images/common/back.svg';
 import SettingIcon from '@/assets/images/common/Setting.svg';
 import { Colors, Radii } from '@/src/constants/theme';
-import { useRouter } from 'expo-router';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 /**
- * 매칭 화면 헤더 (뒤로가기, 제목, 설정 버튼)
+ * 매칭 화면 헤더 (뒤로가기 제거, 제목 중앙 정렬)
  */
 export default function MatchingHeader() {
-  const router = useRouter();
-
   return (
     <View style={styles.header}>
-      <TouchableOpacity 
-        activeOpacity={0.7} 
-        onPress={() => router.back()}
-        style={styles.circleButton}
-      >
-        <BackIcon width={24} height={24} />
-      </TouchableOpacity>
+      {/* 타이틀 중앙 정렬을 위한 더미 뷰 (좌측) */}
+      <View style={styles.dummyView} />
 
       <View style={styles.titleContainer}>
         <Text style={styles.title}>매칭</Text>
@@ -42,6 +33,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     alignSelf: 'stretch',
+  },
+  dummyView: {
+    width: 40,
+    height: 40,
   },
   circleButton: {
     width: 40,

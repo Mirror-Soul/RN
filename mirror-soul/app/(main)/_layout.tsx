@@ -22,11 +22,6 @@ export default function MainLayout() {
           const routeName = state.routes[state.index].name;
           const activeTab = ROUTE_TO_TAB[routeName] ?? 'discover';
 
-          // 매칭 화면에서는 하단 바를 숨김
-          if (routeName === 'match') {
-            return null;
-          }
-
           return (
             <BottomNavbar
               activeTab={activeTab}
