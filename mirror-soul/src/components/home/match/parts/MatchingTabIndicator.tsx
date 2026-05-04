@@ -5,18 +5,26 @@ import { StyleSheet, View } from 'react-native';
 interface MatchingTabIndicatorProps {
   activeIndex: number;
   total: number;
+  activeColor?: string;
 }
 
 /**
- * 매칭 화면 탭 인디케이터 (오렌지 바 + 회색 점)
+ * 매칭 화면 탭 인디케이터 (색상 가변 바 + 회색 점)
  */
-export default function MatchingTabIndicator({ activeIndex, total }: MatchingTabIndicatorProps) {
+export default function MatchingTabIndicator({ 
+  activeIndex, 
+  total, 
+  activeColor = Colors.primary.mirrorOrange 
+}: MatchingTabIndicatorProps) {
   return (
     <View style={styles.container}>
       {Array.from({ length: total }).map((_, index) => (
         <View 
           key={index} 
-          style={index === activeIndex ? styles.activeBar : styles.inactiveDot} 
+          style={[
+            index === activeIndex ? styles.activeBar : styles.inactiveDot,
+            index === activeIndex && { backgroundColor: activeColor }
+          ]} 
         />
       ))}
     </View>

@@ -1,45 +1,100 @@
-import MeetIcon from '@/assets/images/common/matching/MeetIcon.svg';
+import NoMeetingIcon from '@/assets/images/common/matching/NoMeeting.svg';
 import TwinCallIcon from '@/assets/images/common/matching/TwinCall.svg';
-import RecommendIcon from '@/assets/images/common/matching/MatchingRecommend.svg';
+import OnRecommendIcon from '@/assets/images/common/matching/OnRecommend.svg';
 import { Colors, Radii } from '@/src/constants/theme';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
+export type MatchingTabType = 'meet' | 'twin' | 'recommend';
+
+interface MatchingSummaryRowProps {
+  activeTab: MatchingTabType;
+  onTabChange: (tab: MatchingTabType) => void;
+}
+
 /**
  * 매칭 요약 버튼 행 (만남 신청, Twin, 추천)
  */
-export default function MatchingSummaryRow() {
+export default function MatchingSummaryRow({ activeTab, onTabChange }: MatchingSummaryRowProps) {
   return (
     <View style={styles.container}>
       {/* 만남 신청 버튼 */}
-      <TouchableOpacity activeOpacity={0.8} style={[styles.summaryButton, styles.meetButton]}>
+      <TouchableOpacity 
+        activeOpacity={0.8} 
+        onPress={() => onTabChange('meet')}
+        style={[
+          styles.summaryButton, 
+          activeTab === 'meet' && styles.meetButtonActive
+        ]}
+      >
         <View style={styles.buttonContent}>
-          <MeetIcon width={20} height={20} />
-          <Text style={[styles.buttonText, { color: Colors.primary.mirrorOrange }]}>만남 신청</Text>
-          <View style={[styles.badge, { backgroundColor: Colors.glass.orange30 }]}>
-            <Text style={[styles.badgeText, { color: Colors.primary.mirrorOrange }]}>2</Text>
+          <NoMeetingIcon width={20} height={20} />
+          <Text style={[
+            styles.buttonText, 
+            activeTab === 'meet' && { color: Colors.primary.mirrorOrange }
+          ]}>만남 신청</Text>
+          <View style={[
+            styles.badge, 
+            { backgroundColor: activeTab === 'meet' ? Colors.glass.orange30 : 'rgba(255, 137, 4, 0.30)' }
+          ]}>
+            <Text style={[
+              styles.badgeText, 
+              activeTab === 'meet' && { color: Colors.primary.mirrorOrange }
+            ]}>2</Text>
           </View>
         </View>
       </TouchableOpacity>
 
       {/* Twin 버튼 */}
-      <TouchableOpacity activeOpacity={0.8} style={styles.summaryButton}>
+      <TouchableOpacity 
+        activeOpacity={0.8} 
+        onPress={() => onTabChange('twin')}
+        style={[
+          styles.summaryButton, 
+          activeTab === 'twin' && styles.twinButtonActive
+        ]}
+      >
         <View style={styles.buttonContent}>
           <TwinCallIcon width={20} height={20} />
-          <Text style={styles.buttonText}>Twin</Text>
-          <View style={[styles.badge, { backgroundColor: Colors.glass.cyan30 }]}>
-            <Text style={styles.badgeText}>2</Text>
+          <Text style={[
+            styles.buttonText, 
+            activeTab === 'twin' && { color: Colors.primary.electricCyan }
+          ]}>Twin</Text>
+          <View style={[
+            styles.badge, 
+            { backgroundColor: activeTab === 'twin' ? Colors.glass.cyan30 : 'rgba(0, 211, 243, 0.30)' }
+          ]}>
+            <Text style={[
+              styles.badgeText, 
+              activeTab === 'twin' && { color: Colors.primary.electricCyan }
+            ]}>2</Text>
           </View>
         </View>
       </TouchableOpacity>
 
       {/* 추천 버튼 */}
-      <TouchableOpacity activeOpacity={0.8} style={styles.summaryButton}>
+      <TouchableOpacity 
+        activeOpacity={0.8} 
+        onPress={() => onTabChange('recommend')}
+        style={[
+          styles.summaryButton, 
+          activeTab === 'recommend' && styles.recommendButtonActive
+        ]}
+      >
         <View style={styles.buttonContent}>
-          <RecommendIcon width={20} height={20} />
-          <Text style={styles.buttonText}>추천</Text>
-          <View style={[styles.badge, { backgroundColor: Colors.glass.purple30 }]}>
-            <Text style={styles.badgeText}>2</Text>
+          <OnRecommendIcon width={20} height={20} />
+          <Text style={[
+            styles.buttonText, 
+            activeTab === 'recommend' && { color: Colors.primary.vividPurple }
+          ]}>추천</Text>
+          <View style={[
+            styles.badge, 
+            { backgroundColor: activeTab === 'recommend' ? Colors.glass.purple30 : 'rgba(194, 122, 255, 0.30)' }
+          ]}>
+            <Text style={[
+              styles.badgeText, 
+              activeTab === 'recommend' && { color: Colors.primary.vividPurple }
+            ]}>2</Text>
           </View>
         </View>
       </TouchableOpacity>
@@ -63,9 +118,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 4,
   },
-  meetButton: {
+  meetButtonActive: {
     borderColor: Colors.glass.orange30,
     backgroundColor: Colors.glass.orange20,
+  },
+  twinButtonActive: {
+    borderColor: Colors.glass.cyan30,
+    backgroundColor: Colors.glass.cyan20,
+  },
+  recommendButtonActive: {
+    borderColor: Colors.glass.purple30,
+    backgroundColor: Colors.glass.purple20,
   },
   buttonContent: {
     flexDirection: 'row',
