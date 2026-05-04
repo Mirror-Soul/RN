@@ -7,6 +7,7 @@ export const Colors = {
     recordingRed: '#FB2C36', // 녹음 중 버튼 및 포인트 컬러
     activeRedText: '#FF6467', // "실시간 음성 인식 중" 텍스트 컬러
     goldText: '#FFDF20',      // "NEW" 배지 텍스트 컬러
+    mirrorOrange: '#FF8904',  // 매칭 포인트 오렌지
   },
   gradient: {
     cyanToPurple: ['#00D3F3', '#C27AFF'] as [string, string],
@@ -14,9 +15,14 @@ export const Colors = {
     recording: ['#FB2C36', '#E7000B'] as [string, string],
     done: ['#00C950', '#00BC7D'] as [string, string],
     cyanBluePurple: ['#00D3F3', '#51A2FF', '#C27AFF'] as [string, string, string], // 녹음 버튼용
+    matchingActive: ['rgba(251, 100, 182, 0.20)', 'rgba(194, 122, 255, 0.20)'] as [string, string], // 매칭 활성 배너
+    meetProgress: ['#FF8904', '#FF6467'] as [string, string], // 만족도 바 및 통화 버튼
+    cardHeader: ['rgba(255, 137, 4, 0.10)', 'rgba(255, 100, 103, 0.10)'] as [string, string], // 매칭 카드 헤더
+    matchingStart: ['#FB64B6', '#C27AFF'] as [string, string], // 시작 버튼 전용
   },
   neutral: {
     pureWhite: '#FFFFFF',
+    softWhite: '#E5E7EB',
     lightGray: '#99A1AF',
     darkGray: '#6A7282',
     disabledText: '#4A5565',
@@ -53,9 +59,15 @@ export const Colors = {
     pink20: 'rgba(251, 100, 182, 0.20)',   // 내 말풍선 그라디언트 끝색
     pink30: 'rgba(251, 100, 182, 0.30)',   // 목소리 녹음 카드 테두리
     red20: 'rgba(255, 100, 103, 0.20)',    // 목소리 녹음 카드 그라디언트 끝색
+    red30: 'rgba(255, 100, 103, 0.30)',    // 매칭 카드 프로필 이미지 배경
     blue20: 'rgba(81, 162, 255, 0.20)',    // 얼굴 스캔 카드 그라디언트 끝색
     gold20: 'rgba(253, 199, 0, 0.20)',     // "NEW" 배지 배경
     gold40: 'rgba(253, 199, 0, 0.40)',     // "NEW" 배지 테두리
+    orange10: 'rgba(255, 137, 4, 0.10)',   // 매칭 카드 배경
+    orange20: 'rgba(255, 137, 4, 0.20)',   // 만남 신청 버튼 배경
+    orange30: 'rgba(255, 137, 4, 0.30)',   // 만남 신청 버튼 테두리
+    white05: 'rgba(255, 255, 255, 0.05)',  // 범용 글래스 배경
+    white15: 'rgba(255, 255, 255, 0.15)',  // 범용 글래스 테두리
     recordingBg: ['rgba(0, 211, 243, 0.05)', 'rgba(194, 122, 255, 0.05)'] as [string, string], // 웨이브폼 배경
   },
   shadow: {
