@@ -19,8 +19,9 @@ export const Colors = {
     meetProgress: ['#FF8904', '#FF6467'] as [string, string], // 만족도 바 및 통화 버튼
     cardHeader: ['rgba(255, 137, 4, 0.10)', 'rgba(255, 100, 103, 0.10)'] as [string, string], // 매칭 카드 헤더
     matchingStart: ['#FB64B6', '#C27AFF'] as [string, string], // 시작 버튼 전용
-    twinCardHeader: ['rgba(194, 122, 255, 0.10)', 'rgba(251, 100, 182, 0.10)'] as [string, string], // Twin 카드 헤더
+    twinCardHeader: ['rgba(0, 211, 243, 0.10)', 'rgba(81, 162, 255, 0.10)'] as [string, string], // Twin 카드 헤더 (시안)
     twinCallButton: ['#C27AFF', '#FB64B6'] as [string, string], // 상대 Twin과 통화 버튼
+    twinProgress: ['#00D3F3', '#51A2FF'] as [string, string], // Twin 만족도 바 그라디언트
   },
   neutral: {
     pureWhite: '#FFFFFF',
@@ -38,6 +39,9 @@ export const Colors = {
     white30: 'rgba(255, 255, 255, 0.30)',
     cyan18: 'rgba(0, 255, 255, 0.18)',
     cyan20: 'rgba(0, 211, 243, 0.20)',
+    cyan10_d3: 'rgba(0, 211, 243, 0.10)', // #00D3F3 기반
+    cyan20_d3: 'rgba(0, 211, 243, 0.20)', // #00D3F3 기반
+    cyan30_d3: 'rgba(0, 211, 243, 0.30)', // #00D3F3 기반
     purple18: 'rgba(147, 51, 234, 0.18)',
     purple08: 'rgba(142, 85, 236, 0.08)',
     purple20: 'rgba(194, 122, 255, 0.20)',

@@ -1,5 +1,5 @@
 import NoMeetingIcon from '@/assets/images/common/matching/NoMeeting.svg';
-import TwinCallIcon from '@/assets/images/common/matching/TwinCall.svg';
+import TwinCallIcon from '@/assets/images/common/matching/Twin_Call.svg';
 import OnRecommendIcon from '@/assets/images/common/matching/OnRecommend.svg';
 import { Colors, Radii } from '@/src/constants/theme';
 import React from 'react';
@@ -123,8 +123,8 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.glass.orange20,
   },
   twinButtonActive: {
-    borderColor: Colors.glass.cyan30,
-    backgroundColor: Colors.glass.cyan20,
+    borderColor: Colors.glass.cyan30_d3,
+    backgroundColor: Colors.glass.cyan20_d3,
   },
   recommendButtonActive: {
     borderColor: Colors.glass.purple30,

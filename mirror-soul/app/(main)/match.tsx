@@ -1,12 +1,13 @@
 import { Colors, Layout } from '@/src/constants/theme';
 import React from 'react';
-import { StyleSheet, View, ScrollView, SafeAreaView, useWindowDimensions, FlatList, Animated } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StyleSheet, View, ScrollView, useWindowDimensions, FlatList, Animated } from 'react-native';
+import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
 import MatchingHeader from '@/src/components/home/match/parts/MatchingHeader';
 import MatchingActiveBanner from '@/src/components/home/match/parts/MatchingActiveBanner';
 import MatchingSummaryRow, { MatchingTabType } from '@/src/components/home/match/parts/MatchingSummaryRow';
 import MatchingTabIndicator from '@/src/components/home/match/parts/MatchingTabIndicator';
 import MatchingMeetCard from '@/src/components/home/match/parts/cards/MatchingMeetCard';
+import MatchingTwinCard from '@/src/components/home/match/parts/cards/MatchingTwinCard';
 import MatchingRecommendCard from '@/src/components/home/match/parts/cards/MatchingRecommendCard';
 import MatchingFooter from '@/src/components/home/match/parts/MatchingFooter';
 
@@ -52,6 +53,39 @@ const RECOMMEND_DATA = [
   },
 ];
 
+const TWIN_DATA = [
+  {
+    id: 't1',
+    name: '정연',
+    age: 31,
+    callCount: 3,
+    timeAgo: '5시간 전',
+    twinSatisfaction: 67,
+    summaries: ['여행과 사진에 열정적', '활발하고 긍정적인 에너지', '새로운 경험을 즐김'],
+    summaryHighlight: '최근 여행 경험을 공유하며 즐겁게 대화했어요',
+  },
+  {
+    id: 't2',
+    name: '성훈',
+    age: 29,
+    callCount: 2,
+    timeAgo: '2시간 전',
+    twinSatisfaction: 82,
+    summaries: ['카페 투어와 디저트 미식가', '조용하지만 깊이 있는 대화', '주말 아침 러닝 메이트'],
+    summaryHighlight: '비슷한 주말 라이프스타일에 대해 공감하며 대화했어요',
+  },
+  {
+    id: 't3',
+    name: '다은',
+    age: 26,
+    callCount: 5,
+    timeAgo: '12시간 전',
+    twinSatisfaction: 94,
+    summaries: ['반려동물과 유기견 봉사 관심', '리액션이 좋고 밝은 성격', 'IT 트렌드와 커리어 공유'],
+    summaryHighlight: '가치관이 매우 유사하여 끊임없이 대화가 이어졌어요',
+  },
+];
+
 /**
  * 매칭 화면 (Main)
  */
@@ -68,7 +102,6 @@ export default function MatchScreen() {
 
   // 탭 전환 핸들러 (애니메이션 포함)
   const handleTabChange = (tab: MatchingTabType) => {
-    if (tab === 'twin') return; // Twin 탭은 추후 구현
     if (tab === activeTab) return;
     
     Animated.timing(fadeAnim, {
@@ -95,8 +128,20 @@ export default function MatchScreen() {
     setActiveIndex(index);
   };
 
-  const currentData = activeTab === 'meet' ? MEET_DATA : RECOMMEND_DATA;
-  const activeColor = activeTab === 'meet' ? Colors.primary.mirrorOrange : Colors.primary.vividPurple;
+  const getDataByTab = () => {
+    if (activeTab === 'meet') return MEET_DATA;
+    if (activeTab === 'twin') return TWIN_DATA;
+    return RECOMMEND_DATA;
+  };
+
+  const getActiveColor = () => {
+    if (activeTab === 'meet') return Colors.primary.mirrorOrange;
+    if (activeTab === 'twin') return Colors.primary.electricCyan;
+    return Colors.primary.vividPurple;
+  };
+
+  const currentData = getDataByTab();
+  const activeColor = getActiveColor();
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -133,11 +178,9 @@ export default function MatchScreen() {
               onMomentumScrollEnd={onMomentumScrollEnd}
               renderItem={({ item }) => (
                 <View style={{ width: width, paddingHorizontal: horizontalPadding }}>
-                  {activeTab === 'meet' ? (
-                    <MatchingMeetCard {...item} />
-                  ) : (
-                    <MatchingRecommendCard {...item} />
-                  )}
+                  {activeTab === 'meet' && <MatchingMeetCard {...item} />}
+                  {activeTab === 'twin' && <MatchingTwinCard {...item} />}
+                  {activeTab === 'recommend' && <MatchingRecommendCard {...item} />}
                 </View>
               )}
               snapToInterval={width}
