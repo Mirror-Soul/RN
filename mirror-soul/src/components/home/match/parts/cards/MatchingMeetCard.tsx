@@ -20,16 +20,16 @@ interface MatchingCardProps {
 }
 
 /**
- * 매칭 메인 카드 컴포넌트
+ * 매칭 만남 신청 카드 컴포넌트
  */
-export default function MatchingCard({
+export default function MatchingMeetCard({
   name = '민주',
   age = 27,
   timeAgo = '15분 전',
   twinSatisfaction = 73,
   message = 'Twin과 대화가 정말 즐거웠어요! 직접 만나서 커피 한잔 하면서 음악 이야기 더 나누고 싶어요 😊',
   summaries = ['음악 취향이 비슷해요', '여행 이야기로 공감대 형성', '대화 스타일이 편안했어요'],
-}: Partial<MatchingCardProps>) {
+}: Partial<MatchingMeetCardProps>) {
   return (
     <View style={styles.container}>
       {/* 1. 상단 프로필 카드 (Container1) - 콘텐츠 기반 가변 높이 */}

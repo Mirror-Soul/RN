@@ -1,14 +1,23 @@
 import { Colors, Radii } from '@/src/constants/theme';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { MatchingTabType } from './MatchingSummaryRow';
+
+interface MatchingFooterProps {
+  activeTab: MatchingTabType;
+}
 
 /**
  * 매칭 화면 하단 안내 배너
  */
-export default function MatchingFooter() {
+export default function MatchingFooter({ activeTab }: MatchingFooterProps) {
+  const footerText = activeTab === 'recommend' 
+    ? '통화 패턴을 분석하여 추천해드려요' 
+    : '상대방이 직접 당신과 통화하고 싶어해요';
+
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>상대방이 직접 당신과 통화하고 싶어해요</Text>
+      <Text style={styles.text}>{footerText}</Text>
     </View>
   );
 }

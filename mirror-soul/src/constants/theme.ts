@@ -19,6 +19,8 @@ export const Colors = {
     meetProgress: ['#FF8904', '#FF6467'] as [string, string], // 만족도 바 및 통화 버튼
     cardHeader: ['rgba(255, 137, 4, 0.10)', 'rgba(255, 100, 103, 0.10)'] as [string, string], // 매칭 카드 헤더
     matchingStart: ['#FB64B6', '#C27AFF'] as [string, string], // 시작 버튼 전용
+    twinCardHeader: ['rgba(194, 122, 255, 0.10)', 'rgba(251, 100, 182, 0.10)'] as [string, string], // Twin 카드 헤더
+    twinCallButton: ['#C27AFF', '#FB64B6'] as [string, string], // 상대 Twin과 통화 버튼
   },
   neutral: {
     pureWhite: '#FFFFFF',
