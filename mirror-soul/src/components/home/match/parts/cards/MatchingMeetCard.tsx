@@ -7,7 +7,7 @@ import CancelIcon from '@/assets/images/common/Cancel.svg';
 import SendMessageIcon from '@/assets/images/common/matching/SendMessage.svg';
 import SendCallIcon from '@/assets/images/common/matching/SendCall.svg';
 import { Colors, Radii } from '@/src/constants/theme';
-import { rw } from '@/src/utils/responsive';
+import { useLayout } from '@/src/hooks/useLayout';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useRef } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View, Animated, useWindowDimensions } from 'react-native';
@@ -32,7 +32,7 @@ export default function MatchingMeetCard({
   message = 'Twin과 대화가 정말 즐거웠어요! 직접 만나서 커피 한잔 하면서 음악 이야기 더 나누고 싶어요 😊',
   summaries = ['음악 취향이 비슷해요', '여행 이야기로 공감대 형성', '대화 스타일이 편안했어요'],
 }: Partial<MatchingMeetCardProps>) {
-  const { width } = useWindowDimensions();
+  const { rw } = useLayout();
   const progressAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {

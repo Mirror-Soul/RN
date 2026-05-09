@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View, useWindowDimensions, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors, Radii } from '@/src/constants/theme';
-import { rw } from '@/src/utils/responsive';
+import { useLayout } from '@/src/hooks/useLayout';
 
 // 아이콘 에셋
 import TwinCallIcon from '@/assets/images/common/matching/Twin_Call.svg';
@@ -33,7 +33,7 @@ export default function MatchingTwinCard({
   summaries = ['여행과 사진에 열정적', '활발하고 긍정적인 에너지', '새로운 경험을 즐김'],
   summaryHighlight = '최근 여행 경험을 공유하며 즐겁게 대화했어요',
 }: Partial<MatchingTwinCardProps>) {
-  const { width } = useWindowDimensions();
+  const { rw } = useLayout();
   const progressAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
