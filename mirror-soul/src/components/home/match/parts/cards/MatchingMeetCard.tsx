@@ -7,6 +7,7 @@ import CancelIcon from '@/assets/images/common/Cancel.svg';
 import SendMessageIcon from '@/assets/images/common/matching/SendMessage.svg';
 import SendCallIcon from '@/assets/images/common/matching/SendCall.svg';
 import { Colors, Radii } from '@/src/constants/theme';
+import { rw } from '@/src/utils/responsive';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useRef } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View, Animated, useWindowDimensions } from 'react-native';
@@ -33,9 +34,6 @@ export default function MatchingMeetCard({
 }: Partial<MatchingMeetCardProps>) {
   const { width } = useWindowDimensions();
   const progressAnim = useRef(new Animated.Value(0)).current;
-
-  // 동적 사이즈 계산 함수 (피그마 392.927 기준)
-  const rw = (val: number) => (width * val) / 392.927;
 
   useEffect(() => {
     Animated.spring(progressAnim, {

@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View, useWindowDimensions, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors, Radii } from '@/src/constants/theme';
+import { rw } from '@/src/utils/responsive';
 
 // 아이콘 에셋
 import TwinCallIcon from '@/assets/images/common/matching/Twin_Call.svg';
@@ -34,9 +35,6 @@ export default function MatchingTwinCard({
 }: Partial<MatchingTwinCardProps>) {
   const { width } = useWindowDimensions();
   const progressAnim = useRef(new Animated.Value(0)).current;
-
-  // 동적 사이즈 계산 함수 (피그마 392.927 기준)
-  const rw = (val: number) => (width * val) / 392.927;
 
   useEffect(() => {
     // 만족도 바 애니메이션 (0 -> 목표값)
