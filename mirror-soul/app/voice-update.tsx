@@ -5,7 +5,8 @@ import VoiceUpdateTranscriptBox from '@/src/components/home/grow/voice-update/Vo
 import { useSTT } from '@/src/hooks/useSTT';
 import { Colors } from '@/src/constants/theme';
 import React, { useState, useRef, useEffect } from 'react';
-import { StyleSheet, View, SafeAreaView, Alert } from 'react-native';
+import { StyleSheet, View, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const SENTENCES = [
   "주말에는 친구들과 영화를 보러 갈 예정이에요.",

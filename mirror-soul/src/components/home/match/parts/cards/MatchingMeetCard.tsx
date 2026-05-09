@@ -1,14 +1,16 @@
 import TimerIcon from '@/assets/images/common/evlove/evlove_timer.svg';
 import MessageIcon from '@/assets/images/common/matching/MeetingMessage.svg';
 import SummaryIcon from '@/assets/images/common/matching/MeetSummaryIcon.svg';
+import MeetSummaryIcon from '@/assets/images/common/matching/meet_summary.svg';
 import CompleteIcon from '@/assets/images/common/Complete.svg';
 import CancelIcon from '@/assets/images/common/Cancel.svg';
 import SendMessageIcon from '@/assets/images/common/matching/SendMessage.svg';
 import SendCallIcon from '@/assets/images/common/matching/SendCall.svg';
 import { Colors, Radii } from '@/src/constants/theme';
+import { useLayout } from '@/src/hooks/useLayout';
 import { LinearGradient } from 'expo-linear-gradient';
-import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { StyleSheet, Text, TouchableOpacity, View, Animated, useWindowDimensions } from 'react-native';
 
 interface MatchingCardProps {
   name: string;
@@ -30,6 +32,17 @@ export default function MatchingMeetCard({
   message = 'Twin과 대화가 정말 즐거웠어요! 직접 만나서 커피 한잔 하면서 음악 이야기 더 나누고 싶어요 😊',
   summaries = ['음악 취향이 비슷해요', '여행 이야기로 공감대 형성', '대화 스타일이 편안했어요'],
 }: Partial<MatchingMeetCardProps>) {
+  const { rw } = useLayout();
+  const progressAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.spring(progressAnim, {
+      toValue: twinSatisfaction,
+      tension: 20,
+      friction: 7,
+      useNativeDriver: false,
+    }).start();
+  }, [twinSatisfaction]);
   return (
     <View style={styles.container}>
       {/* 1. 상단 프로필 카드 (Container1) - 콘텐츠 기반 가변 높이 */}
@@ -63,12 +76,20 @@ export default function MatchingMeetCard({
                   <Text style={styles.satisfactionValue}>{twinSatisfaction}%</Text>
                 </View>
                 <View style={styles.progressBarBg}>
-                  <LinearGradient
-                    colors={Colors.gradient.meetProgress}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={[styles.progressBarFill, { width: `${twinSatisfaction}%` }]}
-                  />
+                  <Animated.View style={{
+                    height: '100%',
+                    width: progressAnim.interpolate({
+                      inputRange: [0, 100],
+                      outputRange: ['0%', '100%']
+                    }),
+                  }}>
+                    <LinearGradient
+                      colors={Colors.gradient.meetProgress}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={styles.progressBarFill}
+                    />
+                  </Animated.View>
                 </View>
               </View>
             </View>
@@ -94,7 +115,7 @@ export default function MatchingMeetCard({
           <View style={styles.summaryList}>
             {summaries.map((item, index) => (
               <View key={index} style={styles.summaryItem}>
-                <CompleteIcon width={14} height={14} color={Colors.neutral.lightGrayText} />
+                <MeetSummaryIcon width={rw(14)} height={rw(14)} />
                 <Text style={styles.summaryText}>{item}</Text>
               </View>
             ))}
