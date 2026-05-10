@@ -10,7 +10,7 @@ interface EmailSectionProps extends SectionProps {
   isModalVisible: boolean;
   setIsModalVisible: (visible: boolean) => void;
   onSendCode: () => void;
-  onVerify: (code: string) => boolean;
+  onVerify: (code: string) => Promise<boolean>;
   timeLeft?: number;
   isTimerActive?: boolean;
   formattedTime?: string;
