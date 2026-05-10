@@ -1,5 +1,11 @@
 import axios from 'axios';
 
+const apiBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
+
+if (!apiBaseUrl) {
+  throw new Error('EXPO_PUBLIC_API_BASE_URL is not set. Please check your .env file.');
+}
+
 /**
  * API 클라이언트 (SoC: HTTP 통신 관심사 분리)
  * - Base URL: 환경 변수에서 로드
@@ -10,7 +16,7 @@ import axios from 'axios';
  * Authorization 헤더를 추가하면 됩니다. (OCP)
  */
 const apiClient = axios.create({
-  baseURL: process.env.EXPO_PUBLIC_API_BASE_URL,
+  baseURL: apiBaseUrl,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',

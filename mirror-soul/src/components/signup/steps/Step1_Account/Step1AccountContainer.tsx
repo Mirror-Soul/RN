@@ -37,6 +37,7 @@ export default function Step1AccountContainer() {
     isTimerActive,
     formattedTime,
     handleResendCode,
+    isEmailActionLoading,
   } = useStep1Form();
 
   // 로딩 오버레이 애니메이션
@@ -105,6 +106,7 @@ export default function Step1AccountContainer() {
             isTimerActive={isTimerActive}
             formattedTime={formattedTime}
             onResendCode={handleResendCode}
+            isLoading={isEmailActionLoading}
           />
 
           {/* Password Section */}

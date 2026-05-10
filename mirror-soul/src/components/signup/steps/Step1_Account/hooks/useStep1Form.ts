@@ -30,6 +30,7 @@ export function useStep1Form() {
   });
 
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isEmailActionLoading, setIsEmailActionLoading] = useState(false);
   const [verifyAttemptCount, setVerifyAttemptCount] = useState(0);
   const { timeLeft, isActive: isTimerActive, start: startTimer, reset: resetTimer, formattedTime } = useCountdown(180);
 
@@ -43,7 +44,7 @@ export function useStep1Form() {
   // 즉시 타이머 시작 + 모달 오픈, API 실패 시 롤백
   // ─────────────────────────────────────────────
   const handleSendEmailCode = useCallback(async () => {
-    if (state.isLoading) return; // 중복 요청 방지 Lock
+    if (isEmailActionLoading) return; // 이메일 인증 요청 중복 방지 Lock
 
     if (isValidEmail(state.email)) {
       if (isTimerActive && timeLeft > 0) {
@@ -59,7 +60,7 @@ export function useStep1Form() {
       setVerifyAttemptCount(0); // 재발송 시 시도 횟수 초기화
 
       try {
-        updateState({ isLoading: true });
+        setIsEmailActionLoading(true);
         await sendVerificationCode({ email: state.email });
         // 성공: 이미 타이머 + 모달 동작 중이므로 추가 처리 불필요
       } catch (error: any) {
@@ -71,20 +72,20 @@ export function useStep1Form() {
           error?.message || '잠시 후 다시 시도해주세요.'
         );
       } finally {
-        updateState({ isLoading: false });
+        setIsEmailActionLoading(false);
       }
     } else {
       if (__DEV__) {
         console.debug('Invalid email format');
       }
     }
-  }, [state.email, state.isLoading, isTimerActive, timeLeft, resetTimer, startTimer, updateState]);
+  }, [state.email, isEmailActionLoading, isTimerActive, timeLeft, resetTimer, startTimer, updateState]);
 
   // ─────────────────────────────────────────────
   // 이메일 인증 코드 확인 (5회 시도 제한)
   // ─────────────────────────────────────────────
   const handleVerifyEmail = useCallback(async (code: string): Promise<boolean> => {
-    if (state.isLoading) return false;
+    if (isEmailActionLoading) return false;
 
     // 인증 시도 횟수 제한
     // TODO: 백엔드 엔지니어와 협의 후 횟수 및 초과 시 정책 확정 예정
@@ -97,8 +98,7 @@ export function useStep1Form() {
     }
 
     try {
-      updateState({ isLoading: true });
-      setVerifyAttemptCount((prev) => prev + 1);
+      setIsEmailActionLoading(true);
       const response = await verifyCode({ code });
 
       if (response.result.verifySuccess) {
@@ -106,6 +106,8 @@ export function useStep1Form() {
         resetTimer(); // 인증 성공 시 구동 중인 타이머 해제
         return true;
       }
+      // 명확한 인증 실패(불일치 등) 시에만 시도 횟수 증가
+      setVerifyAttemptCount((prev) => prev + 1);
       return false;
     } catch (error: any) {
       if (__DEV__) {
@@ -113,9 +115,9 @@ export function useStep1Form() {
       }
       return false;
     } finally {
-      updateState({ isLoading: false });
+      setIsEmailActionLoading(false);
     }
-  }, [state.isLoading, verifyAttemptCount, updateState, resetTimer]);
+  }, [isEmailActionLoading, verifyAttemptCount, updateState, resetTimer]);
 
   // PASS 본인인증 처리 (추후 구현 예정)
   const handlePassVerification = useCallback(() => {
@@ -146,5 +148,6 @@ export function useStep1Form() {
     formattedTime,
     handleResendCode: handleSendEmailCode,
     verifyAttemptCount,
+    isEmailActionLoading,
   };
 }
