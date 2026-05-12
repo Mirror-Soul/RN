@@ -1,7 +1,16 @@
 import { useCountdown } from '@/src/hooks/useCountdown';
+import { sendVerificationCode, verifyCode } from '@/src/services/authService';
 import { isValidEmail } from '@/src/utils/validation';
 import { useCallback, useState } from 'react';
+import { Alert } from 'react-native';
 import { Step1State } from '../types/step1';
+
+/**
+ * 인증 코드 최대 시도 횟수
+ * TODO: 백엔드 엔지니어와 협의 후 횟수 및 제한 정책 확정 예정
+ * 현재 5회로 설정. 서버 측 제한과 동기화 필요.
+ */
+const MAX_VERIFY_ATTEMPTS = 5;
 
 /**
  * useStep1Form 훅
@@ -17,9 +26,12 @@ export function useStep1Form() {
     isPasswordConfirmVisible: false,
     isIdentityVerified: false,
     agreedToTerms: false,
+    isLoading: false,
   });
 
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isEmailActionLoading, setIsEmailActionLoading] = useState(false);
+  const [verifyAttemptCount, setVerifyAttemptCount] = useState(0);
   const { timeLeft, isActive: isTimerActive, start: startTimer, reset: resetTimer, formattedTime } = useCountdown(180);
 
   // 폼 업데이트 함수
@@ -27,44 +39,87 @@ export function useStep1Form() {
     setState((prev) => ({ ...prev, ...updates }));
   }, []);
 
-  // 이메일 인증 발송 처리 (모달 팝업 및 타이머 연동)
-  const handleSendEmailCode = useCallback(() => {
+  // ─────────────────────────────────────────────
+  // 이메일 인증 코드 발송 (Optimistic UI 패턴)
+  // 즉시 타이머 시작 + 모달 오픈, API 실패 시 롤백
+  // ─────────────────────────────────────────────
+  const handleSendEmailCode = useCallback(async () => {
+    if (isEmailActionLoading) return; // 이메일 인증 요청 중복 방지 Lock
+
     if (isValidEmail(state.email)) {
       if (isTimerActive && timeLeft > 0) {
         // 이미 인증 코드가 발송되어 타이머가 동작 중일 때는 모달 창만 다시 오픈
         setIsModalVisible(true);
-      } else {
-        // 인증 코드 초기 발송 혹은 시간 만료 후 재발송 액션
+        return;
+      }
+
+      // Optimistic UI: 즉시 타이머 시작 + 모달 오픈
+      resetTimer();
+      startTimer();
+      setIsModalVisible(true);
+      setVerifyAttemptCount(0); // 재발송 시 시도 횟수 초기화
+
+      try {
+        setIsEmailActionLoading(true);
+        await sendVerificationCode({ email: state.email });
+        // 성공: 이미 타이머 + 모달 동작 중이므로 추가 처리 불필요
+      } catch (error: any) {
+        // 실패: Optimistic UI 롤백
         resetTimer();
-        startTimer();
-        setIsModalVisible(true);
+        setIsModalVisible(false);
+        Alert.alert(
+          '인증 코드 발송 실패',
+          error?.message || '잠시 후 다시 시도해주세요.'
+        );
+      } finally {
+        setIsEmailActionLoading(false);
       }
     } else {
-      console.log('Invalid email');
+      if (__DEV__) {
+        console.debug('Invalid email format');
+      }
     }
-  }, [state.email, isTimerActive, timeLeft, resetTimer, startTimer]);
+  }, [state.email, isEmailActionLoading, isTimerActive, timeLeft, resetTimer, startTimer, updateState]);
 
-  // 이메일 인증 확인 처리 (모달 확인 클릭)
-  const handleVerifyEmail = useCallback((code: string) => {
-    if (__DEV__) {
-      console.debug('Verifying email code length:', code.length);
-    }
+  // ─────────────────────────────────────────────
+  // 이메일 인증 코드 확인 (5회 시도 제한)
+  // ─────────────────────────────────────────────
+  const handleVerifyEmail = useCallback(async (code: string): Promise<boolean> => {
+    if (isEmailActionLoading) return false;
 
-    // UI 테스트용 임시 Mock: '111111' 입력 시 무조건 실패 처리하여 에러 화면 확인
-    if (__DEV__ && code === '111111') {
+    // 인증 시도 횟수 제한
+    // TODO: 백엔드 엔지니어와 협의 후 횟수 및 초과 시 정책 확정 예정
+    if (verifyAttemptCount >= MAX_VERIFY_ATTEMPTS) {
+      Alert.alert(
+        '인증 시도 횟수 초과',
+        '인증 시도 횟수를 초과했습니다. 인증 코드를 재발송해주세요.'
+      );
       return false;
     }
 
-    // Mock logic: 그 외 6자리 코드면 무조건 성공 처리
-    if (code.length === 6) {
-      updateState({ isEmailVerified: true });
-      resetTimer(); // 인증 성공 시 구동 중인 타이머 해제
-      return true;
-    }
-    return false;
-  }, [updateState, resetTimer]);
+    try {
+      setIsEmailActionLoading(true);
+      const response = await verifyCode({ code });
 
-  // PASS 본인인증 처리 (Mock)
+      if (response.result.verifySuccess) {
+        updateState({ isEmailVerified: true });
+        resetTimer(); // 인증 성공 시 구동 중인 타이머 해제
+        return true;
+      }
+      // 명확한 인증 실패(불일치 등) 시에만 시도 횟수 증가
+      setVerifyAttemptCount((prev) => prev + 1);
+      return false;
+    } catch (error: any) {
+      if (__DEV__) {
+        console.debug('Verify code error:', error?.message);
+      }
+      return false;
+    } finally {
+      setIsEmailActionLoading(false);
+    }
+  }, [isEmailActionLoading, verifyAttemptCount, updateState, resetTimer]);
+
+  // PASS 본인인증 처리 (추후 구현 예정)
   const handlePassVerification = useCallback(() => {
     console.log('PASS Identity Verification requested');
     // Mock logic: 즉시 완료 처리
@@ -92,5 +147,7 @@ export function useStep1Form() {
     isTimerActive,
     formattedTime,
     handleResendCode: handleSendEmailCode,
+    verifyAttemptCount,
+    isEmailActionLoading,
   };
 }
