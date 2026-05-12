@@ -4,20 +4,72 @@ import FormLabel from '@/src/components/signup/common/FormLabel';
 import StepSelectDropdown from '@/src/components/signup/common/StepSelectDropdown';
 import { Colors, Radii } from '@/src/constants/theme';
 import React, { useState } from 'react';
-import { Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Platform, StyleSheet, Text, TextInput, TouchableOpacity, View, ActivityIndicator, Alert } from 'react-native';
 import JobCategoryDropdown from '../Professional/JobCategoryDropdown';
 import { SectionProps } from '../types/step2';
+import * as DocumentPicker from 'expo-document-picker';
+import * as ImagePicker from 'expo-image-picker';
+import { jobCategories } from '../Professional/jobData';
 
 interface JobVerificationSectionProps extends SectionProps {
-  onVerify: () => void;
+  onVerify: (fileUri: string, contentType: string, fileName: string) => Promise<void>;
 }
 
 /**
  * JobVerificationSection 컴포넌트 (SRP)
- * 닉네임 입력 필드와 중복 확인 버튼, 상태 피드백을 표시합니다.
+ * 직군 선택 및 직업 인증(S3 업로드) 로직을 관리합니다.
  */
 export default function JobVerificationSection({ state, onChange, onVerify }: JobVerificationSectionProps) {
   const [isOpen, setIsOpen] = useState(false);
+
+  // 파일 선택 및 업로드 핸들러 (C안: 갤러리/파일 + 카메라)
+  const handlePickDocument = async () => {
+    Alert.alert(
+      '직업 인증',
+      '인증 서류를 어떻게 업로드하시겠습니까?',
+      [
+        {
+          text: '카메라로 촬영',
+          onPress: async () => {
+            const { status } = await ImagePicker.requestCameraPermissionsAsync();
+            if (status !== 'granted') {
+              Alert.alert('권한 필요', '카메라 접근 권한이 필요합니다.');
+              return;
+            }
+            const result = await ImagePicker.launchCameraAsync({
+              quality: 0.8,
+            });
+            if (!result.canceled && result.assets && result.assets.length > 0) {
+              const asset = result.assets[0];
+              await onVerify(
+                asset.uri, 
+                asset.mimeType || 'image/jpeg', 
+                asset.fileName || `camera_${Date.now()}.jpg`
+              );
+            }
+          }
+        },
+        {
+          text: '파일/갤러리에서 선택',
+          onPress: async () => {
+            const result = await DocumentPicker.getDocumentAsync({
+              type: ['image/*', 'application/pdf'],
+              copyToCacheDirectory: true,
+            });
+            if (!result.canceled && result.assets && result.assets.length > 0) {
+              const asset = result.assets[0];
+              await onVerify(
+                asset.uri, 
+                asset.mimeType || 'application/octet-stream', 
+                asset.name
+              );
+            }
+          }
+        },
+        { text: '취소', style: 'cancel' }
+      ]
+    );
+  };
 
   return (
     <View style={[styles.container, isOpen && styles.containerOpen]}>
@@ -25,8 +77,8 @@ export default function JobVerificationSection({ state, onChange, onVerify }: Jo
 
       <View style={styles.dropdownWrapper}>
         <StepSelectDropdown
-          label="" // Subtitle 제거를 위해 빈 라벨
-          placeholder={state.jobCategory || "직군을 선택하세요"}
+          label="" 
+          placeholder={jobCategories.find(j => j.value === state.jobCategory)?.label || "직군을 선택하세요"}
           onPress={() => setIsOpen(!isOpen)}
           isOpen={isOpen}
         />
@@ -58,7 +110,11 @@ export default function JobVerificationSection({ state, onChange, onVerify }: Jo
         <View style={styles.verifyHeaderRow}>
           <View style={styles.verifyHeaderLeft}>
             <View style={styles.iconCircle}>
-              <VerificationSuccessIcon width={24} height={24} />
+              {state.isJobVerifying ? (
+                <ActivityIndicator size="small" color={Colors.primary.electricCyan} />
+              ) : (
+                <VerificationSuccessIcon width={24} height={24} />
+              )}
             </View>
             <View style={styles.verifyTitleGroup}>
               <Text style={styles.verifyTitle}>
@@ -73,9 +129,20 @@ export default function JobVerificationSection({ state, onChange, onVerify }: Jo
           </View>
 
           {!state.isJobVerified && (
-            <TouchableOpacity activeOpacity={0.8} style={styles.verifyButton} onPress={onVerify}>
-              <VerifySendIcon width={16} height={16} />
-              <Text style={styles.verifyButtonText}>인증하기</Text>
+            <TouchableOpacity 
+              activeOpacity={0.8} 
+              style={styles.verifyButton} 
+              onPress={handlePickDocument}
+              disabled={state.isJobVerifying}
+            >
+              {state.isJobVerifying ? (
+                <ActivityIndicator size="small" color="#C27AFF" />
+              ) : (
+                <>
+                  <VerifySendIcon width={16} height={16} />
+                  <Text style={styles.verifyButtonText}>인증하기</Text>
+                </>
+              )}
             </TouchableOpacity>
           )}
         </View>
@@ -129,8 +196,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.glass.white5,
     gap: 12,
   },
-
-
   verifyHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -146,7 +211,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: Radii.lg2,
-    backgroundColor: 'rgba(5, 223, 114, 0.14)', // Success base green
+    backgroundColor: 'rgba(5, 223, 114, 0.14)',
     justifyContent: 'center',
     alignItems: 'center',
   },

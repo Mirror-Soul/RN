@@ -2,18 +2,19 @@ import VerificationSuccessIcon from '@/assets/images/common/Verification_sucess.
 import FormLabel from '@/src/components/signup/common/FormLabel';
 import { Radii } from '@/src/constants/theme';
 import React from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SectionProps } from '../types/step2';
 
 interface NicknameSectionProps extends SectionProps {
   onCheck: () => void;
+  isChecking: boolean;
 }
 
 /**
  * NicknameSection 컴포넌트 (SRP)
  * 닉네임 입력 필드와 중복 확인 버튼, 상태 피드백을 표시합니다.
  */
-export default function NicknameSection({ state, onChange, onCheck }: NicknameSectionProps) {
+export default function NicknameSection({ state, onChange, onCheck, isChecking }: NicknameSectionProps) {
   return (
     <View style={styles.container}>
       <FormLabel label="닉네임" />
@@ -26,14 +27,20 @@ export default function NicknameSection({ state, onChange, onCheck }: NicknameSe
           placeholder="2자 이상 입력해주세요"
           placeholderTextColor="#6A7282"
           autoCapitalize="none"
+          editable={!isChecking}
         />
 
         <TouchableOpacity
           style={styles.checkButton}
           onPress={onCheck}
           activeOpacity={0.8}
+          disabled={isChecking || state.nickname.length < 2}
         >
-          <Text style={styles.checkButtonText}>중복 확인</Text>
+          {isChecking ? (
+            <ActivityIndicator size="small" color="#FFF" />
+          ) : (
+            <Text style={styles.checkButtonText}>중복 확인</Text>
+          )}
         </TouchableOpacity>
       </View>
 

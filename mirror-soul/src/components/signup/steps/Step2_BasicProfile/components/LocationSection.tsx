@@ -19,7 +19,11 @@ export default function LocationSection({ state, onChange }: SectionProps) {
       <View style={styles.dropdownWrapper}>
         <StepSelectDropdown
           label="" // Subtitle 제거를 위해 빈 라벨
-          placeholder={state.location || "거주 중인 지역을 선택하세요"}
+          placeholder={
+            state.sidoName 
+              ? `${state.sidoName} ${state.sigunguName} ${state.eupmyeondongName}`
+              : "거주 중인 지역을 선택하세요"
+          }
           onPress={() => setIsOpen(!isOpen)}
           isOpen={isOpen}
           style={styles.dropdown}
@@ -27,8 +31,12 @@ export default function LocationSection({ state, onChange }: SectionProps) {
 
         {isOpen && (
           <LocationDropdown
-            onSelect={(city) => {
-              onChange({ location: city });
+            onSelect={(result) => {
+              onChange({ 
+                sidoName: result.sidoName,
+                sigunguName: result.sigunguName,
+                eupmyeondongName: result.eupmyeondongName
+              });
               setIsOpen(false);
             }}
             onClose={() => setIsOpen(false)}

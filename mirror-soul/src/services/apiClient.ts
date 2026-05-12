@@ -56,6 +56,17 @@ apiClient.interceptors.response.use(
         error: error.message,
       });
     }
+
+    // 서버가 에러 JSON(400, 500 등)을 응답으로 보낸 경우
+    const data = error.response.data;
+    if (data) {
+      return Promise.reject({
+        code: data.code || 'UNKNOWN_ERROR',
+        message: data.message || '요청 처리에 실패했습니다.',
+        error: data.error || error.message,
+      });
+    }
+
     return Promise.reject(error);
   }
 );

@@ -129,7 +129,7 @@ export function useStep1Form() {
   // 다음 단계 이동 가능 여부 체크
   const isFormValid =
     state.isEmailVerified &&
-    state.password.length >= 8 &&
+    /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d!@#$%^&*()_+=-]{8,20}$/.test(state.password) &&
     state.password === state.passwordConfirm &&
     state.isIdentityVerified &&
     state.agreedToTerms;
