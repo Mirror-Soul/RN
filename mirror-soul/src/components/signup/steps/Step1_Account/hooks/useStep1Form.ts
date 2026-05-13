@@ -1,6 +1,6 @@
 import { useCountdown } from '@/src/hooks/useCountdown';
 import { sendVerificationCode, verifyCode } from '@/src/services/authService';
-import { isValidEmail } from '@/src/utils/validation';
+import { isValidEmail, isValidPassword } from '@/src/utils/validation';
 import { useCallback, useState } from 'react';
 import { Alert } from 'react-native';
 import { Step1State } from '../types/step1';
@@ -129,7 +129,7 @@ export function useStep1Form() {
   // 다음 단계 이동 가능 여부 체크
   const isFormValid =
     state.isEmailVerified &&
-    /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d!@#$%^&*()_+=-]{8,20}$/.test(state.password) &&
+    isValidPassword(state.password) &&
     state.password === state.passwordConfirm &&
     state.isIdentityVerified &&
     state.agreedToTerms;

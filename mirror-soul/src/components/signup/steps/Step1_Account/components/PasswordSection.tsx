@@ -3,6 +3,7 @@ import { Colors, Radii } from '@/src/constants/theme';
 import React from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SectionProps } from '../types/step1';
+import { isValidPassword } from '@/src/utils/validation';
 
 import SeePasswordIcon from '@/assets/images/common/login/login_SeePassword.svg';
 
@@ -11,9 +12,8 @@ import SeePasswordIcon from '@/assets/images/common/login/login_SeePassword.svg'
  * 비밀번호 및 비밀번호 확인 입력을 관리합니다.
  */
 export default function PasswordSection({ state, onChange }: SectionProps) {
-  const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d!@#$%^&*()_+=-]{8,20}$/;
-  const isInvalidPassword = state.password.length > 0 && !passwordRegex.test(state.password);
-  const isMatch = passwordRegex.test(state.password) && state.password === state.passwordConfirm;
+  const isInvalidPassword = state.password.length > 0 && !isValidPassword(state.password);
+  const isMatch = isValidPassword(state.password) && state.password === state.passwordConfirm;
   const isMismatch = state.passwordConfirm.length > 0 && state.password !== state.passwordConfirm;
 
   return (
