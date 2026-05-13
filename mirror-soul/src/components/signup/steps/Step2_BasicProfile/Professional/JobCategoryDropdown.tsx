@@ -29,12 +29,12 @@ export default function JobCategoryDropdown({ onSelect, onClose }: Props) {
         >
           {jobCategories.map((job) => (
             <TouchableOpacity
-              key={job}
+              key={job.value}
               style={styles.listItem}
               activeOpacity={0.6}
-              onPress={() => handleSelect(job)}
+              onPress={() => handleSelect(job.value)}
             >
-              <Text style={styles.listItemText}>{job}</Text>
+              <Text style={styles.listItemText}>{job.label}</Text>
             </TouchableOpacity>
           ))}
         </ScrollView>

@@ -1,10 +1,11 @@
 import SecurityFooter from '@/src/components/home/SecurityFooter';
 import PrimaryButton from '@/src/components/signup/common/PrimaryButton';
 import { SIGNUP_ROUTES } from '@/src/constants/routes/signupRoutes';
-import { Layout } from '@/src/constants/theme';
+import { Colors, Layout } from '@/src/constants/theme';
 import { useRouter } from 'expo-router';
-import React from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import React, { useState } from 'react';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View, Alert, ActivityIndicator, Text } from 'react-native';
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 // Step 2 Specific Parts
 import JobVerificationSection from './components/JobVerificationSection';
@@ -12,6 +13,10 @@ import LocationSection from './components/LocationSection';
 import NicknameSection from './components/NicknameSection';
 import Step2Header from './components/Step2Header';
 import { useStep2Form } from './hooks/useStep2Form';
+import { useSignupStore } from '@/src/store/useSignupStore';
+import { saveProfile } from '@/src/services/onboardingService';
+import { JobEnum } from '@/src/types/api/onboarding';
+import { jobCategories } from './Professional/jobData';
 
 /**
  * Step2BasicProfileContainer 컴포넌트
@@ -19,76 +24,139 @@ import { useStep2Form } from './hooks/useStep2Form';
  */
 export default function Step2BasicProfileContainer() {
   const router = useRouter();
+  const userUuid = useSignupStore((s) => s.userUuid);
+  const [isSaving, setIsSaving] = useState(false);
+
   const {
     state,
     updateState,
     handleNicknameCheck,
     handleJobVerify,
     isFormValid,
+    sigunguCache,
+    eupmyeondongCache,
   } = useStep2Form();
 
-  const handleContinue = () => {
-    if (isFormValid) {
-      router.push(SIGNUP_ROUTES.EXPRESS);
+  // 로딩 오버레이 애니메이션
+  const overlayOpacity = useSharedValue(0);
+  const overlayAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: overlayOpacity.value,
+  }));
+
+  const handleContinue = async () => {
+    // 1. 유효성 검증 (JobEnum 안전성 확보 및 방어 코드)
+    const isValidJob = jobCategories.some((j) => j.value === state.jobCategory);
+    if (!isFormValid || !isValidJob || isSaving) {
+      if (!isValidJob && state.jobCategory !== '') {
+        Alert.alert('오류', '유효하지 않은 직군입니다.');
+      }
+      return;
+    }
+
+    if (!userUuid) {
+      Alert.alert('오류', '사용자 정보를 찾을 수 없습니다. 다시 시도해주세요.');
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      overlayOpacity.value = withTiming(1, { duration: 200 });
+
+      const response = await saveProfile(
+        userUuid,
+        state.jobCategory as JobEnum,
+        {
+          nickname: state.nickname.trim(),
+          sidoName: state.sidoName,
+          sigunguName: state.sigunguName,
+          eupmyeondongName: state.eupmyeondongName,
+          jobDescription: state.jobTitle.trim(),
+          jobCertificationObjectKey: state.jobCertificationObjectKey,
+        }
+      );
+
+      if (response.isSuccess) {
+        // 성공: Step3로 이동
+        router.push(SIGNUP_ROUTES.EXPRESS);
+      } else {
+        Alert.alert('저장 실패', response.message || '프로필 정보를 저장하지 못했습니다.');
+      }
+    } catch (error: any) {
+      Alert.alert('오류', error?.message || '잠시 후 다시 시도해주세요.');
+    } finally {
+      overlayOpacity.value = withTiming(0, { duration: 200 });
+      setIsSaving(false);
     }
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.keyboardView}
-    >
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
+    <View style={{ flex: 1 }}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardView}
       >
-        <View style={styles.container}>
-          {/* Header Section */}
-          <View style={styles.headerWrapper}>
-            <Step2Header />
-          </View>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.container}>
+            <View style={styles.headerWrapper}>
+              <Step2Header />
+            </View>
 
-          {/* Form Body */}
-          <View style={styles.formContainer}>
-            {/* Nickname Section */}
-            <NicknameSection
-              state={state}
-              onChange={updateState}
-              onCheck={handleNicknameCheck}
-            />
-
-            {/* Location Section */}
-            <LocationSection
-              state={state}
-              onChange={updateState}
-            />
-
-            {/* Job Verification Section */}
-            <JobVerificationSection
-              state={state}
-              onChange={updateState}
-              onVerify={handleJobVerify}
-            />
-
-            {/* Continue Button */}
-            <View style={styles.buttonWrapper}>
-              <PrimaryButton
-                title="다음"
-                disabled={!isFormValid}
-                onPress={handleContinue}
+            <View style={styles.formContainer}>
+              <NicknameSection
+                state={state}
+                onChange={updateState}
+                onCheck={handleNicknameCheck}
+                isChecking={state.isNicknameChecking}
               />
+
+              <LocationSection
+                state={state}
+                onChange={updateState}
+                sigunguCache={sigunguCache}
+                eupmyeondongCache={eupmyeondongCache}
+              />
+
+              <JobVerificationSection
+                state={state}
+                onChange={updateState}
+                onVerify={handleJobVerify}
+              />
+
+              <View style={styles.buttonWrapper}>
+                <PrimaryButton
+                  title="다음"
+                  disabled={!isFormValid || isSaving}
+                  isLoading={isSaving}
+                  onPress={handleContinue}
+                />
+              </View>
+            </View>
+
+            <View style={styles.footerContainer}>
+              <SecurityFooter />
             </View>
           </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
 
-          {/* Footer */}
-          <View style={styles.footerContainer}>
-            <SecurityFooter />
+      {/* 로딩 오버레이 */}
+      {isSaving && (
+        <Animated.View
+          style={[styles.loadingOverlay, overlayAnimatedStyle]}
+          pointerEvents="auto"
+        >
+          <View style={styles.loadingContent}>
+            <ActivityIndicator size="large" color={Colors.primary.electricCyan} />
+            <Text style={styles.loadingText}>프로필을 저장하고 있습니다...</Text>
           </View>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </Animated.View>
+      )}
+    </View>
   );
 }
 
@@ -115,17 +183,31 @@ const styles = StyleSheet.create({
   },
   formContainer: {
     width: '100%',
-    gap: 10, // Reduced from 40 for a more compact layout per user request
+    gap: 20, // Adjusted for spacing
   },
-
   buttonWrapper: {
-    marginTop: 8,
+    marginTop: 20,
     width: '100%',
   },
   footerContainer: {
     marginTop: 40,
     width: '100%',
     alignItems: 'center',
-  }
+  },
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  loadingContent: {
+    alignItems: 'center',
+    gap: 16,
+  },
+  loadingText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '500',
+  },
 });
-

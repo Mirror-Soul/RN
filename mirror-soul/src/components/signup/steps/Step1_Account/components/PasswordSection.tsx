@@ -3,6 +3,7 @@ import { Colors, Radii } from '@/src/constants/theme';
 import React from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SectionProps } from '../types/step1';
+import { isValidPassword } from '@/src/utils/validation';
 
 import SeePasswordIcon from '@/assets/images/common/login/login_SeePassword.svg';
 
@@ -11,8 +12,8 @@ import SeePasswordIcon from '@/assets/images/common/login/login_SeePassword.svg'
  * 비밀번호 및 비밀번호 확인 입력을 관리합니다.
  */
 export default function PasswordSection({ state, onChange }: SectionProps) {
-  const isShort = state.password.length > 0 && state.password.length < 8;
-  const isMatch = state.password.length >= 8 && state.password === state.passwordConfirm;
+  const isInvalidPassword = state.password.length > 0 && !isValidPassword(state.password);
+  const isMatch = isValidPassword(state.password) && state.password === state.passwordConfirm;
   const isMismatch = state.passwordConfirm.length > 0 && state.password !== state.passwordConfirm;
 
   return (
@@ -22,10 +23,10 @@ export default function PasswordSection({ state, onChange }: SectionProps) {
         <FormLabel label="비밀번호" />
         <View style={styles.inputWrapper}>
           <TextInput
-            style={[styles.textInput, isShort && styles.inputError]}
+            style={[styles.textInput, isInvalidPassword && styles.inputError]}
             value={state.password}
             onChangeText={(text) => onChange({ password: text })}
-            placeholder="최소 8자 이상"
+            placeholder="영문, 숫자 포함 8~20자"
             placeholderTextColor="#6A7282"
             secureTextEntry={!state.isPasswordVisible}
             autoCapitalize="none"
@@ -43,8 +44,8 @@ export default function PasswordSection({ state, onChange }: SectionProps) {
           </TouchableOpacity>
         </View>
         <View style={styles.messageArea}>
-          {isShort && (
-            <Text style={styles.errorText}>최소 8자 이상 입력해주세요.</Text>
+          {isInvalidPassword && (
+            <Text style={styles.errorText}>영문자, 숫자를 포함하여 8~20자로 입력해주세요.</Text>
           )}
         </View>
       </View>
