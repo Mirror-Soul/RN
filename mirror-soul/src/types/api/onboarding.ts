@@ -29,22 +29,6 @@ export interface GetEupmyeondongRequest {
 export type GetEupmyeondongResponse = ApiResponse<string[]>;
 
 // ─────────────────────────────────────────────
-// POST /files/presigned-url
-// ─────────────────────────────────────────────
-export interface PresignedUrlRequest {
-  fileName: string;
-  contentType: string;
-  directory: 'interviews' | 'face-videos' | 'job-certifications';
-}
-
-export interface PresignedUrlResult {
-  presignedUrl: string;
-  fileUrl: string;
-  objectKey: string;
-}
-export type PresignedUrlResponse = ApiResponse<PresignedUrlResult>;
-
-// ─────────────────────────────────────────────
 // POST /onboarding/profile/{userUuid}
 // ─────────────────────────────────────────────
 export type JobEnum = 

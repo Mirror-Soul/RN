@@ -7,8 +7,6 @@ import {
   GetSigunguRequest,
   GetSigunguResponse,
   JobEnum,
-  PresignedUrlRequest,
-  PresignedUrlResponse,
   SaveProfileRequest,
   SaveProfileResponse,
   SavePersonalityRequest,
@@ -55,14 +53,6 @@ export const getEupmyeondongList = async (
     '/onboarding/regions/eupmyeondong',
     { params }
   );
-  return response.data;
-};
-
-/** Presigned URL 발급 */
-export const getPresignedUrl = async (
-  data: PresignedUrlRequest
-): Promise<PresignedUrlResponse> => {
-  const response = await apiClient.post<PresignedUrlResponse>('/files/presigned-url', data);
   return response.data;
 };
 
