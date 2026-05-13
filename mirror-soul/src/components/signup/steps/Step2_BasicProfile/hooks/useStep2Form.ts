@@ -1,8 +1,9 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { Alert } from 'react-native';
 import { Step2State } from '../types/step2';
 import { checkNicknameDuplicate, getPresignedUrl } from '@/src/services/onboardingService';
 import { uploadFileToS3 } from '@/src/services/s3Service';
+import { jobCategories } from '../Professional/jobData';
 
 /**
  * useStep2Form 훅
@@ -22,6 +23,10 @@ export function useStep2Form() {
     isJobVerified: false,
     jobCertificationObjectKey: null,
   });
+
+  // 지역 데이터 캐시 (성능 최적화: 드롭다운이 닫혀도 유지)
+  const sigunguCache = useRef<Map<string, string[]>>(new Map());
+  const eupmyeondongCache = useRef<Map<string, string[]>>(new Map());
 
   // 폼 업데이트 함수
   const updateState = useCallback((updates: Partial<Step2State>) => {
@@ -89,14 +94,14 @@ export function useStep2Form() {
     }
   }, [state.isJobVerifying, updateState]);
 
-  // 다음 단계 이동 가능 여부 체크
-  // 조건: 닉네임 중복 확인 완료, 지역 선택 완료 (3단계), 직군 선택 완료
+  // 다음 단계 이동 가능 여부 체크 (SoC: 도메인 검증 로직 통합)
+  // 조건: 닉네임 중복 확인 완료, 지역 선택 완료, 유효한 직군 선택 완료
   const isFormValid = 
     state.isNicknameVerified && 
     state.sidoName !== '' && 
     state.sigunguName !== '' && 
     state.eupmyeondongName !== '' && 
-    state.jobCategory !== '';
+    jobCategories.some((j) => j.value === state.jobCategory);
 
   return {
     state,
@@ -104,5 +109,7 @@ export function useStep2Form() {
     handleNicknameCheck,
     handleJobVerify,
     isFormValid,
+    sigunguCache,
+    eupmyeondongCache,
   };
 }

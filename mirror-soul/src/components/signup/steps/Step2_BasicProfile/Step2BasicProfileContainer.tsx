@@ -16,6 +16,7 @@ import { useStep2Form } from './hooks/useStep2Form';
 import { useSignupStore } from '@/src/store/useSignupStore';
 import { saveProfile } from '@/src/services/onboardingService';
 import { JobEnum } from '@/src/types/api/onboarding';
+import { jobCategories } from './Professional/jobData';
 
 /**
  * Step2BasicProfileContainer 컴포넌트
@@ -32,6 +33,8 @@ export default function Step2BasicProfileContainer() {
     handleNicknameCheck,
     handleJobVerify,
     isFormValid,
+    sigunguCache,
+    eupmyeondongCache,
   } = useStep2Form();
 
   // 로딩 오버레이 애니메이션
@@ -41,7 +44,15 @@ export default function Step2BasicProfileContainer() {
   }));
 
   const handleContinue = async () => {
-    if (!isFormValid || isSaving) return;
+    // 1. 유효성 검증 (JobEnum 안전성 확보 및 방어 코드)
+    const isValidJob = jobCategories.some((j) => j.value === state.jobCategory);
+    if (!isFormValid || !isValidJob || isSaving) {
+      if (!isValidJob && state.jobCategory !== '') {
+        Alert.alert('오류', '유효하지 않은 직군입니다.');
+      }
+      return;
+    }
+
     if (!userId) {
       Alert.alert('오류', '사용자 정보를 찾을 수 없습니다. 다시 시도해주세요.');
       return;
@@ -106,6 +117,8 @@ export default function Step2BasicProfileContainer() {
               <LocationSection
                 state={state}
                 onChange={updateState}
+                sigunguCache={sigunguCache}
+                eupmyeondongCache={eupmyeondongCache}
               />
 
               <JobVerificationSection

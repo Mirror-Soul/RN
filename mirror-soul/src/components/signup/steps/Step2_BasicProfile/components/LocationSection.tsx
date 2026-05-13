@@ -5,11 +5,16 @@ import { Platform, StyleSheet, View } from 'react-native';
 import LocationDropdown from '../Location/LocationDropdown';
 import { SectionProps } from '../types/step2';
 
+interface LocationSectionProps extends SectionProps {
+  sigunguCache: React.MutableRefObject<Map<string, string[]>>;
+  eupmyeondongCache: React.MutableRefObject<Map<string, string[]>>;
+}
+
 /**
  * LocationSection 컴포넌트 (SRP)
  * 지역 선택 드롭다운을 렌더링하며, 한글로 직관적인 UI를 제공합니다.
  */
-export default function LocationSection({ state, onChange }: SectionProps) {
+export default function LocationSection({ state, onChange, sigunguCache, eupmyeondongCache }: LocationSectionProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -31,6 +36,8 @@ export default function LocationSection({ state, onChange }: SectionProps) {
 
         {isOpen && (
           <LocationDropdown
+            sigunguCache={sigunguCache}
+            eupmyeondongCache={eupmyeondongCache}
             onSelect={(result) => {
               onChange({ 
                 sidoName: result.sidoName,

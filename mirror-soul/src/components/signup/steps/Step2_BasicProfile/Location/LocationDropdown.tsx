@@ -1,6 +1,6 @@
 import { Colors, Radii } from '@/src/constants/theme';
-import React, { useState, useEffect, useRef } from 'react';
-import { Dimensions, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Dimensions, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View, ActivityIndicator, Alert } from 'react-native';
 import { getSidoList, getSigunguList, getEupmyeondongList } from '@/src/services/onboardingService';
 
 interface LocationResult {
@@ -12,11 +12,13 @@ interface LocationResult {
 interface LocationDropdownProps {
   onSelect: (result: LocationResult) => void;
   onClose: () => void;
+  sigunguCache: React.MutableRefObject<Map<string, string[]>>;
+  eupmyeondongCache: React.MutableRefObject<Map<string, string[]>>;
 }
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-export default function LocationDropdown({ onSelect, onClose }: LocationDropdownProps) {
+export default function LocationDropdown({ onSelect, onClose, sigunguCache, eupmyeondongCache }: LocationDropdownProps) {
   const [activeTab, setActiveTab] = useState<0 | 1 | 2>(0);
   const [selectedSido, setSelectedSido] = useState<string | null>(null);
   const [selectedSigungu, setSelectedSigungu] = useState<string | null>(null);
@@ -24,10 +26,6 @@ export default function LocationDropdown({ onSelect, onClose }: LocationDropdown
   const [sidoList, setSidoList] = useState<string[]>([]);
   const [currentList, setCurrentList] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-
-  // 캐싱 (Memoization) - 리렌더링과 관계없이 데이터를 보관하기 위해 useRef 사용
-  const sigunguCache = useRef<Map<string, string[]>>(new Map());
-  const eupmyeondongCache = useRef<Map<string, string[]>>(new Map());
 
   // 마운트 시 시도 목록 로드
   useEffect(() => {
@@ -45,52 +43,64 @@ export default function LocationDropdown({ onSelect, onClose }: LocationDropdown
     }
   }, [activeTab, selectedSido, selectedSigungu, sidoList]);
 
-  const loadSido = async () => {
+  // 공통 API 데이터 로드 헬퍼 (DRY & Error Handling)
+  const fetchWithHandling = useCallback(async (
+    fetcher: () => Promise<any>, 
+    onSuccess: (data: string[]) => void,
+    cacheKey?: string,
+    cacheRef?: React.MutableRefObject<Map<string, string[]>>
+  ) => {
     try {
       setIsLoading(true);
-      const res = await getSidoList();
+      const res = await fetcher();
       if (res.isSuccess) {
-        setSidoList(res.result);
-        setCurrentList(res.result);
+        onSuccess(res.result);
+        if (cacheKey && cacheRef) {
+          cacheRef.current.set(cacheKey, res.result);
+        }
+      } else {
+        throw new Error(res.message || '데이터를 불러오지 못했습니다.');
       }
+    } catch (error: any) {
+      Alert.alert('오류', '지역 정보를 불러오지 못했습니다. 다시 시도해주세요.');
+      console.error('[LocationDropdown] Fetch Error:', error);
     } finally {
       setIsLoading(false);
     }
+  }, []);
+
+  const loadSido = () => {
+    fetchWithHandling(getSidoList, (data) => {
+      setSidoList(data);
+      setCurrentList(data);
+    });
   };
 
-  const loadSigungu = async (sido: string) => {
+  const loadSigungu = (sido: string) => {
     if (sigunguCache.current.has(sido)) {
       setCurrentList(sigunguCache.current.get(sido)!);
       return;
     }
-    try {
-      setIsLoading(true);
-      const res = await getSigunguList({ sidoName: sido });
-      if (res.isSuccess) {
-        sigunguCache.current.set(sido, res.result);
-        setCurrentList(res.result);
-      }
-    } finally {
-      setIsLoading(false);
-    }
+    fetchWithHandling(
+      () => getSigunguList({ sidoName: sido }),
+      (data) => setCurrentList(data),
+      sido,
+      sigunguCache
+    );
   };
 
-  const loadEupmyeondong = async (sido: string, sigungu: string) => {
+  const loadEupmyeondong = (sido: string, sigungu: string) => {
     const key = `${sido}_${sigungu}`;
     if (eupmyeondongCache.current.has(key)) {
       setCurrentList(eupmyeondongCache.current.get(key)!);
       return;
     }
-    try {
-      setIsLoading(true);
-      const res = await getEupmyeondongList({ sidoName: sido, sigunguName: sigungu });
-      if (res.isSuccess) {
-        eupmyeondongCache.current.set(key, res.result);
-        setCurrentList(res.result);
-      }
-    } finally {
-      setIsLoading(false);
-    }
+    fetchWithHandling(
+      () => getEupmyeondongList({ sidoName: sido, sigunguName: sigungu }),
+      (data) => setCurrentList(data),
+      key,
+      eupmyeondongCache
+    );
   };
 
   const handleSelect = (item: string) => {
