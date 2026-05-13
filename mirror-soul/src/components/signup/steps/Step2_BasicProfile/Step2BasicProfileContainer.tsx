@@ -24,7 +24,7 @@ import { jobCategories } from './Professional/jobData';
  */
 export default function Step2BasicProfileContainer() {
   const router = useRouter();
-  const userId = useSignupStore((s) => s.userId);
+  const userUuid = useSignupStore((s) => s.userUuid);
   const [isSaving, setIsSaving] = useState(false);
 
   const {
@@ -53,7 +53,7 @@ export default function Step2BasicProfileContainer() {
       return;
     }
 
-    if (!userId) {
+    if (!userUuid) {
       Alert.alert('오류', '사용자 정보를 찾을 수 없습니다. 다시 시도해주세요.');
       return;
     }
@@ -63,7 +63,7 @@ export default function Step2BasicProfileContainer() {
       overlayOpacity.value = withTiming(1, { duration: 200 });
 
       const response = await saveProfile(
-        userId,
+        userUuid,
         state.jobCategory as JobEnum,
         {
           nickname: state.nickname.trim(),

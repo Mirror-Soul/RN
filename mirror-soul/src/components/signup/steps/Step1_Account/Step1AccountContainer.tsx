@@ -23,7 +23,7 @@ import { useStep1Form } from './hooks/useStep1Form';
  */
 export default function Step1AccountContainer() {
   const router = useRouter();
-  const setUserId = useSignupStore((s) => s.setUserId);
+  const setUserUuid = useSignupStore((s) => s.setUserUuid);
   const {
     state,
     updateState,
@@ -61,8 +61,8 @@ export default function Step1AccountContainer() {
         termsAgreed: state.agreedToTerms,
       });
 
-      // userId를 전역 상태에 저장 (Step2 이후에서 사용)
-      setUserId(response.result.userId);
+      // userUuid를 전역 상태에 저장 (Step2 이후에서 사용)
+      setUserUuid(response.result.userUuid);
 
       // 성공: Step2로 이동
       router.push(SIGNUP_ROUTES.PROFILE);

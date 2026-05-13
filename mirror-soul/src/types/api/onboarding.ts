@@ -45,7 +45,7 @@ export interface PresignedUrlResult {
 export type PresignedUrlResponse = ApiResponse<PresignedUrlResult>;
 
 // ─────────────────────────────────────────────
-// POST /onboarding/profile/{userId}
+// POST /onboarding/profile/{userUuid}
 // ─────────────────────────────────────────────
 export type JobEnum = 
   | 'IT_TECH' 
@@ -77,7 +77,7 @@ export interface SaveProfileRequest {
 export type SaveProfileResponse = ApiResponse<string>;
 
 // ─────────────────────────────────────────────
-// PUT /onboarding/personality/{userId}
+// PUT /onboarding/personality/{userUuid}
 // ─────────────────────────────────────────────
 export type MbtiEnum =
   | 'ISTJ' | 'ISFJ' | 'INFJ' | 'INTJ'

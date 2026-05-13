@@ -68,12 +68,12 @@ export const getPresignedUrl = async (
 
 /** 프로필 설정 (최종 저장) */
 export const saveProfile = async (
-  userId: number,
+  userUuid: string,
   job: JobEnum,
   data: SaveProfileRequest
 ): Promise<SaveProfileResponse> => {
   const response = await apiClient.post<SaveProfileResponse>(
-    `/onboarding/profile/${userId}`,
+    `/onboarding/profile/${userUuid}`,
     data,
     {
       params: { job },
@@ -84,11 +84,11 @@ export const saveProfile = async (
 
 /** 성격 유형 설정 (저장) */
 export const savePersonality = async (
-  userId: number,
+  userUuid: string,
   data: SavePersonalityRequest
 ): Promise<SavePersonalityResponse> => {
   const response = await apiClient.put<SavePersonalityResponse>(
-    `/onboarding/personality/${userId}`,
+    `/onboarding/personality/${userUuid}`,
     data
   );
   return response.data;

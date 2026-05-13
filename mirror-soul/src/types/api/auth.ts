@@ -30,6 +30,6 @@ export interface BasicProfileRequest {
   termsAgreed: boolean;
 }
 export interface BasicProfileResult {
-  userId: number; // 추후 UUID 전환 시 string으로 변경
+  userUuid: string;
 }
 export type BasicProfileResponse = ApiResponse<BasicProfileResult>;
