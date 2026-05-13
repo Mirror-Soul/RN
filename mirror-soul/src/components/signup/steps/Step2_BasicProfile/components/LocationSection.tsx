@@ -6,8 +6,8 @@ import LocationDropdown from '../Location/LocationDropdown';
 import { SectionProps } from '../types/step2';
 
 interface LocationSectionProps extends SectionProps {
-  sigunguCache: React.MutableRefObject<Map<string, string[]>>;
-  eupmyeondongCache: React.MutableRefObject<Map<string, string[]>>;
+  sigunguCache: React.RefObject<Map<string, string[]>>;
+  eupmyeondongCache: React.RefObject<Map<string, string[]>>;
 }
 
 /**
@@ -25,7 +25,7 @@ export default function LocationSection({ state, onChange, sigunguCache, eupmyeo
         <StepSelectDropdown
           label="" // Subtitle 제거를 위해 빈 라벨
           placeholder={
-            state.sidoName 
+            state.sidoName
               ? `${state.sidoName} ${state.sigunguName} ${state.eupmyeondongName}`
               : "거주 중인 지역을 선택하세요"
           }
@@ -39,7 +39,7 @@ export default function LocationSection({ state, onChange, sigunguCache, eupmyeo
             sigunguCache={sigunguCache}
             eupmyeondongCache={eupmyeondongCache}
             onSelect={(result) => {
-              onChange({ 
+              onChange({
                 sidoName: result.sidoName,
                 sigunguName: result.sigunguName,
                 eupmyeondongName: result.eupmyeondongName
