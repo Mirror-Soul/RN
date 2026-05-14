@@ -79,3 +79,34 @@ export interface SavePersonalityRequest {
 }
 
 export type SavePersonalityResponse = ApiResponse<string>;
+
+// ─────────────────────────────────────────────
+// POST /onboarding/interview/answers/{userUuid}
+// ─────────────────────────────────────────────
+export interface SaveInterviewAnswerRequest {
+  interviewId: number;
+  answerAudioObjectKey: string;
+  answerText: string;
+}
+
+export interface SaveInterviewAnswerResult {
+  recordId: number;
+  interviewId: number;
+  saved: boolean;
+}
+
+export type SaveInterviewAnswerResponse = ApiResponse<SaveInterviewAnswerResult>;
+
+// ─────────────────────────────────────────────
+// GET /onboarding/interview/questions
+// ─────────────────────────────────────────────
+export interface InterviewQuestionItem {
+  questionId: number;
+  question: string;
+}
+
+export interface GetInterviewQuestionsResult {
+  questions: InterviewQuestionItem[];
+}
+
+export type GetInterviewQuestionsResponse = ApiResponse<GetInterviewQuestionsResult>;

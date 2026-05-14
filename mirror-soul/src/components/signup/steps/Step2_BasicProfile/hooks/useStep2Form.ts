@@ -2,15 +2,17 @@ import { useState, useCallback, useRef } from 'react';
 import { Alert } from 'react-native';
 import { Step2State } from '../types/step2';
 import { checkNicknameDuplicate } from '@/src/services/onboardingService';
-import { getPresignedUrl, completeFileUpload } from '@/src/services/fileService';
+import { getPresignedUrl } from '@/src/services/fileService';
 import { uploadFileToS3 } from '@/src/services/s3Service';
 import { jobCategories } from '../Professional/jobData';
+import { useSignupStore } from '@/src/store/useSignupStore';
 
 /**
  * useStep2Form 훅
  * 회원가입 2단계의 모든 폼 로직과 상태를 캡슐화합니다. (SRP)
  */
 export function useStep2Form() {
+  const { userUuid } = useSignupStore();
   const [state, setState] = useState<Step2State>({
     nickname: '',
     isNicknameVerified: false,
@@ -67,13 +69,16 @@ export function useStep2Form() {
 
       // 1. Presigned URL 발급
       const presignedResponse = await getPresignedUrl({
+        userUuid: userUuid || '',
         fileName,
         contentType,
         directory: 'job-certifications',
       });
 
       if (!presignedResponse.isSuccess) {
-        throw new Error(presignedResponse.message || '업로드 주소 발급에 실패했습니다.');
+        const errorMsg = presignedResponse.message || '업로드 주소 발급에 실패했습니다.';
+        const errorCode = presignedResponse.code ? ` (${presignedResponse.code})` : '';
+        throw new Error(`${errorMsg}${errorCode}`);
       }
 
       const { presignedUrl, objectKey } = presignedResponse.result;
@@ -81,17 +86,7 @@ export function useStep2Form() {
       // 2. S3 직접 업로드
       await uploadFileToS3(presignedUrl, fileUri, contentType);
 
-      // 3. 업로드 완료 알림 (Backend finalize)
-      const completeResponse = await completeFileUpload({
-        objectKey,
-        fileType: 'JOB_CERTIFICATION',
-      });
-
-      if (!completeResponse.isSuccess) {
-        throw new Error(completeResponse.message || '파일 업로드 확인에 실패했습니다.');
-      }
-
-      // 4. 상태 업데이트
+      // 3. 상태 업데이트
       updateState({ 
         isJobVerified: true,
         jobCertificationObjectKey: objectKey 

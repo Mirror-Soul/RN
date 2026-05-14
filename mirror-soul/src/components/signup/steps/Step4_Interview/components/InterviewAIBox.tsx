@@ -4,7 +4,7 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 interface InterviewAIBoxProps {
-  category: string;
+  category?: string;
   question: string;
 }
 
@@ -22,9 +22,11 @@ export default function InterviewAIBox({ category, question }: InterviewAIBoxPro
           <Text style={styles.aiLabelText}>AI 인터뷰어</Text>
         </View>
 
-        <View style={styles.badgeWrapper}>
-          <Text style={styles.badgeText}>{category}</Text>
-        </View>
+        {category ? (
+          <View style={styles.badgeWrapper}>
+            <Text style={styles.badgeText}>{category}</Text>
+          </View>
+        ) : null}
       </View>
 
       <View style={styles.paragraphWrapper}>
