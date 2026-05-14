@@ -23,8 +23,26 @@ export const logger = {
   },
   
   error: (message: string, ...args: any[]) => {
-    // 에러 로그는 프로덕션에서도 필요한 경우가 많으므로 최소한의 정보만 출력하거나 
-    // 나중에 Sentry 등 외부 에러 트래킹 서비스와 연동하기에 좋습니다.
-    console.error(`[ERROR] ${message}`, ...args);
+    if (__DEV__) {
+      // 개발 환경: 상세한 디버깅을 위해 모든 인자 출력
+      console.error(`[ERROR] ${message}`, ...args);
+    } else {
+      // 프로덕션 환경: 민감 정보 유출 방지를 위해 메시지만 출력
+      // 상세 데이터(args)는 로그 시스템(예: Sentry)으로만 전송하는 것을 권장합니다.
+      console.error(`[ERROR] ${message}`);
+      
+      // 에러 객체가 포함되어 있다면 최소한의 에러 메시지는 출력
+      const errorObj = args.find(arg => arg instanceof Error);
+      if (errorObj) {
+        console.error(`-> Error Message: ${errorObj.message}`);
+      }
+
+      /**
+       * TODO: 외부 에러 트래킹 서비스 연동 예시
+       * if (Sentry) {
+       *   Sentry.captureException(errorObj || message, { extra: { details: args } });
+       * }
+       */
+    }
   },
 };
