@@ -87,13 +87,18 @@ export function useInterviewSpeech() {
 
       if (uri) {
         setRecordingUri(uri);
-        // TODO: 추후 백엔드 업로드 로직 추가 위치
       }
+      return uri; // URI 반환 (스크린에서 즉시 사용 가능하도록)
     } catch (error) {
       console.error('녹음 중지 실패:', error);
       throw error;
     }
   }, [audioRecorder]);
+
+  // ─── 녹음 초기화 ───
+  const resetRecording = useCallback(() => {
+    setRecordingUri(null);
+  }, []);
 
   return {
     isRecording: recorderState.isRecording,
@@ -103,5 +108,6 @@ export function useInterviewSpeech() {
     requestPermission,
     startRecording,
     stopRecording,
+    resetRecording, // 추가
   };
 }

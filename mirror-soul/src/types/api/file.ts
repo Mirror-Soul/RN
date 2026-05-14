@@ -10,6 +10,7 @@ export type FileType = 'interviews' | 'face-videos' | 'job-certifications';
 // POST /files/presigned-url
 // ─────────────────────────────────────────────
 export interface PresignedUrlRequest {
+  userUuid: string;
   fileName: string;
   contentType: string;
   directory: FileType;
@@ -21,20 +22,3 @@ export interface PresignedUrlResult {
   objectKey: string;
 }
 export type PresignedUrlResponse = ApiResponse<PresignedUrlResult>;
-
-// ─────────────────────────────────────────────
-// POST /files/upload-complete
-// ─────────────────────────────────────────────
-export interface CompleteFileUploadRequest {
-  objectKey: string;
-  fileType: 'INTERVIEW_AUDIO' | 'FACE_VIDEO' | 'JOB_CERTIFICATION';
-}
-
-export interface CompleteFileUploadResult {
-  fileType: string;
-  objectKey: string;
-  fileUrl: string;
-  uploaded: boolean;
-}
-
-export type CompleteFileUploadResponse = ApiResponse<CompleteFileUploadResult>;
