@@ -21,8 +21,8 @@ export function useInterviewQuestions() {
   } = useQuery({
     queryKey: ['interviewQuestions'],
     queryFn: getInterviewQuestions,
-    staleTime: 0, // 항상 최신 데이터를 유지하거나 진입 시 새로고침
-    gcTime: 0,    // 인터뷰를 마치면 메모리에서 제거하도록 설정
+    staleTime: 1000 * 60 * 30, // 30분간 fresh 상태 유지 (회원가입 세션 동안 충분)
+    gcTime: 1000 * 60 * 60,     // 1시간 동안 캐시 유지 (뒤로가기 대응)
   });
 
   const totalQuestions = questions.length || 5; // 서버 데이터가 올 때까지 기본값 5 유지

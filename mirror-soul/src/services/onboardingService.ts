@@ -17,6 +17,7 @@ import {
 } from '../types/api/onboarding';
 import { InterviewQuestion } from '../components/signup/steps/Step4_Interview/types/interview';
 import apiClient from './apiClient';
+import { logger } from '../utils/logger';
 
 /**
  * 온보딩 도메인 API 서비스 (SoC: 온보딩 비즈니스 로직 분리)
@@ -66,16 +67,22 @@ export const saveProfile = async (
   job: JobEnum,
   data: SaveProfileRequest
 ): Promise<SaveProfileResponse> => {
-  console.log('[API Request] saveProfile:', { userUuid, job, data });
-  const response = await apiClient.post<SaveProfileResponse>(
-    `/onboarding/profile/${userUuid}`,
-    data,
-    {
-      params: { job },
-    }
-  );
-  console.log('[API Response] saveProfile:', response.data);
-  return response.data;
+  try {
+    const response = await apiClient.post<SaveProfileResponse>(
+      `/onboarding/profile/${userUuid}`,
+      data,
+      {
+        params: { job },
+      }
+    );
+    logger.debug('saveProfile SUCCESS:', response.data);
+    return response.data;
+  } catch (error: unknown) {
+    logger.error('saveProfile ERROR:', {
+      message: error instanceof Error ? error.message : String(error),
+    });
+    throw error;
+  }
 };
 
 /** 성격 유형 설정 (저장) */
@@ -83,13 +90,19 @@ export const savePersonality = async (
   userUuid: string,
   data: SavePersonalityRequest
 ): Promise<SavePersonalityResponse> => {
-  console.log('[API Request] savePersonality:', { userUuid, data });
-  const response = await apiClient.put<SavePersonalityResponse>(
-    `/onboarding/personality/${userUuid}`,
-    data
-  );
-  console.log('[API Response] savePersonality:', response.data);
-  return response.data;
+  try {
+    const response = await apiClient.put<SavePersonalityResponse>(
+      `/onboarding/personality/${userUuid}`,
+      data
+    );
+    logger.debug('savePersonality SUCCESS:', response.data);
+    return response.data;
+  } catch (error: unknown) {
+    logger.error('savePersonality ERROR:', {
+      message: error instanceof Error ? error.message : String(error),
+    });
+    throw error;
+  }
 };
 
 /** 인터뷰 응답 저장 */
@@ -99,7 +112,7 @@ export const saveInterviewAnswer = async (
 ): Promise<SaveInterviewAnswerResponse> => {
   const url = `/onboarding/interview/answers/${userUuid}`;
   
-  console.log('[API Request] saveInterviewAnswer:', { 
+  logger.debug('saveInterviewAnswer:', { 
     url,
     userUuid, 
     data,
@@ -108,13 +121,12 @@ export const saveInterviewAnswer = async (
   
   try {
     const response = await apiClient.post<SaveInterviewAnswerResponse>(url, data);
-    console.log('[API Response] saveInterviewAnswer SUCCESS:', response.data);
+    logger.info('saveInterviewAnswer SUCCESS:', response.data);
     return response.data;
-  } catch (error: any) {
-    console.error('[API Response] saveInterviewAnswer ERROR:', {
-      code: error?.code,
-      message: error?.message,
-      serverError: error?.error,
+  } catch (error: unknown) {
+    logger.error('saveInterviewAnswer ERROR:', {
+      message: error instanceof Error ? error.message : String(error),
+      serverError: (error as any)?.error,
       requestBody: data
     });
     throw error;
@@ -132,7 +144,7 @@ export const getInterviewQuestions = async (): Promise<InterviewQuestion[]> => {
 
   // 데이터 유효성 검증 (최소주의: 질문 5개 보장 확인)
   if (data.result.questions.length !== 5) {
-    console.warn(`[Validation] Expected 5 questions, but received ${data.result.questions.length}`);
+    logger.warn(`[Validation] Expected 5 questions, but received ${data.result.questions.length}`);
   }
 
   // Adapter Pattern: 서버의 questionId를 앱 내부용 id로 변환

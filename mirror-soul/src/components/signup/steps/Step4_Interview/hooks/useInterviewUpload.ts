@@ -4,6 +4,7 @@ import { getPresignedUrl } from '@/src/services/fileService';
 import { uploadFileToS3 } from '@/src/services/s3Service';
 import { saveInterviewAnswer } from '@/src/services/onboardingService';
 import { useSignupStore } from '@/src/store/useSignupStore';
+import { logger } from '@/src/utils/logger';
 
 /**
  * 인터뷰 오디오 업로드 및 답변 저장 파이프라인을 관리하는 커스텀 훅 (SoC)
@@ -58,7 +59,7 @@ export function useInterviewUpload() {
 
       // 4. 인터뷰 답변 최종 저장 (Onboarding Domain DB)
       // [API 변경 반영] completeFileUpload가 제거되고, URL 대신 objectKey를 전송합니다.
-      console.log('[useInterviewUpload] Final payload before saving:', {
+      logger.debug('Final payload before saving:', {
         userUuid,
         interviewId: questionId,
         objectKey,
@@ -76,8 +77,8 @@ export function useInterviewUpload() {
       }
 
       return true;
-    } catch (err: any) {
-      const errorMessage = err?.message || '인터뷰 업로드 중 오류가 발생했습니다.';
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : '인터뷰 업로드 중 오류가 발생했습니다.';
       setError(errorMessage);
       throw err;
     } finally {
