@@ -14,6 +14,8 @@ import {
   SaveInterviewAnswerRequest,
   SaveInterviewAnswerResponse,
   GetInterviewQuestionsResponse,
+  SaveFaceScanRequest,
+  SaveFaceScanResponse,
 } from '../types/api/onboarding';
 import { InterviewQuestion } from '../components/signup/steps/Step4_Interview/types/interview';
 import apiClient from './apiClient';
@@ -154,4 +156,29 @@ export const getInterviewQuestions = async (): Promise<InterviewQuestion[]> => {
     category: '', // 추후 백엔드 연동 시 업데이트 예정
     question: item.question,
   }));
+};
+
+/** 얼굴 스캔 영상 데이터 저장 */
+export const saveFaceScan = async (
+  userUuid: string,
+  data: SaveFaceScanRequest
+): Promise<SaveFaceScanResponse> => {
+  const url = `/onboarding/visual/${userUuid}`;
+  
+  logger.debug('saveFaceScan:', { 
+    url,
+    userUuid,
+  });
+  
+  try {
+    const response = await apiClient.post<SaveFaceScanResponse>(url, data);
+    logger.info('saveFaceScan SUCCESS:', response.data);
+    return response.data;
+  } catch (error: unknown) {
+    logger.error('saveFaceScan ERROR:', {
+      message: error instanceof Error ? error.message : String(error),
+      serverError: (error as any)?.error,
+    });
+    throw error;
+  }
 };

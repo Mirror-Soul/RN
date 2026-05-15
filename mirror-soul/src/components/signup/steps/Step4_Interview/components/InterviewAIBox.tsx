@@ -11,11 +11,7 @@ interface InterviewAIBoxProps {
 export default function InterviewAIBox({ category, question }: InterviewAIBoxProps) {
   return (
     <View style={styles.outerContainer}>
-      <BlurView 
-        intensity={Platform.OS === 'ios' ? 40 : 100} 
-        tint="dark" 
-        style={styles.container}
-      >
+      <View style={styles.container}>
         <View style={styles.topRow}>
           <View style={styles.aiLabelWrapper}>
             <View style={styles.aiDot} />
@@ -32,7 +28,7 @@ export default function InterviewAIBox({ category, question }: InterviewAIBoxPro
         <View style={styles.paragraphWrapper}>
           <Text style={styles.paragraphText}>{question}</Text>
         </View>
-      </BlurView>
+      </View>
     </View>
   );
 }
@@ -50,7 +46,7 @@ const styles = StyleSheet.create({
     paddingTop: 24,
     paddingHorizontal: 24,
     paddingBottom: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: 'rgba(255, 255, 255, 0.12)', // 가독성을 위해 불투명도 약간 증가
   },
   topRow: {
     flexDirection: 'row',

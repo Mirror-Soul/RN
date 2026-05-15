@@ -1,6 +1,6 @@
+import { Colors } from '@/src/constants/theme';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Colors } from '@/src/constants/theme';
 
 /**
  * MovingBackground
@@ -17,6 +17,6 @@ export default function MovingBackground() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: Colors.primary.soulBlack,
+    backgroundColor: Colors.primary.soulBlack, // #000000
   },
 });
