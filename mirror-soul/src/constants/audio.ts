@@ -22,17 +22,17 @@ export const INTERVIEW_RECORDING_PRESET: RecordingOptions = {
     default: '.m4a',
   }),
   sampleRate: 44100,
-  numberOfChannels: 1, // 모노 (음성 녹음에 최적, 파일 크기 절반)
+  numberOfChannels: 1,
   bitRate: Platform.select({
-    ios: 705600, // 44100 * 16 * 1 (무손실 WAV 용)
-    android: 128000, // AAC 고음질
+    ios: 705600,
+    android: 128000,
     default: 128000,
   }),
   android: {
     outputFormat: 'mpeg4' as const,
     audioEncoder: 'aac' as const,
     sampleRate: 44100,
-    audioSource: 'voice_recognition' as const, // 음성 인식 최적화 소스 사용
+    audioSource: 'voice_recognition' as const,
   },
   ios: {
     outputFormat: IOSOutputFormat.LINEARPCM,
