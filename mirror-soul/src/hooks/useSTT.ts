@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import {
   ExpoSpeechRecognitionModule,
   useSpeechRecognitionEvent,
@@ -14,6 +14,8 @@ export function useSTT(lang: SupportedLanguage = 'ko-KR') {
   const [interimTranscript, setInterimTranscript] = useState('');
   const [isListening, setIsListening] = useState(false);
 
+  const stopResolverRef = useRef<((value: string) => void) | null>(null);
+
   // ─── 이벤트 리스너 등록 ───
   useSpeechRecognitionEvent('start', () => {
     setIsListening(true);
@@ -21,6 +23,12 @@ export function useSTT(lang: SupportedLanguage = 'ko-KR') {
 
   useSpeechRecognitionEvent('end', () => {
     setIsListening(false);
+    // 종료 시점에 대기 중인 Promise가 있다면 현재 transcript와 함께 resolve
+    if (stopResolverRef.current) {
+      const finalResult = (finalizedTranscript + (interimTranscript ? ' ' + interimTranscript : '')).trim();
+      stopResolverRef.current(finalResult);
+      stopResolverRef.current = null;
+    }
   });
 
   useSpeechRecognitionEvent('result', (event) => {
@@ -44,6 +52,13 @@ export function useSTT(lang: SupportedLanguage = 'ko-KR') {
       console.error('STT 오류:', event.error, event.message);
     }
     setIsListening(false);
+    
+    // 에러 발생 시에도 대기 중인 Promise가 있다면 현재까지의 결과로 resolve
+    if (stopResolverRef.current) {
+      const currentResult = (finalizedTranscript + (interimTranscript ? ' ' + interimTranscript : '')).trim();
+      stopResolverRef.current(currentResult);
+      stopResolverRef.current = null;
+    }
   });
 
   const startListening = useCallback(async () => {
@@ -57,9 +72,29 @@ export function useSTT(lang: SupportedLanguage = 'ko-KR') {
     });
   }, [lang]);
 
-  const stopListening = useCallback(() => {
-    ExpoSpeechRecognitionModule.stop();
-  }, []);
+  const stopListening = useCallback(async (): Promise<string> => {
+    return new Promise((resolve) => {
+      // 이미 리스닝 중이 아니면 현재 결과 즉시 반환
+      if (!isListening && !stopResolverRef.current) {
+        resolve((finalizedTranscript + (interimTranscript ? ' ' + interimTranscript : '')).trim());
+        return;
+      }
+
+      // resolver 등록
+      stopResolverRef.current = resolve;
+      
+      // 타임아웃 안전장치 (2초)
+      const timeout = setTimeout(() => {
+        if (stopResolverRef.current) {
+          const currentResult = (finalizedTranscript + (interimTranscript ? ' ' + interimTranscript : '')).trim();
+          stopResolverRef.current(currentResult);
+          stopResolverRef.current = null;
+        }
+      }, 2000);
+
+      ExpoSpeechRecognitionModule.stop();
+    });
+  }, [isListening, finalizedTranscript, interimTranscript]);
 
   useEffect(() => {
     return () => {

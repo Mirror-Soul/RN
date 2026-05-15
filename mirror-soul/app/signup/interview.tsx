@@ -82,7 +82,7 @@ export default function InterviewScreen() {
 
     try {
       if (isRecording) {
-        stopListening();
+        await stopListening();
         await stopRecording();
       } else {
         await startRecording();
@@ -110,18 +110,19 @@ export default function InterviewScreen() {
     try {
       const targetQuestionId = currentQuestion.id;
       let finalUri = recordingUri;
+      let finalTranscript = '';
 
       if (isRecording) {
-        stopListening();
+        finalTranscript = await stopListening();
         finalUri = await stopRecording();
       }
 
-      if (!finalUri) {
+      if (!finalTranscript && !transcript) {
         Alert.alert('알림', '답변 녹음을 완료한 후 다음 단계로 진행해주세요.');
         return;
       }
 
-      const isSuccess = await uploadInterviewAudio(finalUri, targetQuestionId, transcript);
+      const isSuccess = await uploadInterviewAudio(finalUri, targetQuestionId, finalTranscript || transcript);
       if (!isSuccess) return;
 
       if (isLastQuestion) {

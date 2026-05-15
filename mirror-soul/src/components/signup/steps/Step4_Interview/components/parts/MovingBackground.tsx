@@ -1,6 +1,6 @@
+import { Colors } from '@/src/constants/theme';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Colors } from '@/src/constants/theme';
 
 /**
  * MovingBackground
