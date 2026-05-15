@@ -1,7 +1,6 @@
 import { Colors, Radii } from '@/src/constants/theme';
 import React, { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
-import VoiceWaveform from './parts/VoiceWaveform';
 
 interface InterviewAnswerBoxProps {
   answerText?: string;
@@ -39,7 +38,6 @@ export default function InterviewAnswerBox({ answerText, isRecording = false, tr
     }
 
     return () => {
-      // 컴포넌트 언마운트 시 메모리 누수 방지
       if (loopAnim.current) {
         loopAnim.current.stop();
       }
@@ -60,7 +58,11 @@ export default function InterviewAnswerBox({ answerText, isRecording = false, tr
 
       {isRecording ? (
         <View style={styles.recordingContent}>
-          <VoiceWaveform />
+          {/* 노이즈 방지 UX 팁 추가 */}
+          <View style={styles.tipContainer}>
+            <Text style={styles.tipText}>💡 주변이 조용한 곳에서 편안하게 말씀해 주세요.</Text>
+          </View>
+
           {transcript ? (
             <Text style={styles.transcriptText}>{transcript}</Text>
           ) : (
@@ -107,7 +109,7 @@ const styles = StyleSheet.create({
   redDot: {
     width: 7.995,
     height: 7.995,
-    borderRadius: Radii.sm, // circle
+    borderRadius: Radii.sm,
     backgroundColor: Colors.primary.recordingRed,
   },
   recordingText: {
@@ -123,6 +125,20 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     lineHeight: 20,
     letterSpacing: -0.15,
+  },
+  tipContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    padding: 10,
+    borderRadius: Radii.md,
+    borderWidth: 0.5,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    marginBottom: 8,
+  },
+  tipText: {
+    color: Colors.primary.electricCyan,
+    fontSize: 12,
+    fontWeight: '400',
+    lineHeight: 18,
   },
   guideText: {
     color: Colors.neutral.darkGray,
