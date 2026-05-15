@@ -110,3 +110,21 @@ export interface GetInterviewQuestionsResult {
 }
 
 export type GetInterviewQuestionsResponse = ApiResponse<GetInterviewQuestionsResult>;
+
+// ─────────────────────────────────────────────
+// POST /onboarding/visual/{userUuid}
+// ─────────────────────────────────────────────
+export interface SaveFaceScanRequest {
+  fileUrl: string;
+  objectKey: string;
+}
+
+export interface SaveFaceScanResult {
+  faceFileId: number;
+  userUuid: string;
+  fileUrl: string;
+  objectKey: string;
+  saved: boolean;
+}
+
+export type SaveFaceScanResponse = ApiResponse<SaveFaceScanResult>;
