@@ -1,8 +1,8 @@
 import axios from 'axios';
-import { tokenStorage } from '../utils/tokenStorage';
-import { useAuthStore } from '../store/useAuthStore';
 import { router } from 'expo-router';
+import { useAuthStore } from '../store/useAuthStore';
 import { logger } from '../utils/logger';
+import { tokenStorage } from '../utils/tokenStorage';
 
 const apiBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
 
@@ -22,7 +22,7 @@ const apiClient = axios.create({
 // 요청 인터셉터
 // ─────────────────────────────────────────────
 apiClient.interceptors.request.use(async (config) => {
-  const token = useAuthStore.getState().accessToken; 
+  const token = useAuthStore.getState().accessToken;
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -59,57 +59,58 @@ apiClient.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    if (originalRequest?.url?.includes('/auth/refresh')) {
-      logger.error('apiClient: Refresh token expired or invalid. Force logout.');
-      await useAuthStore.getState().logout();
-      router.replace('/');
-      return Promise.reject(error);
-    }
+    // 401 Unauthorized 에러 시 처리
+    if (error.response?.status === 401) {
+      // [고도화] 로그인이나 리프레시 API 자체에서 401이 난 거라면 토큰 갱신 시도 금지
+      const isAuthPath = originalRequest?.url?.includes('/auth/login') || originalRequest?.url?.includes('/auth/refresh');
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      logger.info('apiClient: 401 Unauthorized detected. Attempting token refresh...');
-      
-      if (isRefreshing) {
-        logger.debug('apiClient: Already refreshing. Adding request to queue.');
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        }).then(token => {
-          originalRequest.headers.Authorization = `Bearer ${token}`;
-          return apiClient(originalRequest);
-        }).catch(err => Promise.reject(err));
+      if (isAuthPath) {
+        logger.warn('apiClient: Auth failed on login/refresh path');
+        return Promise.reject({
+          code: 'AUTH_FAILED',
+          message: '이메일 또는 비밀번호가 일치하지 않습니다.',
+          error: error.message,
+        });
       }
 
-      originalRequest._retry = true;
-      isRefreshing = true;
+      // 일반 API 호출 중 401 발생 시에만 토큰 갱신 시도
+      if (!originalRequest._retry) {
+        logger.info('apiClient: 401 detected on normal request. Attempting refresh...');
 
-      try {
-        const refreshToken = await tokenStorage.getRefreshToken();
-        if (!refreshToken) {
-          logger.error('apiClient: No refresh token found in storage');
-          throw new Error("No refresh token");
+        if (isRefreshing) {
+          return new Promise((resolve, reject) => {
+            failedQueue.push({ resolve, reject });
+          }).then(token => {
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+            return apiClient(originalRequest);
+          }).catch(err => Promise.reject(err));
         }
 
-        const { data } = await axios.post(`${apiBaseUrl}/auth/refresh`, { refreshToken });
-        
-        if (data.isSuccess) {
-          logger.info('apiClient: Token refresh successful');
-          await useAuthStore.getState().updateToken(data.result.accessToken, data.result.refreshToken);
+        originalRequest._retry = true;
+        isRefreshing = true;
 
-          processQueue(null, data.result.accessToken);
-          originalRequest.headers.Authorization = `Bearer ${data.result.accessToken}`;
-          return apiClient(originalRequest);
-        } else {
-          logger.error('apiClient: Token refresh failed via API response', data.message);
-          throw new Error('Refresh failed by server flag');
+        try {
+          const refreshToken = await tokenStorage.getRefreshToken();
+          if (!refreshToken) throw new Error("No refresh token");
+
+          const { data } = await axios.post(`${apiBaseUrl}/auth/refresh`, { refreshToken });
+
+          if (data.isSuccess) {
+            await useAuthStore.getState().updateToken(data.result.accessToken, data.result.refreshToken);
+            processQueue(null, data.result.accessToken);
+            originalRequest.headers.Authorization = `Bearer ${data.result.accessToken}`;
+            return apiClient(originalRequest);
+          } else {
+            throw new Error('Refresh failed by server');
+          }
+        } catch (refreshError) {
+          processQueue(refreshError, null);
+          await useAuthStore.getState().logout();
+          router.replace('/');
+          return Promise.reject(refreshError);
+        } finally {
+          isRefreshing = false;
         }
-      } catch (refreshError) {
-        logger.error('apiClient: Token refresh pipeline failed', refreshError);
-        processQueue(refreshError, null);
-        await useAuthStore.getState().logout();
-        router.replace('/');
-        return Promise.reject(refreshError);
-      } finally {
-        isRefreshing = false;
       }
     }
 

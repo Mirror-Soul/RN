@@ -1,10 +1,10 @@
-import { useEffect } from 'react';
+import { useAuthStore } from '@/src/store/useAuthStore';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Stack, router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useAuthStore } from '@/src/store/useAuthStore';
+import { useEffect } from 'react';
 import 'react-native-reanimated';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 const queryClient = new QueryClient();
 
@@ -28,19 +28,19 @@ export default function RootLayout() {
 
   // 상태가 변할 때마다 감시하여 즉시 이동시킵니다.
   useEffect(() => {
-    if (!isHydrated) return; 
+    if (!isHydrated) return;
 
     if (isLoggedIn) {
       if (userStatus === 'ACTIVE') {
         // 이미 메인 화면 구현이 안되어있을 수 있지만 기획상 메인 라우트로 이동
-        router.replace('/(main)'); 
+        router.replace('/(main)');
       } else if (userStatus?.startsWith('ONBOARD_')) {
         // 로그인 한 미완료자는 해당하는 곳으로 강제 이동
-        router.replace(getOnboardingRoute(userStatus)); 
+        router.replace(getOnboardingRoute(userStatus));
       }
     } else {
       // 미로그인 상태면 처음 화면(로그인 화면)
-      router.replace('/'); 
+      router.replace('/');
     }
   }, [isHydrated, isLoggedIn, userStatus]);
 
