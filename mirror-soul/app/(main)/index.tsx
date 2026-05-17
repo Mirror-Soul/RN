@@ -3,8 +3,11 @@ import RecommendSection from '@/src/components/home/main/Recommend/RecommendSect
 import SearchLocationBar from '@/src/components/home/main/SearchLocationBar';
 import UserProfileCard from '@/src/components/home/main/UserProfileCard';
 import { Colors, Layout } from '@/src/constants/theme';
+import { logout } from '@/src/services/authService';
+import { useAuthStore } from '@/src/store/useAuthStore';
+import { logger } from '@/src/utils/logger';
 import React from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 /**
@@ -15,6 +18,30 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 export default function MainHomeScreen() {
   const insets = useSafeAreaInsets();
 
+  const handleLogout = () => {
+    Alert.alert(
+      "로그아웃",
+      "현재 기기에서 로그아웃 하시겠습니까?\n(테스트용 임시 버튼입니다)",
+      [
+        { text: "취소", style: "cancel" },
+        {
+          text: "로그아웃",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              logger.debug('User clicked logout from Home Settings');
+              await logout(); // 백엔드 세션 종료 API
+              await useAuthStore.getState().logout(); // 로컬 스토리지 정리 및 상태 초기화
+            } catch (error) {
+              logger.error('Logout failed from UI', error);
+              Alert.alert("알림", "로그아웃 처리 중 문제가 발생했습니다.");
+            }
+          }
+        }
+      ]
+    );
+  };
+
   return (
     <ScrollView
       style={styles.scrollView}
@@ -23,7 +50,7 @@ export default function MainHomeScreen() {
     >
       <View style={[styles.dashboard, { paddingTop: Math.max(insets.top + 12, Layout.SCREEN_PADDING) }]}>
         {/* 헤더 */}
-        <MainHeader />
+        <MainHeader onSettingPress={handleLogout} />
 
         {/* 유저 프로필 카드 */}
         <UserProfileCard />
