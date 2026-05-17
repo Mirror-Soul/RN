@@ -61,16 +61,24 @@ apiClient.interceptors.response.use(
 
     // 401 Unauthorized 에러 시 처리
     if (error.response?.status === 401) {
-      // [고도화] 로그인이나 리프레시 API 자체에서 401이 난 거라면 토큰 갱신 시도 금지
-      const isAuthPath = originalRequest?.url?.includes('/auth/login') || originalRequest?.url?.includes('/auth/refresh');
+      // [고도화] 인증 경로별 예외 처리 (각각 다른 응답 정책)
+      const isLoginPath = originalRequest?.url?.includes('/auth/login');
+      const isRefreshPath = originalRequest?.url?.includes('/auth/refresh');
+      const isLogoutPath = originalRequest?.url?.includes('/auth/logout');
 
-      if (isAuthPath) {
-        logger.warn('apiClient: Auth failed on login/refresh path');
+      if (isLoginPath || isRefreshPath) {
+        logger.warn(`apiClient: Auth failed on ${originalRequest?.url}. Skipping refresh.`);
         return Promise.reject({
           code: 'AUTH_FAILED',
           message: '이메일 또는 비밀번호가 일치하지 않습니다.',
           error: error.message,
         });
+      }
+
+      // 로그아웃 중 401은 이미 세션이 만료된 것 → 즉시 에러 반환 (상위 finally가 로컬 정리)
+      if (isLogoutPath) {
+        logger.warn('apiClient: Logout returned 401 (session already expired).');
+        return Promise.reject(error);
       }
 
       // 일반 API 호출 중 401 발생 시에만 토큰 갱신 시도
@@ -93,7 +101,7 @@ apiClient.interceptors.response.use(
           const refreshToken = await tokenStorage.getRefreshToken();
           if (!refreshToken) throw new Error("No refresh token");
 
-          const { data } = await axios.post(`${apiBaseUrl}/auth/refresh`, { refreshToken });
+          const { data } = await apiClient.post('/auth/refresh', { refreshToken });
 
           if (data.isSuccess) {
             await useAuthStore.getState().updateToken(data.result.accessToken, data.result.refreshToken);

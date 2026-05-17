@@ -28,13 +28,18 @@ export default function MainHomeScreen() {
           text: "로그아웃",
           style: "destructive",
           onPress: async () => {
+            logger.debug('User clicked logout from Home Settings');
             try {
-              logger.debug('User clicked logout from Home Settings');
-              await logout(); // 백엔드 세션 종료 API
-              await useAuthStore.getState().logout(); // 로컬 스토리지 정리 및 상태 초기화
+              await logout(); // (1) 서버 세션 종료 시도
             } catch (error) {
-              logger.error('Logout failed from UI', error);
-              Alert.alert("알림", "로그아웃 처리 중 문제가 발생했습니다.");
+              logger.warn('Server logout failed, proceeding with local logout', error);
+            } finally {
+              try {
+                await useAuthStore.getState().logout(); // (2) 항상 로컬 세션 정리
+              } catch (localError) {
+                logger.error('Local logout failed', localError);
+                Alert.alert("알림", "로그아웃 처리 중 문제가 발생했습니다.");
+              }
             }
           }
         }

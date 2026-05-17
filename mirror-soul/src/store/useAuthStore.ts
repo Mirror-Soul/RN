@@ -69,7 +69,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   logout: async () => {
     logger.info('useAuthStore: Logging out');
-    await tokenStorage.clearAll();
-    set({ isLoggedIn: false, accessToken: null, userUuid: null, userStatus: null });
+    try {
+      await tokenStorage.clearAll();
+    } finally {
+      // clearAll()이 실패하더라도 메모리 상태는 반드시 초기화 (라우팅 가드 작동 보장)
+      set({ isLoggedIn: false, accessToken: null, userUuid: null, userStatus: null });
+    }
   }
 }));
