@@ -11,12 +11,18 @@ const KEYS = {
 export const tokenStorage = {
   async saveTokens(accessToken: string, refreshToken: string, userUuid: string, userStatus: string) {
     try {
-      await Promise.all([
+      const results = await Promise.allSettled([
         SecureStore.setItemAsync(KEYS.ACCESS_TOKEN, accessToken),
         SecureStore.setItemAsync(KEYS.REFRESH_TOKEN, refreshToken),
         SecureStore.setItemAsync(KEYS.USER_UUID, userUuid),
         SecureStore.setItemAsync(KEYS.USER_STATUS, userStatus),
       ]);
+      const hasFailure = results.some((r) => r.status === 'rejected');
+      if (hasFailure) {
+        // 부분 성공 상태 방지: 저장에 실패하면 전체 롤백
+        await Promise.allSettled(Object.values(KEYS).map(key => SecureStore.deleteItemAsync(key)));
+        throw new Error('tokenStorage: partial save detected, rolled back');
+      }
       logger.info('tokenStorage: Tokens saved successfully');
     } catch (error) {
       logger.error('tokenStorage: Failed to save tokens', error);

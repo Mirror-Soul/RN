@@ -14,13 +14,13 @@ import { logger } from '../utils/logger';
  */
 
 export const sendVerificationCode = async (data: SendCodeRequest): Promise<SendCodeResponse> => {
-  logger.debug('authService: Sending verification code', data.email);
+  logger.debug('authService: Sending verification code');
   const response = await apiClient.post<SendCodeResponse>('/join/send-code', data);
   return response.data;
 };
 
 export const verifyCode = async (data: VerifyCodeRequest): Promise<VerifyCodeResponse> => {
-  logger.debug('authService: Verifying code', data.email);
+  logger.debug('authService: Verifying code');
   const response = await apiClient.post<VerifyCodeResponse>('/join/verify-code', data);
   return response.data;
 };
@@ -49,7 +49,7 @@ export interface LoginResponse {
 }
 
 export const login = async (email: string, password: string): Promise<LoginResponse> => {
-  logger.info('authService: Attempting login', email);
+  logger.info('authService: Attempting login');
   const response = await apiClient.post<LoginResponse>('/auth/login', { email, password });
   return response.data;
 };
