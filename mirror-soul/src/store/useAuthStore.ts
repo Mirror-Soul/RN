@@ -59,9 +59,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   updateToken: async (newAccessToken, newRefreshToken) => {
     logger.debug('useAuthStore: Updating access token');
     const currentRefreshToken = await tokenStorage.getRefreshToken();
-    const refreshTokenToSave = newRefreshToken || currentRefreshToken || '';
-    const userUuid = get().userUuid || '';
-    const userStatus = get().userStatus || '';
+    const refreshTokenToSave = newRefreshToken ?? currentRefreshToken;
+    const userUuid = get().userUuid;
+    const userStatus = get().userStatus;
+
+    if (!refreshTokenToSave || !userUuid || !userStatus) {
+      logger.error('useAuthStore: Critical session metadata lost. Forcing logout.', { hasRefresh: !!refreshTokenToSave, userUuid, userStatus });
+      await get().logout();
+      return;
+    }
 
     await tokenStorage.saveTokens(newAccessToken, refreshTokenToSave, userUuid, userStatus);
     set({ accessToken: newAccessToken });

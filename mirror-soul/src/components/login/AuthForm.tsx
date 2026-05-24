@@ -20,14 +20,17 @@ export default function AuthForm({ activeTab }: AuthFormProps) {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleLogin = async () => {
+    if (isSubmitting) return;
     if (!email || !password) {
       Alert.alert('알림', '이메일과 비밀번호를 모두 입력해주세요.');
       return;
     }
 
     try {
+      setIsSubmitting(true);
       const response = await login(email, password);
       if (response.isSuccess) {
         // Zustand 스토어 업데이트 -> _layout.tsx 라우팅 가드가 자동 감지 후 화면 이동 (SoC 준수)
@@ -42,6 +45,8 @@ export default function AuthForm({ activeTab }: AuthFormProps) {
       }
     } catch (error: any) {
       Alert.alert('오류', error.message || '로그인 처리 중 문제가 발생했습니다.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -85,6 +90,8 @@ export default function AuthForm({ activeTab }: AuthFormProps) {
         title="로그인"
         onPress={handleLogin}
         style={styles.loginButtonMargin}
+        disabled={isSubmitting}
+        isLoading={isSubmitting}
       />
 
       <TouchableOpacity style={styles.findPwButton}>
