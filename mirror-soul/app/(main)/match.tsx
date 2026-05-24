@@ -1,15 +1,15 @@
-import { Colors, Layout } from '@/src/constants/theme';
-import React from 'react';
-import { StyleSheet, View, ScrollView, useWindowDimensions, FlatList, Animated } from 'react-native';
-import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
-import MatchingHeader from '@/src/components/home/match/parts/MatchingHeader';
+import MatchingMeetCard from '@/src/components/home/match/parts/cards/MatchingMeetCard';
+import MatchingRecommendCard from '@/src/components/home/match/parts/cards/MatchingRecommendCard';
+import MatchingTwinCard from '@/src/components/home/match/parts/cards/MatchingTwinCard';
 import MatchingActiveBanner from '@/src/components/home/match/parts/MatchingActiveBanner';
+import MatchingFooter from '@/src/components/home/match/parts/MatchingFooter';
+import MatchingHeader from '@/src/components/home/match/parts/MatchingHeader';
 import MatchingSummaryRow, { MatchingTabType } from '@/src/components/home/match/parts/MatchingSummaryRow';
 import MatchingTabIndicator from '@/src/components/home/match/parts/MatchingTabIndicator';
-import MatchingMeetCard from '@/src/components/home/match/parts/cards/MatchingMeetCard';
-import MatchingTwinCard from '@/src/components/home/match/parts/cards/MatchingTwinCard';
-import MatchingRecommendCard from '@/src/components/home/match/parts/cards/MatchingRecommendCard';
-import MatchingFooter from '@/src/components/home/match/parts/MatchingFooter';
+import { Colors, Layout } from '@/src/constants/theme';
+import React from 'react';
+import { Animated, FlatList, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const MEET_DATA = [
   {
@@ -96,14 +96,14 @@ export default function MatchScreen() {
   const [activeIndex, setActiveIndex] = React.useState(0);
   const fadeAnim = React.useRef(new Animated.Value(1)).current;
   const flatListRef = React.useRef<FlatList>(null);
-  
+
   // 피그마 기준 가로 패딩 적용
   const horizontalPadding = (width * 19.996) / 392.927;
 
   // 탭 전환 핸들러 (애니메이션 포함)
   const handleTabChange = (tab: MatchingTabType) => {
     if (tab === activeTab) return;
-    
+
     Animated.timing(fadeAnim, {
       toValue: 0,
       duration: 150,
@@ -112,7 +112,7 @@ export default function MatchScreen() {
       setActiveTab(tab);
       setActiveIndex(0);
       flatListRef.current?.scrollToOffset({ offset: 0, animated: false });
-      
+
       Animated.timing(fadeAnim, {
         toValue: 1,
         duration: 200,
@@ -144,8 +144,8 @@ export default function MatchScreen() {
   const activeColor = getActiveColor();
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView 
+    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+      <ScrollView
         style={styles.scrollView}
         contentContainerStyle={[
           styles.scrollContent,
@@ -159,9 +159,9 @@ export default function MatchScreen() {
             <MatchingHeader />
             <MatchingActiveBanner />
             <MatchingSummaryRow activeTab={activeTab} onTabChange={handleTabChange} />
-            <MatchingTabIndicator 
-              activeIndex={activeIndex} 
-              total={currentData.length} 
+            <MatchingTabIndicator
+              activeIndex={activeIndex}
+              total={currentData.length}
               activeColor={activeColor}
             />
           </View>

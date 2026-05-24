@@ -116,9 +116,10 @@ export const saveInterviewAnswer = async (
   
   logger.debug('saveInterviewAnswer:', { 
     url,
-    userUuid, 
-    data,
-    interviewIdType: typeof data.interviewId 
+    userUuid,
+    interviewIdType: typeof data.interviewId,
+    hasAnswer: Boolean(data.answer),
+    answerLength: data.answer?.length ?? 0,
   });
   
   try {
@@ -129,7 +130,7 @@ export const saveInterviewAnswer = async (
     logger.error('saveInterviewAnswer ERROR:', {
       message: error instanceof Error ? error.message : String(error),
       serverError: (error as any)?.error,
-      requestBody: data
+      interviewId: data.interviewId
     });
     throw error;
   }

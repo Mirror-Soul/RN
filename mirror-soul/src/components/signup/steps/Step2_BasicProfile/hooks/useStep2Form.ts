@@ -62,6 +62,10 @@ export function useStep2Form() {
 
   // 직업 인증 처리 (S3 업로드 로직 포함)
   const handleJobVerify = useCallback(async (fileUri: string, contentType: string, fileName: string) => {
+    if (!userUuid) {
+      Alert.alert('오류', '사용자 정보가 없습니다. 처음부터 다시 시도해주세요.');
+      return;
+    }
     if (state.isJobVerifying) return;
 
     try {
@@ -69,7 +73,7 @@ export function useStep2Form() {
 
       // 1. Presigned URL 발급
       const presignedResponse = await getPresignedUrl({
-        userUuid: userUuid || '',
+        userUuid,
         fileName,
         contentType,
         directory: 'job-certifications',

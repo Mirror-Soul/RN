@@ -1,18 +1,18 @@
 import TimerIcon from '@/assets/images/common/evlove/evlove_timer.svg';
+import MeetSummaryIcon from '@/assets/images/common/matching/meet_summary.svg';
 import MessageIcon from '@/assets/images/common/matching/MeetingMessage.svg';
 import SummaryIcon from '@/assets/images/common/matching/MeetSummaryIcon.svg';
-import MeetSummaryIcon from '@/assets/images/common/matching/meet_summary.svg';
-import CompleteIcon from '@/assets/images/common/Complete.svg';
+
 import CancelIcon from '@/assets/images/common/Cancel.svg';
-import SendMessageIcon from '@/assets/images/common/matching/SendMessage.svg';
 import SendCallIcon from '@/assets/images/common/matching/SendCall.svg';
+import SendMessageIcon from '@/assets/images/common/matching/SendMessage.svg';
 import { Colors, Radii } from '@/src/constants/theme';
 import { useLayout } from '@/src/hooks/useLayout';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useRef } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View, Animated, useWindowDimensions } from 'react-native';
+import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-interface MatchingCardProps {
+interface MatchingMeetCardProps {
   name: string;
   age: number;
   timeAgo: string;
@@ -60,10 +60,10 @@ export default function MatchingMeetCard({
               colors={[Colors.glass.orange30, Colors.glass.red30]}
               style={styles.profileImage}
             />
-            
+
             <View style={styles.profileInfo}>
               <Text style={styles.nameText}>{name}, {age}</Text>
-              
+
               <View style={styles.timerRow}>
                 <TimerIcon width={12} height={12} />
                 <Text style={styles.timerText}>{timeAgo}</Text>

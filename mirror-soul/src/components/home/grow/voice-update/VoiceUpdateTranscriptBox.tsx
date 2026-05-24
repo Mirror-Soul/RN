@@ -43,7 +43,7 @@ export default function VoiceUpdateTranscriptBox({
     return () => {
       if (animation) animation.stop();
     };
-  }, [isRecording, blinkAnim]);
+  }, [isRecording]);
 
   return (
     <View style={styles.container}>
