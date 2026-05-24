@@ -54,6 +54,7 @@ export interface SaveProfileRequest {
   sidoName: string;
   sigunguName: string;
   eupmyeondongName: string;
+  /** 사용자가 직접 입력하는 직업 상세 설명 (자유 텍스트) */
   jobDescription: string;
   jobCertificationObjectKey?: string | null;
 }
@@ -71,9 +72,17 @@ export type MbtiEnum =
 
 export interface SavePersonalityRequest {
   mbti: MbtiEnum;
+  /**
+   * I/E 점수 (0~100)
+   * - 0에 가까울수록 I(내향) 성향
+   * - 100에 가까울수록 E(외향) 성향
+   */
   ieScore: number;
+  /** N/S 점수 (0~100) */
   nsScore: number;
+  /** F/T 점수 (0~100) */
   ftScore: number;
+  /** P/J 점수 (0~100) */
   pjScore: number;
   selfIntroduction: string;
 }

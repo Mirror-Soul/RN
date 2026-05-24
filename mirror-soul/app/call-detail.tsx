@@ -39,7 +39,7 @@ export default function CallDetailScreen() {
         onBack={() => router.back()}
       />
       <CallDetailAlert />
-      <CallDetailBody initialMessages={callItem.messages} />
+      <CallDetailBody key={callItem.id} initialMessages={callItem.messages} />
       <View style={{ paddingBottom: insets.bottom }}>
         <CallDetailFooter />
       </View>

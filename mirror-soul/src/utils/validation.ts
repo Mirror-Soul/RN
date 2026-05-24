@@ -14,7 +14,7 @@ export const isValidEmail = (email: string): boolean => {
  * - 숫자 1개 이상
  * - 허용 특수문자: !@#$%^&*()_+=-
  */
-export const PASSWORD_REGEX = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d!@#$%^&*()_+=-]{8,20}$/;
+export const PASSWORD_REGEX = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_+=-])[A-Za-z\d!@#$%^&*()_+=-]{8,20}$/;
 
 /**
  * 비밀번호 유효성 검사

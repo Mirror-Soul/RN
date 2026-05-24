@@ -2,6 +2,7 @@ import VerifyEmailIcon from '@/assets/images/common/veritfy_email_icon.svg';
 import { Colors, Radii } from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useState } from 'react';
+import { getErrorMessage } from '@/src/utils/errorUtils';
 import { ActivityIndicator, Dimensions, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
@@ -65,6 +66,8 @@ export default function EmailVerificationModal({
         } else {
           setErrorMessage('인증 코드가 일치하지 않습니다. 다시 확인해주세요.');
         }
+      } catch (error: unknown) {
+        setErrorMessage(getErrorMessage(error, '인증 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'));
       } finally {
         setIsVerifying(false);
       }

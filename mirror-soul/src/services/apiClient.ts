@@ -89,6 +89,7 @@ apiClient.interceptors.response.use(
           return new Promise((resolve, reject) => {
             failedQueue.push({ resolve, reject });
           }).then(token => {
+            originalRequest.headers = originalRequest.headers ?? {};
             originalRequest.headers.Authorization = `Bearer ${token}`;
             return apiClient(originalRequest);
           }).catch(err => Promise.reject(err));
@@ -106,6 +107,7 @@ apiClient.interceptors.response.use(
           if (data.isSuccess) {
             await useAuthStore.getState().updateToken(data.result.accessToken, data.result.refreshToken);
             processQueue(null, data.result.accessToken);
+            originalRequest.headers = originalRequest.headers ?? {};
             originalRequest.headers.Authorization = `Bearer ${data.result.accessToken}`;
             return apiClient(originalRequest);
           } else {

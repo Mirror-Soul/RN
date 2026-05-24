@@ -116,9 +116,10 @@ export const saveInterviewAnswer = async (
   
   logger.debug('saveInterviewAnswer:', { 
     url,
-    userUuid, 
-    data,
-    interviewIdType: typeof data.interviewId 
+    userUuid,
+    interviewIdType: typeof data.interviewId,
+    hasAnswer: Boolean(data.answer),
+    answerLength: data.answer?.length ?? 0,
   });
   
   try {
@@ -129,7 +130,7 @@ export const saveInterviewAnswer = async (
     logger.error('saveInterviewAnswer ERROR:', {
       message: error instanceof Error ? error.message : String(error),
       serverError: (error as any)?.error,
-      requestBody: data
+      interviewId: data.interviewId
     });
     throw error;
   }
@@ -140,7 +141,7 @@ export const getInterviewQuestions = async (): Promise<InterviewQuestion[]> => {
   const response = await apiClient.get<GetInterviewQuestionsResponse>('/onboarding/interview/questions');
   const data = response.data;
 
-  if (!data.isSuccess || !data.result.questions) {
+  if (!data.isSuccess || !data.result?.questions) {
     throw new Error(data.message || '인터뷰 질문을 불러오지 못했습니다.');
   }
 

@@ -81,7 +81,10 @@ export function useSTT(lang: SupportedLanguage = 'ko-KR') {
       }
 
       // resolver 등록
-      stopResolverRef.current = resolve;
+      stopResolverRef.current = (value: string) => {
+        clearTimeout(timeout);
+        resolve(value);
+      };
       
       // 타임아웃 안전장치 (2초)
       const timeout = setTimeout(() => {
