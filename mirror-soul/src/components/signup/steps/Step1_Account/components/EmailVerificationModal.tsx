@@ -2,7 +2,8 @@ import VerifyEmailIcon from '@/assets/images/common/veritfy_email_icon.svg';
 import { Colors, Radii } from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useState } from 'react';
-import { Dimensions, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { getErrorMessage } from '@/src/utils/errorUtils';
+import { ActivityIndicator, Dimensions, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -24,9 +25,11 @@ export default function EmailVerificationModal({
   timeLeft = 180,
   formattedTime = '03:00',
   onResend,
+  isLoading = false,
 }: VerificationModalProps) {
   const [code, setCode] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [isVerifying, setIsVerifying] = useState(false);
 
   // 애니메이션 공유값 (심플한 페이드 전용)
   const opacity = useSharedValue(0);
@@ -53,12 +56,20 @@ export default function EmailVerificationModal({
     opacity: opacity.value,
   }));
 
-  const handleConfirm = () => {
-    if (code.length === 6) {
-      if (onVerify(code)) {
-        onClose();
-      } else {
-        setErrorMessage('인증 코드가 일치하지 않습니다. 다시 확인해주세요.');
+  const handleConfirm = async () => {
+    if (code.length === 6 && !isVerifying) {
+      try {
+        setIsVerifying(true);
+        const success = await onVerify(code);
+        if (success) {
+          onClose();
+        } else {
+          setErrorMessage('인증 코드가 일치하지 않습니다. 다시 확인해주세요.');
+        }
+      } catch (error: unknown) {
+        setErrorMessage(getErrorMessage(error, '인증 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'));
+      } finally {
+        setIsVerifying(false);
       }
     }
   };
@@ -140,11 +151,15 @@ export default function EmailVerificationModal({
                 </TouchableOpacity>
               ) : (
                 <TouchableOpacity
-                  style={[styles.confirmButton, code.length === 6 && styles.confirmButtonActive]}
+                  style={[styles.confirmButton, code.length === 6 && !isVerifying && styles.confirmButtonActive]}
                   onPress={handleConfirm}
-                  disabled={code.length !== 6}
+                  disabled={code.length !== 6 || isVerifying}
                 >
-                  <Text style={[styles.confirmText, code.length === 6 && { color: '#FFF' }]}>인증 확인</Text>
+                  {isVerifying ? (
+                    <ActivityIndicator size="small" color="#FFF" />
+                  ) : (
+                    <Text style={[styles.confirmText, code.length === 6 && { color: '#FFF' }]}>인증 확인</Text>
+                  )}
                 </TouchableOpacity>
               )}
             </View>

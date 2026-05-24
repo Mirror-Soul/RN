@@ -2,7 +2,7 @@ import FormLabel from '@/src/components/signup/common/FormLabel';
 import { Colors, Radii } from '@/src/constants/theme';
 import { isValidEmail } from '@/src/utils/validation';
 import React from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TextInput, TouchableOpacity, View, ActivityIndicator } from 'react-native';
 import { SectionProps } from '../types/step1';
 import EmailVerificationModal from './EmailVerificationModal';
 
@@ -10,11 +10,12 @@ interface EmailSectionProps extends SectionProps {
   isModalVisible: boolean;
   setIsModalVisible: (visible: boolean) => void;
   onSendCode: () => void;
-  onVerify: (code: string) => boolean;
+  onVerify: (code: string) => Promise<boolean>;
   timeLeft?: number;
   isTimerActive?: boolean;
   formattedTime?: string;
   onResendCode?: () => void;
+  isLoading?: boolean;
 }
 
 /**
@@ -31,7 +32,8 @@ export default function EmailSection({
   timeLeft = 0,
   isTimerActive = false,
   formattedTime = '00:00',
-  onResendCode = onSendCode
+  onResendCode = onSendCode,
+  isLoading = false
 }: EmailSectionProps) {
 
   // 버튼 텍스트 및 접근성 동기화를 위한 렌더링 전 상태 처리 (DRY/SRP 유지보수)
@@ -72,15 +74,19 @@ export default function EmailSection({
           <TouchableOpacity
             style={styles.sendButton}
             onPress={isTimerActive && timeLeft === 0 ? onResendCode : onSendCode}
-            disabled={!isValidEmail(state.email)}
+            disabled={!isValidEmail(state.email) || isLoading}
             accessibilityRole="button"
             accessibilityLabel={sendButtonText}
             accessibilityHint={sendButtonA11yHint}
-            accessibilityState={{ disabled: !isValidEmail(state.email) }}
+            accessibilityState={{ disabled: !isValidEmail(state.email) || isLoading }}
           >
-            <Text style={styles.sendButtonText}>
-              {sendButtonText}
-            </Text>
+            {isLoading ? (
+              <ActivityIndicator size="small" color="#FFF" />
+            ) : (
+              <Text style={styles.sendButtonText}>
+                {sendButtonText}
+              </Text>
+            )}
           </TouchableOpacity>
         )}
       </View>

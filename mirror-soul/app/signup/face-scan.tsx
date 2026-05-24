@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from 'react';
-import { View, StyleSheet, Platform, Animated } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, StyleSheet, Platform, Animated, Alert } from 'react-native';
 import { Colors, Layout } from '@/src/constants/theme';
 import { useRouter } from 'expo-router';
 import { useCameraDevice } from 'react-native-vision-camera';
@@ -15,6 +15,7 @@ import FaceCameraView from '@/src/components/signup/steps/Step5_FaceScan/compone
 // Hook Imports
 import { useFaceScan } from '@/src/components/signup/steps/Step5_FaceScan/hooks/useFaceScan';
 import { useFaceProcessor } from '@/src/components/signup/steps/Step5_FaceScan/hooks/useFaceProcessor';
+import { useFaceScanUpload } from '@/src/components/signup/steps/Step5_FaceScan/hooks/useFaceScanUpload';
 
 /**
  * 3D Face Scan 메인 화면
@@ -37,7 +38,37 @@ export default function FaceScanScreen() {
     startScan,
     onCameraInitialized,
     handleFaceDetection,
+    videoUri,
   } = useFaceScan();
+
+  const { uploadFaceVideo } = useFaceScanUpload();
+  const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
+
+  // --- 업로드 자동 시작 및 재시도 로직 ---
+  useEffect(() => {
+    if (phase === 'completed' && videoUri && uploadStatus === 'idle') {
+      setUploadStatus('uploading');
+      uploadFaceVideo(videoUri)
+        .then((success) => {
+          if (success) setUploadStatus('success');
+        })
+        .catch((err) => {
+          setUploadStatus('error');
+          Alert.alert('업로드 실패', err.message || '업로드 중 오류가 발생했습니다.', [
+            { text: '다시 시도', onPress: () => setUploadStatus('idle') },
+          ]);
+        });
+    }
+  }, [phase, videoUri, uploadStatus, uploadFaceVideo]);
+
+  // --- 화면에 보여줄 Phase 계산 ---
+  // 스캔이 완료되었지만 업로드가 끝나지 않았다면 'finalizing'을 재사용하여 로딩 UI 유지
+  const displayPhase =
+    phase === 'completed'
+      ? uploadStatus === 'success'
+        ? 'completed'
+        : 'finalizing'
+      : phase;
 
   // 2. 고성능 카메라 프레임 프로세서 엔진 (Ref Pattern 적용으로 Stale Closure 문제 해결)
   const { frameProcessor } = useFaceProcessor({
@@ -49,7 +80,7 @@ export default function FaceScanScreen() {
   const completionAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    if (phase === 'completed') {
+    if (displayPhase === 'completed') {
       Animated.spring(completionAnim, {
         toValue: 1,
         tension: 50,
@@ -59,7 +90,7 @@ export default function FaceScanScreen() {
     } else {
       completionAnim.setValue(0);
     }
-  }, [phase, completionAnim]);
+  }, [displayPhase, completionAnim]);
 
   // --- 이벤트 핸들러 ---
   const handleNext = () => {
@@ -68,18 +99,18 @@ export default function FaceScanScreen() {
 
   // --- 텍스트 결정 로직 ---
   const guideMessage =
-    phase === 'scanning'
+    displayPhase === 'scanning'
       ? currentDirection.guideMessage
-      : phase === 'finalizing'
-        ? '스캔 데이터를 저장 중입니다...'
-        : phase === 'completed'
+      : displayPhase === 'finalizing'
+        ? '스캔 데이터를 처리 중입니다...'
+        : displayPhase === 'completed'
           ? '스캔이 완료되었습니다!'
           : undefined;
 
   // --- Finalizing 애니메이션 ---
   const pulseAnim = useRef(new Animated.Value(0.8)).current;
   useEffect(() => {
-    if (phase === 'finalizing') {
+    if (displayPhase === 'finalizing') {
       Animated.loop(
         Animated.sequence([
           Animated.timing(pulseAnim, { toValue: 1.1, duration: 800, useNativeDriver: true }),
@@ -89,7 +120,7 @@ export default function FaceScanScreen() {
     } else {
       pulseAnim.stopAnimation();
     }
-  }, [phase, pulseAnim]);
+  }, [displayPhase, pulseAnim]);
 
   return (
     <View style={styles.baseContainer}>
@@ -102,9 +133,9 @@ export default function FaceScanScreen() {
 
         {/* 메인 스캔 영역 (Body) */}
         <View style={styles.bodyWrapper}>
-          <FaceScanBody phase={phase}>
+          <FaceScanBody phase={displayPhase}>
             {/* 카메라 뷰: 스캔 및 처리 중일 때만 표시 (마운트 유지를 통해 콜백 수신) */}
-            {device && (phase === 'scanning' || phase === 'finalizing') && (
+            {device && (displayPhase === 'scanning' || displayPhase === 'finalizing') && (
               <FaceCameraView
                 ref={cameraRef}
                 device={device}
@@ -115,7 +146,7 @@ export default function FaceScanScreen() {
             )}
 
             {/* 가이드 오버레이 */}
-            {phase === 'scanning' && (
+            {displayPhase === 'scanning' && (
               <FaceGuideOverlay
                 currentDirection={currentDirection}
                 currentDirectionIndex={currentDirectionIndex}
@@ -125,7 +156,7 @@ export default function FaceScanScreen() {
             )}
 
             {/* Finalizing (저장 중) 애니메이션 오버레이: 카메라 화면 완전 가림 */}
-            {phase === 'finalizing' && (
+            {displayPhase === 'finalizing' && (
               <View style={[styles.completionOverlay, { backgroundColor: Colors.primary.soulBlack }]}>
                 <Animated.View
                   style={[
@@ -137,7 +168,7 @@ export default function FaceScanScreen() {
             )}
 
             {/* 완료 체크마크 애니메이션 */}
-            {phase === 'completed' && (
+            {displayPhase === 'completed' && (
               <Animated.View
                 style={[
                   styles.completionOverlay,
@@ -158,7 +189,7 @@ export default function FaceScanScreen() {
         {/* 하단 제어 섹션 */}
         <View style={styles.buttonWrapper}>
           <FaceScanButton
-            phase={phase}
+            phase={displayPhase}
             onStartScan={startScan}
             onNext={handleNext}
           />

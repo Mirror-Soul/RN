@@ -2,31 +2,34 @@ import ContinueIcon from '@/assets/images/common/Continue_icon.svg';
 import { Colors, Radii } from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, ViewStyle } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, ViewStyle, ActivityIndicator } from 'react-native';
 
 interface PrimaryButtonProps {
   title: string;
   onPress: () => void;
   disabled?: boolean;
+  isLoading?: boolean;
   style?: ViewStyle;
 }
 
 /**
  * 공용 하단 플로팅/스탠다드 Primary Button 컴포넌트
  */
-export default function PrimaryButton({ title, onPress, disabled, style }: PrimaryButtonProps) {
+export default function PrimaryButton({ title, onPress, disabled, isLoading, style }: PrimaryButtonProps) {
+  const isDisabled = disabled || isLoading;
+
   return (
     <TouchableOpacity
       activeOpacity={0.8}
       onPress={onPress}
-      disabled={disabled}
+      disabled={isDisabled}
       style={[
         styles.button,
-        disabled ? styles.buttonDisabled : undefined,
+        isDisabled ? styles.buttonDisabled : undefined,
         style
       ]}
     >
-      {!disabled && (
+      {!isDisabled && (
         <LinearGradient
           colors={Colors.gradient.cyanToPurple}
           start={{ x: 0, y: 0 }}
@@ -34,12 +37,18 @@ export default function PrimaryButton({ title, onPress, disabled, style }: Prima
           style={[StyleSheet.absoluteFill, { borderRadius: Radii.lg }]}
         />
       )}
-      <Text style={[styles.title, disabled ? styles.titleDisabled : styles.titleActive]}>
-        {title}
-      </Text>
-      {/* SVG Icon typically manages its own fill, but we can render it safely. */}
-      {/* If it doesn't inherit props, we just render it. */}
-      <ContinueIcon width={24} height={24} />
+      {isLoading ? (
+        <ActivityIndicator size="small" color={isDisabled ? Colors.neutral.disabledText : Colors.primary.soulBlack} />
+      ) : (
+        <>
+          <Text style={[styles.title, isDisabled ? styles.titleDisabled : styles.titleActive]}>
+            {title}
+          </Text>
+          {/* SVG Icon typically manages its own fill, but we can render it safely. */}
+          {/* If it doesn't inherit props, we just render it. */}
+          <ContinueIcon width={24} height={24} />
+        </>
+      )}
     </TouchableOpacity>
   );
 }

@@ -4,11 +4,19 @@
  */
 export interface Step2State {
   nickname: string;
-  isNicknameVerified: boolean; // 중복 확인 성공 여부
-  location: string;
-  jobCategory: string;
-  jobTitle: string;
-  isJobVerified: boolean; // 직업 인증 완료 여부
+  isNicknameVerified: boolean;
+  isNicknameChecking: boolean; // API 로딩 상태 추가
+
+  // 지역 정보 분리 (API 명세 대응)
+  sidoName: string;
+  sigunguName: string;
+  eupmyeondongName: string;
+
+  jobCategory: string; // JobEnum과 매칭됨
+  jobTitle: string; // jobDescription에 해당
+  isJobVerifying: boolean; // S3 업로드 로딩 상태 추가
+  isJobVerified: boolean;
+  jobCertificationObjectKey: string | null; // S3에서 받은 키 저장
 }
 
 /**

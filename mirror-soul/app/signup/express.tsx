@@ -10,18 +10,28 @@ import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 're
 
 import { SIGNUP_ROUTES } from '@/src/constants/routes/signupRoutes';
 
+import { useStep3Form } from '@/src/components/signup/steps/Step3_ExpressPersonal/hooks/useStep3Form';
+
 export default function ExpressYourselfScreen() {
   const router = useRouter();
-  const [mbti, setMbti] = useState('ENFJ');
-  const [description, setDescription] = useState('');
+  const {
+    mbti,
+    setMbti,
+    setScores, // 추가
+    description,
+    setDescription,
+    isSubmitting,
+    isFormValid,
+    handleSubmit,
+  } = useStep3Form();
+
   // MBTI 슬라이더 드래그 중에는 ScrollView 스크롤 비활성화
   const [isSliding, setIsSliding] = useState(false);
 
-  // 모든 MBTI가 선택되었고(하이픈 없음), 자기소개가 비어있지 않을 때만 활성화
-  const isFormValid = !mbti.includes('-') && description.trim().length > 0;
-
   const handleContinue = () => {
-    router.push(SIGNUP_ROUTES.INTERVIEW);
+    handleSubmit(() => {
+      router.push(SIGNUP_ROUTES.INTERVIEW);
+    });
   };
 
   return (
@@ -44,6 +54,7 @@ export default function ExpressYourselfScreen() {
           <View style={styles.body}>
             <MbtiSelector
               onMbtiChange={setMbti}
+              onScoresChange={setScores}
               onDragStart={() => setIsSliding(true)}
               onDragEnd={() => setIsSliding(false)}
             />
@@ -58,7 +69,7 @@ export default function ExpressYourselfScreen() {
             <PrimaryButton
               title="Continue"
               onPress={handleContinue}
-              disabled={!isFormValid}
+              disabled={!isFormValid || isSubmitting}
               style={styles.button}
             />
           </View>

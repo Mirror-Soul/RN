@@ -1,13 +1,14 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { logger } from '@/src/utils/logger';
 import * as Haptics from 'expo-haptics';
-import { Camera as VisionCamera } from 'react-native-vision-camera';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert } from 'react-native';
+import { Camera as VisionCamera } from 'react-native-vision-camera';
 import { Face } from 'react-native-vision-camera-face-detector';
-import { ScanPhase } from '../types/faceScan';
 import {
-  SCAN_DIRECTIONS,
   DIRECTION_HOLD_DURATION,
+  SCAN_DIRECTIONS,
 } from '../constants/faceScanConfig';
+import { ScanPhase } from '../types/faceScan';
 import { classifyDirection } from '../utils/faceDirection';
 
 /**
@@ -52,10 +53,12 @@ export function useFaceScan() {
       setCompletedDirections(SCAN_DIRECTIONS.map(() => false));
       setVideoUri(null);
       setIsDirectionMatching(false);
-      setIsCameraReady(false); // 새로운 스캔 세션 시작 시 카메라 준비 상태 초기화
+      setIsCameraReady(false);
       isHoldingRef.current = false;
+
+      logger.debug('Face Scan Started');
     } catch (error) {
-      console.error('스캔 시작 오류:', error);
+      logger.error('Face Scan Start Error:', error);
       Alert.alert('오류 발생', '스캔을 시작하는 중 문제가 발생했습니다.');
       setPhase('idle'); phaseRef.current = 'idle';
     }
@@ -65,19 +68,21 @@ export function useFaceScan() {
   useEffect(() => {
     if (phase === 'scanning' && isCameraReady && cameraRef.current && !videoUri) {
       try {
+        logger.debug('Starting Video Recording...');
         cameraRef.current.startRecording({
           onRecordingFinished: (video) => {
+            logger.info('Recording Finished:', video.path);
             setVideoUri(video.path);
-            setPhase('completed'); phaseRef.current = 'completed'; // 비디오 저장이 완료되면 진짜 완료 상태!
+            setPhase('completed'); phaseRef.current = 'completed';
           },
           onRecordingError: (error) => {
-            console.error('녹화 오류:', error);
+            logger.error('Recording Error:', error);
             Alert.alert('녹화 오류', '영상 녹화 중 문제가 발생했습니다.');
             setPhase('idle'); phaseRef.current = 'idle';
           },
         });
       } catch (err) {
-        console.error('녹화 시작 시점 예외:', err);
+        logger.error('Recording Start Exception:', err);
       }
     }
   }, [phase, isCameraReady, videoUri]); // cameraRef는 외부 ref이므로 의존성에 넣지 않음 (phase 전환 시점 시도)
@@ -118,14 +123,17 @@ export function useFaceScan() {
           isHoldingRef.current = true;
           holdTimerRef.current = setTimeout(() => {
             // 방향 유지 성공! 단계 전환
+            const currentDirLabel = SCAN_DIRECTIONS[indexRef.current]?.label;
+            logger.debug(`Direction Completed: ${currentDirLabel}`);
+
             setCompletedDirections((prev) => {
               const next = [...prev];
               next[indexRef.current] = true;
               return next;
             });
-            
+
             // 한 방향 스캔 성공 시 가벼운 진동 피드백
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => { });
 
             const nextIndex = indexRef.current + 1;
             if (nextIndex >= SCAN_DIRECTIONS.length) {
@@ -173,7 +181,7 @@ export function useFaceScan() {
         holdTimerRef.current = null;
       }
       isHoldingRef.current = false;
-      
+
       // 2. 언마운트 시 네이티브 녹화 프로세스가 실행 중이면 안전하게 중단
       try {
         if (cameraRef.current) {

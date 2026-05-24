@@ -1,5 +1,6 @@
 import { Layout } from '@/src/constants/theme';
 import { useWindowDimensions } from 'react-native';
+import { calculateRW, calculateRH } from '@/src/utils/responsive';
 
 /**
  * 전역 반응형 레이아웃 너비/높이/패딩 관리를 위한 훅 (단일 진실 공급원)
@@ -19,11 +20,19 @@ export function useLayout() {
   // Layout.SCREEN_PADDING이 컨테이너에 적용된 상태에서 자식 컴포넌트의 정확한 너비를 계산할 때 사용합니다.
   const cardWidth = contentWidth - (screenPadding * 2);
 
+  // 4. 피그마 기준 반응형 스케일링 함수 (회전 시 동적 업데이트 됨)
+  const rw = (width: number) => calculateRW(width, windowWidth);
+  const rh = (height: number) => calculateRH(height, windowHeight);
+  const rf = (size: number) => calculateRW(size, windowWidth);
+
   return {
     windowWidth,
     windowHeight,
     contentWidth,
     screenPadding,
     cardWidth,
+    rw,
+    rh,
+    rf,
   };
 }

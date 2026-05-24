@@ -1,41 +1,123 @@
 import { Colors, Radii } from '@/src/constants/theme';
-import React, { useState } from 'react';
-import { Dimensions, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { locationData } from './locationData';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Dimensions, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View, ActivityIndicator, Alert } from 'react-native';
+import { getSidoList, getSigunguList, getEupmyeondongList } from '@/src/services/onboardingService';
+
+interface LocationResult {
+  sidoName: string;
+  sigunguName: string;
+  eupmyeondongName: string;
+}
 
 interface LocationDropdownProps {
-  onSelect: (fullLocation: string) => void;
+  onSelect: (result: LocationResult) => void;
   onClose: () => void;
+  sigunguCache: React.MutableRefObject<Map<string, string[]>>;
+  eupmyeondongCache: React.MutableRefObject<Map<string, string[]>>;
 }
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-export default function LocationDropdown({ onSelect, onClose }: LocationDropdownProps) {
+export default function LocationDropdown({ onSelect, onClose, sigunguCache, eupmyeondongCache }: LocationDropdownProps) {
   const [activeTab, setActiveTab] = useState<0 | 1 | 2>(0);
-  const [selectedCity, setSelectedCity] = useState<string | null>(null);
-  const [selectedDistrict, setSelectedDistrict] = useState<string | null>(null);
+  const [selectedSido, setSelectedSido] = useState<string | null>(null);
+  const [selectedSigungu, setSelectedSigungu] = useState<string | null>(null);
+  
+  const [sidoList, setSidoList] = useState<string[]>([]);
+  const [currentList, setCurrentList] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // 현재 탭과 선택된 데이터에 따라 보여줄 목록 필터링
-  let currentList: string[] = [];
-  if (activeTab === 0) {
-    currentList = Object.keys(locationData);
-  } else if (activeTab === 1 && selectedCity) {
-    currentList = Object.keys(locationData[selectedCity] || {});
-  } else if (activeTab === 2 && selectedCity && selectedDistrict) {
-    currentList = locationData[selectedCity][selectedDistrict] || [];
-  }
+  // 마운트 시 시도 목록 로드
+  useEffect(() => {
+    loadSido();
+  }, []);
+
+  // 탭 변경 시 현재 목록 동기화
+  useEffect(() => {
+    if (activeTab === 0) {
+      setCurrentList(sidoList);
+    } else if (activeTab === 1 && selectedSido) {
+      loadSigungu(selectedSido);
+    } else if (activeTab === 2 && selectedSido && selectedSigungu) {
+      loadEupmyeondong(selectedSido, selectedSigungu);
+    }
+  }, [activeTab, selectedSido, selectedSigungu, sidoList]);
+
+  // 공통 API 데이터 로드 헬퍼 (DRY & Error Handling)
+  const fetchWithHandling = useCallback(async (
+    fetcher: () => Promise<any>, 
+    onSuccess: (data: string[]) => void,
+    cacheKey?: string,
+    cacheRef?: React.MutableRefObject<Map<string, string[]>>
+  ) => {
+    try {
+      setIsLoading(true);
+      const res = await fetcher();
+      if (res.isSuccess) {
+        onSuccess(res.result);
+        if (cacheKey && cacheRef) {
+          cacheRef.current.set(cacheKey, res.result);
+        }
+      } else {
+        throw new Error(res.message || '데이터를 불러오지 못했습니다.');
+      }
+    } catch (error: any) {
+      Alert.alert('오류', '지역 정보를 불러오지 못했습니다. 다시 시도해주세요.');
+      console.error('[LocationDropdown] Fetch Error:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const loadSido = () => {
+    fetchWithHandling(getSidoList, (data) => {
+      setSidoList(data);
+      setCurrentList(data);
+    });
+  };
+
+  const loadSigungu = (sido: string) => {
+    if (sigunguCache.current.has(sido)) {
+      setCurrentList(sigunguCache.current.get(sido)!);
+      return;
+    }
+    fetchWithHandling(
+      () => getSigunguList({ sidoName: sido }),
+      (data) => setCurrentList(data),
+      sido,
+      sigunguCache
+    );
+  };
+
+  const loadEupmyeondong = (sido: string, sigungu: string) => {
+    const key = `${sido}_${sigungu}`;
+    if (eupmyeondongCache.current.has(key)) {
+      setCurrentList(eupmyeondongCache.current.get(key)!);
+      return;
+    }
+    fetchWithHandling(
+      () => getEupmyeondongList({ sidoName: sido, sigunguName: sigungu }),
+      (data) => setCurrentList(data),
+      key,
+      eupmyeondongCache
+    );
+  };
 
   const handleSelect = (item: string) => {
     if (activeTab === 0) {
-      setSelectedCity(item);
-      setSelectedDistrict(null);
+      setSelectedSido(item);
+      setSelectedSigungu(null);
       setActiveTab(1);
     } else if (activeTab === 1) {
-      setSelectedDistrict(item);
+      setSelectedSigungu(item);
       setActiveTab(2);
     } else if (activeTab === 2) {
-      onSelect(`${selectedCity} ${selectedDistrict} ${item}`);
-      onClose(); // 선택 완료 후 명시적으로 닫기 호출
+      onSelect({
+        sidoName: selectedSido!,
+        sigunguName: selectedSigungu!,
+        eupmyeondongName: item,
+      });
+      onClose();
     }
   };
 
@@ -43,8 +125,8 @@ export default function LocationDropdown({ onSelect, onClose }: LocationDropdown
     const isActive = activeTab === tabIndex;
     const canClick =
       tabIndex === 0 ||
-      (tabIndex === 1 && selectedCity !== null) ||
-      (tabIndex === 2 && selectedDistrict !== null);
+      (tabIndex === 1 && selectedSido !== null) ||
+      (tabIndex === 2 && selectedSigungu !== null);
 
     return (
       <TouchableOpacity
@@ -52,9 +134,6 @@ export default function LocationDropdown({ onSelect, onClose }: LocationDropdown
         activeOpacity={canClick ? 0.8 : 1}
         disabled={!canClick}
         onPress={() => setActiveTab(tabIndex)}
-        accessible={true}
-        accessibilityRole="tab"
-        accessibilityState={{ selected: isActive, disabled: !canClick }}
       >
         <Text style={[styles.tabText, isActive && styles.tabTextActive]}>{title}</Text>
       </TouchableOpacity>
@@ -63,40 +142,42 @@ export default function LocationDropdown({ onSelect, onClose }: LocationDropdown
 
   return (
     <View style={styles.overlayContainer}>
-      {/* 바깥 영역 터치 시 닫기를 위한 투명 백드롭 */}
       <Pressable style={styles.backdrop} onPress={onClose} />
 
       <View style={styles.dropdownPanel}>
-        {/* Top Tabs */}
         <View style={styles.tabHeader}>
           {renderTab(0, '시/도')}
           {renderTab(1, '시/구/군')}
           {renderTab(2, '동/읍/면')}
         </View>
 
-        {/* List Area */}
-        <ScrollView
-          style={styles.listContainer}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
-          {currentList.map((item) => (
-            <TouchableOpacity
-              key={item}
-              style={styles.listItem}
-              activeOpacity={0.6}
-              onPress={() => handleSelect(item)}
-            >
-              <Text style={styles.listItemText}>{item}</Text>
-            </TouchableOpacity>
-          ))}
-          {currentList.length === 0 && (
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>선택 가능한 지역이 없습니다.</Text>
-            </View>
-          )}
-        </ScrollView>
+        {isLoading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator color={Colors.primary.electricCyan} />
+          </View>
+        ) : (
+          <ScrollView
+            style={styles.listContainer}
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            {currentList.map((item) => (
+              <TouchableOpacity
+                key={item}
+                style={styles.listItem}
+                onPress={() => handleSelect(item)}
+              >
+                <Text style={styles.listItemText}>{item}</Text>
+              </TouchableOpacity>
+            ))}
+            {currentList.length === 0 && (
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>데이터가 없습니다.</Text>
+              </View>
+            )}
+          </ScrollView>
+        )}
       </View>
     </View>
   );
@@ -105,8 +186,8 @@ export default function LocationDropdown({ onSelect, onClose }: LocationDropdown
 const styles = StyleSheet.create({
   overlayContainer: {
     position: 'absolute',
-    top: -SCREEN_HEIGHT, // 상단 영역까지 덮기 위해 위로 크게 확장
-    left: -100, // 좌우 여백까지 덮기 위함
+    top: -SCREEN_HEIGHT,
+    left: -100,
     right: -100,
     height: SCREEN_HEIGHT * 2,
     zIndex: 1000,
@@ -116,11 +197,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   dropdownPanel: {
-    marginTop: SCREEN_HEIGHT + 70, // Adjusted from 120 to align directly below input
+    marginTop: SCREEN_HEIGHT + 70,
     marginHorizontal: 100,
     height: 303.5,
-    padding: 0.612,
-    flexDirection: 'column',
     borderRadius: Radii.lg,
     borderWidth: 0.612,
     borderColor: Colors.glass.white10,
@@ -152,15 +231,13 @@ const styles = StyleSheet.create({
     color: Colors.neutral.darkGray,
     fontSize: 14,
     fontWeight: '500',
-    lineHeight: 20,
-    letterSpacing: -0.15,
   },
   tabTextActive: {
     color: Colors.primary.electricCyan,
   },
   listContainer: {
     width: '100%',
-    height: 255.8,
+    flex: 1,
   },
   listContent: {
     paddingTop: 8,
@@ -177,8 +254,11 @@ const styles = StyleSheet.create({
     color: Colors.neutral.pureWhite,
     fontSize: 16,
     fontWeight: '500',
-    lineHeight: 24,
-    letterSpacing: -0.312,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   emptyContainer: {
     padding: 24,

@@ -1,51 +1,117 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
+import { Alert } from 'react-native';
 import { Step2State } from '../types/step2';
+import { checkNicknameDuplicate } from '@/src/services/onboardingService';
+import { getPresignedUrl } from '@/src/services/fileService';
+import { uploadFileToS3 } from '@/src/services/s3Service';
+import { jobCategories } from '../Professional/jobData';
+import { useSignupStore } from '@/src/store/useSignupStore';
 
 /**
  * useStep2Form 훅
  * 회원가입 2단계의 모든 폼 로직과 상태를 캡슐화합니다. (SRP)
  */
 export function useStep2Form() {
+  const { userUuid } = useSignupStore();
   const [state, setState] = useState<Step2State>({
     nickname: '',
     isNicknameVerified: false,
-    location: '',
+    isNicknameChecking: false,
+    sidoName: '',
+    sigunguName: '',
+    eupmyeondongName: '',
     jobCategory: '',
     jobTitle: '',
+    isJobVerifying: false,
     isJobVerified: false,
+    jobCertificationObjectKey: null,
   });
+
+  // 지역 데이터 캐시 (성능 최적화: 드롭다운이 닫혀도 유지)
+  const sigunguCache = useRef<Map<string, string[]>>(new Map());
+  const eupmyeondongCache = useRef<Map<string, string[]>>(new Map());
 
   // 폼 업데이트 함수
   const updateState = useCallback((updates: Partial<Step2State>) => {
     setState((prev) => ({ ...prev, ...updates }));
   }, []);
 
-  // 닉네임 중복 확인 처리 (Mock logic)
-  const handleNicknameCheck = useCallback(() => {
-    if (state.nickname.length >= 2) {
-      if (__DEV__) {
-        console.debug('Checking nickname availability');
+  // 닉네임 중복 확인 처리
+  const handleNicknameCheck = useCallback(async () => {
+    if (state.nickname.length < 2) {
+      Alert.alert('알림', '닉네임은 2자 이상 입력해주세요.');
+      return;
+    }
+    if (state.isNicknameChecking) return;
+
+    try {
+      updateState({ isNicknameChecking: true });
+      const response = await checkNicknameDuplicate({ nickname: state.nickname.trim() });
+      
+      if (response.isSuccess) {
+        updateState({ isNicknameVerified: true });
+      } else {
+        Alert.alert('닉네임 중복', response.message || '이미 사용 중인 닉네임입니다.');
       }
-      // Mock: 2자 이상이면 무조건 사용 가능한 것으로 처리
-      updateState({ isNicknameVerified: true });
+    } catch (error: any) {
+      Alert.alert('오류', error?.message || '닉네임 확인 중 오류가 발생했습니다.');
+    } finally {
+      updateState({ isNicknameChecking: false });
     }
-  }, [state.nickname, updateState]);
+  }, [state.nickname, state.isNicknameChecking, updateState]);
 
-  // 직업 인증 처리 (Mock logic)
-  const handleJobVerify = useCallback(() => {
-    if (__DEV__) {
-      console.debug('Job verification requested');
+  // 직업 인증 처리 (S3 업로드 로직 포함)
+  const handleJobVerify = useCallback(async (fileUri: string, contentType: string, fileName: string) => {
+    if (!userUuid) {
+      Alert.alert('오류', '사용자 정보가 없습니다. 처음부터 다시 시도해주세요.');
+      return;
     }
-    // Mock: 인증 시도 시 성공 처리
-    updateState({ isJobVerified: true });
-  }, [updateState]);
+    if (state.isJobVerifying) return;
 
-  // 다음 단계 이동 가능 여부 체크
-  // 조건: 닉네임 중복 확인 완료, 지역 선택 완료, 직군 선택 완료
+    try {
+      updateState({ isJobVerifying: true });
+
+      // 1. Presigned URL 발급
+      const presignedResponse = await getPresignedUrl({
+        userUuid,
+        fileName,
+        contentType,
+        directory: 'job-certifications',
+      });
+
+      if (!presignedResponse.isSuccess) {
+        const errorMsg = presignedResponse.message || '업로드 주소 발급에 실패했습니다.';
+        const errorCode = presignedResponse.code ? ` (${presignedResponse.code})` : '';
+        throw new Error(`${errorMsg}${errorCode}`);
+      }
+
+      const { presignedUrl, objectKey } = presignedResponse.result;
+
+      // 2. S3 직접 업로드
+      await uploadFileToS3(presignedUrl, fileUri, contentType);
+
+      // 3. 상태 업데이트
+      updateState({ 
+        isJobVerified: true,
+        jobCertificationObjectKey: objectKey 
+      });
+      
+      Alert.alert('성공', '직업 인증 서류가 업로드되었습니다.');
+    } catch (error: any) {
+      Alert.alert('업로드 실패', error?.message || '파일 업로드 중 오류가 발생했습니다.');
+    } finally {
+      updateState({ isJobVerifying: false });
+    }
+  }, [state.isJobVerifying, updateState]);
+
+  // 다음 단계 이동 가능 여부 체크 (SoC: 도메인 검증 로직 통합)
+  // 조건: 닉네임 중복 확인 완료, 지역 선택 완료, 유효한 직군 선택 완료
   const isFormValid = 
     state.isNicknameVerified && 
-    state.location !== '' && 
-    state.jobCategory !== '';
+    state.sidoName !== '' && 
+    state.sigunguName !== '' && 
+    state.eupmyeondongName !== '' && 
+    jobCategories.some((j) => j.value === state.jobCategory);
 
   return {
     state,
@@ -53,5 +119,7 @@ export function useStep2Form() {
     handleNicknameCheck,
     handleJobVerify,
     isFormValid,
+    sigunguCache,
+    eupmyeondongCache,
   };
 }

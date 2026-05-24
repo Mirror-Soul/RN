@@ -1,3 +1,4 @@
+import { logger } from '@/src/utils/logger';
 import { useEffect, useMemo, useRef } from 'react';
 import { useFrameProcessor } from 'react-native-vision-camera';
 import { Face, useFaceDetector } from 'react-native-vision-camera-face-detector';
@@ -26,6 +27,15 @@ export function useFaceProcessor({ onFaceDetected, isActive }: UseFaceProcessorP
   useEffect(() => {
     onFaceDetectedRef.current = onFaceDetected;
   }, [onFaceDetected]);
+
+  // 엔진 상태 모니터링 로그
+  useEffect(() => {
+    if (isActive) {
+      logger.debug('Face Detection Engine Activated');
+    } else {
+      logger.debug('Face Detection Engine Deactivated');
+    }
+  }, [isActive]);
 
   // 얼굴 감지 엔진 초기화
   const { detectFaces } = useFaceDetector({

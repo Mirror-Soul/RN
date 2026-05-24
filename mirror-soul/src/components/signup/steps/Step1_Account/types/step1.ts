@@ -9,16 +9,18 @@ export interface Step1State {
   isPasswordConfirmVisible: boolean;
   isIdentityVerified: boolean;
   agreedToTerms: boolean;
+  isLoading: boolean;
 }
 
 export interface VerificationModalProps {
   isVisible: boolean;
   email: string;
   onClose: () => void;
-  onVerify: (code: string) => boolean;
+  onVerify: (code: string) => Promise<boolean>;
   timeLeft?: number;
   formattedTime?: string;
   onResend?: () => void;
+  isLoading?: boolean;
 }
 
 export interface SectionProps {

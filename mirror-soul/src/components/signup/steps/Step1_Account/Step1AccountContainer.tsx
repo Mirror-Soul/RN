@@ -1,10 +1,13 @@
 import SecurityFooter from '@/src/components/home/SecurityFooter';
 import PrimaryButton from '@/src/components/signup/common/PrimaryButton';
 import { SIGNUP_ROUTES } from '@/src/constants/routes/signupRoutes';
-import { Layout } from '@/src/constants/theme';
+import { Colors, Layout } from '@/src/constants/theme';
+import { createBasicProfile } from '@/src/services/authService';
+import { useSignupStore } from '@/src/store/useSignupStore';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 // Step 1 Specific Parts
 import AgreementSection from './components/AgreementSection';
@@ -20,6 +23,7 @@ import { useStep1Form } from './hooks/useStep1Form';
  */
 export default function Step1AccountContainer() {
   const router = useRouter();
+  const setUserUuid = useSignupStore((s) => s.setUserUuid);
   const {
     state,
     updateState,
@@ -33,15 +37,48 @@ export default function Step1AccountContainer() {
     isTimerActive,
     formattedTime,
     handleResendCode,
+    isEmailActionLoading,
   } = useStep1Form();
 
-  const handleContinue = () => {
-    if (isFormValid) {
+  // 로딩 오버레이 애니메이션
+  const overlayOpacity = useSharedValue(0);
+  const overlayAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: overlayOpacity.value,
+  }));
+
+  const handleContinue = async () => {
+    if (!isFormValid || state.isLoading) return;
+
+    try {
+      updateState({ isLoading: true });
+      overlayOpacity.value = withTiming(1, { duration: 200 });
+
+      const response = await createBasicProfile({
+        email: state.email,
+        password: state.password,
+        gender: null,     // PASS 인증 미구현 → null
+        birthDate: null,  // PASS 인증 미구현 → null
+        termsAgreed: state.agreedToTerms,
+      });
+
+      // userUuid를 전역 상태에 저장 (Step2 이후에서 사용)
+      setUserUuid(response.result.userUuid);
+
+      // 성공: Step2로 이동
       router.push(SIGNUP_ROUTES.PROFILE);
+    } catch (error: any) {
+      Alert.alert(
+        '계정 생성 실패',
+        error?.message || '잠시 후 다시 시도해주세요.'
+      );
+    } finally {
+      overlayOpacity.value = withTiming(0, { duration: 200 });
+      updateState({ isLoading: false });
     }
   };
 
   return (
+    <>
     <ScrollView
       style={styles.scrollView}
       contentContainerStyle={styles.scrollContent}
@@ -69,6 +106,7 @@ export default function Step1AccountContainer() {
             isTimerActive={isTimerActive}
             formattedTime={formattedTime}
             onResendCode={handleResendCode}
+            isLoading={isEmailActionLoading}
           />
 
           {/* Password Section */}
@@ -94,6 +132,7 @@ export default function Step1AccountContainer() {
             <PrimaryButton
               title="다음"
               disabled={!isFormValid}
+              isLoading={state.isLoading}
               onPress={handleContinue}
             />
           </View>
@@ -105,6 +144,20 @@ export default function Step1AccountContainer() {
         </View>
       </View>
     </ScrollView>
+
+    {/* 로딩 오버레이 (전체 화면 블러 효과) */}
+    {state.isLoading && (
+      <Animated.View
+        style={[styles.loadingOverlay, overlayAnimatedStyle]}
+        pointerEvents="auto"
+      >
+        <View style={styles.loadingContent}>
+          <ActivityIndicator size="large" color={Colors.primary.electricCyan} />
+          <Text style={styles.loadingText}>계정을 생성하고 있습니다...</Text>
+        </View>
+      </Animated.View>
+    )}
+    </>
   );
 }
 
@@ -141,5 +194,23 @@ const styles = StyleSheet.create({
     marginTop: 40,
     width: '100%',
     alignItems: 'center',
-  }
+  },
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 100,
+  },
+  loadingContent: {
+    alignItems: 'center',
+    gap: 16,
+  },
+  loadingText: {
+    color: '#FFF',
+    fontFamily: 'Inter',
+    fontSize: 16,
+    fontWeight: '500',
+    letterSpacing: -0.312,
+  },
 });

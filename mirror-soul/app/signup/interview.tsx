@@ -1,46 +1,80 @@
 import { Colors, Layout } from '@/src/constants/theme';
 import { useRouter } from 'expo-router';
 import React, { useEffect } from 'react';
-import { Alert, KeyboardAvoidingView, Linking, Platform, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { Alert, KeyboardAvoidingView, Linking, Platform, ScrollView, StyleSheet, View, useWindowDimensions, ActivityIndicator } from 'react-native';
 
 // Step 4 Components
 import InterviewAIBox from '@/src/components/signup/steps/Step4_Interview/components/InterviewAIBox';
 import InterviewAnswerBox from '@/src/components/signup/steps/Step4_Interview/components/InterviewAnswerBox';
-import InterviewAvatar from '@/src/components/signup/steps/Step4_Interview/components/InterviewAvatar';
+import InterviewVisualizer from '@/src/components/signup/steps/Step4_Interview/components/InterviewVisualizer';
 import InterviewControls from '@/src/components/signup/steps/Step4_Interview/components/InterviewControls';
 import InterviewFooter from '@/src/components/signup/steps/Step4_Interview/components/InterviewFooter';
 import InterviewHeader from '@/src/components/signup/steps/Step4_Interview/components/InterviewHeader';
+import MovingBackground from '@/src/components/signup/steps/Step4_Interview/components/parts/MovingBackground';
 
 import { useInterviewSpeech } from '@/src/components/signup/steps/Step4_Interview/hooks/useInterviewSpeech';
-import { useInterviewSTT } from '@/src/components/signup/steps/Step4_Interview/hooks/useInterviewSTT';
+import { useSTT } from '@/src/hooks/useSTT';
 import { useInterviewQuestions } from '@/src/components/signup/steps/Step4_Interview/hooks/useInterviewQuestions';
+import { useInterviewUpload } from '@/src/components/signup/steps/Step4_Interview/hooks/useInterviewUpload';
 import MicPermissionModal from '@/src/components/signup/steps/Step4_Interview/components/parts/MicPermissionModal';
 
 export default function InterviewScreen() {
   const { width: windowWidth } = useWindowDimensions();
-  const containerWidth = Math.min(windowWidth - 32, Layout.MAX_CONTENT_WIDTH);
+  const containerWidth = Math.min(windowWidth - 48, Layout.MAX_CONTENT_WIDTH); // 패딩 조정
   const router = useRouter();
+  
   const {
     isRecording,
     recordingUri,
     hasPermission,
-    requestPermission, // 통합 권한 요청 함수 추가
+    requestPermission,
     startRecording,
     stopRecording,
+    resetRecording,
   } = useInterviewSpeech();
 
-  const { transcript, startListening, stopListening, resetTranscript } = useInterviewSTT('ko-KR');
-  const { currentQuestion, currentQuestionIndex, totalQuestions, isLastQuestion, goToNextQuestion } = useInterviewQuestions();
+  const { transcript, startListening, stopListening, resetTranscript, isListening: isSTTListening } = useSTT('ko-KR');
+  const { 
+    currentQuestion, 
+    currentQuestionIndex, 
+    totalQuestions, 
+    isLastQuestion, 
+    goToNextQuestion,
+    isLoading,
+    isError,
+    refetch 
+  } = useInterviewQuestions();
+  const { uploadInterviewAudio, isUploading } = useInterviewUpload();
 
   const [showPermissionModal, setShowPermissionModal] = React.useState(false);
 
-  // [의견 반영] 인덱스가 변경될 때마다(질문이 넘어갈 때마다) 일관되게 텍스트를 초기화하는 상태 동기화 처리
   useEffect(() => {
     resetTranscript();
-  }, [currentQuestionIndex, resetTranscript]);
+    resetRecording();
+  }, [currentQuestionIndex, resetTranscript, resetRecording]);
+
+  useEffect(() => {
+    if (isError) {
+      Alert.alert(
+        '오류 발생',
+        '데이터를 불러오지 못했습니다. 다시 시도하시겠습니까?',
+        [
+          { text: '취소', style: 'cancel' },
+          { text: '다시 시도', onPress: () => refetch() }
+        ]
+      );
+    }
+  }, [isError, refetch]);
+
+  if (isLoading) {
+    return (
+      <View style={[styles.keyboardView, styles.loadingContainer]}>
+        <ActivityIndicator size="large" color={Colors.primary.electricCyan} />
+      </View>
+    );
+  }
 
   const handleRecordPress = async () => {
-    // 권한이 없거나 아직 확인되지 않았으면 모달 표시
     if (!hasPermission) {
       setShowPermissionModal(true);
       return;
@@ -48,7 +82,7 @@ export default function InterviewScreen() {
 
     try {
       if (isRecording) {
-        stopListening(); // STT를 먼저 중단
+        await stopListening();
         await stopRecording();
       } else {
         await startRecording();
@@ -61,105 +95,120 @@ export default function InterviewScreen() {
   };
 
   const handleRequestPermission = async () => {
-    const granted = await requestPermission(); // 훅의 통합 함수 사용
-
+    const granted = await requestPermission();
     if (granted) {
       setShowPermissionModal(false);
     } else {
-      // 권한이 거부된 경우 (iOS 등에서는 설정창 유도)
       Linking.openSettings();
       setShowPermissionModal(false);
     }
   };
 
   const handleNextPress = async () => {
+    if (isUploading) return;
+
     try {
-      // 1. 녹음 중이면 안전하게 중단 대기
+      const targetQuestionId = currentQuestion.id;
+      let finalUri = recordingUri;
+      let finalTranscript = '';
+
       if (isRecording) {
-        stopListening();
-        await stopRecording();
+        finalTranscript = await stopListening();
+        finalUri = await stopRecording();
       }
 
-      // 2. 서버로 전송 대기
-      // TODO: 실제 서버 전송 로직 구현 필요 (예: await submitAnswer(currentQuestion.id, transcript, recordingUri))
+      if (!finalTranscript && !transcript) {
+        Alert.alert('알림', '답변 녹음을 완료한 후 다음 단계로 진행해주세요.');
+        return;
+      }
 
-      // 3. 마지막 단계 확인 및 다음 로직
+      const isSuccess = await uploadInterviewAudio(finalUri, targetQuestionId, finalTranscript || transcript);
+      if (!isSuccess) return;
+
       if (isLastQuestion) {
-        // 마지막 단계이면 다음 페이지로 이동
         router.push('/signup/face-scan');
-        console.log('인터뷰 완료! 페이스 스캔 화면으로 이동합니다.');
       } else {
         goToNextQuestion();
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('다음 단계 이동 중 오류:', error);
-      Alert.alert('오류 발생', '답변을 처리하는 중 문제가 발생했습니다. 다시 시도해주세요.');
+      if (error?.code === 'AUTH_4030') {
+        Alert.alert('접근 권한 없음', '이전 단계가 정상적으로 완료되지 않았습니다.');
+      } else {
+        Alert.alert('오류 발생', '답변을 처리하는 중 문제가 발생했습니다.');
+      }
     }
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.keyboardView}
-    >
-      <ScrollView
-        contentContainerStyle={styles.scrollContainer}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
+    <View style={styles.mainContainer}>
+      <MovingBackground />
+      
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardView}
       >
-        <View style={[styles.container, { width: containerWidth }]}>
-          <View style={styles.headerWrapper}>
-            <InterviewHeader
-              currentQuestion={currentQuestionIndex + 1}
-              totalQuestions={totalQuestions}
-            />
-          </View>
-
-          {/* 3D Avatar Model */}
-          <InterviewAvatar />
-
-          <View style={styles.body}>
-            <InterviewAIBox
-              category={currentQuestion.category}
-              question={currentQuestion.question}
-            />
-
-            <View style={styles.answerWrapper}>
-              <InterviewAnswerBox isRecording={isRecording} transcript={transcript} />
-            </View>
-
-            <View style={styles.controlsWrapper}>
-              <InterviewControls
-                isRecording={isRecording}
-                isLastQuestion={isLastQuestion}
-                onRecordPress={handleRecordPress}
-                onNextPress={handleNextPress}
+        <ScrollView
+          contentContainerStyle={styles.scrollContainer}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={[styles.container, { width: containerWidth }]}>
+            <View style={styles.headerWrapper}>
+              <InterviewHeader
+                currentQuestion={currentQuestionIndex + 1}
+                totalQuestions={totalQuestions}
               />
             </View>
+
+            {/* AI Visualizer (프리미엄 루핑 애니메이션) */}
+            <View style={styles.visualizerWrapper}>
+              <InterviewVisualizer isRecording={isRecording} />
+            </View>
+
+            <View style={styles.body}>
+              <InterviewAIBox
+                question={currentQuestion.question}
+              />
+
+              <View style={styles.answerWrapper}>
+                <InterviewAnswerBox isRecording={isRecording} transcript={transcript} />
+              </View>
+
+              <View style={styles.controlsWrapper}>
+                <InterviewControls
+                  isRecording={isRecording}
+                  isLastQuestion={isLastQuestion}
+                  isNextDisabled={isUploading}
+                  onRecordPress={handleRecordPress}
+                  onNextPress={handleNextPress}
+                />
+              </View>
+            </View>
+
+            <View style={styles.footerWrapper}>
+              <InterviewFooter />
+            </View>
           </View>
+        </ScrollView>
 
-          <View style={styles.footerWrapper}>
-            <InterviewFooter />
-          </View>
-
-        </View>
-      </ScrollView>
-
-
-      {/* 마이크 권한 요청 모달 */}
-      <MicPermissionModal
-        visible={showPermissionModal}
-        onRequestPermission={handleRequestPermission}
-        onClose={() => setShowPermissionModal(false)}
-      />
-    </KeyboardAvoidingView>
+        <MicPermissionModal
+          visible={showPermissionModal}
+          onRequestPermission={handleRequestPermission}
+          onClose={() => setShowPermissionModal(false)}
+        />
+      </KeyboardAvoidingView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  keyboardView: {
+  mainContainer: {
     flex: 1,
     backgroundColor: Colors.primary.soulBlack,
+  },
+  keyboardView: {
+    flex: 1,
   },
   scrollContainer: {
     flexGrow: 1,
@@ -171,13 +220,18 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: Layout.MAX_CONTENT_WIDTH,
     alignItems: 'center',
-    marginTop: 25,
+    marginTop: 20,
   },
-
   headerWrapper: {
-    marginBottom: 40,
+    marginBottom: 20,
   },
-
+  visualizerWrapper: {
+    width: '100%',
+    height: 180,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
   body: {
     width: '100%',
     alignItems: 'center',
@@ -188,10 +242,15 @@ const styles = StyleSheet.create({
   },
   controlsWrapper: {
     width: '100%',
-    marginTop: 16,
+    marginTop: 20,
   },
   footerWrapper: {
     width: '100%',
     marginTop: 32,
+  },
+  loadingContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: Colors.primary.soulBlack,
   },
 });

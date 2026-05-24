@@ -3,8 +3,12 @@ import RecommendSection from '@/src/components/home/main/Recommend/RecommendSect
 import SearchLocationBar from '@/src/components/home/main/SearchLocationBar';
 import UserProfileCard from '@/src/components/home/main/UserProfileCard';
 import { Colors, Layout } from '@/src/constants/theme';
+import { logout } from '@/src/services/authService';
+import { useAuthStore } from '@/src/store/useAuthStore';
+import { logger } from '@/src/utils/logger';
 import React from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 /**
  * 메인 홈 화면 (발견 탭)
@@ -12,15 +16,46 @@ import { ScrollView, StyleSheet, View } from 'react-native';
  * BottomNavbar는 (main)/_layout.tsx 에서 공유로 제공됩니다.
  */
 export default function MainHomeScreen() {
+  const insets = useSafeAreaInsets();
+
+  const handleLogout = () => {
+    Alert.alert(
+      "로그아웃",
+      "현재 기기에서 로그아웃 하시겠습니까?\n(테스트용 임시 버튼입니다)",
+      [
+        { text: "취소", style: "cancel" },
+        {
+          text: "로그아웃",
+          style: "destructive",
+          onPress: async () => {
+            logger.debug('User clicked logout from Home Settings');
+            try {
+              await logout(); // (1) 서버 세션 종료 시도
+            } catch (error) {
+              logger.warn('Server logout failed, proceeding with local logout', error);
+            } finally {
+              try {
+                await useAuthStore.getState().logout(); // (2) 항상 로컬 세션 정리
+              } catch (localError) {
+                logger.error('Local logout failed', localError);
+                Alert.alert("알림", "로그아웃 처리 중 문제가 발생했습니다.");
+              }
+            }
+          }
+        }
+      ]
+    );
+  };
+
   return (
     <ScrollView
       style={styles.scrollView}
       contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
     >
-      <View style={styles.dashboard}>
+      <View style={[styles.dashboard, { paddingTop: Math.max(insets.top + 12, Layout.SCREEN_PADDING) }]}>
         {/* 헤더 */}
-        <MainHeader />
+        <MainHeader onSettingPress={handleLogout} />
 
         {/* 유저 프로필 카드 */}
         <UserProfileCard />
@@ -49,7 +84,6 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: Layout.MAX_CONTENT_WIDTH,
     alignSelf: 'center',
-    paddingTop: Layout.SCREEN_PADDING,
     gap: Layout.SCREEN_PADDING,
   },
 });
