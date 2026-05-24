@@ -141,7 +141,7 @@ export const getInterviewQuestions = async (): Promise<InterviewQuestion[]> => {
   const response = await apiClient.get<GetInterviewQuestionsResponse>('/onboarding/interview/questions');
   const data = response.data;
 
-  if (!data.isSuccess || !data.result.questions) {
+  if (!data.isSuccess || !data.result?.questions) {
     throw new Error(data.message || '인터뷰 질문을 불러오지 못했습니다.');
   }
 
