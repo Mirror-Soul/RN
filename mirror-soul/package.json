@@ -49,6 +49,7 @@
     "react-native-vision-camera": "~4.7.3",
     "react-native-vision-camera-face-detector": "~1.10.2",
     "react-native-web": "~0.21.0",
+    "react-native-webrtc": "^124.0.7",
     "react-native-worklets": "0.5.1",
     "react-native-worklets-core": "~1.6.3",
     "zustand": "^5.0.13"
