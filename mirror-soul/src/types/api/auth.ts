@@ -31,5 +31,8 @@ export interface BasicProfileRequest {
 }
 export interface BasicProfileResult {
   userUuid: string;
+  accessToken: string;
+  refreshToken: string;
+  userStatus: string;
 }
 export type BasicProfileResponse = ApiResponse<BasicProfileResult>;

@@ -66,7 +66,7 @@ export function useInterviewUpload() {
         answerTextLen: answerText.trim().length
       });
 
-      const saveResponse = await saveInterviewAnswer(userUuid, {
+      const saveResponse = await saveInterviewAnswer({
         interviewId: questionId,
         answerAudioObjectKey: objectKey,
         answerText: answerText.trim(),

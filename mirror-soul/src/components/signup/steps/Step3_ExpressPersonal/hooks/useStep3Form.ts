@@ -35,7 +35,7 @@ export function useStep3Form(initialMbti: string = 'ENFJ', initialDescription: s
 
     try {
       setIsSubmitting(true);
-      const response = await savePersonality(userUuid, {
+      const response = await savePersonality({
         mbti: mbti as MbtiEnum,
         ...scores,
         selfIntroduction: description.trim(),

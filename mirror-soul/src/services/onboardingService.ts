@@ -65,13 +65,12 @@ export const getEupmyeondongList = async (
 
 /** 프로필 설정 (최종 저장) */
 export const saveProfile = async (
-  userUuid: string,
   job: JobEnum,
   data: SaveProfileRequest
 ): Promise<SaveProfileResponse> => {
   try {
     const response = await apiClient.post<SaveProfileResponse>(
-      `/onboarding/profile/${userUuid}`,
+      `/onboarding/profile`,
       data,
       {
         params: { job },
@@ -89,12 +88,11 @@ export const saveProfile = async (
 
 /** 성격 유형 설정 (저장) */
 export const savePersonality = async (
-  userUuid: string,
   data: SavePersonalityRequest
 ): Promise<SavePersonalityResponse> => {
   try {
     const response = await apiClient.put<SavePersonalityResponse>(
-      `/onboarding/personality/${userUuid}`,
+      `/onboarding/personality`,
       data
     );
     logger.debug('savePersonality SUCCESS:', response.data);
@@ -109,14 +107,12 @@ export const savePersonality = async (
 
 /** 인터뷰 응답 저장 */
 export const saveInterviewAnswer = async (
-  userUuid: string,
   data: SaveInterviewAnswerRequest
 ): Promise<SaveInterviewAnswerResponse> => {
-  const url = `/onboarding/interview/answers/${userUuid}`;
+  const url = `/onboarding/interview/answers`;
   
   logger.debug('saveInterviewAnswer:', { 
     url,
-    userUuid,
     interviewIdType: typeof data.interviewId,
     hasAnswer: Boolean(data.answer),
     answerLength: data.answer?.length ?? 0,
@@ -161,14 +157,12 @@ export const getInterviewQuestions = async (): Promise<InterviewQuestion[]> => {
 
 /** 얼굴 스캔 영상 데이터 저장 */
 export const saveFaceScan = async (
-  userUuid: string,
   data: SaveFaceScanRequest
 ): Promise<SaveFaceScanResponse> => {
-  const url = `/onboarding/visual/${userUuid}`;
+  const url = `/onboarding/visual`;
   
   logger.debug('saveFaceScan:', { 
     url,
-    userUuid,
   });
   
   try {
