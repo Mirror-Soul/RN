@@ -48,7 +48,7 @@ export function useFaceScanUpload() {
 
       // 3. 서버에 결과 최종 저장
       logger.debug('Face scan upload payload before saving:', { objectKey });
-      const saveResponse = await saveFaceScan(userUuid, {
+      const saveResponse = await saveFaceScan({
         fileUrl,
         objectKey,
       });

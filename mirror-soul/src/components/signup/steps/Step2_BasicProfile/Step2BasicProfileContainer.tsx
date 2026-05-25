@@ -72,7 +72,6 @@ export default function Step2BasicProfileContainer() {
       overlayOpacity.value = withTiming(1, { duration: 200 });
 
       const response = await saveProfile(
-        userUuid,
         state.jobCategory as JobEnum,
         {
           nickname: state.nickname.trim(),
