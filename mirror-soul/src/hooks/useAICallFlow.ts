@@ -140,6 +140,25 @@ export function useAICallFlow() {
     if (!session) return;
 
     switch (msg.type) {
+      case 'JOINED': {
+        logger.info('[useAICallFlow] JOINED received. Sending CALL_INVITE...');
+        setCallStatus('inviting');
+
+        sendMessage({
+          type: 'CALL_INVITE',
+          roomId: session.roomId,
+          from: session.callerSignalId,
+          to: session.aiSignalId,
+          data: { callId: session.callId, cloneUserUuid: userUuid, mediaType: 'VOICE' },
+        });
+
+        inviteTimeoutRef.current = setTimeout(() => {
+          logger.warn('[useAICallFlow] CALL_INVITE timeout after 10s');
+          _cleanup('AI 트윈이 응답하지 않습니다. 잠시 후 다시 시도해주세요.');
+        }, INVITE_TIMEOUT_MS);
+        break;
+      }
+
       case 'CALL_ACCEPT': {
         // 타임아웃 해제
         if (inviteTimeoutRef.current) {
@@ -201,7 +220,7 @@ export function useAICallFlow() {
       default:
         logger.debug('[useAICallFlow] Unhandled message type:', msg.type);
     }
-  }, [createOffer, applyAnswer, applyIceCandidate, sendMessage]);
+  }, [createOffer, applyAnswer, applyIceCandidate, sendMessage, userUuid]);
 
   // ─────────────────────────────────────────────
   // 내부 정리 함수
@@ -322,22 +341,6 @@ export function useAICallFlow() {
           to: 'server',
           data: null,
         }));
-
-        // 5. CALL_INVITE 발송
-        setCallStatus('inviting');
-        ws.send(JSON.stringify({
-          type: 'CALL_INVITE',
-          roomId,
-          from: callerSignalId,
-          to: aiSignalId,
-          data: { callId, cloneUserUuid: userUuid, mediaType: 'VOICE' },
-        }));
-
-        // 6. 10초 타임아웃
-        inviteTimeoutRef.current = setTimeout(() => {
-          logger.warn('[useAICallFlow] CALL_INVITE timeout after 10s');
-          _cleanup('AI 트윈이 응답하지 않습니다. 잠시 후 다시 시도해주세요.');
-        }, INVITE_TIMEOUT_MS);
       };
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : '통화를 시작할 수 없습니다.';
