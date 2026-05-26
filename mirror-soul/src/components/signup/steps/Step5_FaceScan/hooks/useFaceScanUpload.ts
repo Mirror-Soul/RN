@@ -3,7 +3,7 @@ import { Platform } from 'react-native';
 import { getPresignedUrl } from '@/src/services/fileService';
 import { uploadFileToS3 } from '@/src/services/s3Service';
 import { saveFaceScan } from '@/src/services/onboardingService';
-import { useSignupStore } from '@/src/store/useSignupStore';
+
 import { logger } from '@/src/utils/logger';
 
 /**
@@ -13,12 +13,8 @@ import { logger } from '@/src/utils/logger';
 export function useFaceScanUpload() {
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { userUuid } = useSignupStore();
 
   const uploadFaceVideo = useCallback(async (videoUri: string) => {
-    if (!userUuid) {
-      throw new Error('사용자 정보가 없습니다. 다시 시도해주세요.');
-    }
 
     setIsUploading(true);
     setError(null);
@@ -31,7 +27,6 @@ export function useFaceScanUpload() {
 
       // 1. Presigned URL 발급
       const presignedResponse = await getPresignedUrl({
-        userUuid,
         fileName,
         contentType,
         directory: 'face-videos',
@@ -65,7 +60,7 @@ export function useFaceScanUpload() {
     } finally {
       setIsUploading(false);
     }
-  }, [userUuid]);
+  }, []);
 
   return {
     uploadFaceVideo,

@@ -10,7 +10,6 @@ export type FileType = 'interviews' | 'face-videos' | 'job-certifications';
 // POST /files/presigned-url
 // ─────────────────────────────────────────────
 export interface PresignedUrlRequest {
-  userUuid: string;
   fileName: string;
   contentType: string;
   directory: FileType;

@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { Alert } from 'react-native';
 import { savePersonality } from '@/src/services/onboardingService';
-import { useSignupStore } from '@/src/store/useSignupStore';
+
 import { MbtiScores } from '../Mbti/MbtiSelector';
 import { MbtiEnum } from '@/src/types/api/onboarding';
 
@@ -20,16 +20,12 @@ export function useStep3Form(initialMbti: string = 'ENFJ', initialDescription: s
   });
   const [description, setDescription] = useState(initialDescription);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { userUuid } = useSignupStore();
+
 
   // 모든 MBTI가 선택되었고(하이픈 없음), 자기소개가 비어있지 않을 때만 활성화
   const isFormValid = !mbti.includes('-') && description.trim().length > 0;
 
   const handleSubmit = useCallback(async (onSuccess: () => void) => {
-    if (!userUuid) {
-      Alert.alert('오류', '사용자 정보가 없습니다. 처음부터 다시 시도해주세요.');
-      return;
-    }
 
     if (!isFormValid || isSubmitting) return;
 
@@ -52,7 +48,7 @@ export function useStep3Form(initialMbti: string = 'ENFJ', initialDescription: s
     } finally {
       setIsSubmitting(false);
     }
-  }, [mbti, scores, description, isFormValid, isSubmitting, userUuid]);
+  }, [mbti, scores, description, isFormValid, isSubmitting]);
 
   return {
     mbti,
