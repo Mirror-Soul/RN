@@ -151,7 +151,7 @@ export function useAICallFlow() {
           roomId: session.roomId,
           from: session.callerSignalId,
           to: session.aiSignalId,
-          data: { callId: session.callId, cloneUserUuid: userUuid, mediaType: 'VOICE' },
+          data: { callId: session.callId, cloneUserUuid: userUuid ?? '', mediaType: 'VOICE' },
         });
 
         inviteTimeoutRef.current = setTimeout(() => {
