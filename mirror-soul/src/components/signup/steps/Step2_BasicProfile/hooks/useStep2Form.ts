@@ -5,14 +5,13 @@ import { checkNicknameDuplicate } from '@/src/services/onboardingService';
 import { getPresignedUrl } from '@/src/services/fileService';
 import { uploadFileToS3 } from '@/src/services/s3Service';
 import { jobCategories } from '../Professional/jobData';
-import { useSignupStore } from '@/src/store/useSignupStore';
+
 
 /**
  * useStep2Form 훅
  * 회원가입 2단계의 모든 폼 로직과 상태를 캡슐화합니다. (SRP)
  */
 export function useStep2Form() {
-  const { userUuid } = useSignupStore();
   const [state, setState] = useState<Step2State>({
     nickname: '',
     isNicknameVerified: false,
@@ -62,10 +61,6 @@ export function useStep2Form() {
 
   // 직업 인증 처리 (S3 업로드 로직 포함)
   const handleJobVerify = useCallback(async (fileUri: string, contentType: string, fileName: string) => {
-    if (!userUuid) {
-      Alert.alert('오류', '사용자 정보가 없습니다. 처음부터 다시 시도해주세요.');
-      return;
-    }
     if (state.isJobVerifying) return;
 
     try {
@@ -73,7 +68,6 @@ export function useStep2Form() {
 
       // 1. Presigned URL 발급
       const presignedResponse = await getPresignedUrl({
-        userUuid,
         fileName,
         contentType,
         directory: 'job-certifications',
