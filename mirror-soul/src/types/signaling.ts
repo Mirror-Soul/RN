@@ -8,6 +8,7 @@
 export type SignalingType =
   | 'JOIN'
   | 'LEAVE'
+  | 'JOINED'
   | 'CALL_INVITE'
   | 'CALL_ACCEPT'
   | 'CALL_REJECT'

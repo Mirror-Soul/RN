@@ -6,7 +6,7 @@ import { initiateCall, setCallInProgress, endCall } from '../services/callServic
 import { useWebRTCCall } from './useWebRTCCall';
 import { useCallRecording } from './useCallRecording';
 import { logger } from '../utils/logger';
-import type { SignalingMessage, CallAcceptData, AnswerData, IceData } from '../types/signaling';
+import type { SignalingMessage, CallAcceptData, AnswerData, IceData, OfferData } from '../types/signaling';
 
 const WS_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL?.replace('https://', 'wss://').replace('http://', 'ws://');
 const INVITE_TIMEOUT_MS = 10000; // 10초 AI 응답 대기
@@ -57,7 +57,9 @@ export function useAICallFlow() {
     onLocalIceCandidateCb,
     initialize: initWebRTC,
     createOffer,
+    createAnswer,
     applyAnswer,
+    applyOffer,
     applyIceCandidate,
     close: closeWebRTC,
   } = useWebRTCCall();
@@ -188,6 +190,29 @@ export function useAICallFlow() {
         break;
       }
 
+      case 'OFFER': {
+        // AI 주도 재협상: 수신한 메시지의 from/to를 뒤집어서 ANSWER 발송 (백엔드 컨벤션)
+        const offerData = msg.data as OfferData;
+        try {
+          logger.info('[useAICallFlow] OFFER received from AI. Applying and creating answer...');
+          await applyOffer(offerData.sdp);
+          const answer = await createAnswer();
+          sendMessage({
+            type: 'ANSWER',
+            roomId: msg.roomId,
+            from: msg.to,
+            to: msg.from,
+            data: {
+              callId: offerData.callId,
+              sdp: { type: 'answer', sdp: answer.sdp ?? '' },
+            },
+          });
+        } catch (err) {
+          logger.error('[useAICallFlow] Failed to handle AI OFFER:', err);
+        }
+        break;
+      }
+
       case 'ANSWER': {
         const answerData = msg.data as AnswerData;
         try {
@@ -220,7 +245,7 @@ export function useAICallFlow() {
       default:
         logger.debug('[useAICallFlow] Unhandled message type:', msg.type);
     }
-  }, [createOffer, applyAnswer, applyIceCandidate, sendMessage, userUuid]);
+  }, [createOffer, createAnswer, applyAnswer, applyOffer, applyIceCandidate, sendMessage, userUuid]);
 
   // ─────────────────────────────────────────────
   // 내부 정리 함수
