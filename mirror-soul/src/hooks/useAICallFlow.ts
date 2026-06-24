@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert } from 'react-native';
 import type { MediaStream } from 'react-native-webrtc';
+import { AudioModule, setAudioModeAsync } from 'expo-audio';
 import { useAuthStore } from '../store/useAuthStore';
 import { initiateCall, setCallInProgress, endCall } from '../services/callService';
 import { useWebRTCCall } from './useWebRTCCall';
@@ -297,8 +298,16 @@ export function useAICallFlow() {
       data: { callId: session.callId },
     });
 
-    // 2. 녹음 중단 및 S3 업로드
+    // 2. 녹음 중단 및 S3 업로드 (내 목소리 → AI 학습/분석용)
     const recordingUrl = await stopAndUpload(userUuid ?? '');
+
+    // TODO: 통화 기록(대화 내용) 저장
+    // 나와 AI 서버가 주고받은 대화 내용을 callId 기준으로 저장해야 합니다.
+    // 구현 방향 (백엔드 협의 필요):
+    //   - 방법 A (권장): 백엔드가 callId별 AI 응답 텍스트 + 사용자 음성 STT 결과를 저장
+    //                    → GET /calls/{callId}/transcript 로 조회
+    //   - 방법 B: 클라이언트에서 통화 중 실시간 STT(useSTT)로 수집한 텍스트를 endCall 시 전송
+    // 현재는 recordingUrl(S3 음성 파일)만 전달하며, 텍스트 기록은 추후 추가 예정
 
     // 3. REST API 종료 알림
     try {
@@ -325,6 +334,28 @@ export function useAICallFlow() {
     logger.info('[useAICallFlow] Starting call...');
 
     try {
+      // ─── 전제조건 1: 마이크 권한 확인/요청 ───
+      // 통화 시작 전에 권한을 미리 요청합니다.
+      // 권한이 없으면 WebRTC 초기화 자체가 실패하므로 여기서 조기 차단합니다.
+      const { granted } = await AudioModule.requestRecordingPermissionsAsync();
+      if (!granted) {
+        logger.warn('[useAICallFlow] Microphone permission denied');
+        Alert.alert(
+          '마이크 권한 필요',
+          '통화를 시작하려면 마이크 접근 권한이 필요합니다. 설정에서 권한을 허용해주세요.'
+        );
+        setCallStatus('idle');
+        return;
+      }
+      logger.debug('[useAICallFlow] Microphone permission granted');
+
+      // ─── 전제조건 2: iOS 오디오 세션을 녹음 가능 모드로 사전 설정 ───
+      // WebRTC(getUserMedia)와 expo-audio가 같은 마이크를 공유하려면
+      // iOS AVAudioSession이 처음부터 .playAndRecord 모드여야 합니다.
+      // initWebRTC() 호출 전에 설정해야 충돌이 발생하지 않습니다.
+      await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
+      logger.debug('[useAICallFlow] Audio mode configured for recording');
+
       // 1. REST API: 방 생성
       const response = await initiateCall(userUuid, {
         callerUserUuid: userUuid,

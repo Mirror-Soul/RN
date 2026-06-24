@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { Platform } from 'react-native';
-import { useAudioRecorder, RecordingPresets } from 'expo-audio';
+import { useAudioRecorder, RecordingPresets, AudioModule, setAudioModeAsync } from 'expo-audio';
 import { getPresignedUrl } from '../services/fileService';
 import { uploadFileToS3 } from '../services/s3Service';
 import { logger } from '../utils/logger';
@@ -20,6 +20,15 @@ export function useCallRecording() {
 
   const startRecording = async () => {
     try {
+      // 방어적 권한 확인: 이 훅이 독립적으로 재사용될 때도 안전하게 동작하도록 보장
+      const { granted } = await AudioModule.getRecordingPermissionsAsync();
+      if (!granted) {
+        throw new Error('마이크 녹음 권한이 없습니다. 통화 시작 전 권한을 요청해주세요.');
+      }
+
+      // iOS AVAudioSession을 녹음 가능 모드로 설정 (안전망: useAICallFlow에서 선행 설정되지만 중복 호출은 무해함)
+      await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
+
       await recorder.prepareToRecordAsync();
       recorder.record();
       isRecordingRef.current = true;
