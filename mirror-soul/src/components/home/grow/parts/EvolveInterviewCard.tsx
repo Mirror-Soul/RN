@@ -2,6 +2,7 @@ import InterviewIcon from '@/assets/images/common/evlove/evlove_interview.svg';
 import TimerIcon from '@/assets/images/common/evlove/evlove_timer.svg';
 import { Colors, Radii } from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
@@ -9,12 +10,15 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
  * 나를 알아가는 인터뷰 카드 (SRP)
  */
 export default function EvolveInterviewCard() {
+  const router = useRouter();
+
   return (
     <TouchableOpacity
       activeOpacity={0.85}
       accessibilityRole="button"
       accessibilityLabel="나를 알아가는 인터뷰 미션"
       accessibilityHint="AI와 대화하여 가치관을 공유하는 인터뷰 화면으로 이동"
+      onPress={() => router.push('/ai-call')}
     >
       <LinearGradient
         colors={[Colors.glass.purple20, Colors.glass.pink20]}
