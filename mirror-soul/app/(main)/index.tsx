@@ -10,6 +10,8 @@ import React from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { router } from 'expo-router';
+
 /**
  * 메인 홈 화면 (발견 탭)
  * 로그인 완료 후 진입하는 메인 대시보드입니다.
@@ -27,20 +29,24 @@ export default function MainHomeScreen() {
         {
           text: "로그아웃",
           style: "destructive",
-          onPress: async () => {
-            logger.debug('User clicked logout from Home Settings');
-            try {
-              await logout(); // (1) 서버 세션 종료 시도
-            } catch (error) {
-              logger.warn('Server logout failed, proceeding with local logout', error);
-            } finally {
+          onPress: () => {
+            // iOS Alert가 닫히는 애니메이션 도중에 네비게이션이 실행되면 씹히는 현상 방지를 위해 setTimeout 사용
+            setTimeout(async () => {
+              logger.debug('User clicked logout from Home Settings');
               try {
-                await useAuthStore.getState().logout(); // (2) 항상 로컬 세션 정리
-              } catch (localError) {
-                logger.error('Local logout failed', localError);
-                Alert.alert("알림", "로그아웃 처리 중 문제가 발생했습니다.");
+                await logout(); // (1) 서버 세션 종료 시도
+              } catch (error) {
+                logger.warn('Server logout failed, proceeding with local logout', error);
+              } finally {
+                try {
+                  await useAuthStore.getState().logout(); // (2) 항상 로컬 세션 정리
+                  router.replace('/');
+                } catch (localError) {
+                  logger.error('Local logout failed', localError);
+                  Alert.alert("알림", "로그아웃 처리 중 문제가 발생했습니다.");
+                }
               }
-            }
+            }, 100);
           }
         }
       ]

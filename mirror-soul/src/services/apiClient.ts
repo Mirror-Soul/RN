@@ -59,8 +59,8 @@ apiClient.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // 401 Unauthorized 에러 시 처리
-    if (error.response?.status === 401) {
+    // 401 Unauthorized 또는 403 Forbidden 에러 시 처리 (백엔드에서 만료된 토큰을 403으로 응답함)
+    if (error.response?.status === 401 || error.response?.status === 403) {
       // [고도화] 인증 경로별 예외 처리 (각각 다른 응답 정책)
       const isLoginPath = originalRequest?.url?.includes('/auth/login');
       const isRefreshPath = originalRequest?.url?.includes('/auth/refresh');
@@ -75,15 +75,15 @@ apiClient.interceptors.response.use(
         });
       }
 
-      // 로그아웃 중 401은 이미 세션이 만료된 것 → 즉시 에러 반환 (상위 finally가 로컬 정리)
+      // 로그아웃 중 401/403은 이미 세션이 만료된 것 → 즉시 에러 반환 (상위 finally가 로컬 정리)
       if (isLogoutPath) {
-        logger.warn('apiClient: Logout returned 401 (session already expired).');
+        logger.warn('apiClient: Logout returned 401/403 (session already expired).');
         return Promise.reject(error);
       }
 
-      // 일반 API 호출 중 401 발생 시에만 토큰 갱신 시도
+      // 일반 API 호출 중 401/403 발생 시에만 토큰 갱신 시도
       if (!originalRequest._retry) {
-        logger.info('apiClient: 401 detected on normal request. Attempting refresh...');
+        logger.info(`apiClient: ${error.response.status} detected on normal request. Attempting refresh...`);
 
         if (isRefreshing) {
           return new Promise((resolve, reject) => {

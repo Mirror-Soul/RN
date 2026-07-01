@@ -2,6 +2,32 @@ import { create } from 'zustand';
 import { tokenStorage } from '../utils/tokenStorage';
 import { logger } from '../utils/logger';
 
+const decodeBase64 = (str: string) => {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
+  let output = '';
+  str = String(str).replace(/=+$/, '');
+  for (let bc = 0, bs = 0, buffer, i = 0; (buffer = str.charAt(i++)); ~buffer && (bs = bc % 4 ? bs * 64 + buffer : buffer, bc++ % 4) ? output += String.fromCharCode(255 & bs >> (-2 * bc & 6)) : 0) {
+    buffer = chars.indexOf(buffer);
+  }
+  return output;
+};
+
+const isTokenExpired = (token: string | null) => {
+  if (!token) return true;
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return true;
+    const base64Url = parts[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(decodeBase64(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+    const payload = JSON.parse(jsonPayload);
+    if (payload.exp) return payload.exp * 1000 < Date.now();
+    return false;
+  } catch (error) {
+    return true;
+  }
+};
+
 interface AuthState {
   isHydrated: boolean; 
   isLoggedIn: boolean;
@@ -26,11 +52,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     logger.debug('useAuthStore: Starting hydration...');
     try {
       const accessToken = await tokenStorage.getAccessToken();
+      const refreshToken = await tokenStorage.getRefreshToken();
       const userUuid = await tokenStorage.getUserUuid();
       const userStatus = await tokenStorage.getUserStatus();
       
       if (accessToken && userStatus !== 'ACTIVE') {
         logger.warn(`useAuthStore: Incomplete onboarding detected (${userStatus}). Clearing session.`);
+        await tokenStorage.clearAll();
+        set({ isHydrated: true, isLoggedIn: false, accessToken: null, userUuid: null, userStatus: null });
+        return;
+      }
+      
+      if (accessToken && isTokenExpired(refreshToken)) {
+        logger.warn(`useAuthStore: Refresh token is expired. Clearing session.`);
         await tokenStorage.clearAll();
         set({ isHydrated: true, isLoggedIn: false, accessToken: null, userUuid: null, userStatus: null });
         return;
