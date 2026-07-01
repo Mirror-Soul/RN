@@ -3,7 +3,7 @@ import { Platform, Alert } from 'react-native';
 import { getPresignedUrl } from '@/src/services/fileService';
 import { uploadFileToS3 } from '@/src/services/s3Service';
 import { saveInterviewAnswer } from '@/src/services/onboardingService';
-import { useSignupStore } from '@/src/store/useSignupStore';
+
 import { logger } from '@/src/utils/logger';
 
 /**
@@ -12,16 +12,12 @@ import { logger } from '@/src/utils/logger';
 export function useInterviewUpload() {
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { userUuid } = useSignupStore();
 
   const uploadInterviewAudio = useCallback(async (
     recordingUri: string, 
     questionId: number,
     answerText: string
   ) => {
-    if (!userUuid) {
-      throw new Error('사용자 정보가 없습니다. 다시 시도해주세요.');
-    }
 
     // 1. 텍스트 검증 (Q5 답변: AI 학습을 위한 품질 확보)
     if (!answerText || answerText.trim().length < 5) {
@@ -42,7 +38,6 @@ export function useInterviewUpload() {
       const fileName = `interview-answer-${questionId}.${extension}`;
 
       const presignedResponse = await getPresignedUrl({
-        userUuid,
         fileName,
         contentType,
         directory: 'interviews',
@@ -60,13 +55,12 @@ export function useInterviewUpload() {
       // 4. 인터뷰 답변 최종 저장 (Onboarding Domain DB)
       // [API 변경 반영] completeFileUpload가 제거되고, URL 대신 objectKey를 전송합니다.
       logger.debug('Final payload before saving:', {
-        userUuid,
         interviewId: questionId,
         objectKey,
         answerTextLen: answerText.trim().length
       });
 
-      const saveResponse = await saveInterviewAnswer(userUuid, {
+      const saveResponse = await saveInterviewAnswer({
         interviewId: questionId,
         answerAudioObjectKey: objectKey,
         answerText: answerText.trim(),
@@ -84,7 +78,7 @@ export function useInterviewUpload() {
     } finally {
       setIsUploading(false);
     }
-  }, [userUuid]);
+  }, []);
 
   return {
     uploadInterviewAudio,

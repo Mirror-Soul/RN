@@ -11,10 +11,10 @@ const queryClient = new QueryClient();
 // 백엔드 확정 전까지 사용되는 임시 매핑입니다.
 const getOnboardingRoute = (status: string | null) => {
   switch (status) {
-    case 'ONBOARD_A': return '/signup/step2';
-    case 'ONBOARD_B': return '/signup/step3';
-    case 'ONBOARD_C': return '/signup/interview'; // Step 4
-    case 'ONBOARD_D': return '/signup/face-scan'; // Step 5
+    case 'ONBOARD_A': return '/signup/profile';
+    case 'ONBOARD_B': return '/signup/express';
+    case 'ONBOARD_C': return '/signup/interview';
+    case 'ONBOARD_D': return '/signup/face-scan';
     default: return '/signup';
   }
 };

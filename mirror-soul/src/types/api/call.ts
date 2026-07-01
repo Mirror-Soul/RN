@@ -1,38 +1,43 @@
 import { ApiResponse } from './common';
 
-// ─────────────────────────────────────────────
-// POST /join/send-code
-// ─────────────────────────────────────────────
-export interface SendCodeRequest {
-  email: string;
-}
-export type SendCodeResponse = ApiResponse<string>;
+/**
+ * 통화(Call) 도메인 API 타입 정의
+ */
 
 // ─────────────────────────────────────────────
-// POST /join/verify-code
+// POST /calls/clones/{clone-user-uuid}
 // ─────────────────────────────────────────────
-export interface VerifyCodeRequest {
-  code: string;
+export interface InitiateCallRequest {
+  callerUserUuid: string;
+  mediaType: 'VOICE';
 }
-export interface VerifyCodeResult {
-  verifySuccess: boolean;
+
+export interface InitiateCallResult {
+  callId: number;
+  roomId: string;
+  mediaType: 'VOICE';
+  status: string;
+  callerSignalId: string;
+  aiSignalId: string;
+  signalingUrl: string;
 }
-export type VerifyCodeResponse = ApiResponse<VerifyCodeResult>;
+
+export type InitiateCallResponse = ApiResponse<InitiateCallResult>;
 
 // ─────────────────────────────────────────────
-// POST /join/basic-profile
+// PATCH /calls/{call-id}/in-progress
 // ─────────────────────────────────────────────
-export interface BasicProfileRequest {
-  email: string;
-  password: string;
-  gender: 'MALE' | 'FEMALE' | null;  // PASS 인증 미구현 → 현재 nullable
-  birthDate: string | null;           // PASS 인증 미구현 → 현재 nullable
-  termsAgreed: boolean;
+export type InProgressResponse = ApiResponse<string>;
+
+// ─────────────────────────────────────────────
+// POST /calls/{call-id}/end
+// ─────────────────────────────────────────────
+export interface EndCallRequest {
+  recordingUrl: string;
 }
-export interface BasicProfileResult {
-  userUuid: string;
-  accessToken: string;
-  refreshToken: string;
-  userStatus: string;
+
+export interface EndCallResult {
+  recordingUrl: string;
 }
-export type BasicProfileResponse = ApiResponse<BasicProfileResult>;
+
+export type EndCallResponse = ApiResponse<EndCallResult>;

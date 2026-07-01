@@ -3,7 +3,8 @@ import PrimaryButton from '@/src/components/signup/common/PrimaryButton';
 import { SIGNUP_ROUTES } from '@/src/constants/routes/signupRoutes';
 import { Colors, Layout } from '@/src/constants/theme';
 import { createBasicProfile } from '@/src/services/authService';
-import { useSignupStore } from '@/src/store/useSignupStore';
+
+import { useAuthStore } from '@/src/store/useAuthStore';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -23,7 +24,7 @@ import { useStep1Form } from './hooks/useStep1Form';
  */
 export default function Step1AccountContainer() {
   const router = useRouter();
-  const setUserUuid = useSignupStore((s) => s.setUserUuid);
+
   const {
     state,
     updateState,
@@ -61,8 +62,14 @@ export default function Step1AccountContainer() {
         termsAgreed: state.agreedToTerms,
       });
 
-      // userUuid를 전역 상태에 저장 (Step2 이후에서 사용)
-      setUserUuid(response.result.userUuid);
+
+      // 발급받은 토큰 및 상태를 AuthStore에 저장하여 로그인 상태로 전환
+      await useAuthStore.getState().login({
+        accessToken: response.result.accessToken,
+        refreshToken: response.result.refreshToken,
+        userUuid: response.result.userUuid,
+        userStatus: response.result.userStatus,
+      });
 
       // 성공: Step2로 이동
       router.push(SIGNUP_ROUTES.PROFILE);

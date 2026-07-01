@@ -6,7 +6,7 @@ import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View, Alert, ActivityIndicator, Text } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
-import { useEffect } from 'react';
+
 
 // Step 2 Specific Parts
 import JobVerificationSection from './components/JobVerificationSection';
@@ -14,7 +14,7 @@ import LocationSection from './components/LocationSection';
 import NicknameSection from './components/NicknameSection';
 import Step2Header from './components/Step2Header';
 import { useStep2Form } from './hooks/useStep2Form';
-import { useSignupStore } from '@/src/store/useSignupStore';
+
 import { saveProfile } from '@/src/services/onboardingService';
 import { JobEnum } from '@/src/types/api/onboarding';
 import { jobCategories } from './Professional/jobData';
@@ -25,7 +25,6 @@ import { jobCategories } from './Professional/jobData';
  */
 export default function Step2BasicProfileContainer() {
   const router = useRouter();
-  const userUuid = useSignupStore((s) => s.userUuid);
   const [isSaving, setIsSaving] = useState(false);
 
   const {
@@ -44,14 +43,6 @@ export default function Step2BasicProfileContainer() {
     opacity: overlayOpacity.value,
   }));
 
-  // SoC: 사용자 정보가 없으면 아예 폼을 보여주지 않고 1단계로 리다이렉트 (Guard)
-  useEffect(() => {
-    if (!userUuid) {
-      Alert.alert('오류', '회원가입 정보가 유효하지 않습니다. 다시 시도해주세요.');
-      router.replace(SIGNUP_ROUTES.ACCOUNT);
-    }
-  }, [userUuid, router]);
-
   const handleContinue = async () => {
     // 1. 유효성 검증 (JobEnum 안전성 확보 및 방어 코드)
     const isValidJob = jobCategories.some((j) => j.value === state.jobCategory);
@@ -62,17 +53,11 @@ export default function Step2BasicProfileContainer() {
       return;
     }
 
-    if (!userUuid) {
-      Alert.alert('오류', '사용자 정보를 찾을 수 없습니다. 다시 시도해주세요.');
-      return;
-    }
-
     try {
       setIsSaving(true);
       overlayOpacity.value = withTiming(1, { duration: 200 });
 
       const response = await saveProfile(
-        userUuid,
         state.jobCategory as JobEnum,
         {
           nickname: state.nickname.trim(),
