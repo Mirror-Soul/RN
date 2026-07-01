@@ -114,8 +114,8 @@ export const saveInterviewAnswer = async (
   logger.debug('saveInterviewAnswer:', { 
     url,
     interviewIdType: typeof data.interviewId,
-    hasAnswer: Boolean(data.answer),
-    answerLength: data.answer?.length ?? 0,
+    hasAnswer: Boolean(data.answerText),
+    answerLength: data.answerText?.length ?? 0,
   });
   
   try {

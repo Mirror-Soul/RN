@@ -63,12 +63,11 @@ export function useCallRecording() {
       const contentType = Platform.OS === 'ios' ? 'audio/wav' : 'audio/mp4';
       const fileName = `call-recording.${extension}`;
 
-      // 3. Presigned URL 발급 (임시: 'interviews' 디렉토리 사용)
+      // 3. Presigned URL 발급
       const presignedResponse = await getPresignedUrl({
-        userUuid,
         fileName,
         contentType,
-        directory: 'interviews', // TODO: 백엔드 추가 후 'call-recordings'로 변경
+        directory: 'call-recordings',
       });
 
       if (!presignedResponse.isSuccess) {
