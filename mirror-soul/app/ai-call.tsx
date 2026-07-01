@@ -6,6 +6,7 @@ import { useAICallFlow } from '@/src/hooks/useAICallFlow';
 import CallHeader from '@/src/components/call/CallHeader';
 import CallAIAvatar from '@/src/components/call/CallAIAvatar';
 import CallControls from '@/src/components/call/CallControls';
+import CallErrorFallback from '@/src/components/call/CallErrorFallback';
 
 /**
  * AI 트윈 음성 통화 화면
@@ -17,12 +18,17 @@ export default function AICallScreen() {
   const router = useRouter();
   const { callStatus, remoteStream, startCall, hangUp, error } = useAICallFlow();
 
-  // 통화 종료 시 화면 이탈
+  // 통화 종료 시 화면 이탈 (단, 에러가 발생한 경우는 제외하여 사용자가 에러를 인지할 수 있도록 함)
   useEffect(() => {
-    if (callStatus === 'ended') {
+    if (callStatus === 'ended' && !error) {
       router.back();
     }
-  }, [callStatus, router]);
+  }, [callStatus, error, router]);
+
+  // 에러 발생 시 안내 UI
+  if (error) {
+    return <CallErrorFallback message={error} onBack={() => router.back()} />;
+  }
 
   return (
     <View style={styles.container}>

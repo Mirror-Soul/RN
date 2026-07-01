@@ -28,6 +28,10 @@ export default function CallAIAvatar({ callStatus }: CallAIAvatarProps) {
       pulseAnim.stopAnimation();
       pulseAnim.setValue(1);
     }
+
+    return () => {
+      pulseAnim.stopAnimation();
+    };
   }, [isConnected, pulseAnim]);
 
   return (
