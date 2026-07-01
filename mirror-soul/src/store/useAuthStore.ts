@@ -2,6 +2,8 @@ import { create } from 'zustand';
 import { tokenStorage } from '../utils/tokenStorage';
 import { logger } from '../utils/logger';
 
+import { isTokenExpired } from '../utils/jwtUtils';
+
 interface AuthState {
   isHydrated: boolean; 
   isLoggedIn: boolean;
@@ -26,11 +28,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     logger.debug('useAuthStore: Starting hydration...');
     try {
       const accessToken = await tokenStorage.getAccessToken();
+      const refreshToken = await tokenStorage.getRefreshToken();
       const userUuid = await tokenStorage.getUserUuid();
       const userStatus = await tokenStorage.getUserStatus();
       
       if (accessToken && userStatus !== 'ACTIVE') {
         logger.warn(`useAuthStore: Incomplete onboarding detected (${userStatus}). Clearing session.`);
+        await tokenStorage.clearAll();
+        set({ isHydrated: true, isLoggedIn: false, accessToken: null, userUuid: null, userStatus: null });
+        return;
+      }
+      
+      if (accessToken && isTokenExpired(refreshToken)) {
+        logger.warn(`useAuthStore: Refresh token is expired. Clearing session.`);
         await tokenStorage.clearAll();
         set({ isHydrated: true, isLoggedIn: false, accessToken: null, userUuid: null, userStatus: null });
         return;
