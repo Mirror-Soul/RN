@@ -24,7 +24,14 @@ export default function CallControls({ callStatus, onStartCall, onHangUp }: Call
   if (isIdle) {
     return (
       <View style={styles.container}>
-        <TouchableOpacity style={styles.startButton} onPress={onStartCall} activeOpacity={0.8}>
+        <TouchableOpacity 
+          style={styles.startButton} 
+          onPress={onStartCall} 
+          activeOpacity={0.8}
+          accessibilityRole="button"
+          accessibilityLabel="통화 시작"
+          accessibilityHint="AI 트윈과 통화를 시작합니다."
+        >
           <View style={styles.startInner} />
         </TouchableOpacity>
       </View>
@@ -46,6 +53,10 @@ export default function CallControls({ callStatus, onStartCall, onHangUp }: Call
         onPress={onHangUp}
         disabled={isEnding}
         activeOpacity={0.8}
+        accessibilityRole="button"
+        accessibilityLabel="통화 종료"
+        accessibilityHint="진행 중인 통화를 종료합니다."
+        accessibilityState={{ disabled: isEnding }}
       >
         <View style={styles.endIcon} />
       </TouchableOpacity>

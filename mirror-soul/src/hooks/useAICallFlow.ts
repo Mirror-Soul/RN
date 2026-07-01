@@ -52,6 +52,9 @@ export function useAICallFlow() {
   // AI 응답 대기 타임아웃
   const inviteTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // 종료 진행 중 여부 (중복 방지)
+  const isHangingUpRef = useRef<boolean>(false);
+
   const {
     remoteStream,
     iceConnectionState,
@@ -251,7 +254,7 @@ export function useAICallFlow() {
   // ─────────────────────────────────────────────
   // 내부 정리 함수
   // ─────────────────────────────────────────────
-  const _cleanup = useCallback(async (errorMessage?: string) => {
+  const _cleanup = useCallback(async (errorMessage?: string, targetStatus: CallStatus = 'ended') => {
     logger.debug('[useAICallFlow] Cleaning up...');
 
     if (inviteTimeoutRef.current) {
@@ -270,22 +273,24 @@ export function useAICallFlow() {
 
     closeWebRTC();
     callSessionRef.current = null;
+    isHangingUpRef.current = false;
 
     if (errorMessage) {
       setError(errorMessage);
-      Alert.alert('통화 오류', errorMessage);
     }
 
-    setCallStatus('ended');
+    setCallStatus(targetStatus);
   }, [closeWebRTC]);
 
   // ─────────────────────────────────────────────
   // 통화 종료 내부 처리 (녹음 업로드 포함)
   // ─────────────────────────────────────────────
   const _performHangUp = useCallback(async () => {
+    if (isHangingUpRef.current) return;
     const session = callSessionRef.current;
     if (!session) return;
 
+    isHangingUpRef.current = true;
     setCallStatus('ending');
     logger.info('[useAICallFlow] Hanging up...');
 
@@ -401,9 +406,7 @@ export function useAICallFlow() {
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : '통화를 시작할 수 없습니다.';
       logger.error('[useAICallFlow] startCall failed:', err);
-      setError(message);
-      setCallStatus('idle');
-      Alert.alert('통화 오류', message);
+      await _cleanup(message, 'idle');
     }
   }, [userUuid, initWebRTC, handleMessage, _cleanup]);
 
