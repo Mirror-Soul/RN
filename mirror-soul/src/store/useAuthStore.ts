@@ -2,31 +2,7 @@ import { create } from 'zustand';
 import { tokenStorage } from '../utils/tokenStorage';
 import { logger } from '../utils/logger';
 
-const decodeBase64 = (str: string) => {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
-  let output = '';
-  str = String(str).replace(/=+$/, '');
-  for (let bc = 0, bs = 0, buffer, i = 0; (buffer = str.charAt(i++)); ~buffer && (bs = bc % 4 ? bs * 64 + buffer : buffer, bc++ % 4) ? output += String.fromCharCode(255 & bs >> (-2 * bc & 6)) : 0) {
-    buffer = chars.indexOf(buffer);
-  }
-  return output;
-};
-
-const isTokenExpired = (token: string | null) => {
-  if (!token) return true;
-  try {
-    const parts = token.split('.');
-    if (parts.length !== 3) return true;
-    const base64Url = parts[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(decodeBase64(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
-    const payload = JSON.parse(jsonPayload);
-    if (payload.exp) return payload.exp * 1000 < Date.now();
-    return false;
-  } catch (error) {
-    return true;
-  }
-};
+import { isTokenExpired } from '../utils/jwtUtils';
 
 interface AuthState {
   isHydrated: boolean; 
