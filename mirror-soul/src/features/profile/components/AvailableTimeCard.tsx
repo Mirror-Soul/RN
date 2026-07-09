@@ -9,9 +9,10 @@ import { usePulseAnimation, usePressAnimation } from '../hooks/useProfileAnimati
 interface AvailableTimeCardProps {
   timeString: string;
   delay?: number;
+  onPressRefill?: () => void;
 }
 
-export const AvailableTimeCard = ({ timeString, delay = 100 }: AvailableTimeCardProps) => {
+export const AvailableTimeCard = ({ timeString, delay = 100, onPressRefill }: AvailableTimeCardProps) => {
   const { startPulse, animatedStyle: pulseStyle } = usePulseAnimation();
   const { handlePressIn, handlePressOut, animatedStyle: pressStyle } = usePressAnimation();
 
@@ -56,7 +57,10 @@ export const AvailableTimeCard = ({ timeString, delay = 100 }: AvailableTimeCard
         <Animated.View
           style={[styles.buttonContainer, pressStyle]}
           onTouchStart={handlePressIn}
-          onTouchEnd={handlePressOut}
+          onTouchEnd={(e) => {
+            handlePressOut();
+            if (onPressRefill) onPressRefill();
+          }}
           onTouchCancel={handlePressOut}
         >
           <LinearGradient

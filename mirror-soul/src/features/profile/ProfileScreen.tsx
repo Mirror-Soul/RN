@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -7,9 +7,19 @@ import { AvailableTimeCard } from './components/AvailableTimeCard';
 import { SettingsSection } from './components/SettingsSection';
 import { FooterActions } from './components/FooterActions';
 import { PROFILE_SECTIONS } from './constants/profileMenu';
+import { TimeRefillBottomSheet } from './components/TimeRefillBottomSheet';
 
 export const ProfileScreen = () => {
   const insets = useSafeAreaInsets();
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+
+  const handleOpenSheet = useCallback(() => {
+    setIsSheetOpen(true);
+  }, []);
+
+  const handleCloseSheet = useCallback(() => {
+    setIsSheetOpen(false);
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -29,6 +39,7 @@ export const ProfileScreen = () => {
         <AvailableTimeCard 
           timeString="02:30:00" 
           delay={100}
+          onPressRefill={handleOpenSheet}
         />
         
         {PROFILE_SECTIONS.map((section, index) => (
@@ -41,6 +52,9 @@ export const ProfileScreen = () => {
 
         <FooterActions delay={400} />
       </ScrollView>
+
+      {/* Render Bottom Sheet outside of ScrollView so it overlaps correctly */}
+      <TimeRefillBottomSheet isOpen={isSheetOpen} onClose={handleCloseSheet} />
     </View>
   );
 };
