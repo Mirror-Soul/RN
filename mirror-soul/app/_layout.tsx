@@ -19,6 +19,8 @@ const getOnboardingRoute = (status: string | null) => {
   }
 };
 
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+
 export default function RootLayout() {
   const { isHydrated, isLoggedIn, userStatus, hydrate } = useAuthStore();
 
@@ -47,18 +49,20 @@ export default function RootLayout() {
   if (!isHydrated) return null; // 로딩 중 빈 화면 (필요시 Splash Screen)
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <SafeAreaProvider>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="index" />
-          <Stack.Screen name="signup" />
-          <Stack.Screen name="(main)" />
-          {/* 기존 스크린 유지 */}
-          <Stack.Screen name="call-detail" />
-          <Stack.Screen name="voice-update" />
-        </Stack>
-        <StatusBar style="light" />
-      </SafeAreaProvider>
-    </QueryClientProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <QueryClientProvider client={queryClient}>
+        <SafeAreaProvider>
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="index" />
+            <Stack.Screen name="signup" />
+            <Stack.Screen name="(main)" />
+            {/* 기존 스크린 유지 */}
+            <Stack.Screen name="call-detail" />
+            <Stack.Screen name="voice-update" />
+          </Stack>
+          <StatusBar style="light" />
+        </SafeAreaProvider>
+      </QueryClientProvider>
+    </GestureHandlerRootView>
   );
 }
