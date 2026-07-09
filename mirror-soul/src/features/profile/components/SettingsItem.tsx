@@ -1,9 +1,15 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import Animated from 'react-native-reanimated';
 import { usePressAnimation } from '../hooks/useProfileAnimations';
 import { ProfileItem } from '../types';
+
+/** item.id → expo-router 경로 매핑 */
+const ITEM_ROUTES: Partial<Record<string, string>> = {
+  voice_audio: '/(main)/voice-audio',
+};
 
 interface SettingsItemProps {
   item: ProfileItem;
@@ -11,11 +17,18 @@ interface SettingsItemProps {
 }
 
 export const SettingsItem = ({ item, isLast = false }: SettingsItemProps) => {
+  const router = useRouter();
   const { handlePressIn, handlePressOut, animatedStyle } = usePressAnimation();
+
+  const handlePress = () => {
+    const route = ITEM_ROUTES[item.id];
+    if (route) router.push(route as any);
+  };
 
   return (
     <Animated.View style={[animatedStyle]}>
       <Pressable
+        onPress={handlePress}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
         style={[styles.container, !isLast && styles.borderBottom]}
