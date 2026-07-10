@@ -8,7 +8,6 @@ import { ProfileItem } from '../types';
 
 /** item.id → expo-router 경로 매핑 */
 const ITEM_ROUTES: Partial<Record<string, string>> = {
-  account_management: '/(main)/account',
   voice_audio: '/(main)/voice-audio',
   notifications: '/(main)/notification',
   customer_center: '/(main)/customer-center',

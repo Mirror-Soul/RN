@@ -2,30 +2,25 @@ import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
+import { useRouter } from 'expo-router';
+
 interface FooterActionsProps {
   delay?: number;
 }
 
 export const FooterActions = ({ delay = 400 }: FooterActionsProps) => {
+  const router = useRouter();
+
   return (
     <Animated.View
       entering={FadeInDown.delay(delay).duration(600).springify()}
       style={styles.container}
     >
-      <Pressable style={({ pressed }) => [styles.button, pressed && styles.pressed]}>
+      <Pressable 
+        style={({ pressed }) => [styles.button, pressed && styles.pressed]}
+        onPress={() => router.navigate('/(main)/account')}
+      >
         <Text style={styles.text}>계정 관리</Text>
-      </Pressable>
-
-      <Text style={styles.divider}>|</Text>
-
-      <Pressable style={({ pressed }) => [styles.button, pressed && styles.pressed]}>
-        <Text style={styles.text}>로그아웃</Text>
-      </Pressable>
-
-      <Text style={styles.divider}>|</Text>
-
-      <Pressable style={({ pressed }) => [styles.button, pressed && styles.pressed]}>
-        <Text style={styles.text}>탈퇴하기</Text>
       </Pressable>
     </Animated.View>
   );
