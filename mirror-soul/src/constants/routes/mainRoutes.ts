@@ -21,6 +21,7 @@ export const ROUTE_TO_TAB: Record<string, BottomTabId> = {
   match: 'match',
   profile: 'profile',
   'voice-audio': 'profile',
+  notification: 'profile',
 };
 
 export const TAB_TO_ROUTE: Record<BottomTabId, string> = {

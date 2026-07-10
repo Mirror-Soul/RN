@@ -9,6 +9,7 @@ import { ProfileItem } from '../types';
 /** item.id → expo-router 경로 매핑 */
 const ITEM_ROUTES: Partial<Record<string, string>> = {
   voice_audio: '/(main)/voice-audio',
+  notifications: '/(main)/notification',
 };
 
 interface SettingsItemProps {
