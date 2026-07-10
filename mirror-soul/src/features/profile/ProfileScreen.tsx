@@ -9,9 +9,12 @@ import { FooterActions } from './components/FooterActions';
 import { PROFILE_SECTIONS } from './constants/profileMenu';
 import { TimeRefillBottomSheet } from './components/TimeRefillBottomSheet';
 
+import { useAccountStore } from '@/src/store/useAccountStore';
+
 export const ProfileScreen = () => {
   const insets = useSafeAreaInsets();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const { nickname } = useAccountStore();
 
   const handleOpenSheet = useCallback(() => {
     setIsSheetOpen(true);
@@ -31,8 +34,8 @@ export const ProfileScreen = () => {
         showsVerticalScrollIndicator={false}
       >
         <ProfileHeader 
-          name="김소울" 
-          email="kim@example.com" 
+          name={nickname} 
+          email="user@example.com" 
           delay={0}
         />
         

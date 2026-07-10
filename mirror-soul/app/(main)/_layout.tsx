@@ -43,6 +43,7 @@ export default function MainLayout() {
         <Tabs.Screen name="notification" options={{ unmountOnBlur: true }} />
         <Tabs.Screen name="customer-center" options={{ unmountOnBlur: true }} />
         <Tabs.Screen name="terms-policy" options={{ unmountOnBlur: true }} />
+        <Tabs.Screen name="account" options={{ unmountOnBlur: true }} />
       </Tabs>
     </View>
   );
