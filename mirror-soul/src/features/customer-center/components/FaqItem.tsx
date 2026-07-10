@@ -1,9 +1,11 @@
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, Pressable, LayoutChangeEvent } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
+  withTiming,
+  Easing,
 } from 'react-native-reanimated';
 import { Feather } from '@expo/vector-icons';
 import { FaqItem as FaqItemType } from '../constants/faqData';
@@ -15,58 +17,58 @@ interface FaqItemProps {
   isLast?: boolean;
 }
 
+// 오버스슛(통통 튀는 현상)을 억제하여 차분한 애니메이션 적용
 const SPRING_CONFIG = {
   damping: 20,
-  stiffness: 200,
+  stiffness: 150,
   mass: 0.8,
-};
-
-const ICON_SPRING = {
-  damping: 15,
-  stiffness: 180,
+  overshootClamping: true, 
 };
 
 /**
  * FAQ 아코디언 개별 항목
  *
- * ✅ 핵심 전략: 가변 높이 문제 해결
- *   1. 답변 텍스트를 opacity:0, position:absolute 로 먼저 렌더링
- *   2. onLayout 콜백으로 실제 높이 측정 → contentHeight SharedValue 저장
- *   3. 토글 시 animatedHeight를 0 ↔ contentHeight 로 withSpring 보간
- *
- * ✅ 아이콘 회전: CSS 명세의 transform:rotate(180deg)를
- *   rotation SharedValue + withSpring으로 재현
+ * [실무적 버그 해결 방안]
+ * 1. 높이 측정 (내용이 안 나오는 버그): 
+ *    부모가 height: 0, overflow: hidden 이면 자식의 onLayout 측정값이 0이 나올 수 있습니다.
+ *    따라서 opacity: 0, position: absolute 인 별도의 측정 전용 컨테이너를 먼저 렌더링하여
+ *    정확한 높이를 구한 뒤 상태로 저장합니다.
+ * 2. 아이콘 요동 현상: 
+ *    단순 회전에 withSpring을 쓰면 탄성 때문에 요동치듯(wobble) 보입니다.
+ *    withTiming과 Easing 함수를 사용하여 직관적이고 차분하게 회전하도록 수정했습니다.
  */
 export const FaqItem = ({ item, isOpen, onToggle, isLast = false }: FaqItemProps) => {
-  // 답변 영역의 실제 렌더링 높이 (onLayout으로 측정)
-  const contentHeight = useSharedValue(0);
+  // 실제 렌더링 높이를 상태로 저장하여 컴포넌트를 업데이트
+  const [contentHeight, setContentHeight] = useState(0);
+  
   // 현재 보여지는 높이 (0 ~ contentHeight)
   const animatedHeight = useSharedValue(0);
   // 화살표 아이콘 회전 각도 (0 ~ 180)
   const rotation = useSharedValue(0);
-  // 최초 측정 완료 여부 (중복 측정 방지)
-  const measured = useRef(false);
 
   const handleContentLayout = (e: LayoutChangeEvent) => {
     const h = e.nativeEvent.layout.height;
-    if (h > 0 && !measured.current) {
-      measured.current = true;
-      contentHeight.value = h;
-      // 이미 열려있는 상태라면 즉시 높이 반영
-      if (isOpen) {
-        animatedHeight.value = h;
-      }
+    if (h > 0 && contentHeight === 0) {
+      setContentHeight(h);
     }
   };
 
-  // 부모에서 isOpen이 변경될 때 애니메이션 트리거
+  // 부모에서 isOpen이 변경되거나 측정 높이가 세팅될 때 애니메이션 트리거
   React.useEffect(() => {
-    animatedHeight.value = withSpring(
-      isOpen ? contentHeight.value : 0,
-      SPRING_CONFIG
-    );
-    rotation.value = withSpring(isOpen ? 180 : 0, ICON_SPRING);
-  }, [isOpen]);
+    // 높이가 측정된 이후에만 스프링 애니메이션 적용
+    if (contentHeight > 0) {
+      animatedHeight.value = withSpring(
+        isOpen ? contentHeight : 0,
+        SPRING_CONFIG
+      );
+    }
+    
+    // 아이콘은 요동치지 않도록 Timing 애니메이션 적용 (실무 트렌드)
+    rotation.value = withTiming(isOpen ? 180 : 0, { 
+      duration: 250, 
+      easing: Easing.out(Easing.cubic) 
+    });
+  }, [isOpen, contentHeight]);
 
   // 답변 영역 높이 애니메이션 스타일
   const answerContainerStyle = useAnimatedStyle(() => ({
@@ -95,15 +97,21 @@ export const FaqItem = ({ item, isOpen, onToggle, isLast = false }: FaqItemProps
         </Animated.View>
       </Pressable>
 
-      {/* 답변 영역 - 높이 애니메이션으로 펼침/접힘 */}
+      {/* 답변 영역 - 측정된 높이 기반으로 스프링 애니메이션 */}
       <Animated.View style={answerContainerStyle}>
-        {/* 실제 답변 텍스트 (높이 측정용 invisible 레이어 겸용) */}
-        <View onLayout={handleContentLayout}>
+        <View style={styles.answerInner}>
           <Text style={styles.answerText}>{item.answer}</Text>
         </View>
       </Animated.View>
 
-      {/* 높이 측정용 절대 위치 레이어 (초기 렌더링 시 한 번만 사용) */}
+      {/* 높이 측정용 절대 위치 레이어 (처음 한 번만 렌더링하여 높이 측정 후 DOM에서 제거됨) */}
+      {contentHeight === 0 && (
+        <View style={styles.measureContainer} pointerEvents="none">
+          <View onLayout={handleContentLayout} style={styles.answerInner}>
+            <Text style={styles.answerText}>{item.answer}</Text>
+          </View>
+        </View>
+      )}
     </View>
   );
 };
@@ -111,6 +119,7 @@ export const FaqItem = ({ item, isOpen, onToggle, isLast = false }: FaqItemProps
 const styles = StyleSheet.create({
   wrapper: {
     width: '100%',
+    position: 'relative', // 측정용 컨테이너의 absolute 기준점
   },
   borderBottom: {
     borderBottomWidth: 0.61,
@@ -137,6 +146,11 @@ const styles = StyleSheet.create({
     letterSpacing: -0.15,
     color: '#FFFFFF',
   },
+  answerInner: {
+    paddingHorizontal: 20,
+    paddingBottom: 16,
+    width: '100%',
+  },
   answerText: {
     fontFamily: 'Inter',
     fontWeight: '400',
@@ -144,7 +158,12 @@ const styles = StyleSheet.create({
     lineHeight: 23,
     letterSpacing: -0.15,
     color: '#99A1AF',
-    paddingHorizontal: 20,
-    paddingBottom: 16,
+  },
+  measureContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    opacity: 0, // 사용자에게는 보이지 않음
   },
 });
