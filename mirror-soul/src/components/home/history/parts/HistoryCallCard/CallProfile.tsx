@@ -1,6 +1,5 @@
 import { Colors, Radii } from '@/src/constants/theme';
-import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
-import Animated from 'react-native-reanimated';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
@@ -24,7 +23,7 @@ export default function CallProfile({
   profileImageUrl,
   callTypeDesc,
 }: CallProfileProps) {
-  const theme = useAnimatedTheme();
+  const { colors } = useThemeColors();
 
   return (
     <View style={styles.container}>
@@ -33,14 +32,14 @@ export default function CallProfile({
         {profileImageUrl ? (
           <Image source={{ uri: profileImageUrl }} style={styles.profileImage} />
         ) : (
-          <Animated.View style={[styles.profileImage, theme.animatedGlassBackground]} />
+          <View style={[styles.profileImage, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]} />
         )}
       </View>
 
       {/* Info Section */}
       <View style={styles.infoWrapper}>
         <View style={styles.nameAgeRow}>
-          <Animated.Text style={[styles.nameAgeText, theme.animatedText]}>{name}, {age}</Animated.Text>
+          <Text style={[styles.nameAgeText, { color: colors.text.primary }]}>{name}, {age}</Text>
           <View style={styles.consistencyBadgeWrapper}>
             <LinearGradient
               colors={['rgba(0, 211, 243, 0.20)', 'rgba(194, 122, 255, 0.20)']}
@@ -52,13 +51,13 @@ export default function CallProfile({
             </LinearGradient>
           </View>
         </View>
-        <Animated.Text style={[styles.typeDescText, theme.animatedTextSecondary]}>{callTypeDesc}</Animated.Text>
+        <Text style={[styles.typeDescText, { color: colors.text.secondary }]}>{callTypeDesc}</Text>
       </View>
 
       {/* Date / Time */}
       <View style={styles.dateWrapper}>
-        <Animated.Text style={[styles.dateText, theme.animatedTextSecondary]}>{dateStr}</Animated.Text>
-        <Animated.Text style={[styles.timeText, theme.animatedTextMuted]}>{timeStr}</Animated.Text>
+        <Text style={[styles.dateText, { color: colors.text.secondary }]}>{dateStr}</Text>
+        <Text style={[styles.timeText, { color: colors.text.muted }]}>{timeStr}</Text>
       </View>
     </View>
   );

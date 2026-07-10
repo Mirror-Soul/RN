@@ -5,7 +5,7 @@ import { Feather } from '@expo/vector-icons';
 import Animated from 'react-native-reanimated';
 import { usePressAnimation } from '../hooks/useProfileAnimations';
 import { ProfileItem } from '../types';
-import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 const ITEM_ROUTES: Partial<Record<string, string>> = {
   account_management: '/(main)/account',
@@ -20,12 +20,11 @@ interface SettingsItemProps {
   isLast?: boolean;
 }
 
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export const SettingsItem = ({ item, isLast = false }: SettingsItemProps) => {
   const router = useRouter();
   const { handlePressIn, handlePressOut, animatedStyle } = usePressAnimation();
-  const { colors, animatedText, animatedTextMuted, animatedBorder } = useAnimatedTheme();
+  const { colors } = useThemeColors();
 
   const handlePress = () => {
     const route = ITEM_ROUTES[item.id];
@@ -34,25 +33,25 @@ export const SettingsItem = ({ item, isLast = false }: SettingsItemProps) => {
 
   return (
     <Animated.View style={[animatedStyle]}>
-      <AnimatedPressable
+      <Pressable
         onPress={handlePress}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
-        style={[styles.container, !isLast && styles.borderBottom, !isLast && animatedBorder]}
+        style={[styles.container, !isLast && styles.borderBottom, !isLast && { borderColor: colors.border.primary }]}
       >
         <View style={[styles.iconContainer, { backgroundColor: item.iconBgColor }]}>
           <Feather name={item.iconName} size={16} color={item.iconColor} />
         </View>
 
         <View style={styles.textContainer}>
-          <Animated.Text style={[styles.label, animatedText]}>{item.label}</Animated.Text>
+          <Text style={[styles.label, { color: colors.text.primary }]}>{item.label}</Text>
           {item.description && (
-            <Animated.Text style={[styles.description, animatedTextMuted]}>{item.description}</Animated.Text>
+            <Text style={[styles.description, { color: colors.text.muted }]}>{item.description}</Text>
           )}
         </View>
 
         <Feather name="chevron-right" size={16} color={colors.text.muted} />
-      </AnimatedPressable>
+      </Pressable>
     </Animated.View>
   );
 };

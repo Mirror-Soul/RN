@@ -3,15 +3,14 @@ import HistoryHeader from '@/src/components/home/history/HistoryHeader';
 import HistoryList from '@/src/components/home/history/HistoryList';
 import HistoryStatsRow from '@/src/components/home/history/HistoryStatsRow';
 import { Colors, Layout } from '@/src/constants/theme';
-import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
-import Animated from 'react-native-reanimated';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 import React, { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function HistoryScreen() {
   const insets = useSafeAreaInsets();
-  const theme = useAnimatedTheme();
+  const { colors } = useThemeColors();
   const [activeFilter, setActiveFilter] = useState<HistoryFilterType>('ALL');
 
   // 임시 통계 데이터
@@ -22,15 +21,15 @@ export default function HistoryScreen() {
   };
 
   return (
-    <Animated.ScrollView
-      style={[styles.scrollView, theme.animatedBackground]}
+    <ScrollView
+      style={[styles.scrollView, { backgroundColor: colors.background.primary }]}
       contentContainerStyle={[
         styles.scrollContent,
         { paddingBottom: insets.bottom + Layout.MAIN_TAB_CONTENTS_BOTTOM_PADDING }, // 네비바 높이 + 안전영역 대응
       ]}
       showsVerticalScrollIndicator={false}
     >
-      <Animated.View style={[styles.dashboard, { paddingTop: Math.max(insets.top + 12, Layout.SCREEN_PADDING) }]}>
+      <View style={[styles.dashboard, { paddingTop: Math.max(insets.top + 12, Layout.SCREEN_PADDING) }]}>
         <HistoryHeader />
         
         {/* 통계 스코어보드 */}
@@ -44,8 +43,8 @@ export default function HistoryScreen() {
         
         {/* 리스트 내역 */}
         <HistoryList filter={activeFilter} />
-      </Animated.View>
-    </Animated.ScrollView>
+      </View>
+    </ScrollView>
   );
 }
 

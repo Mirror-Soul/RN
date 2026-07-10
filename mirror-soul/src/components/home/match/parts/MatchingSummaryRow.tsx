@@ -3,9 +3,8 @@ import TwinCallIcon from '@/assets/images/common/matching/Twin_Call.svg';
 import OnRecommendIcon from '@/assets/images/common/matching/OnRecommend.svg';
 import { Colors, Radii } from '@/src/constants/theme';
 import React from 'react';
-import { StyleSheet, TouchableOpacity, View } from 'react-native';
-import Animated from 'react-native-reanimated';
-import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
+import { StyleSheet, TouchableOpacity, View, Text } from 'react-native';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 export type MatchingTabType = 'meet' | 'twin' | 'recommend';
 
@@ -18,7 +17,7 @@ interface MatchingSummaryRowProps {
  * 매칭 요약 버튼 행 (만남 신청, Twin, 추천)
  */
 export default function MatchingSummaryRow({ activeTab, onTabChange }: MatchingSummaryRowProps) {
-  const { animatedGlassBackground, animatedBorder, animatedTextMuted } = useAnimatedTheme();
+  const { colors } = useThemeColors();
 
   return (
     <View style={styles.container}>
@@ -27,31 +26,30 @@ export default function MatchingSummaryRow({ activeTab, onTabChange }: MatchingS
         activeOpacity={0.8} 
         onPress={() => onTabChange('meet')}
       >
-        <Animated.View style={[
+        <View style={[
           styles.summaryButton, 
-          animatedGlassBackground,
-          animatedBorder,
+          { backgroundColor: colors.background.glass, borderColor: colors.border.primary },
           activeTab === 'meet' && styles.meetButtonActive
         ]}>
           <View style={styles.buttonContent}>
             <NoMeetingIcon width={20} height={20} />
-            <Animated.Text style={[
+            <Text style={[
               styles.buttonText, 
-              animatedTextMuted,
+              { color: colors.text.muted },
               activeTab === 'meet' && { color: Colors.primary.mirrorOrange }
-            ]}>만남 신청</Animated.Text>
+            ]}>만남 신청</Text>
             <View style={[
               styles.badge, 
               { backgroundColor: activeTab === 'meet' ? Colors.glass.orange30 : 'rgba(255, 137, 4, 0.30)' }
             ]}>
-              <Animated.Text style={[
+              <Text style={[
                 styles.badgeText, 
-                animatedTextMuted,
+                { color: colors.text.muted },
                 activeTab === 'meet' && { color: Colors.primary.mirrorOrange }
-              ]}>2</Animated.Text>
+              ]}>2</Text>
             </View>
           </View>
-        </Animated.View>
+        </View>
       </TouchableOpacity>
 
       {/* Twin 버튼 */}
@@ -59,31 +57,30 @@ export default function MatchingSummaryRow({ activeTab, onTabChange }: MatchingS
         activeOpacity={0.8} 
         onPress={() => onTabChange('twin')}
       >
-        <Animated.View style={[
+        <View style={[
           styles.summaryButton, 
-          animatedGlassBackground,
-          animatedBorder,
+          { backgroundColor: colors.background.glass, borderColor: colors.border.primary },
           activeTab === 'twin' && styles.twinButtonActive
         ]}>
           <View style={styles.buttonContent}>
             <TwinCallIcon width={20} height={20} />
-            <Animated.Text style={[
+            <Text style={[
               styles.buttonText, 
-              animatedTextMuted,
+              { color: colors.text.muted },
               activeTab === 'twin' && { color: Colors.primary.electricCyan }
-            ]}>Twin</Animated.Text>
+            ]}>Twin</Text>
             <View style={[
               styles.badge, 
               { backgroundColor: activeTab === 'twin' ? Colors.glass.cyan30 : 'rgba(0, 211, 243, 0.30)' }
             ]}>
-              <Animated.Text style={[
+              <Text style={[
                 styles.badgeText, 
-                animatedTextMuted,
+                { color: colors.text.muted },
                 activeTab === 'twin' && { color: Colors.primary.electricCyan }
-              ]}>2</Animated.Text>
+              ]}>2</Text>
             </View>
           </View>
-        </Animated.View>
+        </View>
       </TouchableOpacity>
 
       {/* 추천 버튼 */}
@@ -91,31 +88,30 @@ export default function MatchingSummaryRow({ activeTab, onTabChange }: MatchingS
         activeOpacity={0.8} 
         onPress={() => onTabChange('recommend')}
       >
-        <Animated.View style={[
+        <View style={[
           styles.summaryButton, 
-          animatedGlassBackground,
-          animatedBorder,
+          { backgroundColor: colors.background.glass, borderColor: colors.border.primary },
           activeTab === 'recommend' && styles.recommendButtonActive
         ]}>
           <View style={styles.buttonContent}>
             <OnRecommendIcon width={20} height={20} />
-            <Animated.Text style={[
+            <Text style={[
               styles.buttonText, 
-              animatedTextMuted,
+              { color: colors.text.muted },
               activeTab === 'recommend' && { color: Colors.primary.vividPurple }
-            ]}>추천</Animated.Text>
+            ]}>추천</Text>
             <View style={[
               styles.badge, 
               { backgroundColor: activeTab === 'recommend' ? Colors.glass.purple30 : 'rgba(194, 122, 255, 0.30)' }
             ]}>
-              <Animated.Text style={[
+              <Text style={[
                 styles.badgeText, 
-                animatedTextMuted,
+                { color: colors.text.muted },
                 activeTab === 'recommend' && { color: Colors.primary.vividPurple }
-              ]}>2</Animated.Text>
+              ]}>2</Text>
             </View>
           </View>
-        </Animated.View>
+        </View>
       </TouchableOpacity>
     </View>
   );

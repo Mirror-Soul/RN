@@ -1,18 +1,17 @@
 import { Colors } from '@/src/constants/theme';
-import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
-import Animated from 'react-native-reanimated';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, Text } from 'react-native';
 
 /**
  * HistoryHeader 컴포넌트 (SRP)
  * 기록 화면의 상단 타이틀 영역을 렌더링합니다.
  */
 export default function HistoryHeader() {
-  const theme = useAnimatedTheme();
+  const { colors } = useThemeColors();
   return (
     <View style={styles.container}>
-      <Animated.Text style={[styles.title, theme.animatedText]}>통화 기록</Animated.Text>
+      <Text style={[styles.title, { color: colors.text.primary }]}>통화 기록</Text>
     </View>
   );
 }

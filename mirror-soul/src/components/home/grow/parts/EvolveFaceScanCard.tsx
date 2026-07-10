@@ -4,14 +4,13 @@ import { Colors, Radii } from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import Animated from 'react-native-reanimated';
-import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 /**
  * 얼굴 스캔 카드 (SRP)
  */
 export default function EvolveFaceScanCard() {
-  const { animatedText, animatedTextSecondary } = useAnimatedTheme();
+  const { colors } = useThemeColors();
 
   return (
     <TouchableOpacity
@@ -34,13 +33,13 @@ export default function EvolveFaceScanCard() {
         </View>
 
         <View style={styles.content}>
-          <Animated.Text style={[styles.title, animatedText]}>얼굴 스캔</Animated.Text>
-          <Animated.Text style={[styles.subTitle, animatedTextSecondary]}>표정과 감정 학습</Animated.Text>
+          <Text style={[styles.title, { color: colors.text.primary }]}>얼굴 스캔</Text>
+          <Text style={[styles.subTitle, { color: colors.text.secondary }]}>표정과 감정 학습</Text>
         </View>
 
         <View style={styles.footer}>
           <TimerIcon width={16} height={16} />
-          <Animated.Text style={[styles.timeText, animatedTextSecondary]}>2분</Animated.Text>
+          <Text style={[styles.timeText, { color: colors.text.secondary }]}>2분</Text>
         </View>
       </LinearGradient>
     </TouchableOpacity>

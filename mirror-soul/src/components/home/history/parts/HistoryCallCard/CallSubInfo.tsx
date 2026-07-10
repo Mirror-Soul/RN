@@ -1,10 +1,9 @@
 import HistoryIcon from '@/assets/images/common/bottomNavbar/History_button.svg';
 import PurpleHeartIcon from '@/assets/images/common/history/purpleHeart.svg';
 import { Colors, Radii } from '@/src/constants/theme';
-import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
-import Animated from 'react-native-reanimated';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, Text } from 'react-native';
 
 export interface CallSubInfoProps {
   durationLabel: string; // ex) "8분 23초"
@@ -15,21 +14,21 @@ export default function CallSubInfo({
   durationLabel,
   twinMatchLabel,
 }: CallSubInfoProps) {
-  const theme = useAnimatedTheme();
+  const { colors } = useThemeColors();
 
   return (
     <View style={styles.container}>
       {/* Time */}
-      <Animated.View style={[styles.chip, theme.animatedGlassBackground]}>
-        <HistoryIcon width={16} height={16} color={theme.colors.text.muted} />
-        <Animated.Text style={[styles.chipText, theme.animatedTextMuted]}>{durationLabel}</Animated.Text>
-      </Animated.View>
+      <View style={[styles.chip, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
+        <HistoryIcon width={16} height={16} color={colors.text.muted} />
+        <Text style={[styles.chipText, { color: colors.text.muted }]}>{durationLabel}</Text>
+      </View>
 
       {/* Twin Match */}
-      <Animated.View style={[styles.chip, theme.animatedGlassBackground]}>
+      <View style={[styles.chip, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
         <PurpleHeartIcon width={16} height={16} />
-        <Animated.Text style={[styles.chipText, theme.animatedTextMuted]}>{twinMatchLabel}</Animated.Text>
-      </Animated.View>
+        <Text style={[styles.chipText, { color: colors.text.muted }]}>{twinMatchLabel}</Text>
+      </View>
     </View>
   );
 }

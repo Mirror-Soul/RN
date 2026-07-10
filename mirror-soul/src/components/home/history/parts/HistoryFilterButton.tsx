@@ -1,10 +1,7 @@
 import { Colors, Radii } from '@/src/constants/theme';
-import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
-import Animated from 'react-native-reanimated';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 import React from 'react';
-import { StyleSheet, TouchableOpacity } from 'react-native';
-
-const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
+import { StyleSheet, TouchableOpacity, Text } from 'react-native';
 
 export interface HistoryFilterButtonProps {
   label: string;
@@ -20,23 +17,25 @@ export default function HistoryFilterButton({
   isActive,
   onPress,
 }: HistoryFilterButtonProps) {
-  const theme = useAnimatedTheme();
+  const { colors } = useThemeColors();
 
   return (
-    <AnimatedTouchableOpacity
+    <TouchableOpacity
       style={[
         styles.container,
-        isActive ? theme.animatedCardBackground : theme.animatedGlassBackground,
+        isActive 
+          ? { backgroundColor: colors.background.card, borderColor: colors.border.primary } 
+          : { backgroundColor: colors.background.glass, borderColor: colors.border.primary },
       ]}
       onPress={onPress}
       activeOpacity={0.7}
       accessibilityRole="button"
       accessibilityState={{ selected: isActive }}
     >
-      <Animated.Text style={[styles.label, isActive ? theme.animatedText : theme.animatedTextMuted]}>
+      <Text style={[styles.label, isActive ? { color: colors.text.primary } : { color: colors.text.muted }]}>
         {label}
-      </Animated.Text>
-    </AnimatedTouchableOpacity>
+      </Text>
+    </TouchableOpacity>
   );
 }
 

@@ -1,8 +1,7 @@
 import { Colors, Radii } from '@/src/constants/theme';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import Animated from 'react-native-reanimated';
-import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface MatchingTabIndicatorProps {
   activeIndex: number;
@@ -18,15 +17,15 @@ export default function MatchingTabIndicator({
   total, 
   activeColor = Colors.primary.mirrorOrange 
 }: MatchingTabIndicatorProps) {
-  const { animatedGlassBackground } = useAnimatedTheme();
+  const { colors } = useThemeColors();
 
   return (
     <View style={styles.container}>
       {Array.from({ length: total }).map((_, index) => (
-        <Animated.View 
+        <View 
           key={index} 
           style={[
-            index === activeIndex ? styles.activeBar : [styles.inactiveDot, animatedGlassBackground],
+            index === activeIndex ? styles.activeBar : [styles.inactiveDot, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }],
             index === activeIndex && { backgroundColor: activeColor }
           ]} 
         />

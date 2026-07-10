@@ -1,8 +1,7 @@
 import { Colors, Radii } from '@/src/constants/theme';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import Animated from 'react-native-reanimated';
-import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface RecommendStepIndicatorProps {
   total: number;
@@ -15,14 +14,14 @@ interface RecommendStepIndicatorProps {
  * 활성 도트는 cyan, 비활성 도트는 반투명 흰색입니다.
  */
 export default function RecommendStepIndicator({ total, activeIndex }: RecommendStepIndicatorProps) {
-  const { colors } = useAnimatedTheme();
+  const { colors } = useThemeColors();
 
   return (
     <View style={styles.container}>
       {Array.from({ length: total }).map((_, index) => {
         const isActive = index === activeIndex;
         return (
-          <Animated.View
+          <View
             key={index}
             style={[
               styles.dot,

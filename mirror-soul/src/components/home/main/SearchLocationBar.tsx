@@ -3,10 +3,7 @@ import RightNarrowIcon from '@/assets/images/common/Right_narrow.svg';
 import { Colors, Radii } from '@/src/constants/theme';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import Animated from 'react-native-reanimated';
-import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
-
-const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface SearchLocationBarProps {
   locations?: string[];
@@ -21,11 +18,11 @@ export default function SearchLocationBar({
   locations = ['강동구', '강북구'],
   onPress,
 }: SearchLocationBarProps) {
-  const { animatedGlassBackground } = useAnimatedTheme();
+  const { colors } = useThemeColors();
 
   return (
-    <AnimatedTouchableOpacity
-      style={[styles.container, animatedGlassBackground]}
+    <TouchableOpacity
+      style={[styles.container, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
       onPress={onPress}
       activeOpacity={0.7}
       accessibilityRole="button"
@@ -42,7 +39,7 @@ export default function SearchLocationBar({
         </View>
       </View>
       <RightNarrowIcon width={16} height={16} />
-    </AnimatedTouchableOpacity>
+    </TouchableOpacity>
   );
 }
 

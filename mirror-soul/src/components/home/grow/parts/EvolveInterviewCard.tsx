@@ -5,15 +5,14 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import Animated from 'react-native-reanimated';
-import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 /**
  * 나를 알아가는 인터뷰 카드 (SRP)
  */
 export default function EvolveInterviewCard() {
   const router = useRouter();
-  const { animatedText, animatedTextSecondary } = useAnimatedTheme();
+  const { colors } = useThemeColors();
 
   return (
     <TouchableOpacity
@@ -42,13 +41,13 @@ export default function EvolveInterviewCard() {
         </View>
 
         <View style={styles.content}>
-          <Animated.Text style={[styles.title, animatedText]}>나를 알아가는 인터뷰</Animated.Text>
-          <Animated.Text style={[styles.subTitle, animatedTextSecondary]}>AI와 대화하며 내 가치관 공유하기</Animated.Text>
+          <Text style={[styles.title, { color: colors.text.primary }]}>나를 알아가는 인터뷰</Text>
+          <Text style={[styles.subTitle, { color: colors.text.secondary }]}>AI와 대화하며 내 가치관 공유하기</Text>
         </View>
 
         <View style={styles.footer}>
           <TimerIcon width={16} height={16} />
-          <Animated.Text style={[styles.timeText, animatedTextSecondary]}>15분</Animated.Text>
+          <Text style={[styles.timeText, { color: colors.text.secondary }]}>15분</Text>
         </View>
       </LinearGradient>
     </TouchableOpacity>

@@ -1,8 +1,7 @@
 import { Colors, Radii } from '@/src/constants/theme';
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
-import Animated from 'react-native-reanimated';
-import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
+import { StyleSheet, View, Text } from 'react-native';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { MatchingTabType } from './MatchingSummaryRow';
 
 interface MatchingFooterProps {
@@ -13,7 +12,7 @@ interface MatchingFooterProps {
  * 매칭 화면 하단 안내 배너
  */
 export default function MatchingFooter({ activeTab }: MatchingFooterProps) {
-  const { animatedGlassBackground, animatedBorder, animatedTextMuted } = useAnimatedTheme();
+  const { colors } = useThemeColors();
 
   const getFooterText = () => {
     if (activeTab === 'twin') return '상대의 Twin이 내 Twin과 대화한 결과예요';
@@ -22,9 +21,9 @@ export default function MatchingFooter({ activeTab }: MatchingFooterProps) {
   };
 
   return (
-    <Animated.View style={[styles.container, animatedGlassBackground, animatedBorder]}>
-      <Animated.Text style={[styles.text, animatedTextMuted]}>{getFooterText()}</Animated.Text>
-    </Animated.View>
+    <View style={[styles.container, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
+      <Text style={[styles.text, { color: colors.text.muted }]}>{getFooterText()}</Text>
+    </View>
   );
 }
 

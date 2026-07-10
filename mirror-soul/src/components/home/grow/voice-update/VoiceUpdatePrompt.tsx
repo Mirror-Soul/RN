@@ -3,8 +3,7 @@ import { Colors, Radii } from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import Animated from 'react-native-reanimated';
-import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface VoiceUpdatePromptProps {
   sentence: string;
@@ -14,13 +13,13 @@ interface VoiceUpdatePromptProps {
  * 목소리 업데이트 문장 안내 카드 (SRP)
  */
 export default function VoiceUpdatePrompt({ sentence }: VoiceUpdatePromptProps) {
-  const { animatedText, animatedTextSecondary } = useAnimatedTheme();
+  const { colors } = useThemeColors();
 
   return (
     <View style={styles.container}>
       <View style={styles.head}>
-        <Animated.Text style={[styles.title, animatedText]}>다음 문장을 읽어주세요</Animated.Text>
-        <Animated.Text style={[styles.subTitle, animatedTextSecondary]}>자연스럽게, 평소 말하는 톤으로 읽어주시면 됩니다</Animated.Text>
+        <Text style={[styles.title, { color: colors.text.primary }]}>다음 문장을 읽어주세요</Text>
+        <Text style={[styles.subTitle, { color: colors.text.secondary }]}>자연스럽게, 평소 말하는 톤으로 읽어주시면 됩니다</Text>
       </View>
 
       <LinearGradient
@@ -31,7 +30,7 @@ export default function VoiceUpdatePrompt({ sentence }: VoiceUpdatePromptProps) 
       >
         <View style={styles.bodyContainer}>
           <VoiceUpdateIcon width={24} height={24} />
-          <Animated.Text style={[styles.sentenceText, animatedText]}>{sentence}</Animated.Text>
+          <Text style={[styles.sentenceText, { color: colors.text.primary }]}>{sentence}</Text>
         </View>
       </LinearGradient>
     </View>

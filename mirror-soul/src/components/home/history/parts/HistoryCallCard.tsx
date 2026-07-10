@@ -1,10 +1,8 @@
 import { Colors, Radii } from '@/src/constants/theme';
-import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
-import Animated from 'react-native-reanimated';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 import React from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 
-const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
 import CallProfile from './HistoryCallCard/CallProfile';
 import CallSubInfo from './HistoryCallCard/CallSubInfo';
 import CallTagRow from './HistoryCallCard/CallTagRow';
@@ -46,11 +44,11 @@ interface HistoryCallCardProps {
  * 개별 통화 기록 단위 카드 컴포넌트
  */
 export default function HistoryCallCard({ data, onPress }: HistoryCallCardProps) {
-  const theme = useAnimatedTheme();
+  const { colors } = useThemeColors();
 
   return (
-    <AnimatedTouchableOpacity
-      style={[styles.container, theme.animatedGlassBackground]}
+    <TouchableOpacity
+      style={[styles.container, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
       onPress={onPress}
       activeOpacity={0.85}
       accessibilityRole="button"
@@ -69,7 +67,7 @@ export default function HistoryCallCard({ data, onPress }: HistoryCallCardProps)
         twinMatchLabel={data.twinMatchLabel}
       />
       <CallTagRow tags={data.tags} />
-    </AnimatedTouchableOpacity>
+    </TouchableOpacity>
   );
 }
 

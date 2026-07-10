@@ -1,8 +1,7 @@
 import { Colors, Radii } from '@/src/constants/theme';
-import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
-import Animated from 'react-native-reanimated';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, Text } from 'react-native';
 
 interface HistoryStatCardProps {
   count: number | string;
@@ -18,17 +17,17 @@ export default function HistoryStatCard({
   label,
   countColor,
 }: HistoryStatCardProps) {
-  const theme = useAnimatedTheme();
+  const { colors } = useThemeColors();
 
   return (
-    <Animated.View style={[styles.container, theme.animatedGlassBackground]}>
+    <View style={[styles.container, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
       <View style={styles.countWrapper}>
-        <Animated.Text style={[styles.countText, countColor ? { color: countColor } : theme.animatedText]}>{count}</Animated.Text>
+        <Text style={[styles.countText, countColor ? { color: countColor } : { color: colors.text.primary }]}>{count}</Text>
       </View>
       <View style={styles.labelWrapper}>
-        <Animated.Text style={[styles.labelText, theme.animatedTextSecondary]}>{label}</Animated.Text>
+        <Text style={[styles.labelText, { color: colors.text.secondary }]}>{label}</Text>
       </View>
-    </Animated.View>
+    </View>
   );
 }
 

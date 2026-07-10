@@ -9,11 +9,8 @@ import MatchingTabIndicator from '@/src/components/home/match/parts/MatchingTabI
 import { Colors, Layout } from '@/src/constants/theme';
 import React from 'react';
 import { Animated as RNAnimated, FlatList, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
-import Animated from 'react-native-reanimated';
-import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-
-const AnimatedSafeAreaView = Animated.createAnimatedComponent(SafeAreaView);
 
 const MEET_DATA = [
   {
@@ -96,7 +93,7 @@ const TWIN_DATA = [
 export default function MatchScreen() {
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
-  const { animatedBackground } = useAnimatedTheme();
+  const { colors } = useThemeColors();
   const [activeTab, setActiveTab] = React.useState<MatchingTabType>('meet');
   const [activeIndex, setActiveIndex] = React.useState(0);
   const fadeAnim = React.useRef(new RNAnimated.Value(1)).current;
@@ -149,7 +146,7 @@ export default function MatchScreen() {
   const activeColor = getActiveColor();
 
   return (
-    <AnimatedSafeAreaView style={[styles.safeArea, animatedBackground]} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background.primary }]} edges={['top', 'left', 'right']}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={[
@@ -201,7 +198,7 @@ export default function MatchScreen() {
           </View>
         </View>
       </ScrollView>
-    </AnimatedSafeAreaView>
+    </SafeAreaView>
   );
 }
 

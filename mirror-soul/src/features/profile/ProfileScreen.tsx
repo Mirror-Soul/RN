@@ -9,14 +9,13 @@ import { PROFILE_SECTIONS } from './constants/profileMenu';
 import { TimeRefillBottomSheet } from './components/TimeRefillBottomSheet';
 
 import { useAccountStore } from '@/src/store/useAccountStore';
-import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
-import Animated from 'react-native-reanimated';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 export const ProfileScreen = () => {
   const insets = useSafeAreaInsets();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const { nickname } = useAccountStore();
-  const { animatedBackground } = useAnimatedTheme();
+  const { colors } = useThemeColors();
 
   const handleOpenSheet = useCallback(() => {
     setIsSheetOpen(true);
@@ -27,7 +26,7 @@ export const ProfileScreen = () => {
   }, []);
 
   return (
-    <Animated.View style={[styles.container, animatedBackground]}>
+    <View style={[styles.container, { backgroundColor: colors.background.primary }]}>
       <ScrollView 
         contentContainerStyle={[
           styles.scrollContent, 
@@ -58,7 +57,7 @@ export const ProfileScreen = () => {
 
       {/* Render Bottom Sheet outside of ScrollView so it overlaps correctly */}
       <TimeRefillBottomSheet isOpen={isSheetOpen} onClose={handleCloseSheet} />
-    </Animated.View>
+    </View>
   );
 };
 

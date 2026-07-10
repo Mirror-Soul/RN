@@ -1,22 +1,21 @@
 import { Colors, Radii } from '@/src/constants/theme';
 import React from 'react';
-import { StyleSheet } from 'react-native';
-import Animated from 'react-native-reanimated';
-import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
+import { StyleSheet, View, Text } from 'react-native';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 /**
  * 성장 탭 하단 안내 카드 (SRP)
  */
 export default function EvolveFooter() {
-  const { animatedGlassBackground, animatedBorder, animatedText, animatedTextSecondary } = useAnimatedTheme();
+  const { colors } = useThemeColors();
 
   return (
-    <Animated.View style={[styles.container, animatedGlassBackground, animatedBorder]}>
-      <Animated.Text style={[styles.title, animatedText]}>완성도가 높을수록 좋은 이유</Animated.Text>
-      <Animated.Text style={[styles.subTitle, animatedTextSecondary]}>
+    <View style={[styles.container, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
+      <Text style={[styles.title, { color: colors.text.primary }]}>완성도가 높을수록 좋은 이유</Text>
+      <Text style={[styles.subTitle, { color: colors.text.secondary }]}>
         트윈이 나를 더 잘 이해할수록 나와 잘 맞는 사람을 찾아주고, 더 자연스러운 대화를 나눌 수 있어요.
-      </Animated.Text>
-    </Animated.View>
+      </Text>
+    </View>
   );
 }
 

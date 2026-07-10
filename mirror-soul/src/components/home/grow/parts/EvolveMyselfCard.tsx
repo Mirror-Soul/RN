@@ -3,14 +3,13 @@ import { Colors, Radii } from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import Animated from 'react-native-reanimated';
-import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 /**
  * 내 트윈과 대화하기 배너 (SRP)
  */
 export default function EvolveMyselfCard() {
-  const { animatedText, animatedTextSecondary } = useAnimatedTheme();
+  const { colors } = useThemeColors();
 
   return (
     <TouchableOpacity
@@ -38,8 +37,8 @@ export default function EvolveMyselfCard() {
 
           {/* 텍스트 영역 */}
           <View style={styles.textContainer}>
-            <Animated.Text style={[styles.title, animatedText]}>내 트윈과 대화하기</Animated.Text>
-            <Animated.Text style={[styles.subTitle, animatedTextSecondary]}>지금 어떻게 답변하는지 확인해보세요</Animated.Text>
+            <Text style={[styles.title, { color: colors.text.primary }]}>내 트윈과 대화하기</Text>
+            <Text style={[styles.subTitle, { color: colors.text.secondary }]}>지금 어떻게 답변하는지 확인해보세요</Text>
           </View>
 
           {/* 우측 화살표 */}

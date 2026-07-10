@@ -1,9 +1,9 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { ProfileSection } from '../types';
 import { SettingsItem } from './SettingsItem';
-import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface SettingsSectionProps {
   section: ProfileSection;
@@ -11,16 +11,16 @@ interface SettingsSectionProps {
 }
 
 export const SettingsSection = ({ section, delay = 200 }: SettingsSectionProps) => {
-  const { animatedTextMuted, animatedGlassBackground, animatedBorder } = useAnimatedTheme();
+  const { colors } = useThemeColors();
 
   return (
     <Animated.View
       entering={FadeInDown.delay(delay).duration(600).springify()}
       style={styles.container}
     >
-      <Animated.Text style={[styles.titleText, animatedTextMuted]}>{section.title}</Animated.Text>
+      <Text style={[styles.titleText, { color: colors.text.muted }]}>{section.title}</Text>
       
-      <Animated.View style={[styles.cardContainer, animatedGlassBackground, animatedBorder]}>
+      <View style={[styles.cardContainer, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
         {section.items.map((item, index) => (
           <SettingsItem 
             key={item.id} 
@@ -28,7 +28,7 @@ export const SettingsSection = ({ section, delay = 200 }: SettingsSectionProps) 
             isLast={index === section.items.length - 1} 
           />
         ))}
-      </Animated.View>
+      </View>
     </Animated.View>
   );
 };

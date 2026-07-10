@@ -6,8 +6,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
-import Animated from 'react-native-reanimated';
-import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 export type VoiceUpdateStatus = 'idle' | 'recording' | 'analyzing' | 'done';
 
@@ -29,7 +28,7 @@ export default function VoiceUpdateButton({
 }: VoiceUpdateButtonProps) {
   const router = useRouter();
   const { width } = useWindowDimensions();
-  const { animatedText, animatedTextSecondary } = useAnimatedTheme();
+  const { colors } = useThemeColors();
   
   // 기기 폭에 비례하는 동적 크기 계산 (기준 393px에서 96px은 약 24.4%)
   // 너무 작아지거나 커지는 것을 방지하기 위해 clamp 적용
@@ -103,8 +102,8 @@ export default function VoiceUpdateButton({
       <View style={styles.infoArea}>
         {isIdle && (
           <View style={styles.idleInfo}>
-            <Animated.Text style={[styles.statusText, animatedText]}>녹음 시작</Animated.Text>
-            <Animated.Text style={[styles.footerText, animatedTextSecondary]}>마이크 버튼을 눌러 녹음을 시작하세요</Animated.Text>
+            <Text style={[styles.statusText, { color: colors.text.primary }]}>녹음 시작</Text>
+            <Text style={[styles.footerText, { color: colors.text.secondary }]}>마이크 버튼을 눌러 녹음을 시작하세요</Text>
           </View>
         )}
 
@@ -112,18 +111,18 @@ export default function VoiceUpdateButton({
           <View style={styles.recordingInfo}>
             <View style={styles.recordingStatusRow}>
               <View style={styles.recordingDot} />
-              <Animated.Text style={[styles.statusText, animatedText]}>녹음 중...</Animated.Text>
+              <Text style={[styles.statusText, { color: colors.text.primary }]}>녹음 중...</Text>
             </View>
-            <Animated.Text style={[styles.elapsedText, animatedTextSecondary]}>{elapsedTime}초</Animated.Text>
+            <Text style={[styles.elapsedText, { color: colors.text.secondary }]}>{elapsedTime}초</Text>
           </View>
         )}
 
         {isAnalyzing && (
           <View style={styles.doneInfo}>
-            <Animated.Text style={[styles.statusText, animatedText, { color: Colors.primary.successGreen, fontWeight: '600' }]}>
+            <Text style={[styles.statusText, { color: colors.text.primary }, { color: Colors.primary.successGreen, fontWeight: '600' }]}>
               목소리 분석 중...
-            </Animated.Text>
-            <Animated.Text style={[styles.footerText, animatedTextSecondary]}>인공지능이 당신의 말투를 학습하고 있습니다</Animated.Text>
+            </Text>
+            <Text style={[styles.footerText, { color: colors.text.secondary }]}>인공지능이 당신의 말투를 학습하고 있습니다</Text>
           </View>
         )}
 
@@ -136,7 +135,7 @@ export default function VoiceUpdateButton({
                 onPress={onRetry}
                 style={styles.actionChip}
               >
-                <Animated.Text style={[styles.actionChipText, animatedTextSecondary]}>다른 문장 읽어보기</Animated.Text>
+                <Text style={[styles.actionChipText, { color: colors.text.secondary }]}>다른 문장 읽어보기</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -144,7 +143,7 @@ export default function VoiceUpdateButton({
                 onPress={() => router.back()}
                 style={[styles.actionChip, styles.primaryChip]}
               >
-                <Animated.Text style={[styles.actionChipText, animatedTextSecondary, styles.primaryChipText]}>완료하기</Animated.Text>
+                <Text style={[styles.actionChipText, { color: colors.text.secondary }, styles.primaryChipText]}>완료하기</Text>
               </TouchableOpacity>
             </View>
           </View>

@@ -4,18 +4,17 @@ import { ROUTE_TO_TAB, TAB_TO_ROUTE } from '@/src/constants/routes/mainRoutes';
 import { Tabs } from 'expo-router';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import Animated from 'react-native-reanimated';
-import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 /**
  * (main) 그룹 탭 레이아웃
  * expo-router의 Tabs를 사용하여 탭별 네비게이션 스택을 독립적으로 유지합니다.
  */
 export default function MainLayout() {
-  const { animatedBackground } = useAnimatedTheme();
+  const { colors } = useThemeColors();
 
   return (
-    <Animated.View style={[styles.container, animatedBackground]}>
+    <View style={[styles.container, { backgroundColor: colors.background.primary }]}>
       <Tabs
         initialRouteName="index"
         screenOptions={{
@@ -47,9 +46,8 @@ export default function MainLayout() {
         <Tabs.Screen name="notification" options={{ unmountOnBlur: true }} />
         <Tabs.Screen name="customer-center" options={{ unmountOnBlur: true }} />
         <Tabs.Screen name="terms-policy" options={{ unmountOnBlur: true }} />
-        <Tabs.Screen name="account" options={{ unmountOnBlur: true }} />
       </Tabs>
-    </Animated.View>
+    </View>
   );
 }
 

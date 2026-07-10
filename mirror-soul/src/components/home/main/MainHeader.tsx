@@ -2,11 +2,8 @@ import SettingIcon from '@/assets/images/common/Setting.svg';
 import TimerIcon from '@/assets/images/common/main/Timer.svg';
 import { Colors, Radii } from '@/src/constants/theme';
 import React from 'react';
-import { StyleSheet, TouchableOpacity, View } from 'react-native';
-import Animated from 'react-native-reanimated';
-import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
-
-const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface MainHeaderProps {
   timerDisplay?: string;
@@ -21,31 +18,31 @@ export default function MainHeader({
   timerDisplay = '23 : 44 : 59',
   onSettingPress,
 }: MainHeaderProps) {
-  const { animatedText, animatedGlassBackground } = useAnimatedTheme();
+  const { colors } = useThemeColors();
 
   return (
     <View style={styles.container}>
       {/* Title */}
-      <Animated.Text style={[styles.title, animatedText]}>Mirror Soul</Animated.Text>
+      <Text style={[styles.title, { color: colors.text.primary }]}>Mirror Soul</Text>
 
       {/* Timer + Setting */}
       <View style={styles.rightSection}>
         {/* Timer Badge */}
-        <Animated.View style={[styles.timerBadge, animatedGlassBackground]}>
+        <View style={[styles.timerBadge, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
           <TimerIcon width={16} height={16} />
-          <Animated.Text style={styles.timerText}>{timerDisplay}</Animated.Text>
-        </Animated.View>
+          <Text style={styles.timerText}>{timerDisplay}</Text>
+        </View>
 
         {/* Setting Button */}
-        <AnimatedTouchableOpacity
-          style={[styles.settingButton, animatedGlassBackground]}
+        <TouchableOpacity
+          style={[styles.settingButton, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
           onPress={onSettingPress}
           activeOpacity={0.7}
           accessibilityRole="button"
           accessibilityLabel="설정"
         >
           <SettingIcon width={21} height={21} />
-        </AnimatedTouchableOpacity>
+        </TouchableOpacity>
       </View>
     </View>
   );

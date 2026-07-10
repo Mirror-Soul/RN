@@ -5,8 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import Animated from 'react-native-reanimated';
-import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 
 /**
@@ -14,7 +13,7 @@ import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
  */
 export default function EvolveVoiceCard() {
   const router = useRouter();
-  const { animatedText, animatedTextSecondary } = useAnimatedTheme();
+  const { colors } = useThemeColors();
 
   return (
     <TouchableOpacity
@@ -35,17 +34,17 @@ export default function EvolveVoiceCard() {
           <View style={styles.iconBg}>
             <VoiceIcon width={16} height={16} />
           </View>
-          <Animated.Text style={[styles.dateText, animatedTextSecondary]}>2일 전</Animated.Text>
+          <Text style={[styles.dateText, { color: colors.text.secondary }]}>2일 전</Text>
         </View>
 
         <View style={styles.content}>
-          <Animated.Text style={[styles.title, animatedText]}>목소리 녹음</Animated.Text>
-          <Animated.Text style={[styles.subTitle, animatedTextSecondary]}>내 말투 학습시키기</Animated.Text>
+          <Text style={[styles.title, { color: colors.text.primary }]}>목소리 녹음</Text>
+          <Text style={[styles.subTitle, { color: colors.text.secondary }]}>내 말투 학습시키기</Text>
         </View>
 
         <View style={styles.footer}>
           <TimerIcon width={16} height={16} />
-          <Animated.Text style={[styles.timeText, animatedTextSecondary]}>5분</Animated.Text>
+          <Text style={[styles.timeText, { color: colors.text.secondary }]}>5분</Text>
         </View>
       </LinearGradient>
     </TouchableOpacity>

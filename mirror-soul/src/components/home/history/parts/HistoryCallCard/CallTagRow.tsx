@@ -1,6 +1,5 @@
 import { Colors, Radii } from '@/src/constants/theme';
-import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
-import Animated from 'react-native-reanimated';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -9,13 +8,13 @@ export interface CallTagRowProps {
 }
 
 export default function CallTagRow({ tags }: CallTagRowProps) {
-  const theme = useAnimatedTheme();
+  const { colors } = useThemeColors();
 
   if (!tags || tags.length === 0) return null;
 
   return (
     <View style={styles.container}>
-      <Animated.Text style={[styles.titleText, theme.animatedTextSecondary]}>대화 주제</Animated.Text>
+      <Text style={[styles.titleText, { color: colors.text.secondary }]}>대화 주제</Text>
       <View style={styles.tagsWrapper}>
         {tags.map((tag, index) => (
           <View key={index} style={styles.tagBadge}>

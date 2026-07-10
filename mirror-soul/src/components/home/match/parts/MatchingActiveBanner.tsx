@@ -2,8 +2,7 @@ import { Colors, Radii } from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useRef, useState } from 'react';
 import { Animated as RNAnimated, StyleSheet, TouchableOpacity, useWindowDimensions, View, Text } from 'react-native';
-import Animated from 'react-native-reanimated';
-import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 /**
  * 매칭 활성화 상태 배너 (상태 토글 및 페이드 애니메이션 적용)
@@ -11,7 +10,7 @@ import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
 export default function MatchingActiveBanner() {
   const { width } = useWindowDimensions();
   const [isActive, setIsActive] = useState(true);
-  const { animatedText } = useAnimatedTheme();
+  const { colors } = useThemeColors();
 
   // 페이드 애니메이션을 위한 값 (0: 비활성, 1: 활성)
   const fadeAnim = useRef(new RNAnimated.Value(1)).current;
@@ -55,13 +54,13 @@ export default function MatchingActiveBanner() {
         {/* 활성 상태 뷰 */}
         <RNAnimated.View style={[styles.statusContainer, { opacity: activeOpacity, position: isActive ? 'relative' : 'absolute' }]}>
           <View style={[styles.dot, { backgroundColor: Colors.primary.successGreen }]} />
-          <Animated.Text style={[styles.statusText, animatedText]}>매칭 활성</Animated.Text>
+          <Text style={[styles.statusText, { color: colors.text.primary }]}>매칭 활성</Text>
         </RNAnimated.View>
 
         {/* 비활성 상태 뷰 */}
         <RNAnimated.View style={[styles.statusContainer, { opacity: inactiveOpacity, position: !isActive ? 'relative' : 'absolute' }]}>
           <View style={[styles.dot, { backgroundColor: Colors.neutral.darkGray }]} />
-          <Animated.Text style={[styles.statusText, animatedText]}>매칭 비활성</Animated.Text>
+          <Text style={[styles.statusText, { color: colors.text.primary }]}>매칭 비활성</Text>
         </RNAnimated.View>
       </View>
 
@@ -74,7 +73,7 @@ export default function MatchingActiveBanner() {
             onPress={toggleStatus}
             style={styles.stopButton}
           >
-            <Animated.Text style={[styles.stopButtonText, animatedText]}>중지</Animated.Text>
+            <Text style={[styles.stopButtonText, { color: colors.text.primary }]}>중지</Text>
           </TouchableOpacity>
         </RNAnimated.View>
 

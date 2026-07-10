@@ -2,10 +2,7 @@ import { Colors, Radii } from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import Animated from 'react-native-reanimated';
-import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
-
-const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface UserProfileCardProps {
   similarityPercent?: number;
@@ -21,29 +18,29 @@ export default function UserProfileCard({
   similarityPercent = 73,
   growthMessage = '더 나은 매칭을 위해 성장하세요',
 }: UserProfileCardProps) {
-  const { animatedGlassBackground, animatedBorder, animatedTextSecondary, animatedTextMuted } = useAnimatedTheme();
+  const { colors } = useThemeColors();
 
   return (
-    <Animated.View style={[styles.container, animatedGlassBackground]}>
+    <View style={[styles.container, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
       <View style={styles.inner}>
         {/* Avatar (빈 상태 — 추후 API 연동) */}
-        <AnimatedLinearGradient
+        <LinearGradient
           colors={['rgba(0,211,243,0.20)', 'rgba(194,122,255,0.20)']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={[styles.avatar, animatedBorder]}
+          style={[styles.avatar, { borderColor: colors.border.primary }]}
         />
 
         {/* Info */}
         <View style={styles.info}>
           <View style={styles.titleRow}>
-            <Animated.Text style={[styles.labelText, animatedTextSecondary]}>트윈 유사도</Animated.Text>
+            <Text style={[styles.labelText, { color: colors.text.secondary }]}>트윈 유사도</Text>
             <Text style={styles.percentText}>{similarityPercent}%</Text>
           </View>
-          <Animated.Text style={[styles.growthText, animatedTextMuted]}>{growthMessage}</Animated.Text>
+          <Text style={[styles.growthText, { color: colors.text.muted }]}>{growthMessage}</Text>
         </View>
       </View>
-    </Animated.View>
+    </View>
   );
 }
 

@@ -7,10 +7,7 @@ import { Colors, Radii } from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import Animated from 'react-native-reanimated';
-import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
-
-const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 export interface RecommendCardData {
   id: string;
@@ -35,28 +32,28 @@ interface RecommendCardProps {
  * — 하단: 이름/나이, 지역, 소개, 패스/관심 버튼
  */
 export default function RecommendCard({ data, onPass, onLike, onInfo }: RecommendCardProps) {
-  const { animatedCardBackground, animatedText, animatedTextSecondary, isDark } = useAnimatedTheme();
+  const { colors, isDark } = useThemeColors();
 
   return (
-    <Animated.View style={[styles.card, animatedCardBackground]}>
+    <View style={[styles.card, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
       {/* 카드 상단 배지 영역 */}
       <View style={styles.badgeRow}>
         {/* Info 버튼 */}
-        <AnimatedTouchableOpacity
-          style={[styles.iconButton, animatedCardBackground]}
+        <TouchableOpacity
+          style={[styles.iconButton, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}
           onPress={() => onInfo?.(data.id)}
           activeOpacity={0.7}
           accessibilityRole="button"
           accessibilityLabel="상세 정보 보기"
         >
           <InfoIcon width={16} height={16} />
-        </AnimatedTouchableOpacity>
+        </TouchableOpacity>
 
         {/* 유사도 배지 */}
-        <Animated.View style={[styles.similarityBadge, animatedCardBackground]}>
+        <View style={[styles.similarityBadge, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
           <SimilarityIcon width={14} height={14} />
-          <Animated.Text style={[styles.similarityText, animatedText]}>{data.similarityPercent}%</Animated.Text>
-        </Animated.View>
+          <Text style={[styles.similarityText, { color: colors.text.primary }]}>{data.similarityPercent}%</Text>
+        </View>
       </View>
 
       {/* 카드 하단 정보 영역 (그라디언트 오버레이) */}
@@ -67,30 +64,30 @@ export default function RecommendCard({ data, onPass, onLike, onInfo }: Recommen
         style={styles.infoGradient}
       >
         {/* 이름 + 나이 */}
-        <Animated.Text style={[styles.nameText, animatedText]}>{data.name}, {data.age}</Animated.Text>
+        <Text style={[styles.nameText, { color: colors.text.primary }]}>{data.name}, {data.age}</Text>
 
         {/* 지역 */}
         <View style={styles.locationRow}>
           <LocationIcon width={14} height={14} />
-          <Animated.Text style={[styles.locationText, animatedTextSecondary]}>{data.location}</Animated.Text>
+          <Text style={[styles.locationText, { color: colors.text.secondary }]}>{data.location}</Text>
         </View>
 
         {/* 소개 */}
-        <Animated.Text style={[styles.descriptionText, animatedTextSecondary]} numberOfLines={3}>{data.description}</Animated.Text>
+        <Text style={[styles.descriptionText, { color: colors.text.secondary }]} numberOfLines={3}>{data.description}</Text>
 
         {/* 버튼 영역 */}
         <View style={styles.actionRow}>
           {/* 패스 버튼 */}
-          <AnimatedTouchableOpacity
-            style={[styles.passButton, animatedCardBackground]}
+          <TouchableOpacity
+            style={[styles.passButton, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}
             onPress={() => onPass?.(data.id)}
             activeOpacity={0.7}
             accessibilityRole="button"
             accessibilityLabel="패스"
           >
             <CancelIcon width={16} height={16} />
-            <Animated.Text style={[styles.passText, animatedTextSecondary]}>패스</Animated.Text>
-          </AnimatedTouchableOpacity>
+            <Text style={[styles.passText, { color: colors.text.secondary }]}>패스</Text>
+          </TouchableOpacity>
 
           {/* 관심 버튼 */}
           <LinearGradient
@@ -112,7 +109,7 @@ export default function RecommendCard({ data, onPass, onLike, onInfo }: Recommen
           </LinearGradient>
         </View>
       </LinearGradient>
-    </Animated.View>
+    </View>
   );
 }
 

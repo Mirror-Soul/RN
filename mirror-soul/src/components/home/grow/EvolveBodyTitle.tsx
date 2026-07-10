@@ -1,21 +1,20 @@
 import { Colors } from '@/src/constants/theme';
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
-import Animated from 'react-native-reanimated';
-import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
+import { Text, StyleSheet, View } from 'react-native';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 /**
  * 성장 미션 섹션 타이틀 (SRP)
  */
 export default function EvolveBodyTitle() {
-  const { animatedText, animatedTextSecondary } = useAnimatedTheme();
+  const { colors } = useThemeColors();
 
   return (
     <View style={styles.container}>
-      <Animated.Text style={[styles.heading, animatedText]}>성장 미션</Animated.Text>
-      <Animated.Text style={[styles.paragraph, animatedTextSecondary]}>
+      <Text style={[styles.heading, { color: colors.text.primary }]}>성장 미션</Text>
+      <Text style={[styles.paragraph, { color: colors.text.secondary }]}>
         미션을 완료하고 내 트윈을 더 나답게 만들어보세요
-      </Animated.Text>
+      </Text>
     </View>
   );
 }

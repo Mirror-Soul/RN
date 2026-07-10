@@ -7,8 +7,7 @@ import { Colors, Layout, Radii } from '@/src/constants/theme';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Animated from 'react-native-reanimated';
-import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 export type BottomTabId = 'history' | 'grow' | 'discover' | 'match' | 'profile';
 
@@ -37,11 +36,11 @@ interface BottomNavbarProps {
  */
 export default function BottomNavbar({ activeTab = 'discover', onTabPress }: BottomNavbarProps) {
   const insets = useSafeAreaInsets();
-  const { colors, animatedGlassBackground } = useAnimatedTheme();
+  const { colors } = useThemeColors();
 
   return (
     <View style={[styles.wrapper, { bottom: insets.bottom + 16 }]}>
-      <Animated.View style={[styles.bar, animatedGlassBackground]}>
+      <View style={[styles.bar, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
         {TABS.map((tab) => {
           const isActive = tab.id === activeTab;
           const color = isActive ? Colors.primary.electricCyan : colors.text.muted;
@@ -60,7 +59,7 @@ export default function BottomNavbar({ activeTab = 'discover', onTabPress }: Bot
             </TouchableOpacity>
           );
         })}
-      </Animated.View>
+      </View>
     </View>
   );
 }

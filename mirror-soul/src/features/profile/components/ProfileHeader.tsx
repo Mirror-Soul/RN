@@ -3,7 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface ProfileHeaderProps {
   name: string;
@@ -12,7 +12,7 @@ interface ProfileHeaderProps {
 }
 
 export const ProfileHeader = ({ name, email, delay = 0 }: ProfileHeaderProps) => {
-  const { animatedText, animatedTextMuted } = useAnimatedTheme();
+  const { colors } = useThemeColors();
 
   return (
     <Animated.View
@@ -33,10 +33,10 @@ export const ProfileHeader = ({ name, email, delay = 0 }: ProfileHeaderProps) =>
       </View>
 
       <View style={styles.infoContainer}>
-        <Animated.Text style={[styles.nameText, animatedText]}>안녕하세요, {name}님</Animated.Text>
+        <Text style={[styles.nameText, { color: colors.text.primary }]}>안녕하세요, {name}님</Text>
         
         <View style={styles.emailContainer}>
-          <Animated.Text style={[styles.emailText, animatedTextMuted]}>{email}</Animated.Text>
+          <Text style={[styles.emailText, { color: colors.text.muted }]}>{email}</Text>
         </View>
       </View>
     </Animated.View>

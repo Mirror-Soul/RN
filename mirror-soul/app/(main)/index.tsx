@@ -11,8 +11,7 @@ import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { router } from 'expo-router';
-import Animated from 'react-native-reanimated';
-import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 /**
  * 메인 홈 화면 (발견 탭)
@@ -21,7 +20,7 @@ import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
  */
 export default function MainHomeScreen() {
   const insets = useSafeAreaInsets();
-  const { animatedBackground } = useAnimatedTheme();
+  const { colors } = useThemeColors();
 
   const handleLogout = () => {
     Alert.alert(
@@ -57,8 +56,8 @@ export default function MainHomeScreen() {
   };
 
   return (
-    <Animated.ScrollView
-      style={[styles.scrollView, animatedBackground]}
+    <ScrollView
+      style={[styles.scrollView, { backgroundColor: colors.background.primary }]}
       contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
     >
@@ -75,7 +74,7 @@ export default function MainHomeScreen() {
         {/* 추천 섹션 (좌우 스와이프 카드) */}
         <RecommendSection />
       </View>
-    </Animated.ScrollView>
+    </ScrollView>
   );
 }
 

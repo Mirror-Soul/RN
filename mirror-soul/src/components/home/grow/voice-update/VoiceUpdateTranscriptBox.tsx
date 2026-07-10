@@ -1,7 +1,7 @@
 import { Colors, Radii } from '@/src/constants/theme';
 import React, { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
-import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface VoiceUpdateTranscriptBoxProps {
   transcript: string;
@@ -17,7 +17,7 @@ export default function VoiceUpdateTranscriptBox({
   isRecording,
 }: VoiceUpdateTranscriptBoxProps) {
   const blinkAnim = useRef(new Animated.Value(0.8)).current;
-  const { animatedText, animatedTextSecondary, animatedBorder } = useAnimatedTheme();
+  const { colors } = useThemeColors();
 
   useEffect(() => {
     let animation: Animated.CompositeAnimation | null = null;
@@ -48,7 +48,7 @@ export default function VoiceUpdateTranscriptBox({
   }, [isRecording]);
 
   return (
-    <Animated.View style={[styles.container, animatedBorder]}>
+    <View style={[styles.container, { borderColor: colors.border.primary }]}>
       <View style={styles.header}>
         {isRecording && (
           <View style={styles.recordingIndicator}>
@@ -60,14 +60,14 @@ export default function VoiceUpdateTranscriptBox({
 
       <View style={styles.content}>
         {transcript ? (
-          <Animated.Text style={[styles.transcriptText, animatedText]}>{transcript}</Animated.Text>
+          <Text style={[styles.transcriptText, { color: colors.text.primary }]}>{transcript}</Text>
         ) : (
-          <Animated.Text style={[styles.placeholderText, animatedTextSecondary]}>
+          <Text style={[styles.placeholderText, { color: colors.text.secondary }]}>
             {isRecording ? '말씀해 주세요...' : '녹음 버튼을 눌러 문장을 읽어주세요'}
-          </Animated.Text>
+          </Text>
         )}
       </View>
-    </Animated.View>
+    </View>
   );
 }
 

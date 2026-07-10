@@ -1,15 +1,13 @@
 import SettingIcon from '@/assets/images/common/Setting.svg';
 import { Colors, Radii } from '@/src/constants/theme';
 import React from 'react';
-import { StyleSheet, TouchableOpacity, View } from 'react-native';
-import Animated from 'react-native-reanimated';
-import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
-
+import { StyleSheet, TouchableOpacity, View, Text } from 'react-native';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 /**
  * 매칭 화면 헤더 (뒤로가기 제거, 제목 중앙 정렬)
  */
 export default function MatchingHeader() {
-  const { animatedText, animatedGlassBackground, animatedBorder } = useAnimatedTheme();
+  const { colors } = useThemeColors();
 
   return (
     <View style={styles.header}>
@@ -17,15 +15,15 @@ export default function MatchingHeader() {
       <View style={styles.dummyView} />
 
       <View style={styles.titleContainer}>
-        <Animated.Text style={[styles.title, animatedText]}>매칭</Animated.Text>
+        <Text style={[styles.title, { color: colors.text.primary }]}>매칭</Text>
       </View>
 
       <TouchableOpacity 
         activeOpacity={0.7} 
       >
-        <Animated.View style={[styles.circleButton, animatedGlassBackground, animatedBorder]}>
+        <View style={[styles.circleButton, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
           <SettingIcon width={24} height={24} />
-        </Animated.View>
+        </View>
       </TouchableOpacity>
     </View>
   );
