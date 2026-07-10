@@ -13,8 +13,21 @@ import { SUPPORT_EMAIL } from '../constants/faqData';
  */
 export const EmailContactButton = () => {
   const handlePress = async () => {
-    const subject = encodeURIComponent('[Mirror Soul] 문의합니다');
-    const url = `mailto:${SUPPORT_EMAIL}?subject=${subject}`;
+    const subject = encodeURIComponent('[Mirror Soul] 고객센터 문의');
+    const bodyTemplate = `아래 양식에 맞춰 문의 내용을 작성해 주시면 더욱 빠른 확인이 가능합니다.
+
+---
+■ 사용 중인 기기 (예: iPhone 14 Pro, 갤럭시 S23 등): 
+■ OS 버전 (예: iOS 17, Android 14 등): 
+■ 로그인 계정: 
+■ 문의 내용: 
+(여기에 자세한 문의 내용을 남겨주세요)
+---
+
+감사합니다.`;
+    
+    const body = encodeURIComponent(bodyTemplate);
+    const url = `mailto:${SUPPORT_EMAIL}?subject=${subject}&body=${body}`;
 
     try {
       const canOpen = await Linking.canOpenURL(url);

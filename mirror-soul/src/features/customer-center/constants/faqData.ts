@@ -37,4 +37,4 @@ export const FAQ_ITEMS: FaqItem[] = [
   },
 ];
 
-export const SUPPORT_EMAIL = 'support@mirrorsoul.app';
+export const SUPPORT_EMAIL = 'mirrorsoul64@gmail.com';
