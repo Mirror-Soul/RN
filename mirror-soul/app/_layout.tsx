@@ -33,19 +33,23 @@ export default function RootLayout() {
   useEffect(() => {
     if (!isHydrated || !rootNavigationState?.key) return;
 
-    if (isLoggedIn) {
-      if (userStatus === 'ACTIVE') {
-        // 이미 메인 화면 구현이 안되어있을 수 있지만 기획상 메인 라우트로 이동
-        router.replace('/(main)');
-      } else if (userStatus?.startsWith('ONBOARD_')) {
-        // 로그인 한 미완료자는 해당하는 곳으로 강제 이동
-        router.replace(getOnboardingRoute(userStatus));
+    const timer = setTimeout(() => {
+      if (isLoggedIn) {
+        if (userStatus === 'ACTIVE') {
+          // 이미 메인 화면 구현이 안되어있을 수 있지만 기획상 메인 라우트로 이동
+          router.replace('/(main)');
+        } else if (userStatus?.startsWith('ONBOARD_')) {
+          // 로그인 한 미완료자는 해당하는 곳으로 강제 이동
+          router.replace(getOnboardingRoute(userStatus));
+        }
+      } else {
+        // 미로그인 상태면 처음 화면(로그인 화면)
+        router.replace('/');
       }
-    } else {
-      // 미로그인 상태면 처음 화면(로그인 화면)
-      router.replace('/');
-    }
-  }, [isHydrated, isLoggedIn, userStatus]);
+    }, 0);
+
+    return () => clearTimeout(timer);
+  }, [isHydrated, isLoggedIn, userStatus, rootNavigationState?.key]);
 
   if (!isHydrated) return null; // 로딩 중 빈 화면 (필요시 Splash Screen)
 
