@@ -103,7 +103,7 @@ export default function MatchingRecommendCard({
             </View>
           </View>
         </View>
-      </View>
+      </Animated.View>
 
       {/* 하단 액션 버튼 영역 */}
       <View style={styles.actionRow}>
