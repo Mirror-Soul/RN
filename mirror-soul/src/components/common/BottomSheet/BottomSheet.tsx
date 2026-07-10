@@ -8,6 +8,7 @@ import Animated, {
   withTiming,
   runOnJS,
 } from 'react-native-reanimated';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -19,6 +20,7 @@ interface BottomSheetProps {
 }
 
 export const BottomSheet = ({ isOpen, onClose, children, height = SCREEN_HEIGHT * 0.8 }: BottomSheetProps) => {
+  const { colors } = useThemeColors();
   const [isModalVisible, setIsModalVisible] = useState(isOpen);
   const translateY = useSharedValue(SCREEN_HEIGHT);
   const opacity = useSharedValue(0);
@@ -80,7 +82,7 @@ export const BottomSheet = ({ isOpen, onClose, children, height = SCREEN_HEIGHT 
         </TouchableWithoutFeedback>
 
         <GestureDetector gesture={panGesture}>
-          <Animated.View style={[styles.sheet, animatedSheetStyle, { height }]}>
+          <Animated.View style={[styles.sheet, animatedSheetStyle, { height, backgroundColor: colors.background.card, borderTopColor: colors.border.primary }]}>
             <View style={styles.handleContainer}>
               <View style={styles.handle} />
             </View>
@@ -106,9 +108,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.95)',
     borderTopWidth: 0.61,
-    borderTopColor: 'rgba(255, 255, 255, 0.1)',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     zIndex: 2,
