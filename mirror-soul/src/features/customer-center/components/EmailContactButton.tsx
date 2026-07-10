@@ -2,16 +2,13 @@ import React from 'react';
 import { View, Text, StyleSheet, Pressable, Linking, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
+import Animated from 'react-native-reanimated';
 import { SUPPORT_EMAIL } from '../constants/faqData';
+import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
 
-/**
- * 이메일 문의 버튼
- *
- * - CSS 명세: Cyan→Purple 그라디언트 배경 + Cyan 테두리
- * - Linking.openURL로 기기 기본 메일 앱 실행
- * - 메일 앱 미설치 기기 대비 canOpenURL 사전 체크
- */
 export const EmailContactButton = () => {
+  const { animatedTextMuted } = useAnimatedTheme();
+
   const handlePress = async () => {
     const subject = encodeURIComponent('[Mirror Soul] 고객센터 문의');
     const bodyTemplate = `아래 양식에 맞춰 문의 내용을 작성해 주시면 더욱 빠른 확인이 가능합니다.
@@ -51,7 +48,7 @@ export const EmailContactButton = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>해결되지 않은 문제가 있으신가요?</Text>
+      <Animated.Text style={[styles.label, animatedTextMuted]}>해결되지 않은 문제가 있으신가요?</Animated.Text>
 
       <View style={styles.buttonWrapper}>
         <Pressable
@@ -71,7 +68,7 @@ export const EmailContactButton = () => {
         </Pressable>
       </View>
 
-      <Text style={styles.emailAddress}>{SUPPORT_EMAIL}</Text>
+      <Animated.Text style={[styles.emailAddress, animatedTextMuted]}>{SUPPORT_EMAIL}</Animated.Text>
     </View>
   );
 };
@@ -87,7 +84,6 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     fontSize: 12,
     lineHeight: 16,
-    color: '#6A7282',
     textAlign: 'center',
   },
   buttonWrapper: {
@@ -125,7 +121,6 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     fontSize: 12,
     lineHeight: 16,
-    color: '#4A5565',
     textAlign: 'center',
     marginTop: 12,
   },

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
+import { View, StyleSheet, Pressable, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -7,16 +7,16 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { PolicyMenuItem } from './components/PolicyMenuItem';
 import { TERMS_LINKS } from './constants/termsLinks';
+import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
 
 export const TermsPolicyScreen = () => {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { colors, animatedBackground, animatedGlassBackground, animatedBorder, animatedText, animatedTextMuted } = useAnimatedTheme();
 
   return (
-    <View style={styles.container}>
-      {/* 백그라운드 (CSS 명세 기반 근사치 그라데이션) */}
+    <Animated.View style={[styles.container, animatedBackground]}>
       <View style={StyleSheet.absoluteFill} pointerEvents="none">
-        {/* React Native에서 복잡한 다중 Radial Gradient를 위해 SVG를 사용하거나 단순화합니다. 여기서는 단순화. */}
         <View style={styles.gradientOverlay} />
       </View>
 
@@ -27,23 +27,22 @@ export const TermsPolicyScreen = () => {
         ]}
         showsVerticalScrollIndicator={false}
       >
-        {/* 헤더 */}
         <Animated.View 
           entering={FadeInDown.delay(0).duration(500).springify()}
           style={styles.header}
         >
-          <Pressable onPress={() => router.navigate('/(main)/profile')} style={styles.backButton}>
-            <Feather name="arrow-left" size={20} color="#FFFFFF" />
+          <Pressable onPress={() => router.navigate('/(main)/profile')}>
+            <Animated.View style={[styles.backButton, animatedGlassBackground, animatedBorder]}>
+              <Feather name="arrow-left" size={20} color={colors.text.primary} />
+            </Animated.View>
           </Pressable>
-          <Text style={styles.headerTitle}>약관 및 정책</Text>
-          {/* 타이틀 중앙 정렬용 여백 */}
+          <Animated.Text style={[styles.headerTitle, animatedText]}>약관 및 정책</Animated.Text>
           <View style={{ width: 40 }} />
         </Animated.View>
 
-        {/* 메뉴 리스트 컨테이너 (Glassmorphism) */}
         <Animated.View 
           entering={FadeInDown.delay(120).duration(550).springify()}
-          style={styles.menuContainer}
+          style={[styles.menuContainer, animatedGlassBackground, animatedBorder]}
         >
           <PolicyMenuItem
             title="서비스 이용약관"
@@ -66,22 +65,20 @@ export const TermsPolicyScreen = () => {
           />
         </Animated.View>
 
-        {/* 하단 안내 텍스트 */}
         <Animated.View 
           entering={FadeInDown.delay(240).duration(550).springify()}
           style={styles.footerTextContainer}
         >
-          <Text style={styles.footerText}>각 항목을 누르면 외부 브라우저에서 열립니다.</Text>
+          <Animated.Text style={[styles.footerText, animatedTextMuted]}>각 항목을 누르면 외부 브라우저에서 열립니다.</Animated.Text>
         </Animated.View>
       </ScrollView>
-    </View>
+    </Animated.View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
   },
   gradientOverlay: {
     ...StyleSheet.absoluteFillObject,
@@ -103,9 +100,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderWidth: 0.61,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -113,14 +108,11 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter',
     fontWeight: '500',
     fontSize: 18,
-    color: '#FFFFFF',
     letterSpacing: -0.44,
   },
   menuContainer: {
     marginHorizontal: 24,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderWidth: 0.61,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 16,
     overflow: 'hidden',
   },
@@ -132,7 +124,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter',
     fontWeight: '400',
     fontSize: 12,
-    color: '#4A5565',
     textAlign: 'center',
   },
 });

@@ -1,32 +1,32 @@
 import React from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, StyleSheet, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
 
 export const VoiceAudioHeader = () => {
   const router = useRouter();
+  const { colors, animatedGlassBackground, animatedText } = useAnimatedTheme();
 
   return (
     <Animated.View
       entering={FadeInDown.delay(0).duration(500).springify()}
       style={styles.container}
     >
-      {/* 뒤로가기 버튼 */}
       <Pressable
         onPress={() => router.navigate('/(main)/profile')}
-        style={({ pressed }) => [styles.backButton, pressed && styles.backButtonPressed]}
         hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
       >
-        <Feather name="arrow-left" size={20} color="#FFFFFF" />
+        <Animated.View style={[styles.backButton, animatedGlassBackground]}>
+          <Feather name="arrow-left" size={20} color={colors.text.primary} />
+        </Animated.View>
       </Pressable>
 
-      {/* 타이틀 (가운데 정렬) */}
       <View style={styles.titleContainer} pointerEvents="none">
-        <Text style={styles.title}>음성 및 오디오</Text>
+        <Animated.Text style={[styles.title, animatedText]}>음성 및 오디오</Animated.Text>
       </View>
 
-      {/* 우측 공간 균형 맞춤 (타이틀 정중앙 배치용) */}
       <View style={styles.placeholder} />
     </Animated.View>
   );
@@ -44,14 +44,9 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 9999,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderWidth: 0.61,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  backButtonPressed: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
   },
   titleContainer: {
     flex: 1,
@@ -63,7 +58,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     lineHeight: 28,
     letterSpacing: -0.44,
-    color: '#FFFFFF',
     textAlign: 'center',
   },
   placeholder: {

@@ -1,82 +1,83 @@
-import { useMemo } from 'react';
-import { useDerivedValue, withTiming, useAnimatedStyle, SharedValue } from 'react-native-reanimated';
+import { useDerivedValue, withTiming, useAnimatedStyle } from 'react-native-reanimated';
 import { useActiveTheme } from '@/src/store/useThemeStore';
 import { lightTheme, darkTheme, ThemeColors } from '@/src/constants/theme';
 
+const D = darkTheme;
+const L = lightTheme;
+const DURATION = 350;
+
 export const useAnimatedTheme = () => {
   const activeTheme = useActiveTheme();
-  
-  // 1. Raw Colors for non-animated components (SVGs, StatusBar, etc)
-  const colors: ThemeColors = activeTheme === 'dark' ? darkTheme : lightTheme;
+  const isDark = activeTheme === 'dark';
 
-  // 2. Reanimated SharedValues for smooth transition
-  // We use useDerivedValue to reactively update the color based on activeTheme changes.
-  // withTiming interpolates the hex color transition over 400ms smoothly.
-  
-  const bgPrimary = useDerivedValue(() => {
-    return withTiming(activeTheme === 'dark' ? darkTheme.background.primary : lightTheme.background.primary, { duration: 400 });
-  }, [activeTheme]);
+  // 1. Raw Colors (non-animated, for SVGs, icons, etc.)
+  const colors: ThemeColors = isDark ? D : L;
 
-  const bgCard = useDerivedValue(() => {
-    return withTiming(activeTheme === 'dark' ? darkTheme.background.card : lightTheme.background.card, { duration: 400 });
-  }, [activeTheme]);
+  // ─── SharedValues ──────────────────────────────────────
+  const bgPrimary = useDerivedValue(() =>
+    withTiming(isDark ? D.background.primary : L.background.primary, { duration: DURATION })
+  );
+  const bgCard = useDerivedValue(() =>
+    withTiming(isDark ? D.background.card : L.background.card, { duration: DURATION })
+  );
+  const bgGlass = useDerivedValue(() =>
+    withTiming(isDark ? D.background.glass : L.background.glass, { duration: DURATION })
+  );
+  const textPrimary = useDerivedValue(() =>
+    withTiming(isDark ? D.text.primary : L.text.primary, { duration: DURATION })
+  );
+  const textSecondary = useDerivedValue(() =>
+    withTiming(isDark ? D.text.secondary : L.text.secondary, { duration: DURATION })
+  );
+  const textMuted = useDerivedValue(() =>
+    withTiming(isDark ? D.text.muted : L.text.muted, { duration: DURATION })
+  );
+  const borderPrimary = useDerivedValue(() =>
+    withTiming(isDark ? D.border.primary : L.border.primary, { duration: DURATION })
+  );
 
-  const bgGlass = useDerivedValue(() => {
-    return withTiming(activeTheme === 'dark' ? darkTheme.background.glass : lightTheme.background.glass, { duration: 400 });
-  }, [activeTheme]);
+  // ─── Pre-built Animated Styles ──────────────────────────
+  const animatedBackground = useAnimatedStyle(() => ({
+    backgroundColor: bgPrimary.value,
+  }));
 
-  const textPrimary = useDerivedValue(() => {
-    return withTiming(activeTheme === 'dark' ? darkTheme.text.primary : lightTheme.text.primary, { duration: 400 });
-  }, [activeTheme]);
+  const animatedCardBackground = useAnimatedStyle(() => ({
+    backgroundColor: bgCard.value,
+    borderColor: borderPrimary.value,
+  }));
 
-  const textSecondary = useDerivedValue(() => {
-    return withTiming(activeTheme === 'dark' ? darkTheme.text.secondary : lightTheme.text.secondary, { duration: 400 });
-  }, [activeTheme]);
+  const animatedGlassBackground = useAnimatedStyle(() => ({
+    backgroundColor: bgGlass.value,
+    borderColor: borderPrimary.value,
+  }));
 
-  const borderPrimary = useDerivedValue(() => {
-    return withTiming(activeTheme === 'dark' ? darkTheme.border.primary : lightTheme.border.primary, { duration: 400 });
-  }, [activeTheme]);
+  const animatedText = useAnimatedStyle(() => ({
+    color: textPrimary.value,
+  }));
 
-  // 3. Pre-built Animated Styles for convenience
-  const animatedBackground = useAnimatedStyle(() => {
-    return { backgroundColor: bgPrimary.value };
-  });
+  const animatedTextSecondary = useAnimatedStyle(() => ({
+    color: textSecondary.value,
+  }));
 
-  const animatedCardBackground = useAnimatedStyle(() => {
-    return { backgroundColor: bgCard.value };
-  });
+  const animatedTextMuted = useAnimatedStyle(() => ({
+    color: textMuted.value,
+  }));
 
-  const animatedGlassBackground = useAnimatedStyle(() => {
-    return { backgroundColor: bgGlass.value };
-  });
-
-  const animatedText = useAnimatedStyle(() => {
-    return { color: textPrimary.value };
-  });
-
-  const animatedTextSecondary = useAnimatedStyle(() => {
-    return { color: textSecondary.value };
-  });
-
-  const animatedBorder = useAnimatedStyle(() => {
-    return { borderColor: borderPrimary.value };
-  });
+  const animatedBorder = useAnimatedStyle(() => ({
+    borderColor: borderPrimary.value,
+  }));
 
   return {
-    colors, // raw colors
+    colors,
     activeTheme,
-    // Animated styles
+    isDark,
+    // Animated styles (use on Animated.View / Animated.Text)
     animatedBackground,
     animatedCardBackground,
     animatedGlassBackground,
     animatedText,
     animatedTextSecondary,
+    animatedTextMuted,
     animatedBorder,
-    // Raw shared values if needed for custom interpolation
-    shared: {
-      bgPrimary,
-      textPrimary,
-      borderPrimary
-    }
   };
 };

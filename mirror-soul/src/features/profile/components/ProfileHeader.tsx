@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
 
 interface ProfileHeaderProps {
   name: string;
@@ -11,12 +12,13 @@ interface ProfileHeaderProps {
 }
 
 export const ProfileHeader = ({ name, email, delay = 0 }: ProfileHeaderProps) => {
+  const { animatedText, animatedTextMuted } = useAnimatedTheme();
+
   return (
     <Animated.View
       entering={FadeInDown.delay(delay).duration(600).springify()}
       style={styles.container}
     >
-      {/* Avatar Container with Gradient Background */}
       <View style={styles.avatarMargin}>
         <LinearGradient
           colors={['rgba(0, 211, 243, 0.2)', 'rgba(194, 122, 255, 0.2)']}
@@ -24,19 +26,17 @@ export const ProfileHeader = ({ name, email, delay = 0 }: ProfileHeaderProps) =>
           end={{ x: 1, y: 1 }}
           style={styles.avatarGradient}
         >
-          {/* Avatar Border Overlay */}
           <View style={styles.avatarBorder}>
             <Feather name="user" size={32} color="rgba(255, 255, 255, 0.8)" />
           </View>
         </LinearGradient>
       </View>
 
-      {/* User Info Container */}
       <View style={styles.infoContainer}>
-        <Text style={styles.nameText}>안녕하세요, {name}님</Text>
+        <Animated.Text style={[styles.nameText, animatedText]}>안녕하세요, {name}님</Animated.Text>
         
         <View style={styles.emailContainer}>
-          <Text style={styles.emailText}>{email}</Text>
+          <Animated.Text style={[styles.emailText, animatedTextMuted]}>{email}</Animated.Text>
         </View>
       </View>
     </Animated.View>
@@ -60,7 +60,6 @@ const styles = StyleSheet.create({
     borderRadius: 48,
     justifyContent: 'center',
     alignItems: 'center',
-    // boxShadow equivalent in React Native
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.1,
@@ -85,7 +84,6 @@ const styles = StyleSheet.create({
     fontSize: 24,
     lineHeight: 32,
     letterSpacing: 0.07,
-    color: '#FFFFFF',
     marginBottom: 6,
   },
   emailContainer: {
@@ -99,6 +97,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     letterSpacing: -0.15,
-    color: '#6A7282',
   },
 });

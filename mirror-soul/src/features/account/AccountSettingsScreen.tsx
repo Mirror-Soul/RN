@@ -1,38 +1,46 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import Constants from 'expo-constants';
+
+import { NicknameEditModal } from './components/NicknameEditModal';
 import { useAccountStore } from '@/src/store/useAccountStore';
 import { useThemeStore } from '@/src/store/useThemeStore';
 import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
-import { NicknameEditModal } from './components/NicknameEditModal';
-import Constants from 'expo-constants';
 
 export const AccountSettingsScreen = () => {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { nickname } = useAccountStore();
   const { themeMode, setThemeMode } = useThemeStore();
-  const { animatedBackground, animatedCardBackground, animatedText, animatedTextSecondary, colors } = useAnimatedTheme();
+  const { 
+    colors, 
+    animatedBackground, 
+    animatedCardBackground, 
+    animatedGlassBackground,
+    animatedBorder,
+    animatedText, 
+    animatedTextSecondary 
+  } = useAnimatedTheme();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-
   const appVersion = Constants.expoConfig?.version || '1.0.0';
 
-  const handleOpenModal = useCallback(() => setIsModalOpen(true), []);
-  const handleCloseModal = useCallback(() => setIsModalOpen(false), []);
+  const handleOpenModal = () => setIsModalOpen(true);
+  const handleCloseModal = () => setIsModalOpen(false);
 
   const handleLogout = () => {
     Alert.alert('로그아웃', '정말 로그아웃 하시겠습니까?', [
       { text: '취소', style: 'cancel' },
-      { text: '확인', onPress: () => console.log('로그아웃 처리') },
+      { text: '로그아웃', style: 'destructive', onPress: () => console.log('로그아웃 처리') },
     ]);
   };
 
   const handleWithdraw = () => {
-    Alert.alert('회원 탈퇴', '탈퇴 시 모든 데이터가 삭제되며 복구할 수 없습니다. 계속하시겠습니까?', [
+    Alert.alert('회원 탈퇴', '정말 탈퇴하시겠습니까? 이 작업은 되돌릴 수 없습니다.', [
       { text: '취소', style: 'cancel' },
       { text: '탈퇴하기', style: 'destructive', onPress: () => console.log('탈퇴 처리') },
     ]);
@@ -40,7 +48,6 @@ export const AccountSettingsScreen = () => {
 
   return (
     <Animated.View style={[styles.container, animatedBackground]}>
-      {/* Radial Gradient 배경 레이어 */}
       <View style={styles.bgTopLeft} pointerEvents="none" />
       <View style={styles.bgBottomRight} pointerEvents="none" />
 
@@ -51,19 +58,19 @@ export const AccountSettingsScreen = () => {
         ]}
         showsVerticalScrollIndicator={false}
       >
-        {/* 헤더 */}
         <Animated.View 
           entering={FadeInDown.delay(0).duration(500).springify()}
           style={styles.header}
         >
-          <Pressable onPress={() => router.navigate('/(main)/profile')} style={styles.backButton}>
-            <Feather name="arrow-left" size={20} color={colors.text.primary} />
+          <Pressable onPress={() => router.navigate('/(main)/profile')}>
+            <Animated.View style={[styles.backButton, animatedGlassBackground, animatedBorder]}>
+              <Feather name="arrow-left" size={20} color={colors.text.primary} />
+            </Animated.View>
           </Pressable>
           <Animated.Text style={[styles.headerTitle, animatedText]}>계정 관리</Animated.Text>
           <View style={{ width: 40 }} />
         </Animated.View>
 
-        {/* 닉네임 섹션 */}
         <Animated.View 
           entering={FadeInDown.delay(120).duration(550).springify()}
           style={styles.sectionContainer}
@@ -80,7 +87,6 @@ export const AccountSettingsScreen = () => {
           </Animated.View>
         </Animated.View>
 
-        {/* 테마 설정 섹션 */}
         <Animated.View 
           entering={FadeInDown.delay(180).duration(550).springify()}
           style={[styles.sectionContainer, { marginTop: 32 }]}
@@ -100,7 +106,6 @@ export const AccountSettingsScreen = () => {
           </Animated.View>
         </Animated.View>
 
-        {/* 계정 제어 섹션 (로그아웃 / 탈퇴) */}
         <Animated.View 
           entering={FadeInDown.delay(240).duration(550).springify()}
           style={[styles.sectionContainer, { marginTop: 32 }]}
@@ -115,7 +120,7 @@ export const AccountSettingsScreen = () => {
               <Animated.Text style={[styles.controlText, animatedText]}>로그아웃</Animated.Text>
             </Pressable>
             
-            <View style={styles.divider} />
+            <Animated.View style={[styles.divider, animatedBorder]} />
             
             <Pressable 
               style={({ pressed }) => [styles.controlRow, pressed && styles.controlRowPressed]}
@@ -126,7 +131,6 @@ export const AccountSettingsScreen = () => {
           </Animated.View>
         </Animated.View>
 
-        {/* 하단 버전 정보 */}
         <Animated.View 
           entering={FadeInDown.delay(360).duration(550).springify()}
           style={styles.versionContainer}
@@ -136,7 +140,6 @@ export const AccountSettingsScreen = () => {
 
       </ScrollView>
 
-      {/* 닉네임 수정 중앙 모달 */}
       <NicknameEditModal isOpen={isModalOpen} onClose={handleCloseModal} />
     </Animated.View>
   );
@@ -145,7 +148,6 @@ export const AccountSettingsScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
   },
   bgTopLeft: {
     position: 'absolute',
@@ -181,9 +183,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderWidth: 0.61,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -191,7 +191,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter',
     fontWeight: '500',
     fontSize: 18,
-    color: '#FFFFFF',
     letterSpacing: -0.44,
   },
   sectionContainer: {
@@ -204,7 +203,6 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     letterSpacing: 0.6,
     textTransform: 'uppercase',
-    color: '#6A7282',
     marginBottom: 12,
     paddingHorizontal: 4,
   },
@@ -214,9 +212,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingVertical: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderWidth: 0.61,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 16,
   },
   nicknameText: {
@@ -225,7 +221,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     letterSpacing: -0.15,
-    color: '#FFFFFF',
   },
   editButton: {
     flexDirection: 'row',
@@ -237,12 +232,9 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     fontSize: 12,
     lineHeight: 16,
-    color: '#00D3F3',
   },
   controlCardContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderWidth: 0.61,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 16,
     overflow: 'hidden',
   },
@@ -257,14 +249,13 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter',
     fontWeight: '500',
     fontSize: 15,
-    color: '#FFFFFF',
   },
   destructiveText: {
     color: '#FF4C4C',
   },
   divider: {
-    height: 0.61,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    height: 0,
+    borderBottomWidth: 0.61,
     marginHorizontal: 20,
   },
   versionContainer: {

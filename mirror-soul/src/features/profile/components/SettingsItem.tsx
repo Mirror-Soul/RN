@@ -5,8 +5,8 @@ import { Feather } from '@expo/vector-icons';
 import Animated from 'react-native-reanimated';
 import { usePressAnimation } from '../hooks/useProfileAnimations';
 import { ProfileItem } from '../types';
+import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
 
-/** item.id → expo-router 경로 매핑 */
 const ITEM_ROUTES: Partial<Record<string, string>> = {
   account_management: '/(main)/account',
   voice_audio: '/(main)/voice-audio',
@@ -23,6 +23,7 @@ interface SettingsItemProps {
 export const SettingsItem = ({ item, isLast = false }: SettingsItemProps) => {
   const router = useRouter();
   const { handlePressIn, handlePressOut, animatedStyle } = usePressAnimation();
+  const { colors, animatedText, animatedTextMuted, animatedBorder } = useAnimatedTheme();
 
   const handlePress = () => {
     const route = ITEM_ROUTES[item.id];
@@ -35,20 +36,20 @@ export const SettingsItem = ({ item, isLast = false }: SettingsItemProps) => {
         onPress={handlePress}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
-        style={[styles.container, !isLast && styles.borderBottom]}
+        style={[styles.container, !isLast && styles.borderBottom, !isLast && animatedBorder]}
       >
         <View style={[styles.iconContainer, { backgroundColor: item.iconBgColor }]}>
           <Feather name={item.iconName} size={16} color={item.iconColor} />
         </View>
 
         <View style={styles.textContainer}>
-          <Text style={styles.label}>{item.label}</Text>
+          <Animated.Text style={[styles.label, animatedText]}>{item.label}</Animated.Text>
           {item.description && (
-            <Text style={styles.description}>{item.description}</Text>
+            <Animated.Text style={[styles.description, animatedTextMuted]}>{item.description}</Animated.Text>
           )}
         </View>
 
-        <Feather name="chevron-right" size={16} color="#4A5565" />
+        <Feather name="chevron-right" size={16} color={colors.text.muted} />
       </Pressable>
     </Animated.View>
   );
@@ -65,7 +66,6 @@ const styles = StyleSheet.create({
   },
   borderBottom: {
     borderBottomWidth: 0.61,
-    borderBottomColor: 'rgba(255, 255, 255, 0.05)',
   },
   iconContainer: {
     width: 32,
@@ -84,14 +84,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     letterSpacing: -0.15,
-    color: '#FFFFFF',
   },
   description: {
     fontFamily: 'Inter',
     fontWeight: '500',
     fontSize: 12,
     lineHeight: 16,
-    color: '#6A7282',
     marginTop: 2,
   },
 });

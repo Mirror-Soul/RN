@@ -1,17 +1,19 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { StyleSheet, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { CustomerCenterHeader } from './components/CustomerCenterHeader';
 import { FaqAccordion } from './components/FaqAccordion';
 import { EmailContactButton } from './components/EmailContactButton';
+import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
 
 export const CustomerCenterScreen = () => {
   const insets = useSafeAreaInsets();
+  const { animatedBackground, animatedText, animatedTextMuted } = useAnimatedTheme();
 
   return (
-    <View style={styles.container}>
+    <Animated.View style={[styles.container, animatedBackground]}>
       <ScrollView
         contentContainerStyle={[
           styles.scrollContent,
@@ -19,19 +21,16 @@ export const CustomerCenterScreen = () => {
         ]}
         showsVerticalScrollIndicator={false}
       >
-        {/* 헤더 */}
         <CustomerCenterHeader />
 
-        {/* 서브타이틀 */}
         <Animated.View
           entering={FadeInDown.delay(80).duration(500).springify()}
           style={styles.subtitleContainer}
         >
-          <Text style={styles.subtitleMain}>무엇을 도와드릴까요?</Text>
-          <Text style={styles.subtitleSub}>편하게 물어보세요.</Text>
+          <Animated.Text style={[styles.subtitleMain, animatedText]}>무엇을 도와드릴까요?</Animated.Text>
+          <Animated.Text style={[styles.subtitleSub, animatedTextMuted]}>편하게 물어보세요.</Animated.Text>
         </Animated.View>
 
-        {/* FAQ 아코디언 카드 */}
         <Animated.View
           entering={FadeInDown.delay(160).duration(550).springify()}
           style={styles.faqSection}
@@ -39,7 +38,6 @@ export const CustomerCenterScreen = () => {
           <FaqAccordion />
         </Animated.View>
 
-        {/* 이메일 문의 섹션 */}
         <Animated.View
           entering={FadeInDown.delay(240).duration(550).springify()}
           style={styles.emailSection}
@@ -47,14 +45,13 @@ export const CustomerCenterScreen = () => {
           <EmailContactButton />
         </Animated.View>
       </ScrollView>
-    </View>
+    </Animated.View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
   },
   scrollContent: {
     flexGrow: 1,
@@ -70,7 +67,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     lineHeight: 28,
     letterSpacing: -0.45,
-    color: '#FFFFFF',
   },
   subtitleSub: {
     fontFamily: 'Inter',
@@ -78,7 +74,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     letterSpacing: -0.15,
-    color: '#99A1AF',
     marginTop: 4,
   },
   faqSection: {

@@ -1,6 +1,8 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
+import Animated from 'react-native-reanimated';
 import { AnimatedSwitch } from './AnimatedSwitch';
+import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
 
 interface NotificationItemProps {
   title: string;
@@ -10,10 +12,6 @@ interface NotificationItemProps {
   isLast?: boolean;
 }
 
-/**
- * 알림 설정 카드 내 개별 항목
- * 마지막 항목은 구분선(border-bottom)을 제거합니다.
- */
 export const NotificationItem = ({
   title,
   description,
@@ -21,17 +19,17 @@ export const NotificationItem = ({
   onToggle,
   isLast = false,
 }: NotificationItemProps) => {
+  const { animatedText, animatedTextMuted, animatedBorder } = useAnimatedTheme();
+
   return (
-    <View style={[styles.container, !isLast && styles.borderBottom]}>
-      {/* 텍스트 영역 */}
+    <Animated.View style={[styles.container, !isLast && styles.borderBottom, !isLast && animatedBorder]}>
       <View style={styles.textContainer}>
-        <Text style={styles.title}>{title}</Text>
-        <Text style={styles.description}>{description}</Text>
+        <Animated.Text style={[styles.title, animatedText]}>{title}</Animated.Text>
+        <Animated.Text style={[styles.description, animatedTextMuted]}>{description}</Animated.Text>
       </View>
 
-      {/* 토글 스위치 */}
       <AnimatedSwitch value={value} onToggle={onToggle} />
-    </View>
+    </Animated.View>
   );
 };
 
@@ -45,7 +43,6 @@ const styles = StyleSheet.create({
   },
   borderBottom: {
     borderBottomWidth: 0.61,
-    borderBottomColor: 'rgba(255, 255, 255, 0.05)',
   },
   textContainer: {
     flex: 1,
@@ -57,14 +54,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     letterSpacing: -0.15,
-    color: '#FFFFFF',
   },
   description: {
     fontFamily: 'Inter',
     fontWeight: '400',
     fontSize: 12,
     lineHeight: 20,
-    color: '#6A7282',
     marginTop: 2,
   },
 });
