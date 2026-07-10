@@ -1,7 +1,7 @@
 import { Colors, Radii } from '@/src/constants/theme';
 import React, { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
-import useAnimatedTheme from '@/src/hooks/useAnimatedTheme';
+import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
 
 interface VoiceUpdateTranscriptBoxProps {
   transcript: string;

@@ -4,7 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
-import useAnimatedTheme from '@/src/hooks/useAnimatedTheme';
+import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
 
 interface EvolveTwinCardProps {
   completionPercent: number;

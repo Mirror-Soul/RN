@@ -2,7 +2,7 @@ import { Colors } from '@/src/constants/theme';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
-import useAnimatedTheme from '@/src/hooks/useAnimatedTheme';
+import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
 
 /**
  * 성장 탭 헤더 (SRP)

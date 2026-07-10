@@ -7,7 +7,7 @@ import { useRouter } from 'expo-router';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import Animated from 'react-native-reanimated';
-import useAnimatedTheme from '@/src/hooks/useAnimatedTheme';
+import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
 
 export type VoiceUpdateStatus = 'idle' | 'recording' | 'analyzing' | 'done';
 

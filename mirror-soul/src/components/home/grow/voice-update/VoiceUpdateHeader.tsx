@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated from 'react-native-reanimated';
-import useAnimatedTheme from '@/src/hooks/useAnimatedTheme';
+import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
 
 /**
  * 목소리 업데이트 헤더 (SRP)

@@ -2,7 +2,7 @@ import { Colors } from '@/src/constants/theme';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
-import useAnimatedTheme from '@/src/hooks/useAnimatedTheme';
+import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
 
 /**
  * 성장 미션 섹션 타이틀 (SRP)

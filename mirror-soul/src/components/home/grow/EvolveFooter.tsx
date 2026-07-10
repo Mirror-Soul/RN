@@ -2,7 +2,7 @@ import { Colors, Radii } from '@/src/constants/theme';
 import React from 'react';
 import { StyleSheet } from 'react-native';
 import Animated from 'react-native-reanimated';
-import useAnimatedTheme from '@/src/hooks/useAnimatedTheme';
+import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
 
 /**
  * 성장 탭 하단 안내 카드 (SRP)
