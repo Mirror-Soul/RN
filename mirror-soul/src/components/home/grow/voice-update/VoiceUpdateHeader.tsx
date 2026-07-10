@@ -3,6 +3,8 @@ import { Colors } from '@/src/constants/theme';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Animated from 'react-native-reanimated';
+import useAnimatedTheme from '@/src/hooks/useAnimatedTheme';
 
 /**
  * 목소리 업데이트 헤더 (SRP)
@@ -10,6 +12,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
  */
 export default function VoiceUpdateHeader() {
   const router = useRouter();
+  const { animatedText } = useAnimatedTheme();
 
   return (
     <View style={styles.container}>
@@ -24,7 +27,7 @@ export default function VoiceUpdateHeader() {
       </TouchableOpacity>
       
       <View style={styles.titleContainer}>
-        <Text style={styles.title}>목소리 업데이트</Text>
+        <Animated.Text style={[styles.title, animatedText]}>목소리 업데이트</Animated.Text>
       </View>
     </View>
   );
@@ -48,7 +51,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    color: Colors.neutral.pureWhite,
     textAlign: 'center',
     fontFamily: 'Inter',
     fontSize: 20,

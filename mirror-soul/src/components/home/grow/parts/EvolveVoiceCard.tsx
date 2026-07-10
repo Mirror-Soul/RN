@@ -5,6 +5,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Animated from 'react-native-reanimated';
+import useAnimatedTheme from '@/src/hooks/useAnimatedTheme';
 
 
 /**
@@ -12,6 +14,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
  */
 export default function EvolveVoiceCard() {
   const router = useRouter();
+  const { animatedText, animatedTextSecondary } = useAnimatedTheme();
 
   return (
     <TouchableOpacity
@@ -32,17 +35,17 @@ export default function EvolveVoiceCard() {
           <View style={styles.iconBg}>
             <VoiceIcon width={16} height={16} />
           </View>
-          <Text style={styles.dateText}>2일 전</Text>
+          <Animated.Text style={[styles.dateText, animatedTextSecondary]}>2일 전</Animated.Text>
         </View>
 
         <View style={styles.content}>
-          <Text style={styles.title}>목소리 녹음</Text>
-          <Text style={styles.subTitle}>내 말투 학습시키기</Text>
+          <Animated.Text style={[styles.title, animatedText]}>목소리 녹음</Animated.Text>
+          <Animated.Text style={[styles.subTitle, animatedTextSecondary]}>내 말투 학습시키기</Animated.Text>
         </View>
 
         <View style={styles.footer}>
           <TimerIcon width={16} height={16} />
-          <Text style={styles.timeText}>5분</Text>
+          <Animated.Text style={[styles.timeText, animatedTextSecondary]}>5분</Animated.Text>
         </View>
       </LinearGradient>
     </TouchableOpacity>
@@ -74,7 +77,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   dateText: {
-    color: Colors.neutral.darkGray,
     fontFamily: 'Inter',
     fontSize: 12,
     fontWeight: '500',
@@ -84,7 +86,6 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   title: {
-    color: Colors.neutral.pureWhite,
     fontFamily: 'Inter',
     fontSize: 14,
     fontWeight: '500',
@@ -92,7 +93,6 @@ const styles = StyleSheet.create({
     letterSpacing: -0.15,
   },
   subTitle: {
-    color: Colors.neutral.lightGray,
     fontFamily: 'Inter',
     fontSize: 12,
     fontWeight: '500',
@@ -104,7 +104,6 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   timeText: {
-    color: Colors.neutral.darkGray,
     fontFamily: 'Inter',
     fontSize: 12,
     fontWeight: '500',

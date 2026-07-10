@@ -1,6 +1,10 @@
 import { Colors, Radii } from '@/src/constants/theme';
+import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
+import Animated from 'react-native-reanimated';
 import React from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
+
+const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
 import CallProfile from './HistoryCallCard/CallProfile';
 import CallSubInfo from './HistoryCallCard/CallSubInfo';
 import CallTagRow from './HistoryCallCard/CallTagRow';
@@ -42,9 +46,11 @@ interface HistoryCallCardProps {
  * 개별 통화 기록 단위 카드 컴포넌트
  */
 export default function HistoryCallCard({ data, onPress }: HistoryCallCardProps) {
+  const theme = useAnimatedTheme();
+
   return (
-    <TouchableOpacity
-      style={styles.container}
+    <AnimatedTouchableOpacity
+      style={[styles.container, theme.animatedGlassBackground]}
       onPress={onPress}
       activeOpacity={0.85}
       accessibilityRole="button"
@@ -63,7 +69,7 @@ export default function HistoryCallCard({ data, onPress }: HistoryCallCardProps)
         twinMatchLabel={data.twinMatchLabel}
       />
       <CallTagRow tags={data.tags} />
-    </TouchableOpacity>
+    </AnimatedTouchableOpacity>
   );
 }
 
@@ -78,7 +84,5 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
     borderRadius: Radii.lg, // 16px
     borderWidth: 0.612,
-    borderColor: Colors.glass.white10,
-    backgroundColor: Colors.glass.white5,
   },
 });

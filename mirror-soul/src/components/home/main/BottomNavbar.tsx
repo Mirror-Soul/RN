@@ -7,6 +7,8 @@ import { Colors, Layout, Radii } from '@/src/constants/theme';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Animated from 'react-native-reanimated';
+import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
 
 export type BottomTabId = 'history' | 'grow' | 'discover' | 'match' | 'profile';
 
@@ -35,13 +37,14 @@ interface BottomNavbarProps {
  */
 export default function BottomNavbar({ activeTab = 'discover', onTabPress }: BottomNavbarProps) {
   const insets = useSafeAreaInsets();
+  const { colors, animatedGlassBackground } = useAnimatedTheme();
 
   return (
     <View style={[styles.wrapper, { bottom: insets.bottom + 16 }]}>
-      <View style={styles.bar}>
+      <Animated.View style={[styles.bar, animatedGlassBackground]}>
         {TABS.map((tab) => {
           const isActive = tab.id === activeTab;
-          const color = isActive ? Colors.primary.electricCyan : Colors.neutral.lightGray;
+          const color = isActive ? Colors.primary.electricCyan : colors.text.muted;
           return (
             <TouchableOpacity
               key={tab.id}
@@ -57,7 +60,7 @@ export default function BottomNavbar({ activeTab = 'discover', onTabPress }: Bot
             </TouchableOpacity>
           );
         })}
-      </View>
+      </Animated.View>
     </View>
   );
 }
@@ -79,8 +82,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: Radii.full,
     borderWidth: 1, // 선명도를 위해 약간 두껍게 조정
-    borderColor: 'rgba(255, 255, 255, 0.15)', // Glassmorphism 경계 강조
-    backgroundColor: 'rgba(20, 20, 20, 0.85)', // 내부가 살짝 비치되 메인 색상 유지
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.3,

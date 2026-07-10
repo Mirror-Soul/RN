@@ -1,26 +1,31 @@
 import SettingIcon from '@/assets/images/common/Setting.svg';
 import { Colors, Radii } from '@/src/constants/theme';
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import Animated from 'react-native-reanimated';
+import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
 
 /**
  * 매칭 화면 헤더 (뒤로가기 제거, 제목 중앙 정렬)
  */
 export default function MatchingHeader() {
+  const { animatedText, animatedGlassBackground, animatedBorder } = useAnimatedTheme();
+
   return (
     <View style={styles.header}>
       {/* 타이틀 중앙 정렬을 위한 더미 뷰 (좌측) */}
       <View style={styles.dummyView} />
 
       <View style={styles.titleContainer}>
-        <Text style={styles.title}>매칭</Text>
+        <Animated.Text style={[styles.title, animatedText]}>매칭</Animated.Text>
       </View>
 
       <TouchableOpacity 
         activeOpacity={0.7} 
-        style={styles.circleButton}
       >
-        <SettingIcon width={24} height={24} />
+        <Animated.View style={[styles.circleButton, animatedGlassBackground, animatedBorder]}>
+          <SettingIcon width={24} height={24} />
+        </Animated.View>
       </TouchableOpacity>
     </View>
   );
@@ -43,8 +48,6 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: Radii.full,
     borderWidth: 0.612,
-    borderColor: Colors.glass.white10,
-    backgroundColor: Colors.glass.white05,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -53,7 +56,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    color: Colors.neutral.pureWhite,
     fontFamily: 'Inter',
     fontSize: 18,
     fontWeight: '500',

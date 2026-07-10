@@ -4,11 +4,15 @@ import { Colors, Radii } from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Animated from 'react-native-reanimated';
+import useAnimatedTheme from '@/src/hooks/useAnimatedTheme';
 
 /**
  * 얼굴 스캔 카드 (SRP)
  */
 export default function EvolveFaceScanCard() {
+  const { animatedText, animatedTextSecondary } = useAnimatedTheme();
+
   return (
     <TouchableOpacity
       activeOpacity={0.85}
@@ -30,13 +34,13 @@ export default function EvolveFaceScanCard() {
         </View>
 
         <View style={styles.content}>
-          <Text style={styles.title}>얼굴 스캔</Text>
-          <Text style={styles.subTitle}>표정과 감정 학습</Text>
+          <Animated.Text style={[styles.title, animatedText]}>얼굴 스캔</Animated.Text>
+          <Animated.Text style={[styles.subTitle, animatedTextSecondary]}>표정과 감정 학습</Animated.Text>
         </View>
 
         <View style={styles.footer}>
           <TimerIcon width={16} height={16} />
-          <Text style={styles.timeText}>2분</Text>
+          <Animated.Text style={[styles.timeText, animatedTextSecondary]}>2분</Animated.Text>
         </View>
       </LinearGradient>
     </TouchableOpacity>
@@ -70,7 +74,6 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   title: {
-    color: Colors.neutral.pureWhite,
     fontFamily: 'Inter',
     fontSize: 14,
     fontWeight: '500',
@@ -78,7 +81,6 @@ const styles = StyleSheet.create({
     letterSpacing: -0.15,
   },
   subTitle: {
-    color: Colors.neutral.lightGray,
     fontFamily: 'Inter',
     fontSize: 12,
     fontWeight: '500',
@@ -90,7 +92,6 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   timeText: {
-    color: Colors.neutral.darkGray,
     fontFamily: 'Inter',
     fontSize: 12,
     fontWeight: '500',

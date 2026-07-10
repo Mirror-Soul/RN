@@ -9,7 +9,9 @@ import EvolveVoiceCard from '@/src/components/home/grow/parts/EvolveVoiceCard';
 import { Colors, Layout } from '@/src/constants/theme';
 import React from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
+import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import useAnimatedTheme from '@/src/hooks/useAnimatedTheme';
 
 /**
  * 성장(Evolve) 탭 화면
@@ -23,9 +25,11 @@ export default function GrowScreen() {
     completionPercent: 92,
   };
 
+  const { animatedBackground } = useAnimatedTheme();
+
   return (
-    <ScrollView
-      style={styles.scrollView}
+    <Animated.ScrollView
+      style={[styles.scrollView, animatedBackground]}
       contentContainerStyle={[
         styles.scrollContent,
         { paddingBottom: insets.bottom + Layout.MAIN_TAB_CONTENTS_BOTTOM_PADDING },
@@ -60,14 +64,13 @@ export default function GrowScreen() {
         {/* 하단 푸터 안내 */}
         <EvolveFooter />
       </View>
-    </ScrollView>
+    </Animated.ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
-    backgroundColor: Colors.primary.soulBlack,
   },
   scrollContent: {
     flexGrow: 1,

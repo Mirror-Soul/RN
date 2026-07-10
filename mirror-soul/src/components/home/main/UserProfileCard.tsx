@@ -2,6 +2,10 @@ import { Colors, Radii } from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import Animated from 'react-native-reanimated';
+import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
+
+const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
 
 interface UserProfileCardProps {
   similarityPercent?: number;
@@ -17,27 +21,29 @@ export default function UserProfileCard({
   similarityPercent = 73,
   growthMessage = '더 나은 매칭을 위해 성장하세요',
 }: UserProfileCardProps) {
+  const { animatedGlassBackground, animatedBorder, animatedTextSecondary, animatedTextMuted } = useAnimatedTheme();
+
   return (
-    <View style={styles.container}>
+    <Animated.View style={[styles.container, animatedGlassBackground]}>
       <View style={styles.inner}>
         {/* Avatar (빈 상태 — 추후 API 연동) */}
-        <LinearGradient
+        <AnimatedLinearGradient
           colors={['rgba(0,211,243,0.20)', 'rgba(194,122,255,0.20)']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={styles.avatar}
+          style={[styles.avatar, animatedBorder]}
         />
 
         {/* Info */}
         <View style={styles.info}>
           <View style={styles.titleRow}>
-            <Text style={styles.labelText}>트윈 유사도</Text>
+            <Animated.Text style={[styles.labelText, animatedTextSecondary]}>트윈 유사도</Animated.Text>
             <Text style={styles.percentText}>{similarityPercent}%</Text>
           </View>
-          <Text style={styles.growthText}>{growthMessage}</Text>
+          <Animated.Text style={[styles.growthText, animatedTextMuted]}>{growthMessage}</Animated.Text>
         </View>
       </View>
-    </View>
+    </Animated.View>
   );
 }
 
@@ -46,8 +52,6 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
     borderRadius: Radii.md2,
     borderWidth: 0.612,
-    borderColor: Colors.glass.white10,
-    backgroundColor: Colors.glass.white5,
     paddingHorizontal: 12,
     height: 70,
     justifyContent: 'center',
@@ -62,7 +66,6 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: Radii.full,
     borderWidth: 0.612,
-    borderColor: Colors.glass.white20,
   },
   info: {
     flexDirection: 'column',
@@ -75,7 +78,6 @@ const styles = StyleSheet.create({
     height: 28,
   },
   labelText: {
-    color: Colors.neutral.lightGray,
     fontFamily: 'Inter',
     fontSize: 14,
     fontWeight: '400',
@@ -91,7 +93,6 @@ const styles = StyleSheet.create({
     letterSpacing: -0.439,
   },
   growthText: {
-    color: Colors.neutral.darkGray,
     fontFamily: 'Inter',
     fontSize: 12,
     fontWeight: '400',

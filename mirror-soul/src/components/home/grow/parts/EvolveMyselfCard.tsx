@@ -3,11 +3,15 @@ import { Colors, Radii } from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Animated from 'react-native-reanimated';
+import useAnimatedTheme from '@/src/hooks/useAnimatedTheme';
 
 /**
  * 내 트윈과 대화하기 배너 (SRP)
  */
 export default function EvolveMyselfCard() {
+  const { animatedText, animatedTextSecondary } = useAnimatedTheme();
+
   return (
     <TouchableOpacity
       activeOpacity={0.85}
@@ -34,8 +38,8 @@ export default function EvolveMyselfCard() {
 
           {/* 텍스트 영역 */}
           <View style={styles.textContainer}>
-            <Text style={styles.title}>내 트윈과 대화하기</Text>
-            <Text style={styles.subTitle}>지금 어떻게 답변하는지 확인해보세요</Text>
+            <Animated.Text style={[styles.title, animatedText]}>내 트윈과 대화하기</Animated.Text>
+            <Animated.Text style={[styles.subTitle, animatedTextSecondary]}>지금 어떻게 답변하는지 확인해보세요</Animated.Text>
           </View>
 
           {/* 우측 화살표 */}
@@ -72,7 +76,6 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   title: {
-    color: Colors.neutral.pureWhite,
     fontFamily: 'Inter',
     fontSize: 14,
     fontWeight: '500',
@@ -80,7 +83,6 @@ const styles = StyleSheet.create({
     letterSpacing: -0.15,
   },
   subTitle: {
-    color: Colors.neutral.lightGray,
     fontFamily: 'Inter',
     fontSize: 12,
     fontWeight: '500',

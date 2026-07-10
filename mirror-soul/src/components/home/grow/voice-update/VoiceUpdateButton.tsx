@@ -6,6 +6,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
+import Animated from 'react-native-reanimated';
+import useAnimatedTheme from '@/src/hooks/useAnimatedTheme';
 
 export type VoiceUpdateStatus = 'idle' | 'recording' | 'analyzing' | 'done';
 
@@ -27,6 +29,7 @@ export default function VoiceUpdateButton({
 }: VoiceUpdateButtonProps) {
   const router = useRouter();
   const { width } = useWindowDimensions();
+  const { animatedText, animatedTextSecondary } = useAnimatedTheme();
   
   // 기기 폭에 비례하는 동적 크기 계산 (기준 393px에서 96px은 약 24.4%)
   // 너무 작아지거나 커지는 것을 방지하기 위해 clamp 적용
@@ -100,8 +103,8 @@ export default function VoiceUpdateButton({
       <View style={styles.infoArea}>
         {isIdle && (
           <View style={styles.idleInfo}>
-            <Text style={styles.statusText}>녹음 시작</Text>
-            <Text style={styles.footerText}>마이크 버튼을 눌러 녹음을 시작하세요</Text>
+            <Animated.Text style={[styles.statusText, animatedText]}>녹음 시작</Animated.Text>
+            <Animated.Text style={[styles.footerText, animatedTextSecondary]}>마이크 버튼을 눌러 녹음을 시작하세요</Animated.Text>
           </View>
         )}
 
@@ -109,18 +112,18 @@ export default function VoiceUpdateButton({
           <View style={styles.recordingInfo}>
             <View style={styles.recordingStatusRow}>
               <View style={styles.recordingDot} />
-              <Text style={styles.statusText}>녹음 중...</Text>
+              <Animated.Text style={[styles.statusText, animatedText]}>녹음 중...</Animated.Text>
             </View>
-            <Text style={styles.elapsedText}>{elapsedTime}초</Text>
+            <Animated.Text style={[styles.elapsedText, animatedTextSecondary]}>{elapsedTime}초</Animated.Text>
           </View>
         )}
 
         {isAnalyzing && (
           <View style={styles.doneInfo}>
-            <Text style={[styles.statusText, { color: Colors.primary.successGreen, fontWeight: '600' }]}>
+            <Animated.Text style={[styles.statusText, animatedText, { color: Colors.primary.successGreen, fontWeight: '600' }]}>
               목소리 분석 중...
-            </Text>
-            <Text style={styles.footerText}>인공지능이 당신의 말투를 학습하고 있습니다</Text>
+            </Animated.Text>
+            <Animated.Text style={[styles.footerText, animatedTextSecondary]}>인공지능이 당신의 말투를 학습하고 있습니다</Animated.Text>
           </View>
         )}
 
@@ -133,7 +136,7 @@ export default function VoiceUpdateButton({
                 onPress={onRetry}
                 style={styles.actionChip}
               >
-                <Text style={styles.actionChipText}>다른 문장 읽어보기</Text>
+                <Animated.Text style={[styles.actionChipText, animatedTextSecondary]}>다른 문장 읽어보기</Animated.Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -141,7 +144,7 @@ export default function VoiceUpdateButton({
                 onPress={() => router.back()}
                 style={[styles.actionChip, styles.primaryChip]}
               >
-                <Text style={[styles.actionChipText, styles.primaryChipText]}>완료하기</Text>
+                <Animated.Text style={[styles.actionChipText, animatedTextSecondary, styles.primaryChipText]}>완료하기</Animated.Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -197,7 +200,6 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   statusText: {
-    color: Colors.neutral.pureWhite,
     textAlign: 'center',
     fontFamily: 'Inter',
     fontSize: 16,
@@ -206,7 +208,6 @@ const styles = StyleSheet.create({
     letterSpacing: -0.312,
   },
   elapsedText: {
-    color: Colors.neutral.lightGray,
     textAlign: 'center',
     fontFamily: 'Inter',
     fontSize: 14,
@@ -215,7 +216,6 @@ const styles = StyleSheet.create({
     letterSpacing: -0.15,
   },
   footerText: {
-    color: Colors.neutral.darkGray,
     textAlign: 'center',
     fontFamily: 'Inter',
     fontSize: 12,
@@ -242,7 +242,6 @@ const styles = StyleSheet.create({
     borderColor: Colors.glass.white20,
   },
   actionChipText: {
-    color: Colors.neutral.lightGray,
     fontSize: 15,
     fontWeight: '500',
     letterSpacing: -0.3,

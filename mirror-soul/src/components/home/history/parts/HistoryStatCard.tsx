@@ -1,6 +1,8 @@
 import { Colors, Radii } from '@/src/constants/theme';
+import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
+import Animated from 'react-native-reanimated';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 interface HistoryStatCardProps {
   count: number | string;
@@ -14,17 +16,19 @@ interface HistoryStatCardProps {
 export default function HistoryStatCard({
   count,
   label,
-  countColor = Colors.neutral.pureWhite,
+  countColor,
 }: HistoryStatCardProps) {
+  const theme = useAnimatedTheme();
+
   return (
-    <View style={styles.container}>
+    <Animated.View style={[styles.container, theme.animatedGlassBackground]}>
       <View style={styles.countWrapper}>
-        <Text style={[styles.countText, { color: countColor }]}>{count}</Text>
+        <Animated.Text style={[styles.countText, countColor ? { color: countColor } : theme.animatedText]}>{count}</Animated.Text>
       </View>
       <View style={styles.labelWrapper}>
-        <Text style={styles.labelText}>{label}</Text>
+        <Animated.Text style={[styles.labelText, theme.animatedTextSecondary]}>{label}</Animated.Text>
       </View>
-    </View>
+    </Animated.View>
   );
 }
 
@@ -40,8 +44,6 @@ const styles = StyleSheet.create({
     gap: 4,
     borderRadius: Radii.lg,
     borderWidth: 0.612,
-    borderColor: Colors.glass.white10,
-    backgroundColor: Colors.glass.white5,
   },
   countWrapper: {
     alignSelf: 'stretch',
@@ -62,7 +64,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   labelText: {
-    color: Colors.neutral.lightGray,
     fontFamily: 'Inter',
     fontSize: 12,
     fontWeight: '400',

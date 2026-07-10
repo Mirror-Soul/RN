@@ -22,7 +22,6 @@ export default function HistoryStatsRow({ stats }: HistoryStatsRowProps) {
       <HistoryStatCard
         count={stats.total}
         label="전체 통화"
-        countColor={Colors.neutral.pureWhite}
       />
       <HistoryStatCard
         count={stats.received}

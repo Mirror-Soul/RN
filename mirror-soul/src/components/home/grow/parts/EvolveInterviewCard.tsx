@@ -5,12 +5,15 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Animated from 'react-native-reanimated';
+import useAnimatedTheme from '@/src/hooks/useAnimatedTheme';
 
 /**
  * 나를 알아가는 인터뷰 카드 (SRP)
  */
 export default function EvolveInterviewCard() {
   const router = useRouter();
+  const { animatedText, animatedTextSecondary } = useAnimatedTheme();
 
   return (
     <TouchableOpacity
@@ -39,13 +42,13 @@ export default function EvolveInterviewCard() {
         </View>
 
         <View style={styles.content}>
-          <Text style={styles.title}>나를 알아가는 인터뷰</Text>
-          <Text style={styles.subTitle}>AI와 대화하며 내 가치관 공유하기</Text>
+          <Animated.Text style={[styles.title, animatedText]}>나를 알아가는 인터뷰</Animated.Text>
+          <Animated.Text style={[styles.subTitle, animatedTextSecondary]}>AI와 대화하며 내 가치관 공유하기</Animated.Text>
         </View>
 
         <View style={styles.footer}>
           <TimerIcon width={16} height={16} />
-          <Text style={styles.timeText}>15분</Text>
+          <Animated.Text style={[styles.timeText, animatedTextSecondary]}>15분</Animated.Text>
         </View>
       </LinearGradient>
     </TouchableOpacity>
@@ -93,7 +96,6 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   title: {
-    color: Colors.neutral.pureWhite,
     fontFamily: 'Inter',
     fontSize: 14,
     fontWeight: '500',
@@ -101,7 +103,6 @@ const styles = StyleSheet.create({
     letterSpacing: -0.15,
   },
   subTitle: {
-    color: Colors.neutral.lightGray,
     fontFamily: 'Inter',
     fontSize: 12,
     fontWeight: '500',
@@ -113,7 +114,6 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   timeText: {
-    color: Colors.neutral.darkGray,
     fontFamily: 'Inter',
     fontSize: 12,
     fontWeight: '500',

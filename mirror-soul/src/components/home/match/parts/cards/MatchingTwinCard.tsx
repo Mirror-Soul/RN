@@ -1,8 +1,13 @@
 import React, { useEffect, useRef } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View, useWindowDimensions, Animated } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View, useWindowDimensions, Animated as RNAnimated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import Animated from 'react-native-reanimated';
+import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
 import { Colors, Radii } from '@/src/constants/theme';
 import { useLayout } from '@/src/hooks/useLayout';
+
+const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
+const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
 
 // 아이콘 에셋
 import TwinCallIcon from '@/assets/images/common/matching/Twin_Call.svg';
@@ -34,11 +39,12 @@ export default function MatchingTwinCard({
   summaryHighlight = '최근 여행 경험을 공유하며 즐겁게 대화했어요',
 }: Partial<MatchingTwinCardProps>) {
   const { rw } = useLayout();
-  const progressAnim = useRef(new Animated.Value(0)).current;
+  const progressAnim = useRef(new RNAnimated.Value(0)).current;
+  const { animatedCardBackground, animatedBorder, animatedGlassBackground, animatedText, animatedTextSecondary, animatedTextMuted } = useAnimatedTheme();
 
   useEffect(() => {
     // 만족도 바 애니메이션 (0 -> 목표값)
-    Animated.spring(progressAnim, {
+    RNAnimated.spring(progressAnim, {
       toValue: twinSatisfaction,
       tension: 20,
       friction: 7,
@@ -49,40 +55,40 @@ export default function MatchingTwinCard({
   return (
     <View style={styles.container}>
       {/* 메인 카드 영역 */}
-      <View style={styles.mainCard}>
+      <Animated.View style={[styles.mainCard, animatedCardBackground, animatedBorder]}>
         {/* 1. 프로필 섹션 (시안-블루 그라디언트 헤더) */}
-        <LinearGradient
+        <AnimatedLinearGradient
           colors={Colors.gradient.twinCardHeader}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={[styles.profileSection, { height: rw(143.178), padding: rw(19.996) }]}
+          style={[styles.profileSection, { height: rw(143.178), padding: rw(19.996) }, animatedBorder]}
         >
           <View style={styles.profileRow}>
             {/* 프로필 이미지 */}
-            <LinearGradient
+            <AnimatedLinearGradient
               colors={[Colors.glass.cyan30_d3, Colors.glass.blue20]}
-              style={[styles.profileImage, { width: rw(79.995), height: rw(79.995) }]}
+              style={[styles.profileImage, { width: rw(79.995), height: rw(79.995) }, animatedBorder]}
             />
             
             <View style={styles.profileInfo}>
-              <Text style={styles.nameText}>{name}, {age}</Text>
+              <Animated.Text style={[styles.nameText, animatedText]}>{name}, {age}</Animated.Text>
               
               <View style={styles.histRow}>
                 <View style={styles.callHistBadge}>
                   <TwinCallIcon width={rw(12)} height={rw(12)} />
                   <Text style={styles.callCountText}>{callCount}번 통화</Text>
                 </View>
-                <Text style={styles.timeText}>{timeAgo}</Text>
+                <Animated.Text style={[styles.timeText, animatedTextMuted]}>{timeAgo}</Animated.Text>
               </View>
 
               {/* 내 Twin 만족도 */}
               <View style={styles.satisfactionArea}>
                 <View style={styles.satisfactionHeader}>
-                  <Text style={styles.satisfactionLabel}>내 Twin 만족도</Text>
+                  <Animated.Text style={[styles.satisfactionLabel, animatedTextMuted]}>내 Twin 만족도</Animated.Text>
                   <Text style={styles.satisfactionValue}>{twinSatisfaction}%</Text>
                 </View>
-                <View style={styles.progressBarBg}>
-                  <Animated.View style={{
+                <Animated.View style={[styles.progressBarBg, animatedGlassBackground]}>
+                  <RNAnimated.View style={{
                     height: '100%',
                     width: progressAnim.interpolate({
                       inputRange: [0, 100],
@@ -95,25 +101,25 @@ export default function MatchingTwinCard({
                       end={{ x: 1, y: 0 }}
                       style={styles.progressBarFill}
                     />
-                  </Animated.View>
-                </View>
+                  </RNAnimated.View>
+                </Animated.View>
               </View>
             </View>
           </View>
-        </LinearGradient>
+        </AnimatedLinearGradient>
 
         {/* 2. 대화 내용 요약 섹션 */}
         <View style={[styles.summarySection, { padding: rw(20) }]}>
           <View style={styles.sectionTitleRow}>
             <SummaryIcon width={rw(16)} height={rw(16)} />
-            <Text style={styles.sectionTitle}>대화 내용 요약</Text>
+            <Animated.Text style={[styles.sectionTitle, animatedText]}>대화 내용 요약</Animated.Text>
           </View>
           
           <View style={styles.summaryContent}>
             {summaries.map((item, index) => (
               <View key={index} style={styles.summaryItem}>
                 <CompleteIcon width={rw(14)} height={rw(14)} />
-                <Text style={styles.summaryText}>{item}</Text>
+                <Animated.Text style={[styles.summaryText, animatedTextMuted]}>{item}</Animated.Text>
               </View>
             ))}
           </View>
@@ -125,14 +131,14 @@ export default function MatchingTwinCard({
             </Text>
           </View>
         </View>
-      </View>
+      </Animated.View>
 
       {/* 3. 하단 액션 버튼 영역 */}
       <View style={[styles.actionRow, { height: rw(57.216) }]}>
-        <TouchableOpacity activeOpacity={0.8} style={styles.nextButton}>
+        <AnimatedTouchableOpacity activeOpacity={0.8} style={[styles.nextButton, animatedGlassBackground, animatedBorder]}>
           <CancelIcon width={rw(24)} height={rw(24)} />
-          <Text style={styles.buttonText}>다음에</Text>
-        </TouchableOpacity>
+          <Animated.Text style={[styles.buttonText, animatedText]}>다음에</Animated.Text>
+        </AnimatedTouchableOpacity>
 
         <TouchableOpacity activeOpacity={0.8} style={styles.callButtonContainer}>
           <LinearGradient
@@ -158,13 +164,10 @@ const styles = StyleSheet.create({
   mainCard: {
     borderRadius: Radii.lg,
     borderWidth: 0.612,
-    borderColor: Colors.glass.white20,
-    backgroundColor: Colors.glass.white05,
     overflow: 'hidden',
   },
   profileSection: {
     borderBottomWidth: 0.612,
-    borderColor: Colors.glass.white10,
   },
   profileRow: {
     flexDirection: 'row',
@@ -174,14 +177,12 @@ const styles = StyleSheet.create({
   profileImage: {
     borderRadius: Radii.lg,
     borderWidth: 0.612,
-    borderColor: Colors.glass.white20,
   },
   profileInfo: {
     flex: 1,
     gap: 8,
   },
   nameText: {
-    color: Colors.neutral.pureWhite,
     fontFamily: 'Inter',
     fontSize: 20,
     fontWeight: '500',
@@ -212,7 +213,6 @@ const styles = StyleSheet.create({
     lineHeight: 16,
   },
   timeText: {
-    color: Colors.neutral.lightGray,
     fontFamily: 'Inter',
     fontSize: 12,
     fontWeight: '400',
@@ -228,7 +228,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   satisfactionLabel: {
-    color: Colors.neutral.lightGray,
     fontFamily: 'Inter',
     fontSize: 12,
     fontWeight: '400',
@@ -245,7 +244,6 @@ const styles = StyleSheet.create({
   progressBarBg: {
     height: 6,
     borderRadius: Radii.full,
-    backgroundColor: Colors.glass.white10,
     overflow: 'hidden',
   },
   progressBarFill: {
@@ -261,7 +259,6 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   sectionTitle: {
-    color: Colors.neutral.pureWhite,
     fontFamily: 'Inter',
     fontSize: 14,
     fontWeight: '500',
@@ -277,7 +274,6 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   summaryText: {
-    color: Colors.neutral.lightGrayText,
     fontFamily: 'Inter',
     fontSize: 14,
     fontWeight: '400',
@@ -312,11 +308,8 @@ const styles = StyleSheet.create({
     gap: 8,
     borderRadius: Radii.md2,
     borderWidth: 0.612,
-    borderColor: Colors.glass.white10,
-    backgroundColor: Colors.glass.white05,
   },
   buttonText: {
-    color: Colors.neutral.pureWhite,
     fontFamily: 'Inter',
     fontSize: 16,
     fontWeight: '500',

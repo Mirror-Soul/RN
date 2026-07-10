@@ -3,6 +3,8 @@ import { Colors, Radii } from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import Animated from 'react-native-reanimated';
+import useAnimatedTheme from '@/src/hooks/useAnimatedTheme';
 
 interface EvolveTwinCardProps {
   completionPercent: number;
@@ -21,6 +23,8 @@ export default function EvolveTwinCard({ completionPercent }: EvolveTwinCardProp
   // 단일 소스 원칙: completion을 기반으로 남은 퍼센트 자동 계산
   const safeRemaining = 100 - safeCompletion;
 
+  const { animatedText, animatedTextSecondary } = useAnimatedTheme();
+
   return (
     <LinearGradient
       colors={[Colors.glass.purple20, Colors.glass.cyan20]}
@@ -31,8 +35,8 @@ export default function EvolveTwinCard({ completionPercent }: EvolveTwinCardProp
       {/* 상단 정보 영역 */}
       <View style={styles.topRow}>
         <View style={styles.percentageInfo}>
-          <Text style={styles.label}>내 트윈 완성도</Text>
-          <Text style={styles.percentText}>{safeCompletion}%</Text>
+          <Animated.Text style={[styles.label, animatedTextSecondary]}>내 트윈 완성도</Animated.Text>
+          <Animated.Text style={[styles.percentText, animatedText]}>{safeCompletion}%</Animated.Text>
         </View>
         
         {/* 아이콘 배지 */}
@@ -60,7 +64,7 @@ export default function EvolveTwinCard({ completionPercent }: EvolveTwinCardProp
       <View style={styles.bottomRow}>
         <Text style={styles.bottomText}>
           <Text style={styles.highlightText}>100%</Text>
-          <Text style={styles.neutralText}> 완성까지 {safeRemaining}% 남았어요!</Text>
+          <Animated.Text style={[styles.neutralText, animatedTextSecondary]}> 완성까지 {safeRemaining}% 남았어요!</Animated.Text>
         </Text>
       </View>
     </LinearGradient>
@@ -87,14 +91,12 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   label: {
-    color: Colors.neutral.lightGray,
     fontFamily: 'Inter',
     fontSize: 12,
     fontWeight: '400',
     lineHeight: 16,
   },
   percentText: {
-    color: Colors.neutral.pureWhite,
     fontFamily: 'Inter',
     fontSize: 24,
     fontWeight: '400',
@@ -133,6 +135,5 @@ const styles = StyleSheet.create({
     color: Colors.primary.electricCyan,
   },
   neutralText: {
-    color: Colors.neutral.lightGray,
   },
 });

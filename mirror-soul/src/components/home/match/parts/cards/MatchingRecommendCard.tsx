@@ -1,7 +1,12 @@
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import Animated from 'react-native-reanimated';
+import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
 import { Colors, Radii } from '@/src/constants/theme';
+
+const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
+const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
 
 // 아이콘 에셋
 import SummaryIcon from '@/assets/images/common/matching/RemmendSummary.svg';
@@ -30,67 +35,69 @@ export default function MatchingRecommendCard({
   avgCallMinutes = 16,
   tags = ['헬스', '식단'],
 }: Partial<MatchingRecommendCardProps>) {
+  const { animatedCardBackground, animatedBorder, animatedGlassBackground, animatedText, animatedTextSecondary, animatedTextMuted } = useAnimatedTheme();
+
   return (
     <View style={styles.container}>
       {/* 메인 카드 영역 */}
-      <View style={styles.mainCard}>
+      <Animated.View style={[styles.mainCard, animatedCardBackground, animatedBorder]}>
         {/* 1. 프로필 섹션 (헤더 그라디언트) */}
-        <LinearGradient
+        <AnimatedLinearGradient
           colors={Colors.gradient.twinCardHeader}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={styles.profileSection}
+          style={[styles.profileSection, animatedBorder]}
         >
           <View style={styles.profileRow}>
             {/* 프로필 이미지 (목업 그라디언트) */}
-            <LinearGradient
+            <AnimatedLinearGradient
               colors={[Colors.glass.purple30, Colors.glass.pink30]}
-              style={styles.profileImage}
+              style={[styles.profileImage, animatedBorder]}
             />
             
             <View style={styles.profileInfo}>
-              <Text style={styles.nameText}>{name}, {age}</Text>
-              <Text style={styles.bioText} numberOfLines={2}>
+              <Animated.Text style={[styles.nameText, animatedText]}>{name}, {age}</Animated.Text>
+              <Animated.Text style={[styles.bioText, animatedTextMuted]} numberOfLines={2}>
                 {bio}
-              </Text>
+              </Animated.Text>
             </View>
           </View>
-        </LinearGradient>
+        </AnimatedLinearGradient>
 
         {/* 2. 추천 이유 섹션 */}
-        <View style={styles.summarySection}>
+        <Animated.View style={[styles.summarySection, animatedBorder]}>
           <View style={styles.sectionTitleRow}>
             <SummaryIcon width={16} height={16} />
-            <Text style={styles.sectionTitle}>추천 드린 이유</Text>
+            <Animated.Text style={[styles.sectionTitle, animatedText]}>추천 드린 이유</Animated.Text>
           </View>
           
           <View style={styles.reasonList}>
             {reasons.map((reason, index) => (
               <View key={index} style={styles.reasonItem}>
                 <View style={styles.dot} />
-                <Text style={styles.reasonText}>{reason}</Text>
+                <Animated.Text style={[styles.reasonText, animatedTextMuted]}>{reason}</Animated.Text>
               </View>
             ))}
           </View>
-        </View>
+        </Animated.View>
 
         {/* 3. 통화 스타일 섹션 */}
         <View style={styles.callStyleSection}>
           <View style={styles.sectionTitleRow}>
             <CallStyleIcon width={16} height={16} />
-            <Text style={styles.sectionTitle}>통화 스타일</Text>
+            <Animated.Text style={[styles.sectionTitle, animatedText]}>통화 스타일</Animated.Text>
           </View>
           
           <View style={styles.callStyleBox}>
             <View style={styles.avgTimeRow}>
               <TimerIcon width={16} height={16} />
-              <Text style={styles.avgTimeText}>평균 {avgCallMinutes}분</Text>
+              <Animated.Text style={[styles.avgTimeText, animatedTextMuted]}>평균 {avgCallMinutes}분</Animated.Text>
             </View>
             
             <View style={styles.tagRow}>
               {tags.map((tag, index) => (
                 <View key={index} style={styles.tagBadge}>
-                  <Text style={styles.tagText}>{tag}</Text>
+                  <Animated.Text style={styles.tagText}>{tag}</Animated.Text>
                 </View>
               ))}
             </View>
@@ -100,10 +107,10 @@ export default function MatchingRecommendCard({
 
       {/* 하단 액션 버튼 영역 */}
       <View style={styles.actionRow}>
-        <TouchableOpacity activeOpacity={0.8} style={styles.cancelButton}>
+        <AnimatedTouchableOpacity activeOpacity={0.8} style={[styles.cancelButton, animatedGlassBackground, animatedBorder]}>
           <CancelIcon width={24} height={24} />
-          <Text style={styles.cancelButtonText}>건너뛰기</Text>
-        </TouchableOpacity>
+          <Animated.Text style={[styles.cancelButtonText, animatedText]}>건너뛰기</Animated.Text>
+        </AnimatedTouchableOpacity>
 
         <TouchableOpacity activeOpacity={0.8} style={styles.callButtonContainer}>
           <LinearGradient
@@ -129,14 +136,11 @@ const styles = StyleSheet.create({
   mainCard: {
     borderRadius: Radii.lg,
     borderWidth: 0.612,
-    borderColor: Colors.glass.white20,
-    backgroundColor: Colors.glass.white05,
     overflow: 'hidden',
   },
   profileSection: {
     padding: 20,
     borderBottomWidth: 0.612,
-    borderColor: Colors.glass.white10,
   },
   profileRow: {
     flexDirection: 'row',
@@ -148,14 +152,12 @@ const styles = StyleSheet.create({
     height: 80,
     borderRadius: Radii.lg,
     borderWidth: 0.612,
-    borderColor: Colors.glass.white20,
   },
   profileInfo: {
     flex: 1,
     gap: 8,
   },
   nameText: {
-    color: Colors.neutral.pureWhite,
     fontFamily: 'Inter',
     fontSize: 20,
     fontWeight: '500',
@@ -163,7 +165,6 @@ const styles = StyleSheet.create({
     letterSpacing: -0.45,
   },
   bioText: {
-    color: Colors.neutral.lightGray,
     fontFamily: 'Inter',
     fontSize: 14,
     fontWeight: '400',
@@ -174,7 +175,6 @@ const styles = StyleSheet.create({
     padding: 20,
     gap: 12,
     borderBottomWidth: 0.612,
-    borderColor: Colors.glass.white10,
   },
   sectionTitleRow: {
     flexDirection: 'row',
@@ -182,7 +182,6 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   sectionTitle: {
-    color: Colors.neutral.pureWhite,
     fontFamily: 'Inter',
     fontSize: 14,
     fontWeight: '500',
@@ -204,7 +203,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary.vividPurple,
   },
   reasonText: {
-    color: Colors.neutral.lightGrayText,
     fontFamily: 'Inter',
     fontSize: 14,
     fontWeight: '400',
@@ -229,7 +227,6 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   avgTimeText: {
-    color: Colors.neutral.lightGrayText,
     fontFamily: 'Inter',
     fontSize: 14,
     fontWeight: '400',
@@ -266,11 +263,8 @@ const styles = StyleSheet.create({
     gap: 8,
     borderRadius: Radii.md2,
     borderWidth: 0.612,
-    borderColor: Colors.glass.white10,
-    backgroundColor: Colors.glass.white05,
   },
   cancelButtonText: {
-    color: Colors.neutral.pureWhite,
     fontFamily: 'Inter',
     fontSize: 16,
     fontWeight: '500',

@@ -1,4 +1,6 @@
 import { Colors, Radii } from '@/src/constants/theme';
+import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
+import Animated from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
@@ -22,6 +24,8 @@ export default function CallProfile({
   profileImageUrl,
   callTypeDesc,
 }: CallProfileProps) {
+  const theme = useAnimatedTheme();
+
   return (
     <View style={styles.container}>
       {/* Profile Image */}
@@ -29,14 +33,14 @@ export default function CallProfile({
         {profileImageUrl ? (
           <Image source={{ uri: profileImageUrl }} style={styles.profileImage} />
         ) : (
-          <View style={[styles.profileImage, styles.placeholderImage]} />
+          <Animated.View style={[styles.profileImage, theme.animatedGlassBackground]} />
         )}
       </View>
 
       {/* Info Section */}
       <View style={styles.infoWrapper}>
         <View style={styles.nameAgeRow}>
-          <Text style={styles.nameAgeText}>{name}, {age}</Text>
+          <Animated.Text style={[styles.nameAgeText, theme.animatedText]}>{name}, {age}</Animated.Text>
           <View style={styles.consistencyBadgeWrapper}>
             <LinearGradient
               colors={['rgba(0, 211, 243, 0.20)', 'rgba(194, 122, 255, 0.20)']}
@@ -48,13 +52,13 @@ export default function CallProfile({
             </LinearGradient>
           </View>
         </View>
-        <Text style={styles.typeDescText}>{callTypeDesc}</Text>
+        <Animated.Text style={[styles.typeDescText, theme.animatedTextSecondary]}>{callTypeDesc}</Animated.Text>
       </View>
 
       {/* Date / Time */}
       <View style={styles.dateWrapper}>
-        <Text style={styles.dateText}>{dateStr}</Text>
-        <Text style={styles.timeText}>{timeStr}</Text>
+        <Animated.Text style={[styles.dateText, theme.animatedTextSecondary]}>{dateStr}</Animated.Text>
+        <Animated.Text style={[styles.timeText, theme.animatedTextMuted]}>{timeStr}</Animated.Text>
       </View>
     </View>
   );
@@ -76,9 +80,6 @@ const styles = StyleSheet.create({
     height: 48,
     borderRadius: Radii.full,
   },
-  placeholderImage: {
-    backgroundColor: Colors.glass.white10,
-  },
   infoWrapper: {
     flex: 1,
     flexDirection: 'column',
@@ -90,7 +91,6 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   nameAgeText: {
-    color: Colors.neutral.pureWhite,
     fontFamily: 'Inter',
     fontSize: 18,
     fontWeight: '500',
@@ -117,7 +117,6 @@ const styles = StyleSheet.create({
     lineHeight: 16, // 133.333%
   },
   typeDescText: {
-    color: Colors.neutral.lightGray,
     fontFamily: 'Inter',
     fontSize: 12,
     fontWeight: '400',
@@ -129,7 +128,6 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   dateText: {
-    color: Colors.neutral.lightGray,
     fontFamily: 'Inter',
     fontSize: 12,
     fontWeight: '400',
@@ -137,7 +135,6 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   timeText: {
-    color: Colors.neutral.darkGray, // #6A7282
     fontFamily: 'Inter',
     fontSize: 12,
     fontWeight: '400',

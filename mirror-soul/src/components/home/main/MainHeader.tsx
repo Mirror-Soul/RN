@@ -2,7 +2,11 @@ import SettingIcon from '@/assets/images/common/Setting.svg';
 import TimerIcon from '@/assets/images/common/main/Timer.svg';
 import { Colors, Radii } from '@/src/constants/theme';
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import Animated from 'react-native-reanimated';
+import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
+
+const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
 
 interface MainHeaderProps {
   timerDisplay?: string;
@@ -17,29 +21,31 @@ export default function MainHeader({
   timerDisplay = '23 : 44 : 59',
   onSettingPress,
 }: MainHeaderProps) {
+  const { animatedText, animatedGlassBackground } = useAnimatedTheme();
+
   return (
     <View style={styles.container}>
       {/* Title */}
-      <Text style={styles.title}>Mirror Soul</Text>
+      <Animated.Text style={[styles.title, animatedText]}>Mirror Soul</Animated.Text>
 
       {/* Timer + Setting */}
       <View style={styles.rightSection}>
         {/* Timer Badge */}
-        <View style={styles.timerBadge}>
+        <Animated.View style={[styles.timerBadge, animatedGlassBackground]}>
           <TimerIcon width={16} height={16} />
-          <Text style={styles.timerText}>{timerDisplay}</Text>
-        </View>
+          <Animated.Text style={styles.timerText}>{timerDisplay}</Animated.Text>
+        </Animated.View>
 
         {/* Setting Button */}
-        <TouchableOpacity
-          style={styles.settingButton}
+        <AnimatedTouchableOpacity
+          style={[styles.settingButton, animatedGlassBackground]}
           onPress={onSettingPress}
           activeOpacity={0.7}
           accessibilityRole="button"
           accessibilityLabel="설정"
         >
           <SettingIcon width={21} height={21} />
-        </TouchableOpacity>
+        </AnimatedTouchableOpacity>
       </View>
     </View>
   );
@@ -54,7 +60,6 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
   },
   title: {
-    color: Colors.neutral.pureWhite,
     fontFamily: 'Inter',
     fontSize: 24,
     fontWeight: '500',
@@ -74,8 +79,6 @@ const styles = StyleSheet.create({
     height: 30,
     borderRadius: Radii.full,
     borderWidth: 0.612,
-    borderColor: Colors.glass.white10,
-    backgroundColor: Colors.glass.white5,
   },
   timerText: {
     color: Colors.primary.electricCyan,
@@ -91,8 +94,6 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: Radii.full,
     borderWidth: 0.612,
-    borderColor: Colors.glass.white10,
-    backgroundColor: Colors.glass.white5,
     justifyContent: 'center',
     alignItems: 'center',
   },

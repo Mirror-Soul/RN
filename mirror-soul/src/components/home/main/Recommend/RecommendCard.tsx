@@ -7,6 +7,10 @@ import { Colors, Radii } from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Animated from 'react-native-reanimated';
+import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
+
+const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
 
 export interface RecommendCardData {
   id: string;
@@ -31,60 +35,62 @@ interface RecommendCardProps {
  * — 하단: 이름/나이, 지역, 소개, 패스/관심 버튼
  */
 export default function RecommendCard({ data, onPass, onLike, onInfo }: RecommendCardProps) {
+  const { animatedCardBackground, animatedText, animatedTextSecondary, isDark } = useAnimatedTheme();
+
   return (
-    <View style={styles.card}>
+    <Animated.View style={[styles.card, animatedCardBackground]}>
       {/* 카드 상단 배지 영역 */}
       <View style={styles.badgeRow}>
         {/* Info 버튼 */}
-        <TouchableOpacity
-          style={styles.iconButton}
+        <AnimatedTouchableOpacity
+          style={[styles.iconButton, animatedCardBackground]}
           onPress={() => onInfo?.(data.id)}
           activeOpacity={0.7}
           accessibilityRole="button"
           accessibilityLabel="상세 정보 보기"
         >
           <InfoIcon width={16} height={16} />
-        </TouchableOpacity>
+        </AnimatedTouchableOpacity>
 
         {/* 유사도 배지 */}
-        <View style={styles.similarityBadge}>
+        <Animated.View style={[styles.similarityBadge, animatedCardBackground]}>
           <SimilarityIcon width={14} height={14} />
-          <Text style={styles.similarityText}>{data.similarityPercent}%</Text>
-        </View>
+          <Animated.Text style={[styles.similarityText, animatedText]}>{data.similarityPercent}%</Animated.Text>
+        </Animated.View>
       </View>
 
       {/* 카드 하단 정보 영역 (그라디언트 오버레이) */}
       <LinearGradient
-        colors={['transparent', Colors.glass.black80 as string]}
+        colors={['transparent', isDark ? (Colors.glass.black80 as string) : 'rgba(255,255,255,0.95)']}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
         style={styles.infoGradient}
       >
         {/* 이름 + 나이 */}
-        <Text style={styles.nameText}>{data.name}, {data.age}</Text>
+        <Animated.Text style={[styles.nameText, animatedText]}>{data.name}, {data.age}</Animated.Text>
 
         {/* 지역 */}
         <View style={styles.locationRow}>
           <LocationIcon width={14} height={14} />
-          <Text style={styles.locationText}>{data.location}</Text>
+          <Animated.Text style={[styles.locationText, animatedTextSecondary]}>{data.location}</Animated.Text>
         </View>
 
         {/* 소개 */}
-        <Text style={styles.descriptionText} numberOfLines={3}>{data.description}</Text>
+        <Animated.Text style={[styles.descriptionText, animatedTextSecondary]} numberOfLines={3}>{data.description}</Animated.Text>
 
         {/* 버튼 영역 */}
         <View style={styles.actionRow}>
           {/* 패스 버튼 */}
-          <TouchableOpacity
-            style={styles.passButton}
+          <AnimatedTouchableOpacity
+            style={[styles.passButton, animatedCardBackground]}
             onPress={() => onPass?.(data.id)}
             activeOpacity={0.7}
             accessibilityRole="button"
             accessibilityLabel="패스"
           >
             <CancelIcon width={16} height={16} />
-            <Text style={styles.passText}>패스</Text>
-          </TouchableOpacity>
+            <Animated.Text style={[styles.passText, animatedTextSecondary]}>패스</Animated.Text>
+          </AnimatedTouchableOpacity>
 
           {/* 관심 버튼 */}
           <LinearGradient
@@ -106,7 +112,7 @@ export default function RecommendCard({ data, onPass, onLike, onInfo }: Recommen
           </LinearGradient>
         </View>
       </LinearGradient>
-    </View>
+    </Animated.View>
   );
 }
 
@@ -116,8 +122,6 @@ const styles = StyleSheet.create({
     height: 480,
     borderRadius: Radii.xl,
     borderWidth: 0.612,
-    borderColor: Colors.glass.white10,
-    backgroundColor: Colors.glass.white10,
     overflow: 'hidden',
     justifyContent: 'space-between',
   },
@@ -132,8 +136,6 @@ const styles = StyleSheet.create({
     height: 36,
     borderRadius: Radii.full,
     borderWidth: 0.612,
-    borderColor: Colors.glass.white20,
-    backgroundColor: Colors.glass.black50,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -146,11 +148,8 @@ const styles = StyleSheet.create({
     height: 34,
     borderRadius: Radii.full,
     borderWidth: 0.612,
-    borderColor: Colors.glass.white20,
-    backgroundColor: Colors.glass.black50,
   },
   similarityText: {
-    color: Colors.neutral.pureWhite,
     fontFamily: 'Inter',
     fontSize: 14,
     fontWeight: '500',
@@ -162,7 +161,6 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   nameText: {
-    color: Colors.neutral.pureWhite,
     fontFamily: 'Inter',
     fontSize: 24,
     fontWeight: '500',
@@ -175,7 +173,6 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   locationText: {
-    color: Colors.neutral.lightGrayText,
     fontFamily: 'Inter',
     fontSize: 14,
     fontWeight: '400',
@@ -183,7 +180,6 @@ const styles = StyleSheet.create({
     letterSpacing: -0.15,
   },
   descriptionText: {
-    color: Colors.neutral.lightGrayText,
     fontFamily: 'Inter',
     fontSize: 14,
     fontWeight: '400',
@@ -205,11 +201,8 @@ const styles = StyleSheet.create({
     height: 46,
     borderRadius: Radii.md2,
     borderWidth: 0.612,
-    borderColor: Colors.glass.white20,
-    backgroundColor: Colors.glass.white10,
   },
   passText: {
-    color: Colors.neutral.lightGrayText,
     fontFamily: 'Inter',
     fontSize: 14,
     fontWeight: '500',
