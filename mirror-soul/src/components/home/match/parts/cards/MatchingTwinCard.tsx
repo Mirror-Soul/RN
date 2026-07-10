@@ -1,13 +1,9 @@
 import React, { useEffect, useRef } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View, useWindowDimensions, Animated as RNAnimated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated from 'react-native-reanimated';
-import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { Colors, Radii } from '@/src/constants/theme';
 import { useLayout } from '@/src/hooks/useLayout';
-
-const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
-const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
 
 // 아이콘 에셋
 import TwinCallIcon from '@/assets/images/common/matching/Twin_Call.svg';
@@ -40,7 +36,7 @@ export default function MatchingTwinCard({
 }: Partial<MatchingTwinCardProps>) {
   const { rw } = useLayout();
   const progressAnim = useRef(new RNAnimated.Value(0)).current;
-  const { animatedCardBackground, animatedBorder, animatedGlassBackground, animatedText, animatedTextSecondary, animatedTextMuted } = useAnimatedTheme();
+  const { colors } = useThemeColors();
 
   useEffect(() => {
     // 만족도 바 애니메이션 (0 -> 목표값)
@@ -55,39 +51,39 @@ export default function MatchingTwinCard({
   return (
     <View style={styles.container}>
       {/* 메인 카드 영역 */}
-      <Animated.View style={[styles.mainCard, animatedCardBackground, animatedBorder]}>
+      <View style={[styles.mainCard, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
         {/* 1. 프로필 섹션 (시안-블루 그라디언트 헤더) */}
-        <AnimatedLinearGradient
+        <LinearGradient
           colors={Colors.gradient.twinCardHeader}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={[styles.profileSection, { height: rw(143.178), padding: rw(19.996) }, animatedBorder]}
+          style={[styles.profileSection, { height: rw(143.178), padding: rw(19.996) }, { borderColor: colors.border.primary }]}
         >
           <View style={styles.profileRow}>
             {/* 프로필 이미지 */}
-            <AnimatedLinearGradient
+            <LinearGradient
               colors={[Colors.glass.cyan30_d3, Colors.glass.blue20]}
-              style={[styles.profileImage, { width: rw(79.995), height: rw(79.995) }, animatedBorder]}
+              style={[styles.profileImage, { width: rw(79.995), height: rw(79.995) }, { borderColor: colors.border.primary }]}
             />
             
             <View style={styles.profileInfo}>
-              <Animated.Text style={[styles.nameText, animatedText]}>{name}, {age}</Animated.Text>
+              <Text style={[styles.nameText, { color: colors.text.primary }]}>{name}, {age}</Text>
               
               <View style={styles.histRow}>
                 <View style={styles.callHistBadge}>
                   <TwinCallIcon width={rw(12)} height={rw(12)} />
                   <Text style={styles.callCountText}>{callCount}번 통화</Text>
                 </View>
-                <Animated.Text style={[styles.timeText, animatedTextMuted]}>{timeAgo}</Animated.Text>
+                <Text style={[styles.timeText, { color: colors.text.muted }]}>{timeAgo}</Text>
               </View>
 
               {/* 내 Twin 만족도 */}
               <View style={styles.satisfactionArea}>
                 <View style={styles.satisfactionHeader}>
-                  <Animated.Text style={[styles.satisfactionLabel, animatedTextMuted]}>내 Twin 만족도</Animated.Text>
+                  <Text style={[styles.satisfactionLabel, { color: colors.text.muted }]}>내 Twin 만족도</Text>
                   <Text style={styles.satisfactionValue}>{twinSatisfaction}%</Text>
                 </View>
-                <Animated.View style={[styles.progressBarBg, animatedGlassBackground]}>
+                <View style={[styles.progressBarBg, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
                   <RNAnimated.View style={{
                     height: '100%',
                     width: progressAnim.interpolate({
@@ -102,24 +98,24 @@ export default function MatchingTwinCard({
                       style={styles.progressBarFill}
                     />
                   </RNAnimated.View>
-                </Animated.View>
+                </View>
               </View>
             </View>
           </View>
-        </AnimatedLinearGradient>
+        </LinearGradient>
 
         {/* 2. 대화 내용 요약 섹션 */}
         <View style={[styles.summarySection, { padding: rw(20) }]}>
           <View style={styles.sectionTitleRow}>
             <SummaryIcon width={rw(16)} height={rw(16)} />
-            <Animated.Text style={[styles.sectionTitle, animatedText]}>대화 내용 요약</Animated.Text>
+            <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>대화 내용 요약</Text>
           </View>
           
           <View style={styles.summaryContent}>
             {summaries.map((item, index) => (
               <View key={index} style={styles.summaryItem}>
                 <CompleteIcon width={rw(14)} height={rw(14)} />
-                <Animated.Text style={[styles.summaryText, animatedTextMuted]}>{item}</Animated.Text>
+                <Text style={[styles.summaryText, { color: colors.text.muted }]}>{item}</Text>
               </View>
             ))}
           </View>
@@ -131,14 +127,14 @@ export default function MatchingTwinCard({
             </Text>
           </View>
         </View>
-      </Animated.View>
+      </View>
 
       {/* 3. 하단 액션 버튼 영역 */}
       <View style={[styles.actionRow, { height: rw(57.216) }]}>
-        <AnimatedTouchableOpacity activeOpacity={0.8} style={[styles.nextButton, animatedGlassBackground, animatedBorder]}>
+        <TouchableOpacity activeOpacity={0.8} style={[styles.nextButton, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
           <CancelIcon width={rw(24)} height={rw(24)} />
-          <Animated.Text style={[styles.buttonText, animatedText]}>다음에</Animated.Text>
-        </AnimatedTouchableOpacity>
+          <Text style={[styles.buttonText, { color: colors.text.primary }]}>다음에</Text>
+        </TouchableOpacity>
 
         <TouchableOpacity activeOpacity={0.8} style={styles.callButtonContainer}>
           <LinearGradient

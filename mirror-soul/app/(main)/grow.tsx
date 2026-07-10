@@ -9,6 +9,7 @@ import EvolveVoiceCard from '@/src/components/home/grow/parts/EvolveVoiceCard';
 import { Colors, Layout } from '@/src/constants/theme';
 import React from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 /**

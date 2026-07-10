@@ -10,12 +10,8 @@ import { Colors, Radii } from '@/src/constants/theme';
 import { useLayout } from '@/src/hooks/useLayout';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useRef } from 'react';
-import { Animated as RNAnimated, StyleSheet, TouchableOpacity, View } from 'react-native';
-import Animated from 'react-native-reanimated';
-import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
-
-const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
-const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
+import { Animated as RNAnimated, StyleSheet, TouchableOpacity, View, Text } from 'react-native';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface MatchingMeetCardProps {
   name: string;
@@ -39,7 +35,7 @@ export default function MatchingMeetCard({
 }: Partial<MatchingMeetCardProps>) {
   const { rw } = useLayout();
   const progressAnim = useRef(new RNAnimated.Value(0)).current;
-  const { animatedCardBackground, animatedBorder, animatedGlassBackground, animatedText, animatedTextSecondary, animatedTextMuted } = useAnimatedTheme();
+  const { colors } = useThemeColors();
 
   useEffect(() => {
     RNAnimated.spring(progressAnim, {
@@ -52,36 +48,36 @@ export default function MatchingMeetCard({
   return (
     <View style={styles.container}>
       {/* 1. 상단 프로필 카드 (Container1) - 콘텐츠 기반 가변 높이 */}
-      <Animated.View style={[styles.mainContent, animatedCardBackground, animatedBorder]}>
+      <View style={[styles.mainContent, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
         {/* 헤드 영역 (그라디언트 배경) */}
-        <AnimatedLinearGradient
+        <LinearGradient
           colors={Colors.gradient.cardHeader}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={[styles.cardHeader, animatedBorder]}
+          style={[styles.cardHeader, { borderColor: colors.border.primary }]}
         >
           <View style={styles.profileRow}>
             {/* 프로필 이미지 (목업) */}
-            <AnimatedLinearGradient
+            <LinearGradient
               colors={[Colors.glass.orange30, Colors.glass.red30]}
-              style={[styles.profileImage, animatedBorder]}
+              style={[styles.profileImage, { borderColor: colors.border.primary }]}
             />
 
             <View style={styles.profileInfo}>
-              <Animated.Text style={[styles.nameText, animatedText]}>{name}, {age}</Animated.Text>
+              <Text style={[styles.nameText, { color: colors.text.primary }]}>{name}, {age}</Text>
 
               <View style={styles.timerRow}>
                 <TimerIcon width={12} height={12} />
-                <Animated.Text style={[styles.timerText, animatedTextMuted]}>{timeAgo}</Animated.Text>
+                <Text style={[styles.timerText, { color: colors.text.muted }]}>{timeAgo}</Text>
               </View>
 
               {/* Twin 만족도 (연동형) */}
               <View style={styles.satisfactionArea}>
                 <View style={styles.satisfactionHeader}>
-                  <Animated.Text style={[styles.satisfactionLabel, animatedTextMuted]}>내 Twin 만족도</Animated.Text>
-                  <Animated.Text style={styles.satisfactionValue}>{twinSatisfaction}%</Animated.Text>
+                  <Text style={[styles.satisfactionLabel, { color: colors.text.muted }]}>내 Twin 만족도</Text>
+                  <Text style={styles.satisfactionValue}>{twinSatisfaction}%</Text>
                 </View>
-                <Animated.View style={[styles.progressBarBg, animatedGlassBackground]}>
+                <View style={[styles.progressBarBg, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
                   <RNAnimated.View style={{
                     height: '100%',
                     width: progressAnim.interpolate({
@@ -96,50 +92,50 @@ export default function MatchingMeetCard({
                       style={styles.progressBarFill}
                     />
                   </RNAnimated.View>
-                </Animated.View>
+                </View>
               </View>
             </View>
           </View>
-        </AnimatedLinearGradient>
+        </LinearGradient>
 
         {/* 바디 영역 (메시지 및 요약) - 가변 높이 적용 */}
         <View style={styles.cardBody}>
           {/* 메시지 섹션 */}
           <View style={styles.sectionHeader}>
             <MessageIcon width={16} height={16} />
-            <Animated.Text style={[styles.sectionTitle, animatedText]}>메시지</Animated.Text>
+            <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>메시지</Text>
           </View>
           <View style={styles.messageBox}>
-            <Animated.Text style={[styles.messageText, animatedTextSecondary]}>{message}</Animated.Text>
+            <Text style={[styles.messageText, { color: colors.text.secondary }]}>{message}</Text>
           </View>
 
           {/* 대화 요약 섹션 */}
           <View style={styles.sectionHeader}>
             <SummaryIcon width={16} height={16} />
-            <Animated.Text style={[styles.sectionTitle, animatedText]}>Twin 대화 요약</Animated.Text>
+            <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>Twin 대화 요약</Text>
           </View>
           <View style={styles.summaryList}>
             {summaries.map((item, index) => (
               <View key={index} style={styles.summaryItem}>
                 <MeetSummaryIcon width={rw(14)} height={rw(14)} />
-                <Animated.Text style={[styles.summaryText, animatedTextMuted]}>{item}</Animated.Text>
+                <Text style={[styles.summaryText, { color: colors.text.muted }]}>{item}</Text>
               </View>
             ))}
           </View>
         </View>
-      </Animated.View>
+      </View>
 
       {/* 2. 하단 액션 버튼 영역 (Container2) */}
       <View style={styles.actionArea}>
-        <AnimatedTouchableOpacity activeOpacity={0.8} style={[styles.actionButton, animatedGlassBackground, animatedBorder]}>
+        <TouchableOpacity activeOpacity={0.8} style={[styles.actionButton, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
           <CancelIcon width={24} height={24} />
-          <Animated.Text style={[styles.actionText, animatedText]}>거절</Animated.Text>
-        </AnimatedTouchableOpacity>
+          <Text style={[styles.actionText, { color: colors.text.primary }]}>거절</Text>
+        </TouchableOpacity>
 
-        <AnimatedTouchableOpacity activeOpacity={0.8} style={[styles.actionButton, animatedGlassBackground, animatedBorder]}>
+        <TouchableOpacity activeOpacity={0.8} style={[styles.actionButton, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
           <SendMessageIcon width={24} height={24} />
-          <Animated.Text style={[styles.actionText, animatedText]}>메시지</Animated.Text>
-        </AnimatedTouchableOpacity>
+          <Text style={[styles.actionText, { color: colors.text.primary }]}>메시지</Text>
+        </TouchableOpacity>
 
         <TouchableOpacity activeOpacity={0.8} style={[styles.actionButton, styles.callButton]}>
           <LinearGradient
@@ -149,7 +145,7 @@ export default function MatchingMeetCard({
             style={StyleSheet.absoluteFill}
           />
           <SendCallIcon width={24} height={24} />
-          <Animated.Text style={[styles.actionText, { color: Colors.primary.soulBlack }]}>통화하기</Animated.Text>
+          <Text style={[styles.actionText, { color: Colors.primary.soulBlack }]}>통화하기</Text>
         </TouchableOpacity>
       </View>
     </View>

@@ -1,13 +1,8 @@
 import React from 'react';
-import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, TouchableOpacity, View, Text } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated from 'react-native-reanimated';
-import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { Colors, Radii } from '@/src/constants/theme';
-
-const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
-const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
-
 // 아이콘 에셋
 import SummaryIcon from '@/assets/images/common/matching/RemmendSummary.svg';
 import CallStyleIcon from '@/assets/images/common/matching/Call_Style.svg';
@@ -35,82 +30,82 @@ export default function MatchingRecommendCard({
   avgCallMinutes = 16,
   tags = ['헬스', '식단'],
 }: Partial<MatchingRecommendCardProps>) {
-  const { animatedCardBackground, animatedBorder, animatedGlassBackground, animatedText, animatedTextSecondary, animatedTextMuted } = useAnimatedTheme();
+  const { colors } = useThemeColors();
 
   return (
     <View style={styles.container}>
       {/* 메인 카드 영역 */}
-      <Animated.View style={[styles.mainCard, animatedCardBackground, animatedBorder]}>
+      <View style={[styles.mainCard, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
         {/* 1. 프로필 섹션 (헤더 그라디언트) */}
-        <AnimatedLinearGradient
+        <LinearGradient
           colors={Colors.gradient.twinCardHeader}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={[styles.profileSection, animatedBorder]}
+          style={[styles.profileSection, { borderColor: colors.border.primary }]}
         >
           <View style={styles.profileRow}>
             {/* 프로필 이미지 (목업 그라디언트) */}
-            <AnimatedLinearGradient
+            <LinearGradient
               colors={[Colors.glass.purple30, Colors.glass.pink30]}
-              style={[styles.profileImage, animatedBorder]}
+              style={[styles.profileImage, { borderColor: colors.border.primary }]}
             />
             
             <View style={styles.profileInfo}>
-              <Animated.Text style={[styles.nameText, animatedText]}>{name}, {age}</Animated.Text>
-              <Animated.Text style={[styles.bioText, animatedTextMuted]} numberOfLines={2}>
+              <Text style={[styles.nameText, { color: colors.text.primary }]}>{name}, {age}</Text>
+              <Text style={[styles.bioText, { color: colors.text.muted }]} numberOfLines={2}>
                 {bio}
-              </Animated.Text>
+              </Text>
             </View>
           </View>
-        </AnimatedLinearGradient>
+        </LinearGradient>
 
         {/* 2. 추천 이유 섹션 */}
-        <Animated.View style={[styles.summarySection, animatedBorder]}>
+        <View style={[styles.summarySection, { borderColor: colors.border.primary }]}>
           <View style={styles.sectionTitleRow}>
             <SummaryIcon width={16} height={16} />
-            <Animated.Text style={[styles.sectionTitle, animatedText]}>추천 드린 이유</Animated.Text>
+            <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>추천 드린 이유</Text>
           </View>
           
           <View style={styles.reasonList}>
             {reasons.map((reason, index) => (
               <View key={index} style={styles.reasonItem}>
                 <View style={styles.dot} />
-                <Animated.Text style={[styles.reasonText, animatedTextMuted]}>{reason}</Animated.Text>
+                <Text style={[styles.reasonText, { color: colors.text.muted }]}>{reason}</Text>
               </View>
             ))}
           </View>
-        </Animated.View>
+        </View>
 
         {/* 3. 통화 스타일 섹션 */}
         <View style={styles.callStyleSection}>
           <View style={styles.sectionTitleRow}>
             <CallStyleIcon width={16} height={16} />
-            <Animated.Text style={[styles.sectionTitle, animatedText]}>통화 스타일</Animated.Text>
+            <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>통화 스타일</Text>
           </View>
           
           <View style={styles.callStyleBox}>
             <View style={styles.avgTimeRow}>
               <TimerIcon width={16} height={16} />
-              <Animated.Text style={[styles.avgTimeText, animatedTextMuted]}>평균 {avgCallMinutes}분</Animated.Text>
+              <Text style={[styles.avgTimeText, { color: colors.text.muted }]}>평균 {avgCallMinutes}분</Text>
             </View>
             
             <View style={styles.tagRow}>
               {tags.map((tag, index) => (
                 <View key={index} style={styles.tagBadge}>
-                  <Animated.Text style={styles.tagText}>{tag}</Animated.Text>
+                  <Text style={styles.tagText}>{tag}</Text>
                 </View>
               ))}
             </View>
           </View>
         </View>
-      </Animated.View>
+      </View>
 
       {/* 하단 액션 버튼 영역 */}
       <View style={styles.actionRow}>
-        <AnimatedTouchableOpacity activeOpacity={0.8} style={[styles.cancelButton, animatedGlassBackground, animatedBorder]}>
+        <TouchableOpacity activeOpacity={0.8} style={[styles.cancelButton, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
           <CancelIcon width={24} height={24} />
-          <Animated.Text style={[styles.cancelButtonText, animatedText]}>건너뛰기</Animated.Text>
-        </AnimatedTouchableOpacity>
+          <Text style={[styles.cancelButtonText, { color: colors.text.primary }]}>건너뛰기</Text>
+        </TouchableOpacity>
 
         <TouchableOpacity activeOpacity={0.8} style={styles.callButtonContainer}>
           <LinearGradient

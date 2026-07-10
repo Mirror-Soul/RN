@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Pressable, Linking } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import Animated from 'react-native-reanimated';
 import { usePressAnimation } from '@/src/features/profile/hooks/useProfileAnimations';
-import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface PolicyMenuItemProps {
   title: string;
@@ -21,7 +21,7 @@ export const PolicyMenuItem = ({
   isLast = false,
 }: PolicyMenuItemProps) => {
   const { handlePressIn, handlePressOut, animatedStyle } = usePressAnimation();
-  const { colors, animatedText, animatedBorder } = useAnimatedTheme();
+  const { colors } = useThemeColors();
 
   const handlePress = async () => {
     const supported = await Linking.canOpenURL(url);
@@ -36,13 +36,13 @@ export const PolicyMenuItem = ({
         onPress={handlePress}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
-        style={[styles.container, !isLast && styles.borderBottom, !isLast && animatedBorder]}
+        style={[styles.container, !isLast && styles.borderBottom, !isLast && { borderColor: colors.border.primary }]}
       >
         <View style={[styles.iconWrapper, { backgroundColor: iconBgColor }]}>
           <Feather name="file-text" size={16} color={iconColor} />
         </View>
 
-        <Animated.Text style={[styles.title, animatedText]}>{title}</Animated.Text>
+        <Text style={[styles.title, { color: colors.text.primary }]}>{title}</Text>
 
         <Feather name="chevron-right" size={16} color={colors.text.muted} />
       </Pressable>
