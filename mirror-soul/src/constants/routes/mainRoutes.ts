@@ -23,6 +23,7 @@ export const ROUTE_TO_TAB: Record<string, BottomTabId> = {
   'voice-audio': 'profile',
   notification: 'profile',
   'customer-center': 'profile',
+  'terms-policy': 'profile',
 };
 
 export const TAB_TO_ROUTE: Record<BottomTabId, string> = {
