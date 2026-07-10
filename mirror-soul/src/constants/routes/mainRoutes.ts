@@ -22,6 +22,7 @@ export const ROUTE_TO_TAB: Record<string, BottomTabId> = {
   profile: 'profile',
   'voice-audio': 'profile',
   notification: 'profile',
+  'customer-center': 'profile',
 };
 
 export const TAB_TO_ROUTE: Record<BottomTabId, string> = {

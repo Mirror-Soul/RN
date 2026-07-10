@@ -10,6 +10,7 @@ import { ProfileItem } from '../types';
 const ITEM_ROUTES: Partial<Record<string, string>> = {
   voice_audio: '/(main)/voice-audio',
   notifications: '/(main)/notification',
+  customer_center: '/(main)/customer-center',
 };
 
 interface SettingsItemProps {
