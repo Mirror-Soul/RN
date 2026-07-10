@@ -2,13 +2,16 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import MaskedView from '@react-native-masked-view/masked-view';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Colors } from '@/src/constants/theme';
+import { Colors, FontFamily } from '@/src/constants/theme';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 /**
  * LoginHeader 컴포넌트
  * "Mirror Soul" 리니어 그라디언트 로고와 "당신의 영혼을 비추는 거울" 부제를 렌더링.
  */
 export default function LoginHeader() {
+  const { colors } = useThemeColors();
+
   return (
     <View style={styles.container}>
       {/* Container/Header/Heading1 */}
@@ -36,7 +39,7 @@ export default function LoginHeader() {
 
       {/* Container/Header/Paragraph */}
       <View style={styles.paragraph}>
-        <Text style={styles.subtitle}>당신의 영혼을 비추는 거울</Text>
+        <Text style={[styles.subtitle, { color: colors.text.secondary }]}>당신의 영혼을 비추는 거울</Text>
       </View>
     </View>
   );
@@ -45,10 +48,9 @@ export default function LoginHeader() {
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    height: 67.98,
     flexDirection: 'column',
     alignItems: 'center',
-    gap: 7.995,
+    gap: 8,
   },
   heading1: {
     alignSelf: 'stretch',
@@ -73,7 +75,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   title: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 36,
     fontWeight: '300',
     lineHeight: 40,
@@ -81,11 +83,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   subtitle: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '400',
     lineHeight: 20,
-    color: '#99A1AF',
     textAlign: 'center',
     letterSpacing: -0.15,
   },

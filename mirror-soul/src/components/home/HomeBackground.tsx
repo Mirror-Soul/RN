@@ -2,6 +2,7 @@ import React from 'react';
 import { StyleSheet, View, Dimensions } from 'react-native';
 import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
 import { Colors } from '@/src/constants/theme';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 const { width, height } = Dimensions.get('window');
 
@@ -10,10 +11,15 @@ const { width, height } = Dimensions.get('window');
  * 디자인 시스템의 Electric Cyan, Vivid Purple 컬러를 바탕으로 한 백그라운드 효과 구현
  */
 export default function HomeBackground() {
+  const { colors, isDark } = useThemeColors();
+  const accentOpacity = isDark ? "0.2" : "0.15";
+  const stopColor = colors.background.primary;
+  const accentColor = colors.brand.accent;
+
   return (
     <View style={StyleSheet.absoluteFill}>
       {/* Base Background */}
-      <View style={[StyleSheet.absoluteFill, { backgroundColor: Colors.primary.soulBlack }]} />
+      <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.background.primary }]} />
       
       {/* SVG Radial Gradients */}
       <Svg height="100%" width="100%" style={StyleSheet.absoluteFill}>
@@ -27,8 +33,8 @@ export default function HomeBackground() {
             fx="70.3%"
             fy="46.17%"
           >
-            <Stop offset="0" stopColor={Colors.glass.cyan18} stopOpacity="1" />
-            <Stop offset="1" stopColor={Colors.primary.soulBlack} stopOpacity="0" />
+            <Stop offset="0" stopColor={accentColor} stopOpacity={accentOpacity} />
+            <Stop offset="1" stopColor={stopColor} stopOpacity="0" />
           </RadialGradient>
           <RadialGradient
             id="grad2"
@@ -39,8 +45,8 @@ export default function HomeBackground() {
             fx="29.7%"
             fy="53.84%"
           >
-            <Stop offset="0" stopColor={Colors.glass.purple18} stopOpacity="1" />
-            <Stop offset="1" stopColor={Colors.primary.soulBlack} stopOpacity="0" />
+            <Stop offset="0" stopColor={accentColor} stopOpacity={isDark ? "0.15" : "0.1"} />
+            <Stop offset="1" stopColor={stopColor} stopOpacity="0" />
           </RadialGradient>
         </Defs>
         <Rect x="0" y="0" width="100%" height="100%" fill="url(#grad1)" />
