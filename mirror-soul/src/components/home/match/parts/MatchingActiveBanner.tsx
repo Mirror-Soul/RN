@@ -1,7 +1,7 @@
 import { Colors, Radii } from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useRef, useState } from 'react';
-import { Animated as RNAnimated, StyleSheet, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { Animated as RNAnimated, StyleSheet, TouchableOpacity, useWindowDimensions, View, Text } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
 
