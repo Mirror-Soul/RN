@@ -5,6 +5,8 @@ import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useAccountStore } from '@/src/store/useAccountStore';
+import { useThemeStore } from '@/src/store/useThemeStore';
+import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
 import { NicknameEditModal } from './components/NicknameEditModal';
 import Constants from 'expo-constants';
 
@@ -12,6 +14,9 @@ export const AccountSettingsScreen = () => {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { nickname } = useAccountStore();
+  const { themeMode, setThemeMode } = useThemeStore();
+  const { animatedBackground, animatedCardBackground, animatedText, animatedTextSecondary, colors } = useAnimatedTheme();
+
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const appVersion = Constants.expoConfig?.version || '1.0.0';
@@ -34,7 +39,7 @@ export const AccountSettingsScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <Animated.View style={[styles.container, animatedBackground]}>
       {/* Radial Gradient 배경 레이어 */}
       <View style={styles.bgTopLeft} pointerEvents="none" />
       <View style={styles.bgBottomRight} pointerEvents="none" />
@@ -52,9 +57,9 @@ export const AccountSettingsScreen = () => {
           style={styles.header}
         >
           <Pressable onPress={() => router.navigate('/(main)/profile')} style={styles.backButton}>
-            <Feather name="arrow-left" size={20} color="#FFFFFF" />
+            <Feather name="arrow-left" size={20} color={colors.text.primary} />
           </Pressable>
-          <Text style={styles.headerTitle}>계정 관리</Text>
+          <Animated.Text style={[styles.headerTitle, animatedText]}>계정 관리</Animated.Text>
           <View style={{ width: 40 }} />
         </Animated.View>
 
@@ -63,16 +68,36 @@ export const AccountSettingsScreen = () => {
           entering={FadeInDown.delay(120).duration(550).springify()}
           style={styles.sectionContainer}
         >
-          <Text style={styles.sectionLabel}>닉네임</Text>
+          <Animated.Text style={[styles.sectionLabel, animatedTextSecondary]}>닉네임</Animated.Text>
           
-          <View style={styles.cardContainer}>
-            <Text style={styles.nicknameText}>{nickname}</Text>
+          <Animated.View style={[styles.cardContainer, animatedCardBackground]}>
+            <Animated.Text style={[styles.nicknameText, animatedText]}>{nickname}</Animated.Text>
             
             <Pressable onPress={handleOpenModal} style={styles.editButton}>
-              <Feather name="edit-2" size={14} color="#00D3F2" />
-              <Text style={styles.editButtonText}>수정</Text>
+              <Feather name="edit-2" size={14} color={colors.brand.accent} />
+              <Text style={[styles.editButtonText, { color: colors.brand.accent }]}>수정</Text>
             </Pressable>
-          </View>
+          </Animated.View>
+        </Animated.View>
+
+        {/* 테마 설정 섹션 */}
+        <Animated.View 
+          entering={FadeInDown.delay(180).duration(550).springify()}
+          style={[styles.sectionContainer, { marginTop: 32 }]}
+        >
+          <Animated.Text style={[styles.sectionLabel, animatedTextSecondary]}>디스플레이</Animated.Text>
+          
+          <Animated.View style={[styles.controlCardContainer, animatedCardBackground]}>
+            <View style={styles.themeToggleRow}>
+              <Animated.Text style={[styles.controlText, animatedText]}>다크 모드</Animated.Text>
+              <Pressable 
+                style={[styles.toggleButton, themeMode === 'dark' && { backgroundColor: colors.brand.accent }]}
+                onPress={() => setThemeMode(themeMode === 'dark' ? 'light' : 'dark')}
+              >
+                <View style={[styles.toggleThumb, themeMode === 'dark' ? styles.toggleThumbActive : styles.toggleThumbInactive]} />
+              </Pressable>
+            </View>
+          </Animated.View>
         </Animated.View>
 
         {/* 계정 제어 섹션 (로그아웃 / 탈퇴) */}
@@ -80,14 +105,14 @@ export const AccountSettingsScreen = () => {
           entering={FadeInDown.delay(240).duration(550).springify()}
           style={[styles.sectionContainer, { marginTop: 32 }]}
         >
-          <Text style={styles.sectionLabel}>계정 제어</Text>
+          <Animated.Text style={[styles.sectionLabel, animatedTextSecondary]}>계정 제어</Animated.Text>
           
-          <View style={styles.controlCardContainer}>
+          <Animated.View style={[styles.controlCardContainer, animatedCardBackground]}>
             <Pressable 
               style={({ pressed }) => [styles.controlRow, pressed && styles.controlRowPressed]}
               onPress={handleLogout}
             >
-              <Text style={styles.controlText}>로그아웃</Text>
+              <Animated.Text style={[styles.controlText, animatedText]}>로그아웃</Animated.Text>
             </Pressable>
             
             <View style={styles.divider} />
@@ -98,7 +123,7 @@ export const AccountSettingsScreen = () => {
             >
               <Text style={[styles.controlText, styles.destructiveText]}>회원 탈퇴</Text>
             </Pressable>
-          </View>
+          </Animated.View>
         </Animated.View>
 
         {/* 하단 버전 정보 */}
@@ -106,7 +131,7 @@ export const AccountSettingsScreen = () => {
           entering={FadeInDown.delay(360).duration(550).springify()}
           style={styles.versionContainer}
         >
-          <Text style={styles.versionText}>현재 버전 {appVersion}</Text>
+          <Animated.Text style={[styles.versionText, animatedTextSecondary]}>현재 버전 {appVersion}</Animated.Text>
         </Animated.View>
 
       </ScrollView>
@@ -250,6 +275,32 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter',
     fontWeight: '400',
     fontSize: 12,
-    color: '#6A7282',
+  },
+  themeToggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 18,
+    paddingHorizontal: 20,
+  },
+  toggleButton: {
+    width: 44,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(100, 100, 100, 0.3)',
+    justifyContent: 'center',
+    paddingHorizontal: 2,
+  },
+  toggleThumb: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#FFFFFF',
+  },
+  toggleThumbActive: {
+    alignSelf: 'flex-end',
+  },
+  toggleThumbInactive: {
+    alignSelf: 'flex-start',
   },
 });

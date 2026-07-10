@@ -129,4 +129,62 @@ export const Layout = {
   MAIN_TAB_CONTENTS_BOTTOM_PADDING: 100, // BottomNavbar 높이에 대응하는 스크롤 하단 여백
 } as const;
 
+/**
+ * 동적 테마 (Light/Dark Mode) 시스템
+ */
+export interface ThemeColors {
+  background: {
+    primary: string; // 최상단 배경
+    card: string;    // 카드, 모달 등 박스 배경
+    glass: string;   // 반투명 영역
+  };
+  text: {
+    primary: string; // 기본 텍스트
+    secondary: string; // 서브 텍스트
+    muted: string;     // 비활성화 텍스트
+  };
+  brand: {
+    accent: string; // 주요 액센트 컬러
+  };
+  border: {
+    primary: string;
+  };
+}
 
+export const lightTheme: ThemeColors = {
+  background: {
+    primary: '#F8F7F4', // Off White (명세)
+    card: '#FFFFFF',
+    glass: 'rgba(0, 0, 0, 0.05)',
+  },
+  text: {
+    primary: '#141414',
+    secondary: '#4B5563',
+    muted: '#9CA3AF',
+  },
+  brand: {
+    accent: '#0047FF', // Electric Cobalt (명세)
+  },
+  border: {
+    primary: 'rgba(0, 0, 0, 0.1)',
+  },
+};
+
+export const darkTheme: ThemeColors = {
+  background: {
+    primary: '#141414', // Pitch Black (명세)
+    card: '#2A2A2A',
+    glass: 'rgba(255, 255, 255, 0.05)',
+  },
+  text: {
+    primary: '#FFFFFF',
+    secondary: '#D1D5DC',
+    muted: '#6A7282',
+  },
+  brand: {
+    accent: '#2BEE34', // Lime Green (명세)
+  },
+  border: {
+    primary: 'rgba(255, 255, 255, 0.1)',
+  },
+};

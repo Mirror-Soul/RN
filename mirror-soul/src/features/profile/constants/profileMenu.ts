@@ -6,6 +6,14 @@ export const PROFILE_SECTIONS: ProfileSection[] = [
     title: '서비스 설정',
     items: [
       {
+        id: 'account_management',
+        label: '계정 관리',
+        description: '닉네임, 로그아웃 등',
+        iconName: 'user',
+        iconColor: '#FFFFFF',
+        iconBgColor: 'rgba(255, 255, 255, 0.1)',
+      },
+      {
         id: 'voice_audio',
         label: '음성 및 오디오',
         description: 'AI 통화 품질 · 마이크 설정',

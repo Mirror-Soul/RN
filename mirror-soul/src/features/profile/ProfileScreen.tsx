@@ -5,16 +5,18 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ProfileHeader } from './components/ProfileHeader';
 import { AvailableTimeCard } from './components/AvailableTimeCard';
 import { SettingsSection } from './components/SettingsSection';
-import { FooterActions } from './components/FooterActions';
 import { PROFILE_SECTIONS } from './constants/profileMenu';
 import { TimeRefillBottomSheet } from './components/TimeRefillBottomSheet';
 
 import { useAccountStore } from '@/src/store/useAccountStore';
+import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
+import Animated from 'react-native-reanimated';
 
 export const ProfileScreen = () => {
   const insets = useSafeAreaInsets();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const { nickname } = useAccountStore();
+  const { animatedBackground } = useAnimatedTheme();
 
   const handleOpenSheet = useCallback(() => {
     setIsSheetOpen(true);
@@ -25,7 +27,7 @@ export const ProfileScreen = () => {
   }, []);
 
   return (
-    <View style={styles.container}>
+    <Animated.View style={[styles.container, animatedBackground]}>
       <ScrollView 
         contentContainerStyle={[
           styles.scrollContent, 
@@ -52,13 +54,11 @@ export const ProfileScreen = () => {
             delay={200 + (index * 100)}
           />
         ))}
-
-        <FooterActions delay={400} />
       </ScrollView>
 
       {/* Render Bottom Sheet outside of ScrollView so it overlaps correctly */}
       <TimeRefillBottomSheet isOpen={isSheetOpen} onClose={handleCloseSheet} />
-    </View>
+    </Animated.View>
   );
 };
 
