@@ -7,7 +7,7 @@ import Animated, {
   Easing,
   LinearTransition,
   FadeIn,
-  FadeOutUp,
+  FadeOut,
 } from 'react-native-reanimated';
 import { Feather } from '@expo/vector-icons';
 import { FaqItem as FaqItemType } from '../constants/faqData';
