@@ -138,7 +138,7 @@ export const AccountSettingsScreen = () => {
 
       {/* 닉네임 수정 중앙 모달 */}
       <NicknameEditModal isOpen={isModalOpen} onClose={handleCloseModal} />
-    </View>
+    </Animated.View>
   );
 };
 
