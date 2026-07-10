@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, Pressable, Linking } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import Animated from 'react-native-reanimated';
-import { usePressAnimation } from '../hooks/useTermsPolicyAnimations';
+import { usePressAnimation } from '@/src/features/profile/hooks/useProfileAnimations';
 import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
 
 interface PolicyMenuItemProps {
