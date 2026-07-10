@@ -28,18 +28,21 @@ export const TermsPolicyScreen = () => {
         showsVerticalScrollIndicator={false}
       >
         {/* 헤더 */}
-        <View style={styles.header}>
+        <Animated.View 
+          entering={FadeInDown.delay(0).duration(500).springify()}
+          style={styles.header}
+        >
           <Pressable onPress={() => router.back()} style={styles.backButton}>
             <Feather name="arrow-left" size={20} color="#FFFFFF" />
           </Pressable>
           <Text style={styles.headerTitle}>약관 및 정책</Text>
           {/* 타이틀 중앙 정렬용 여백 */}
           <View style={{ width: 40 }} />
-        </View>
+        </Animated.View>
 
         {/* 메뉴 리스트 컨테이너 (Glassmorphism) */}
         <Animated.View 
-          entering={FadeInDown.delay(100).duration(400).springify().damping(20)}
+          entering={FadeInDown.delay(120).duration(550).springify()}
           style={styles.menuContainer}
         >
           <PolicyMenuItem
@@ -65,7 +68,7 @@ export const TermsPolicyScreen = () => {
 
         {/* 하단 안내 텍스트 */}
         <Animated.View 
-          entering={FadeInDown.delay(200).duration(400).springify().damping(20)}
+          entering={FadeInDown.delay(240).duration(550).springify()}
           style={styles.footerTextContainer}
         >
           <Text style={styles.footerText}>각 항목을 누르면 외부 브라우저에서 열립니다.</Text>
