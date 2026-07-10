@@ -48,7 +48,7 @@ export const FaqItem = ({ item, isOpen, onToggle, isLast = false }: FaqItemProps
 
   return (
     <Animated.View 
-      layout={LinearTransition.springify().damping(20).stiffness(150)}
+      layout={LinearTransition.duration(250).easing(Easing.out(Easing.cubic))}
       style={[styles.wrapper, !isLast && styles.borderBottom]}
     >
       {/* 질문 행 (탭 가능) */}
@@ -67,13 +67,13 @@ export const FaqItem = ({ item, isOpen, onToggle, isLast = false }: FaqItemProps
 
       {/* 
         답변 영역 - 열렸을 때만 렌더링. 
-        FadeIn/FadeOut을 주어 부드럽게 나타나고 사라지며, 
-        부모의 LinearTransition이 전체 높이를 스무스하게 밀어줍니다.
+        흐느적거림(Jelly Effect) 제거를 위해 FadeOutUp 대신 깔끔한 FadeOut 적용.
+        부모의 LinearTransition(Timing 기반)이 견고하게 전체 높이를 조절합니다.
       */}
       {isOpen && (
         <Animated.View 
           entering={FadeIn.duration(200)} 
-          exiting={FadeOutUp.duration(200)}
+          exiting={FadeOut.duration(200)}
         >
           <View style={styles.answerInner}>
             <Text style={styles.answerText}>{item.answer}</Text>
