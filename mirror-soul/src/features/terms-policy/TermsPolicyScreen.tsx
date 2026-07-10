@@ -33,7 +33,8 @@ export const TermsPolicyScreen = () => {
             <Feather name="arrow-left" size={20} color="#FFFFFF" />
           </Pressable>
           <Text style={styles.headerTitle}>약관 및 정책</Text>
-          <View style={{ width: 40 }} /> {/* 타이틀 중앙 정렬용 여백 */}
+          {/* 타이틀 중앙 정렬용 여백 */}
+          <View style={{ width: 40 }} />
         </View>
 
         {/* 메뉴 리스트 컨테이너 (Glassmorphism) */}
