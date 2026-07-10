@@ -22,6 +22,8 @@ export const Colors = {
     twinCardHeader: ['rgba(0, 211, 243, 0.10)', 'rgba(81, 162, 255, 0.10)'] as [string, string], // Twin 카드 헤더 (시안)
     twinCallButton: ['#C27AFF', '#FB64B6'] as [string, string], // 상대 Twin과 통화 버튼
     twinProgress: ['#00D3F3', '#51A2FF'] as [string, string], // Twin 만족도 바 그라디언트
+    limeGradient: ['#65F56D', '#2BEE34'] as [string, string], // Lime Green 시작 버튼용
+    subtleLimeGradient: ['rgba(43, 238, 52, 0.6)', 'rgba(43, 238, 52, 0.3)'] as [string, string], // 은은한 Lime Green (토글용)
   },
   neutral: {
     pureWhite: '#FFFFFF',
@@ -153,7 +155,7 @@ export interface ThemeColors {
 
 export const lightTheme: ThemeColors = {
   background: {
-    primary: '#F8F7F4', // Off White (명세)
+    primary: '#F8F7F4', // Off White (명세 - 너무 밝은 흰색 방지)
     card: '#FFFFFF',
     glass: 'rgba(0, 0, 0, 0.05)',
   },
@@ -166,7 +168,7 @@ export const lightTheme: ThemeColors = {
     accent: '#0047FF', // Electric Cobalt (명세)
   },
   border: {
-    primary: 'rgba(0, 0, 0, 0.1)',
+    primary: 'rgba(0, 0, 0, 0.15)', // 테두리를 너무 강하지 않게 살짝만 색상을 넣음
   },
 };
 
@@ -188,3 +190,12 @@ export const darkTheme: ThemeColors = {
     primary: 'rgba(255, 255, 255, 0.1)',
   },
 };
+
+/**
+ * 폰트 패밀리 상수
+ * 프로젝트 전역에서 fontFamily 하드코딩 방지를 위해 사용합니다.
+ */
+export const FontFamily = {
+  sans: 'Inter',   // UI 전반 (본문, 버튼, 레이블 등)
+  mono: 'Menlo',   // 타이머, 코드, 인증 코드 등 고정 폭 텍스트
+} as const;

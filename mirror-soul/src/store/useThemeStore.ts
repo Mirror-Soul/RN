@@ -9,7 +9,7 @@ interface ThemeState {
 }
 
 export const useThemeStore = create<ThemeState>((set) => ({
-  themeMode: 'system', // 기본값
+  themeMode: 'light', // 기본값을 system에서 light로 변경하여 항상 흰색 계열 배경이 나오도록 함
   setThemeMode: (mode: ThemeMode) => set({ themeMode: mode }),
 }));
 
@@ -18,7 +18,7 @@ export const useThemeStore = create<ThemeState>((set) => ({
  */
 export const useActiveTheme = () => {
   const { themeMode } = useThemeStore();
-  const systemTheme = useColorScheme() || 'dark'; // fallback to dark
+  const systemTheme = useColorScheme() || 'light'; // fallback to light
 
   if (themeMode === 'system') return systemTheme;
   return themeMode;
