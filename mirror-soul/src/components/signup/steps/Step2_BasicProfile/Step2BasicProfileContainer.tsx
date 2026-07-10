@@ -1,5 +1,5 @@
 import SecurityFooter from '@/src/components/home/SecurityFooter';
-import PrimaryButton from '@/src/components/signup/common/PrimaryButton';
+import GradientButton from '@/src/components/common/GradientButton';
 import { SIGNUP_ROUTES } from '@/src/constants/routes/signupRoutes';
 import { Colors, Layout } from '@/src/constants/theme';
 import { useRouter } from 'expo-router';
@@ -122,11 +122,12 @@ export default function Step2BasicProfileContainer() {
               />
 
               <View style={styles.buttonWrapper}>
-                <PrimaryButton
+                <GradientButton
                   title="다음"
                   disabled={!isFormValid || isSaving}
                   isLoading={isSaving}
                   onPress={handleContinue}
+                  variant="full"
                 />
               </View>
             </View>

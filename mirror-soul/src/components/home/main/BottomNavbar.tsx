@@ -2,10 +2,17 @@ import GrowIcon from '@/assets/images/common/bottomNavbar/Grow.svg';
 import HeartIcon from '@/assets/images/common/bottomNavbar/Heart.svg';
 import HistoryIcon from '@/assets/images/common/bottomNavbar/History_button.svg';
 import ProfileIcon from '@/assets/images/common/bottomNavbar/Profile.svg';
-import SimilarityIcon from '@/assets/images/common/main/Similarity.svg';
-import { Colors, Layout, Radii } from '@/src/constants/theme';
-import React from 'react';
+import SimilarityMainIcon from '@/assets/images/common/main/Similarity.svg';
+import { Colors, FontFamily, Layout, Radii } from '@/src/constants/theme';
+import React, { useCallback, useEffect } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+  Easing,
+} from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 
@@ -20,7 +27,7 @@ interface TabItem {
 const TABS: TabItem[] = [
   { id: 'history', label: '기록', Icon: HistoryIcon as React.FC<{ width: number; height: number; color?: string }> },
   { id: 'grow', label: '성장', Icon: GrowIcon as React.FC<{ width: number; height: number; color?: string }> },
-  { id: 'discover', label: '발견', Icon: SimilarityIcon as React.FC<{ width: number; height: number; color?: string }> },
+  { id: 'discover', label: '발견', Icon: SimilarityMainIcon as React.FC<{ width: number; height: number; color?: string }> },
   { id: 'match', label: '매칭', Icon: HeartIcon as React.FC<{ width: number; height: number; color?: string }> },
   { id: 'profile', label: '프로필', Icon: ProfileIcon as React.FC<{ width: number; height: number; color?: string }> },
 ];
@@ -31,34 +38,102 @@ interface BottomNavbarProps {
 }
 
 /**
+ * 개별 탭 아이템 컴포넌트
+ * 활성화 상태에 따라 아이콘 scale + 그라디언트 dot indicator 표시.
+ */
+function TabItem({
+  tab,
+  isActive,
+  onPress,
+  mutedColor,
+}: {
+  tab: TabItem;
+  isActive: boolean;
+  onPress: () => void;
+  mutedColor: string;
+}) {
+  const scale = useSharedValue(isActive ? 1.1 : 1);
+  const dotOpacity = useSharedValue(isActive ? 1 : 0);
+
+  useEffect(() => {
+    scale.value = withTiming(isActive ? 1.1 : 1, {
+      duration: 200,
+      easing: Easing.inOut(Easing.ease),
+    });
+    dotOpacity.value = withTiming(isActive ? 1 : 0, {
+      duration: 200,
+      easing: Easing.inOut(Easing.ease),
+    });
+  }, [isActive, scale, dotOpacity]);
+
+  const iconStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  const dotStyle = useAnimatedStyle(() => ({
+    opacity: dotOpacity.value,
+  }));
+
+  const color = isActive ? Colors.primary.electricCyan : mutedColor;
+
+  return (
+    <TouchableOpacity
+      style={styles.tabItem}
+      onPress={onPress}
+      activeOpacity={0.7}
+      accessibilityRole="tab"
+      accessibilityLabel={tab.label}
+      accessibilityState={{ selected: isActive }}
+    >
+      <Animated.View style={iconStyle}>
+        <tab.Icon width={24} height={24} color={color} />
+      </Animated.View>
+      <Text style={[styles.tabLabel, { color }]}>{tab.label}</Text>
+
+      {/* 그라디언트 Dot indicator */}
+      <Animated.View style={[styles.dotWrapper, dotStyle]}>
+        <LinearGradient
+          colors={Colors.gradient.cyanToPurple}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.dot}
+        />
+      </Animated.View>
+    </TouchableOpacity>
+  );
+}
+
+/**
  * BottomNavbar 컴포넌트
- * 메인 화면의 하단 네비게이션 바를 부유형(Floating)으로 렌더링합니다.
+ * 메인 화면의 하단 부유형(Floating) 네비게이션 바.
+ * 각 탭 전환 시 scale + dot indicator 애니메이션 적용.
  */
 export default function BottomNavbar({ activeTab = 'discover', onTabPress }: BottomNavbarProps) {
   const insets = useSafeAreaInsets();
   const { colors } = useThemeColors();
 
+  const handleTabPress = useCallback(
+    (tab: BottomTabId) => onTabPress?.(tab),
+    [onTabPress],
+  );
+
   return (
     <View style={[styles.wrapper, { bottom: insets.bottom + 16 }]}>
-      <View style={[styles.bar, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
-        {TABS.map((tab) => {
-          const isActive = tab.id === activeTab;
-          const color = isActive ? Colors.primary.electricCyan : colors.text.muted;
-          return (
-            <TouchableOpacity
-              key={tab.id}
-              style={styles.tabItem}
-              onPress={() => onTabPress?.(tab.id)}
-              activeOpacity={0.7}
-              accessibilityRole="tab"
-              accessibilityLabel={tab.label}
-              accessibilityState={{ selected: isActive }}
-            >
-              <tab.Icon width={24} height={24} color={color} />
-              <Text style={[styles.tabLabel, { color }]}>{tab.label}</Text>
-            </TouchableOpacity>
-          );
-        })}
+      <View
+        style={[
+          styles.bar,
+          { backgroundColor: colors.background.glass, borderColor: colors.border.primary },
+        ]}
+      >
+        {TABS.map((tab) => (
+          <TabItem
+            key={tab.id}
+            tab={tab}
+            isActive={tab.id === activeTab}
+            onPress={() => handleTabPress(tab.id)}
+            mutedColor={colors.text.muted}
+          />
+        ))}
       </View>
     </View>
   );
@@ -68,7 +143,7 @@ const styles = StyleSheet.create({
   wrapper: {
     position: 'absolute',
     width: '100%',
-    maxWidth: Layout.MAX_CONTENT_WIDTH + 48, // Padding 24 * 2 포함
+    maxWidth: Layout.MAX_CONTENT_WIDTH + 48,
     paddingHorizontal: 24,
     alignSelf: 'center',
     zIndex: 1000,
@@ -80,7 +155,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: Radii.full,
-    borderWidth: 1, // 선명도를 위해 약간 두껍게 조정
+    borderWidth: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.3,
@@ -88,15 +163,26 @@ const styles = StyleSheet.create({
     elevation: 15,
   },
   tabItem: {
-    flex: 1, // 균등 배분
+    flex: 1,
     alignItems: 'center',
     gap: 4,
+    position: 'relative',
   },
   tabLabel: {
-    fontFamily: 'Inter',
-    fontSize: 10, // 텍스트 겹침 방지를 위해 약간 축소
+    fontFamily: FontFamily.sans,
+    fontSize: 10,
     fontWeight: '500',
     lineHeight: 14,
     textAlign: 'center',
+  },
+  dotWrapper: {
+    position: 'absolute',
+    bottom: -12,
+    alignSelf: 'center',
+  },
+  dot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
   },
 });

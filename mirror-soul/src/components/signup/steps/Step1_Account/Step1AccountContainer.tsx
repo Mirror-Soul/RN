@@ -1,5 +1,5 @@
 import SecurityFooter from '@/src/components/home/SecurityFooter';
-import PrimaryButton from '@/src/components/signup/common/PrimaryButton';
+import GradientButton from '@/src/components/common/GradientButton';
 import { SIGNUP_ROUTES } from '@/src/constants/routes/signupRoutes';
 import { Colors, Layout } from '@/src/constants/theme';
 import { createBasicProfile } from '@/src/services/authService';
@@ -136,11 +136,12 @@ export default function Step1AccountContainer() {
 
           {/* Continue Button */}
           <View style={styles.buttonWrapper}>
-            <PrimaryButton
+            <GradientButton
               title="다음"
               disabled={!isFormValid}
               isLoading={state.isLoading}
               onPress={handleContinue}
+              variant="full"
             />
           </View>
         </View>

@@ -1,5 +1,5 @@
 import SecurityFooter from '@/src/components/home/SecurityFooter';
-import PrimaryButton from '@/src/components/signup/common/PrimaryButton';
+import GradientButton from '@/src/components/common/GradientButton';
 import Step3Header from '@/src/components/signup/steps/Step3_ExpressPersonal/components/Step3Header';
 import SelfDescriptionInput from '@/src/components/signup/steps/Step3_ExpressPersonal/Description/SelfDescriptionInput';
 import MbtiSelector from '@/src/components/signup/steps/Step3_ExpressPersonal/Mbti/MbtiSelector';
@@ -66,11 +66,12 @@ export default function ExpressYourselfScreen() {
           </View>
 
           <View style={styles.buttonWrapper}>
-            <PrimaryButton
+            <GradientButton
               title="Continue"
               onPress={handleContinue}
               disabled={!isFormValid || isSubmitting}
               style={styles.button}
+              variant="full"
             />
           </View>
           <SecurityFooter />
