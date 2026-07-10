@@ -193,7 +193,7 @@ export default function MatchScreen() {
               snapToAlignment="center"
               contentContainerStyle={{ alignItems: 'flex-start' }}
             />
-          </Animated.View>
+          </RNAnimated.View>
 
           {/* 하단 섹션 */}
           <View style={[styles.bottomSection, { paddingHorizontal: horizontalPadding }]}>
