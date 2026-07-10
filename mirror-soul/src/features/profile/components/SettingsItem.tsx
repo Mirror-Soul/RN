@@ -20,6 +20,8 @@ interface SettingsItemProps {
   isLast?: boolean;
 }
 
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
 export const SettingsItem = ({ item, isLast = false }: SettingsItemProps) => {
   const router = useRouter();
   const { handlePressIn, handlePressOut, animatedStyle } = usePressAnimation();
@@ -32,7 +34,7 @@ export const SettingsItem = ({ item, isLast = false }: SettingsItemProps) => {
 
   return (
     <Animated.View style={[animatedStyle]}>
-      <Pressable
+      <AnimatedPressable
         onPress={handlePress}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
@@ -50,7 +52,7 @@ export const SettingsItem = ({ item, isLast = false }: SettingsItemProps) => {
         </View>
 
         <Feather name="chevron-right" size={16} color={colors.text.muted} />
-      </Pressable>
+      </AnimatedPressable>
     </Animated.View>
   );
 };
