@@ -1,6 +1,6 @@
 import { useAuthStore } from '@/src/store/useAuthStore';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Stack, router } from 'expo-router';
+import { Stack, router, useRootNavigationState } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
@@ -22,6 +22,7 @@ const getOnboardingRoute = (status: string | null) => {
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 export default function RootLayout() {
+  const rootNavigationState = useRootNavigationState();
   const { isHydrated, isLoggedIn, userStatus, hydrate } = useAuthStore();
 
   useEffect(() => {
@@ -30,7 +31,7 @@ export default function RootLayout() {
 
   // 상태가 변할 때마다 감시하여 즉시 이동시킵니다.
   useEffect(() => {
-    if (!isHydrated) return;
+    if (!isHydrated || !rootNavigationState?.key) return;
 
     if (isLoggedIn) {
       if (userStatus === 'ACTIVE') {
