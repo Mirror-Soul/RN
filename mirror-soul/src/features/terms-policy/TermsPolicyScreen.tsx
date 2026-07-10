@@ -32,7 +32,7 @@ export const TermsPolicyScreen = () => {
           entering={FadeInDown.delay(0).duration(500).springify()}
           style={styles.header}
         >
-          <Pressable onPress={() => router.back()} style={styles.backButton}>
+          <Pressable onPress={() => router.navigate('/(main)/profile')} style={styles.backButton}>
             <Feather name="arrow-left" size={20} color="#FFFFFF" />
           </Pressable>
           <Text style={styles.headerTitle}>약관 및 정책</Text>
