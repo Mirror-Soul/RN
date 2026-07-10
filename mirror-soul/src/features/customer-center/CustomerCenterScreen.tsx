@@ -1,34 +1,27 @@
 import React from 'react';
-import { StyleSheet, ScrollView } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
-import { CustomerCenterHeader } from './components/CustomerCenterHeader';
 import { FaqAccordion } from './components/FaqAccordion';
 import { EmailContactButton } from './components/EmailContactButton';
-import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
+import { Header } from '@/src/components/common/Header';
+import { ScreenLayout } from '@/src/components/common/ScreenLayout';
 
 export const CustomerCenterScreen = () => {
-  const insets = useSafeAreaInsets();
-  const { animatedBackground, animatedText, animatedTextMuted } = useAnimatedTheme();
+  const { colors } = useThemeColors();
 
   return (
-    <Animated.View style={[styles.container, animatedBackground]}>
-      <ScrollView
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingTop: insets.top, paddingBottom: insets.bottom + 64 },
-        ]}
-        showsVerticalScrollIndicator={false}
-      >
-        <CustomerCenterHeader />
+    <ScreenLayout withScroll={true}>
+      <Header title="고객센터" delay={0} />
 
+      <View style={styles.contentPadding}>
         <Animated.View
           entering={FadeInDown.delay(80).duration(500).springify()}
           style={styles.subtitleContainer}
         >
-          <Animated.Text style={[styles.subtitleMain, animatedText]}>무엇을 도와드릴까요?</Animated.Text>
-          <Animated.Text style={[styles.subtitleSub, animatedTextMuted]}>편하게 물어보세요.</Animated.Text>
+          <Animated.Text style={[styles.subtitleMain, { color: colors.text.primary }]}>무엇을 도와드릴까요?</Animated.Text>
+          <Animated.Text style={[styles.subtitleSub, { color: colors.text.muted }]}>편하게 물어보세요.</Animated.Text>
         </Animated.View>
 
         <Animated.View
@@ -44,17 +37,13 @@ export const CustomerCenterScreen = () => {
         >
           <EmailContactButton />
         </Animated.View>
-      </ScrollView>
-    </Animated.View>
+      </View>
+    </ScreenLayout>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
+  contentPadding: {
     paddingHorizontal: 24,
   },
   subtitleContainer: {

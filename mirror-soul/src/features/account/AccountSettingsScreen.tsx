@@ -1,154 +1,134 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Pressable, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import Constants from 'expo-constants';
 
 import { NicknameEditModal } from './components/NicknameEditModal';
+import { LogoutBottomSheet } from './components/LogoutBottomSheet';
 import { useAccountStore } from '@/src/store/useAccountStore';
 import { useThemeStore } from '@/src/store/useThemeStore';
-import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
+import { Header } from '@/src/components/common/Header';
+import { ScreenLayout } from '@/src/components/common/ScreenLayout';
 
 export const AccountSettingsScreen = () => {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const { nickname } = useAccountStore();
   const { themeMode, setThemeMode } = useThemeStore();
-  const { 
-    colors, 
-    animatedBackground, 
-    animatedCardBackground, 
-    animatedGlassBackground,
-    animatedBorder,
-    animatedText, 
-    animatedTextSecondary 
-  } = useAnimatedTheme();
+  const { colors } = useThemeColors();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLogoutSheetOpen, setIsLogoutSheetOpen] = useState(false);
   const appVersion = Constants.expoConfig?.version || '1.0.0';
 
   const handleOpenModal = () => setIsModalOpen(true);
   const handleCloseModal = () => setIsModalOpen(false);
 
   const handleLogout = () => {
-    Alert.alert('로그아웃', '정말 로그아웃 하시겠습니까?', [
-      { text: '취소', style: 'cancel' },
-      { text: '로그아웃', style: 'destructive', onPress: () => console.log('로그아웃 처리') },
-    ]);
+    setIsLogoutSheetOpen(true);
+  };
+
+  const handleCloseLogoutSheet = () => {
+    setIsLogoutSheetOpen(false);
+  };
+
+  const performLogout = () => {
+    console.log('로그아웃 처리');
+    setIsLogoutSheetOpen(false);
+    // TODO: useAuthStore().logout() 등 실제 로그아웃 로직
   };
 
   const handleWithdraw = () => {
-    Alert.alert('회원 탈퇴', '정말 탈퇴하시겠습니까? 이 작업은 되돌릴 수 없습니다.', [
-      { text: '취소', style: 'cancel' },
-      { text: '탈퇴하기', style: 'destructive', onPress: () => console.log('탈퇴 처리') },
-    ]);
+    router.navigate('/(main)/account-delete');
   };
 
   return (
-    <Animated.View style={[styles.container, animatedBackground]}>
+    <ScreenLayout withScroll={true}>
       <View style={styles.bgTopLeft} pointerEvents="none" />
       <View style={styles.bgBottomRight} pointerEvents="none" />
 
-      <ScrollView
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingTop: insets.top, paddingBottom: insets.bottom + 64 },
-        ]}
-        showsVerticalScrollIndicator={false}
+      <Header title="계정 관리" delay={0} />
+
+      <Animated.View 
+        entering={FadeInDown.delay(120).duration(550).springify()}
+        style={styles.sectionContainer}
       >
-        <Animated.View 
-          entering={FadeInDown.delay(0).duration(500).springify()}
-          style={styles.header}
-        >
-          <Pressable onPress={() => router.navigate('/(main)/profile')}>
-            <Animated.View style={[styles.backButton, animatedGlassBackground, animatedBorder]}>
-              <Feather name="arrow-left" size={20} color={colors.text.primary} />
-            </Animated.View>
+        <Text style={[styles.sectionLabel, { color: colors.text.secondary }]}>닉네임</Text>
+        
+        <View style={[styles.cardContainer, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
+          <Text style={[styles.nicknameText, { color: colors.text.primary }]}>{nickname}</Text>
+          
+          <Pressable onPress={handleOpenModal} style={styles.editButton}>
+            <Feather name="edit-2" size={14} color={colors.brand.accent} />
+            <Text style={[styles.editButtonText, { color: colors.brand.accent }]}>수정</Text>
           </Pressable>
-          <Animated.Text style={[styles.headerTitle, animatedText]}>계정 관리</Animated.Text>
-          <View style={{ width: 40 }} />
-        </Animated.View>
+        </View>
+      </Animated.View>
 
-        <Animated.View 
-          entering={FadeInDown.delay(120).duration(550).springify()}
-          style={styles.sectionContainer}
-        >
-          <Animated.Text style={[styles.sectionLabel, animatedTextSecondary]}>닉네임</Animated.Text>
-          
-          <Animated.View style={[styles.cardContainer, animatedCardBackground]}>
-            <Animated.Text style={[styles.nicknameText, animatedText]}>{nickname}</Animated.Text>
-            
-            <Pressable onPress={handleOpenModal} style={styles.editButton}>
-              <Feather name="edit-2" size={14} color={colors.brand.accent} />
-              <Text style={[styles.editButtonText, { color: colors.brand.accent }]}>수정</Text>
-            </Pressable>
-          </Animated.View>
-        </Animated.View>
-
-        <Animated.View 
-          entering={FadeInDown.delay(180).duration(550).springify()}
-          style={[styles.sectionContainer, { marginTop: 32 }]}
-        >
-          <Animated.Text style={[styles.sectionLabel, animatedTextSecondary]}>디스플레이</Animated.Text>
-          
-          <Animated.View style={[styles.controlCardContainer, animatedCardBackground]}>
-            <View style={styles.themeToggleRow}>
-              <Animated.Text style={[styles.controlText, animatedText]}>다크 모드</Animated.Text>
-              <Pressable 
-                style={[styles.toggleButton, themeMode === 'dark' && { backgroundColor: colors.brand.accent }]}
-                onPress={() => setThemeMode(themeMode === 'dark' ? 'light' : 'dark')}
-              >
-                <View style={[styles.toggleThumb, themeMode === 'dark' ? styles.toggleThumbActive : styles.toggleThumbInactive]} />
-              </Pressable>
-            </View>
-          </Animated.View>
-        </Animated.View>
-
-        <Animated.View 
-          entering={FadeInDown.delay(240).duration(550).springify()}
-          style={[styles.sectionContainer, { marginTop: 32 }]}
-        >
-          <Animated.Text style={[styles.sectionLabel, animatedTextSecondary]}>계정 제어</Animated.Text>
-          
-          <Animated.View style={[styles.controlCardContainer, animatedCardBackground]}>
+      <Animated.View 
+        entering={FadeInDown.delay(180).duration(550).springify()}
+        style={[styles.sectionContainer, { marginTop: 32 }]}
+      >
+        <Text style={[styles.sectionLabel, { color: colors.text.secondary }]}>디스플레이</Text>
+        
+        <View style={[styles.controlCardContainer, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
+          <View style={styles.themeToggleRow}>
+            <Text style={[styles.controlText, { color: colors.text.primary }]}>다크 모드</Text>
             <Pressable 
-              style={({ pressed }) => [styles.controlRow, pressed && styles.controlRowPressed]}
-              onPress={handleLogout}
+              style={[styles.toggleButton, themeMode === 'dark' && { backgroundColor: colors.brand.accent }]}
+              onPress={() => setThemeMode(themeMode === 'dark' ? 'light' : 'dark')}
             >
-              <Animated.Text style={[styles.controlText, animatedText]}>로그아웃</Animated.Text>
+              <View style={[styles.toggleThumb, themeMode === 'dark' ? styles.toggleThumbActive : styles.toggleThumbInactive]} />
             </Pressable>
-            
-            <Animated.View style={[styles.divider, animatedBorder]} />
-            
-            <Pressable 
-              style={({ pressed }) => [styles.controlRow, pressed && styles.controlRowPressed]}
-              onPress={handleWithdraw}
-            >
-              <Text style={[styles.controlText, styles.destructiveText]}>회원 탈퇴</Text>
-            </Pressable>
-          </Animated.View>
-        </Animated.View>
+          </View>
+        </View>
+      </Animated.View>
 
-        <Animated.View 
-          entering={FadeInDown.delay(360).duration(550).springify()}
-          style={styles.versionContainer}
-        >
-          <Animated.Text style={[styles.versionText, animatedTextSecondary]}>현재 버전 {appVersion}</Animated.Text>
-        </Animated.View>
+      <Animated.View 
+        entering={FadeInDown.delay(240).duration(550).springify()}
+        style={[styles.sectionContainer, { marginTop: 32 }]}
+      >
+        <Text style={[styles.sectionLabel, { color: colors.text.secondary }]}>계정 제어</Text>
+        
+        <View style={[styles.controlCardContainer, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
+          <Pressable 
+            style={({ pressed }) => [styles.controlRow, pressed && styles.controlRowPressed]}
+            onPress={handleLogout}
+          >
+            <Text style={[styles.controlText, { color: colors.text.primary }]}>로그아웃</Text>
+          </Pressable>
+          
+          <View style={[styles.divider, { borderColor: colors.border.primary }]} />
+          
+          <Pressable 
+            style={({ pressed }) => [styles.controlRow, pressed && styles.controlRowPressed]}
+            onPress={handleWithdraw}
+          >
+            <Text style={[styles.controlText, styles.destructiveText]}>회원 탈퇴</Text>
+          </Pressable>
+        </View>
+      </Animated.View>
 
-      </ScrollView>
+      <Animated.View 
+        entering={FadeInDown.delay(360).duration(550).springify()}
+        style={styles.versionContainer}
+      >
+        <Text style={[styles.versionText, { color: colors.text.secondary }]}>현재 버전 {appVersion}</Text>
+      </Animated.View>
 
       <NicknameEditModal isOpen={isModalOpen} onClose={handleCloseModal} />
-    </Animated.View>
+      <LogoutBottomSheet 
+        isOpen={isLogoutSheetOpen} 
+        onClose={handleCloseLogoutSheet} 
+        onLogout={performLogout} 
+      />
+    </ScreenLayout>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
   bgTopLeft: {
     position: 'absolute',
     width: 600,
@@ -166,32 +146,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(78, 218, 249, 0.05)',
     bottom: -100,
     right: -200,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    paddingHorizontal: 0,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingTop: 24,
-    paddingBottom: 40,
-    justifyContent: 'space-between',
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    borderWidth: 0.61,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  headerTitle: {
-    fontFamily: 'Inter',
-    fontWeight: '500',
-    fontSize: 18,
-    letterSpacing: -0.44,
   },
   sectionContainer: {
     paddingHorizontal: 24,

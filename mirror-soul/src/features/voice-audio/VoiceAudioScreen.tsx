@@ -1,39 +1,32 @@
 import React from 'react';
-import { StyleSheet, ScrollView, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
-import { VoiceAudioHeader } from './components/VoiceAudioHeader';
 import { SpeedSegmentControl } from './components/SpeedSegmentControl';
 import { useVoiceAudioSettings } from './hooks/useVoiceAudioSettings';
-import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
+import { Header } from '@/src/components/common/Header';
+import { ScreenLayout } from '@/src/components/common/ScreenLayout';
 
 export const VoiceAudioScreen = () => {
-  const insets = useSafeAreaInsets();
   const { speechSpeed, handleSpeedChange } = useVoiceAudioSettings();
-  const { animatedBackground, animatedGlassBackground, animatedText, animatedTextMuted } = useAnimatedTheme();
+  const { colors } = useThemeColors();
 
   return (
-    <Animated.View style={[styles.container, animatedBackground]}>
-      <ScrollView
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingTop: insets.top, paddingBottom: insets.bottom + 40 },
-        ]}
-        showsVerticalScrollIndicator={false}
-      >
-        <VoiceAudioHeader />
+    <ScreenLayout withScroll={true}>
+      <Header title="음성/오디오 설정" delay={0} />
 
+      <View style={styles.contentPadding}>
         <Animated.View
           entering={FadeInDown.delay(120).duration(550).springify()}
-          style={[styles.card, animatedGlassBackground]}
+          style={[styles.card, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
         >
           <View style={styles.cardHeader}>
-            <Animated.Text style={[styles.cardTitle, animatedText]}>상대방 말하기 속도</Animated.Text>
+            <Animated.Text style={[styles.cardTitle, { color: colors.text.primary }]}>상대방 말하기 속도</Animated.Text>
           </View>
 
           <View style={styles.cardDescription}>
-            <Animated.Text style={[styles.descriptionText, animatedTextMuted]}>
+            <Animated.Text style={[styles.descriptionText, { color: colors.text.muted }]}>
               자연스러운 대화 흐름에 맞게 속도를 조절하세요.
             </Animated.Text>
           </View>
@@ -45,17 +38,13 @@ export const VoiceAudioScreen = () => {
             />
           </View>
         </Animated.View>
-      </ScrollView>
-    </Animated.View>
+      </View>
+    </ScreenLayout>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
+  contentPadding: {
     paddingHorizontal: 24,
   },
   card: {

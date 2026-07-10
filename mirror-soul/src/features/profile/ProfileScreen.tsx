@@ -1,6 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StyleSheet, View } from 'react-native';
 
 import { ProfileHeader } from './components/ProfileHeader';
 import { AvailableTimeCard } from './components/AvailableTimeCard';
@@ -9,13 +8,11 @@ import { PROFILE_SECTIONS } from './constants/profileMenu';
 import { TimeRefillBottomSheet } from './components/TimeRefillBottomSheet';
 
 import { useAccountStore } from '@/src/store/useAccountStore';
-import { useThemeColors } from '@/src/hooks/useThemeColors';
+import { ScreenLayout } from '@/src/components/common/ScreenLayout';
 
 export const ProfileScreen = () => {
-  const insets = useSafeAreaInsets();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const { nickname } = useAccountStore();
-  const { colors } = useThemeColors();
 
   const handleOpenSheet = useCallback(() => {
     setIsSheetOpen(true);
@@ -26,13 +23,11 @@ export const ProfileScreen = () => {
   }, []);
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background.primary }]}>
-      <ScrollView 
-        contentContainerStyle={[
-          styles.scrollContent, 
-          { paddingTop: insets.top, paddingBottom: insets.bottom + 100 }
-        ]}
-        showsVerticalScrollIndicator={false}
+    <>
+      <ScreenLayout 
+        withScroll={true} 
+        contentContainerStyle={styles.scrollContent}
+        paddingBottomOffset={100}
       >
         <ProfileHeader 
           name={nickname} 
@@ -53,21 +48,15 @@ export const ProfileScreen = () => {
             delay={200 + (index * 100)}
           />
         ))}
-      </ScrollView>
+      </ScreenLayout>
 
-      {/* Render Bottom Sheet outside of ScrollView so it overlaps correctly */}
       <TimeRefillBottomSheet isOpen={isSheetOpen} onClose={handleCloseSheet} />
-    </View>
+    </>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#000000',
-  },
   scrollContent: {
-    flexGrow: 1,
     alignItems: 'center',
   }
 });
