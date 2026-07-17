@@ -1,8 +1,9 @@
 import HistoryIcon from '@/assets/images/common/bottomNavbar/History_button.svg';
 import PurpleHeartIcon from '@/assets/images/common/history/purpleHeart.svg';
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, FontFamily} from '@/src/constants/theme';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View, Text } from 'react-native';
 
 export interface CallSubInfoProps {
   durationLabel: string; // ex) "8분 23초"
@@ -13,18 +14,20 @@ export default function CallSubInfo({
   durationLabel,
   twinMatchLabel,
 }: CallSubInfoProps) {
+  const { colors } = useThemeColors();
+
   return (
     <View style={styles.container}>
       {/* Time */}
-      <View style={styles.chip}>
-        <HistoryIcon width={16} height={16} color={Colors.neutral.lightGrayText} />
-        <Text style={styles.chipText}>{durationLabel}</Text>
+      <View style={[styles.chip, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
+        <HistoryIcon width={16} height={16} color={colors.text.muted} />
+        <Text style={[styles.chipText, { color: colors.text.muted }]}>{durationLabel}</Text>
       </View>
 
       {/* Twin Match */}
-      <View style={styles.chip}>
+      <View style={[styles.chip, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
         <PurpleHeartIcon width={16} height={16} />
-        <Text style={styles.chipText}>{twinMatchLabel}</Text>
+        <Text style={[styles.chipText, { color: colors.text.muted }]}>{twinMatchLabel}</Text>
       </View>
     </View>
   );
@@ -45,11 +48,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     borderRadius: Radii.smmd, // 10px (스펙에서 새로 추가함)
-    backgroundColor: Colors.glass.white5,
   },
   chipText: {
-    color: Colors.neutral.lightGrayText, // #D1D5DC
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 12,
     fontWeight: '400',
     lineHeight: 16, // 133.333%

@@ -1,4 +1,5 @@
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, FontFamily} from '@/src/constants/theme';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -7,11 +8,13 @@ export interface CallTagRowProps {
 }
 
 export default function CallTagRow({ tags }: CallTagRowProps) {
+  const { colors } = useThemeColors();
+
   if (!tags || tags.length === 0) return null;
 
   return (
     <View style={styles.container}>
-      <Text style={styles.titleText}>대화 주제</Text>
+      <Text style={[styles.titleText, { color: colors.text.secondary }]}>대화 주제</Text>
       <View style={styles.tagsWrapper}>
         {tags.map((tag, index) => (
           <View key={index} style={styles.tagBadge}>
@@ -31,8 +34,7 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
   },
   titleText: {
-    color: Colors.neutral.lightGray, // #99A1AF
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 12,
     fontWeight: '400',
     lineHeight: 16, // 133.333%
@@ -56,7 +58,7 @@ const styles = StyleSheet.create({
   },
   tagText: {
     color: Colors.primary.vividPurple, // #C27AFF
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 12,
     fontWeight: '400',
     lineHeight: 16, // 133.333%

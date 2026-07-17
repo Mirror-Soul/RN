@@ -1,10 +1,11 @@
 import EditPencilIcon from '@/assets/images/common/history/call_history/call_edit_pencil.svg';
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, FontFamily} from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View, TextInput } from 'react-native';
 import { ChatMessage } from '../../parts/HistoryCallCard';
 import ChatEditForm from './ChatEditForm';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface ChatBubbleProps {
   message: ChatMessage;
@@ -29,6 +30,7 @@ export default function ChatBubble({
   onEditCancel,
   onEditTextChange,
 }: ChatBubbleProps) {
+  const { colors } = useThemeColors();
   const isSent = message.direction === 'SENT';
   const isEditing = editingId === message.id;
 
@@ -86,7 +88,7 @@ export default function ChatBubble({
         {/* 수정 버튼: 평상시에만 노출하며 우측 상단 오버랩 */}
         {!isEditing && (
           <TouchableOpacity
-            style={styles.editButtonAbsolute}
+            style={[styles.editButtonAbsolute, { backgroundColor: colors.background.card }]}
             onPress={() => onEditStart(message.id, message.text)}
             activeOpacity={0.8}
             accessibilityRole="button"
@@ -155,7 +157,7 @@ const styles = StyleSheet.create({
   },
   messageText: {
     color: Colors.neutral.pureWhite,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '400',
     lineHeight: 22,
@@ -163,7 +165,7 @@ const styles = StyleSheet.create({
   },
   textInput: {
     color: Colors.neutral.pureWhite,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     lineHeight: 22,
     letterSpacing: -0.15,
@@ -182,19 +184,18 @@ const styles = StyleSheet.create({
     borderRadius: Radii.full,
     borderWidth: 0.612,
     borderColor: Colors.glass.purple50,
-    backgroundColor: 'rgba(20, 20, 20, 0.9)',
     zIndex: 10,
   },
   timestamp: {
     color: Colors.neutral.darkGray,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 11,
     fontWeight: '400',
     lineHeight: 14,
   },
   editedLabel: {
     color: Colors.neutral.darkGray,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 11,
     fontWeight: '400',
     lineHeight: 14,

@@ -1,8 +1,9 @@
 import BackIcon from '@/assets/images/common/back.svg';
-import { Colors } from '@/src/constants/theme';
+import {Colors, FontFamily} from '@/src/constants/theme';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 /**
  * 목소리 업데이트 헤더 (SRP)
@@ -10,6 +11,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
  */
 export default function VoiceUpdateHeader() {
   const router = useRouter();
+  const { colors } = useThemeColors();
 
   return (
     <View style={styles.container}>
@@ -24,7 +26,7 @@ export default function VoiceUpdateHeader() {
       </TouchableOpacity>
       
       <View style={styles.titleContainer}>
-        <Text style={styles.title}>목소리 업데이트</Text>
+        <Text style={[styles.title, { color: colors.text.primary }]}>목소리 업데이트</Text>
       </View>
     </View>
   );
@@ -48,9 +50,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    color: Colors.neutral.pureWhite,
     textAlign: 'center',
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 20,
     fontWeight: '500',
     lineHeight: 28,

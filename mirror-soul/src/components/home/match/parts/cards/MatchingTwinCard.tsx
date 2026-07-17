@@ -1,7 +1,8 @@
 import React, { useEffect, useRef } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View, useWindowDimensions, Animated } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View, useWindowDimensions, Animated as RNAnimated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Colors, Radii } from '@/src/constants/theme';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
+import {Colors, Radii, FontFamily} from '@/src/constants/theme';
 import { useLayout } from '@/src/hooks/useLayout';
 
 // 아이콘 에셋
@@ -34,11 +35,12 @@ export default function MatchingTwinCard({
   summaryHighlight = '최근 여행 경험을 공유하며 즐겁게 대화했어요',
 }: Partial<MatchingTwinCardProps>) {
   const { rw } = useLayout();
-  const progressAnim = useRef(new Animated.Value(0)).current;
+  const progressAnim = useRef(new RNAnimated.Value(0)).current;
+  const { colors } = useThemeColors();
 
   useEffect(() => {
     // 만족도 바 애니메이션 (0 -> 목표값)
-    Animated.spring(progressAnim, {
+    RNAnimated.spring(progressAnim, {
       toValue: twinSatisfaction,
       tension: 20,
       friction: 7,
@@ -49,40 +51,40 @@ export default function MatchingTwinCard({
   return (
     <View style={styles.container}>
       {/* 메인 카드 영역 */}
-      <View style={styles.mainCard}>
+      <View style={[styles.mainCard, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
         {/* 1. 프로필 섹션 (시안-블루 그라디언트 헤더) */}
         <LinearGradient
           colors={Colors.gradient.twinCardHeader}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={[styles.profileSection, { height: rw(143.178), padding: rw(19.996) }]}
+          style={[styles.profileSection, { height: rw(143.178), padding: rw(19.996) }, { borderColor: colors.border.primary }]}
         >
           <View style={styles.profileRow}>
             {/* 프로필 이미지 */}
             <LinearGradient
               colors={[Colors.glass.cyan30_d3, Colors.glass.blue20]}
-              style={[styles.profileImage, { width: rw(79.995), height: rw(79.995) }]}
+              style={[styles.profileImage, { width: rw(79.995), height: rw(79.995) }, { borderColor: colors.border.primary }]}
             />
             
             <View style={styles.profileInfo}>
-              <Text style={styles.nameText}>{name}, {age}</Text>
+              <Text style={[styles.nameText, { color: colors.text.primary }]}>{name}, {age}</Text>
               
               <View style={styles.histRow}>
                 <View style={styles.callHistBadge}>
                   <TwinCallIcon width={rw(12)} height={rw(12)} />
                   <Text style={styles.callCountText}>{callCount}번 통화</Text>
                 </View>
-                <Text style={styles.timeText}>{timeAgo}</Text>
+                <Text style={[styles.timeText, { color: colors.text.muted }]}>{timeAgo}</Text>
               </View>
 
               {/* 내 Twin 만족도 */}
               <View style={styles.satisfactionArea}>
                 <View style={styles.satisfactionHeader}>
-                  <Text style={styles.satisfactionLabel}>내 Twin 만족도</Text>
+                  <Text style={[styles.satisfactionLabel, { color: colors.text.muted }]}>내 Twin 만족도</Text>
                   <Text style={styles.satisfactionValue}>{twinSatisfaction}%</Text>
                 </View>
-                <View style={styles.progressBarBg}>
-                  <Animated.View style={{
+                <View style={[styles.progressBarBg, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
+                  <RNAnimated.View style={{
                     height: '100%',
                     width: progressAnim.interpolate({
                       inputRange: [0, 100],
@@ -95,7 +97,7 @@ export default function MatchingTwinCard({
                       end={{ x: 1, y: 0 }}
                       style={styles.progressBarFill}
                     />
-                  </Animated.View>
+                  </RNAnimated.View>
                 </View>
               </View>
             </View>
@@ -106,14 +108,14 @@ export default function MatchingTwinCard({
         <View style={[styles.summarySection, { padding: rw(20) }]}>
           <View style={styles.sectionTitleRow}>
             <SummaryIcon width={rw(16)} height={rw(16)} />
-            <Text style={styles.sectionTitle}>대화 내용 요약</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>대화 내용 요약</Text>
           </View>
           
           <View style={styles.summaryContent}>
             {summaries.map((item, index) => (
               <View key={index} style={styles.summaryItem}>
                 <CompleteIcon width={rw(14)} height={rw(14)} />
-                <Text style={styles.summaryText}>{item}</Text>
+                <Text style={[styles.summaryText, { color: colors.text.muted }]}>{item}</Text>
               </View>
             ))}
           </View>
@@ -129,9 +131,9 @@ export default function MatchingTwinCard({
 
       {/* 3. 하단 액션 버튼 영역 */}
       <View style={[styles.actionRow, { height: rw(57.216) }]}>
-        <TouchableOpacity activeOpacity={0.8} style={styles.nextButton}>
+        <TouchableOpacity activeOpacity={0.8} style={[styles.nextButton, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
           <CancelIcon width={rw(24)} height={rw(24)} />
-          <Text style={styles.buttonText}>다음에</Text>
+          <Text style={[styles.buttonText, { color: colors.text.primary }]}>다음에</Text>
         </TouchableOpacity>
 
         <TouchableOpacity activeOpacity={0.8} style={styles.callButtonContainer}>
@@ -142,7 +144,7 @@ export default function MatchingTwinCard({
             style={styles.callButton}
           >
             <TwinCallButtonIcon width={rw(20)} height={rw(20)} />
-            <Text style={[styles.buttonText, { color: '#000' }]}>상대 Twin과 통화</Text>
+            <Text style={[styles.buttonText, { color: colors.background.primary }]}>상대 Twin과 통화</Text>
           </LinearGradient>
         </TouchableOpacity>
       </View>
@@ -158,13 +160,10 @@ const styles = StyleSheet.create({
   mainCard: {
     borderRadius: Radii.lg,
     borderWidth: 0.612,
-    borderColor: Colors.glass.white20,
-    backgroundColor: Colors.glass.white05,
     overflow: 'hidden',
   },
   profileSection: {
     borderBottomWidth: 0.612,
-    borderColor: Colors.glass.white10,
   },
   profileRow: {
     flexDirection: 'row',
@@ -174,15 +173,13 @@ const styles = StyleSheet.create({
   profileImage: {
     borderRadius: Radii.lg,
     borderWidth: 0.612,
-    borderColor: Colors.glass.white20,
   },
   profileInfo: {
     flex: 1,
     gap: 8,
   },
   nameText: {
-    color: Colors.neutral.pureWhite,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 20,
     fontWeight: '500',
     lineHeight: 28,
@@ -206,14 +203,13 @@ const styles = StyleSheet.create({
   },
   callCountText: {
     color: Colors.primary.electricCyan,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 12,
     fontWeight: '500',
     lineHeight: 16,
   },
   timeText: {
-    color: Colors.neutral.lightGray,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 12,
     fontWeight: '400',
     lineHeight: 16,
@@ -228,15 +224,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   satisfactionLabel: {
-    color: Colors.neutral.lightGray,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 12,
     fontWeight: '400',
     lineHeight: 16,
   },
   satisfactionValue: {
     color: Colors.primary.electricCyan,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '500',
     lineHeight: 20,
@@ -245,7 +240,6 @@ const styles = StyleSheet.create({
   progressBarBg: {
     height: 6,
     borderRadius: Radii.full,
-    backgroundColor: Colors.glass.white10,
     overflow: 'hidden',
   },
   progressBarFill: {
@@ -261,8 +255,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   sectionTitle: {
-    color: Colors.neutral.pureWhite,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '500',
     lineHeight: 20,
@@ -277,8 +270,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   summaryText: {
-    color: Colors.neutral.lightGrayText,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '400',
     lineHeight: 20,
@@ -294,7 +286,7 @@ const styles = StyleSheet.create({
   },
   highlightText: {
     color: '#53EAFD',
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '400',
     lineHeight: 22.75,
@@ -312,12 +304,9 @@ const styles = StyleSheet.create({
     gap: 8,
     borderRadius: Radii.md2,
     borderWidth: 0.612,
-    borderColor: Colors.glass.white10,
-    backgroundColor: Colors.glass.white05,
   },
   buttonText: {
-    color: Colors.neutral.pureWhite,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 16,
     fontWeight: '500',
     lineHeight: 24,

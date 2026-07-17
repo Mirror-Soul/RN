@@ -1,14 +1,17 @@
 import FaceScanIcon from '@/assets/images/common/evlove/evolve_facescan.svg';
 import TimerIcon from '@/assets/images/common/evlove/evlove_timer.svg';
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, FontFamily} from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 /**
  * 얼굴 스캔 카드 (SRP)
  */
 export default function EvolveFaceScanCard() {
+  const { colors } = useThemeColors();
+
   return (
     <TouchableOpacity
       activeOpacity={0.85}
@@ -30,13 +33,13 @@ export default function EvolveFaceScanCard() {
         </View>
 
         <View style={styles.content}>
-          <Text style={styles.title}>얼굴 스캔</Text>
-          <Text style={styles.subTitle}>표정과 감정 학습</Text>
+          <Text style={[styles.title, { color: colors.text.primary }]}>얼굴 스캔</Text>
+          <Text style={[styles.subTitle, { color: colors.text.secondary }]}>표정과 감정 학습</Text>
         </View>
 
         <View style={styles.footer}>
           <TimerIcon width={16} height={16} />
-          <Text style={styles.timeText}>2분</Text>
+          <Text style={[styles.timeText, { color: colors.text.secondary }]}>2분</Text>
         </View>
       </LinearGradient>
     </TouchableOpacity>
@@ -70,16 +73,14 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   title: {
-    color: Colors.neutral.pureWhite,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '500',
     lineHeight: 20,
     letterSpacing: -0.15,
   },
   subTitle: {
-    color: Colors.neutral.lightGray,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 12,
     fontWeight: '500',
     lineHeight: 16,
@@ -90,8 +91,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   timeText: {
-    color: Colors.neutral.darkGray,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 12,
     fontWeight: '500',
     lineHeight: 16,

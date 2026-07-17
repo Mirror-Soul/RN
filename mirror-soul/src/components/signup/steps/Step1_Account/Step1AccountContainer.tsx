@@ -1,12 +1,13 @@
 import SecurityFooter from '@/src/components/home/SecurityFooter';
-import PrimaryButton from '@/src/components/signup/common/PrimaryButton';
+import GradientButton from '@/src/components/common/GradientButton';
 import { SIGNUP_ROUTES } from '@/src/constants/routes/signupRoutes';
-import { Colors, Layout } from '@/src/constants/theme';
+import {Colors, Layout, FontFamily} from '@/src/constants/theme';
 import { createBasicProfile } from '@/src/services/authService';
 
 import { useAuthStore } from '@/src/store/useAuthStore';
 import { useRouter } from 'expo-router';
 import React from 'react';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
@@ -24,6 +25,7 @@ import { useStep1Form } from './hooks/useStep1Form';
  */
 export default function Step1AccountContainer() {
   const router = useRouter();
+  const { colors } = useThemeColors();
 
   const {
     state,
@@ -136,11 +138,12 @@ export default function Step1AccountContainer() {
 
           {/* Continue Button */}
           <View style={styles.buttonWrapper}>
-            <PrimaryButton
+            <GradientButton
               title="다음"
               disabled={!isFormValid}
               isLoading={state.isLoading}
               onPress={handleContinue}
+              variant="full"
             />
           </View>
         </View>
@@ -155,12 +158,12 @@ export default function Step1AccountContainer() {
     {/* 로딩 오버레이 (전체 화면 블러 효과) */}
     {state.isLoading && (
       <Animated.View
-        style={[styles.loadingOverlay, overlayAnimatedStyle]}
+        style={[styles.loadingOverlay, overlayAnimatedStyle, { backgroundColor: colors.background.overlay || 'rgba(0,0,0,0.7)' }]}
         pointerEvents="auto"
       >
         <View style={styles.loadingContent}>
           <ActivityIndicator size="large" color={Colors.primary.electricCyan} />
-          <Text style={styles.loadingText}>계정을 생성하고 있습니다...</Text>
+          <Text style={[styles.loadingText, { color: colors.text.primary }]}>계정을 생성하고 있습니다...</Text>
         </View>
       </Animated.View>
     )}
@@ -204,7 +207,6 @@ const styles = StyleSheet.create({
   },
   loadingOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 100,
@@ -214,8 +216,7 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   loadingText: {
-    color: '#FFF',
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 16,
     fontWeight: '500',
     letterSpacing: -0.312,

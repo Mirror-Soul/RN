@@ -1,8 +1,9 @@
 import LocationIcon from '@/assets/images/common/Location.svg';
 import RightNarrowIcon from '@/assets/images/common/Right_narrow.svg';
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, FontFamily} from '@/src/constants/theme';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface SearchLocationBarProps {
   locations?: string[];
@@ -17,9 +18,11 @@ export default function SearchLocationBar({
   locations = ['강동구', '강북구'],
   onPress,
 }: SearchLocationBarProps) {
+  const { colors } = useThemeColors();
+
   return (
     <TouchableOpacity
-      style={styles.container}
+      style={[styles.container, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
       onPress={onPress}
       activeOpacity={0.7}
       accessibilityRole="button"
@@ -50,8 +53,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     borderRadius: Radii.md2,
     borderWidth: 0.612,
-    borderColor: Colors.glass.white10,
-    backgroundColor: Colors.glass.white5,
   },
   leftSection: {
     flexDirection: 'row',
@@ -72,7 +73,7 @@ const styles = StyleSheet.create({
   },
   tagText: {
     color: Colors.primary.electricCyan,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 12,
     fontWeight: '500',
     lineHeight: 16,

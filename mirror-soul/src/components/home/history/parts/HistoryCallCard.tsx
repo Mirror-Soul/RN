@@ -1,6 +1,8 @@
 import { Colors, Radii } from '@/src/constants/theme';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 import React from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
+
 import CallProfile from './HistoryCallCard/CallProfile';
 import CallSubInfo from './HistoryCallCard/CallSubInfo';
 import CallTagRow from './HistoryCallCard/CallTagRow';
@@ -42,9 +44,11 @@ interface HistoryCallCardProps {
  * 개별 통화 기록 단위 카드 컴포넌트
  */
 export default function HistoryCallCard({ data, onPress }: HistoryCallCardProps) {
+  const { colors } = useThemeColors();
+
   return (
     <TouchableOpacity
-      style={styles.container}
+      style={[styles.container, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
       onPress={onPress}
       activeOpacity={0.85}
       accessibilityRole="button"
@@ -78,7 +82,5 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
     borderRadius: Radii.lg, // 16px
     borderWidth: 0.612,
-    borderColor: Colors.glass.white10,
-    backgroundColor: Colors.glass.white5,
   },
 });

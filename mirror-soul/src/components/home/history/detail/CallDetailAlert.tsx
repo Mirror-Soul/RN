@@ -1,6 +1,6 @@
 import EditPencilIcon from '@/assets/images/common/history/call_history/call_edit_pencil.svg';
 import PurpleInfoIcon from '@/assets/images/common/history/call_history/puple_info.svg';
-import { Colors } from '@/src/constants/theme';
+import {Colors, FontFamily} from '@/src/constants/theme';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
   },
   text: {
     color: Colors.neutral.lavender,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 12,
     fontWeight: '400',
     lineHeight: 16,

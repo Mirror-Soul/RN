@@ -1,3 +1,5 @@
+import { TextStyle, ViewStyle } from 'react-native';
+
 export const Colors = {
   primary: {
     electricCyan: '#00D3F3', // Brand Cyan
@@ -22,6 +24,8 @@ export const Colors = {
     twinCardHeader: ['rgba(0, 211, 243, 0.10)', 'rgba(81, 162, 255, 0.10)'] as [string, string], // Twin 카드 헤더 (시안)
     twinCallButton: ['#C27AFF', '#FB64B6'] as [string, string], // 상대 Twin과 통화 버튼
     twinProgress: ['#00D3F3', '#51A2FF'] as [string, string], // Twin 만족도 바 그라디언트
+    limeGradient: ['#65F56D', '#2BEE34'] as [string, string], // Lime Green 시작 버튼용
+    subtleLimeGradient: ['rgba(43, 238, 52, 0.6)', 'rgba(43, 238, 52, 0.3)'] as [string, string], // 은은한 Lime Green (토글용)
   },
   neutral: {
     pureWhite: '#FFFFFF',
@@ -129,4 +133,95 @@ export const Layout = {
   MAIN_TAB_CONTENTS_BOTTOM_PADDING: 100, // BottomNavbar 높이에 대응하는 스크롤 하단 여백
 } as const;
 
+/**
+ * 동적 테마 (Light/Dark Mode) 시스템
+ */
+export interface ThemeColors {
+  background: {
+    primary: string;   // 화면 최상단
+    card: string;      // 카드, 모달 박스
+    elevated: string;  // 바텀시트, 팝오버
+    glass: string;     // 반투명 글래스
+    overlay: string;   // 모달 오버레이 딤(dim) 배경
+  };
+  text: {
+    primary: string;   // 주 텍스트
+    secondary: string; // 서브 텍스트
+    muted: string;     // 비활성, 플레이스홀더
+    danger: string;    // 탈퇴, 에러 등 destructive 액션
+  };
+  brand: {
+    accent: string;    // 주 액센트 (dark: limeGreen, light: cobaltBlue)
+  };
+  border: {
+    primary: string;   // 카드, 구분선
+    strong: string;    // 포커스, 강조 테두리
+  };
+  state: {
+    danger: string;    // 에러, 탈퇴 등
+    success: string;   // 완료, 확인
+  };
+}
 
+export const lightTheme: ThemeColors = {
+  background: {
+    primary: '#F8F7F4',               // Off White
+    card: '#FFFFFF',
+    elevated: '#FFFFFF',              // 바텀시트, 팝오버
+    glass: 'rgba(0, 0, 0, 0.05)',
+    overlay: 'rgba(0, 0, 0, 0.4)',
+  },
+  text: {
+    primary: '#141414',
+    secondary: '#4B5563',
+    muted: '#9CA3AF',
+    danger: '#DC2626',                // 라이트 모드 destructive
+  },
+  brand: {
+    accent: '#0047FF',                // Electric Cobalt
+  },
+  border: {
+    primary: 'rgba(0, 0, 0, 0.12)',
+    strong: 'rgba(0, 0, 0, 0.30)',
+  },
+  state: {
+    danger: '#DC2626',
+    success: '#059669',
+  },
+};
+
+export const darkTheme: ThemeColors = {
+  background: {
+    primary: '#141414',               // Pitch Black
+    card: '#2A2A2A',
+    elevated: '#323232',              // 바텀시트, 팝오버
+    glass: Colors.glass.white5,
+    overlay: 'rgba(0, 0, 0, 0.7)',
+  },
+  text: {
+    primary: '#FFFFFF',
+    secondary: '#D1D5DC',
+    muted: '#6A7282',
+    danger: '#FF4C4C',                // 다크 모드 destructive
+  },
+  brand: {
+    accent: '#2BEE34',                // Lime Green
+  },
+  border: {
+    primary: Colors.glass.white10,
+    strong: 'rgba(255, 255, 255, 0.30)',
+  },
+  state: {
+    danger: '#FF4C4C',
+    success: '#05DF72',
+  },
+};
+
+/**
+ * 폰트 패밀리 상수
+ * 프로젝트 전역에서 fontFamily 하드코딩 방지를 위해 사용합니다.
+ */
+export const FontFamily = {
+  sans: 'Inter',   // UI 전반 (본문, 버튼, 레이블 등)
+  mono: 'Menlo',   // 타이머, 코드, 인증 코드 등 고정 폭 텍스트
+} as const;

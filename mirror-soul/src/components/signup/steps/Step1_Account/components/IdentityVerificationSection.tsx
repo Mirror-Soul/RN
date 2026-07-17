@@ -1,10 +1,11 @@
 import GreenCheckIcon from '@/assets/images/common/Green_check.svg';
 import ProtectIcon from '@/assets/images/common/Verification_protect_icon.svg';
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, FontFamily} from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Step1State } from '../types/step1';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface IdentityVerificationSectionProps {
   state: Step1State;
@@ -16,12 +17,13 @@ interface IdentityVerificationSectionProps {
  * PASS 본인인증 버튼 및 완료 상태를 관리합니다.
  */
 export default function IdentityVerificationSection({ state, onVerify }: IdentityVerificationSectionProps) {
+  const { colors } = useThemeColors();
   return (
     <View style={styles.container}>
       {/* Heading */}
       <View style={styles.heading}>
         <ProtectIcon width={24} height={24} />
-        <Text style={styles.headingTitle}>본인인증</Text>
+        <Text style={[styles.headingTitle, { color: colors.text.primary }]}>본인인증</Text>
       </View>
 
       {!state.isIdentityVerified ? (
@@ -70,8 +72,7 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
   },
   headingTitle: {
-    color: '#FFF',
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 16,
     fontWeight: '500',
     lineHeight: 24,
@@ -91,7 +92,7 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#FFF',
     textAlign: 'center',
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 16,
     fontWeight: '500',
     lineHeight: 24,
@@ -127,7 +128,7 @@ const styles = StyleSheet.create({
   },
   successTitle: {
     color: Colors.primary.successGreen,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '500',
     lineHeight: 20,
@@ -135,7 +136,7 @@ const styles = StyleSheet.create({
   },
   successSubtitle: {
     color: Colors.neutral.lightGray,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 12,
     fontWeight: '400',
     lineHeight: 16,

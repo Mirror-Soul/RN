@@ -1,9 +1,10 @@
 import NoMeetingIcon from '@/assets/images/common/matching/NoMeeting.svg';
 import TwinCallIcon from '@/assets/images/common/matching/Twin_Call.svg';
 import OnRecommendIcon from '@/assets/images/common/matching/OnRecommend.svg';
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, FontFamily} from '@/src/constants/theme';
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, TouchableOpacity, View, Text } from 'react-native';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 export type MatchingTabType = 'meet' | 'twin' | 'recommend';
 
@@ -16,31 +17,37 @@ interface MatchingSummaryRowProps {
  * 매칭 요약 버튼 행 (만남 신청, Twin, 추천)
  */
 export default function MatchingSummaryRow({ activeTab, onTabChange }: MatchingSummaryRowProps) {
+  const { colors } = useThemeColors();
+
   return (
     <View style={styles.container}>
       {/* 만남 신청 버튼 */}
       <TouchableOpacity 
         activeOpacity={0.8} 
         onPress={() => onTabChange('meet')}
-        style={[
-          styles.summaryButton, 
-          activeTab === 'meet' && styles.meetButtonActive
-        ]}
       >
-        <View style={styles.buttonContent}>
-          <NoMeetingIcon width={20} height={20} />
-          <Text style={[
-            styles.buttonText, 
-            activeTab === 'meet' && { color: Colors.primary.mirrorOrange }
-          ]}>만남 신청</Text>
-          <View style={[
-            styles.badge, 
-            { backgroundColor: activeTab === 'meet' ? Colors.glass.orange30 : 'rgba(255, 137, 4, 0.30)' }
-          ]}>
+        <View style={[
+          styles.summaryButton, 
+          { backgroundColor: colors.background.glass, borderColor: colors.border.primary },
+          activeTab === 'meet' && styles.meetButtonActive
+        ]}>
+          <View style={styles.buttonContent}>
+            <NoMeetingIcon width={20} height={20} />
             <Text style={[
-              styles.badgeText, 
+              styles.buttonText, 
+              { color: colors.text.muted },
               activeTab === 'meet' && { color: Colors.primary.mirrorOrange }
-            ]}>2</Text>
+            ]}>만남 신청</Text>
+            <View style={[
+              styles.badge, 
+              { backgroundColor: activeTab === 'meet' ? Colors.glass.orange30 : 'rgba(255, 137, 4, 0.30)' }
+            ]}>
+              <Text style={[
+                styles.badgeText, 
+                { color: colors.text.muted },
+                activeTab === 'meet' && { color: Colors.primary.mirrorOrange }
+              ]}>2</Text>
+            </View>
           </View>
         </View>
       </TouchableOpacity>
@@ -49,25 +56,29 @@ export default function MatchingSummaryRow({ activeTab, onTabChange }: MatchingS
       <TouchableOpacity 
         activeOpacity={0.8} 
         onPress={() => onTabChange('twin')}
-        style={[
-          styles.summaryButton, 
-          activeTab === 'twin' && styles.twinButtonActive
-        ]}
       >
-        <View style={styles.buttonContent}>
-          <TwinCallIcon width={20} height={20} />
-          <Text style={[
-            styles.buttonText, 
-            activeTab === 'twin' && { color: Colors.primary.electricCyan }
-          ]}>Twin</Text>
-          <View style={[
-            styles.badge, 
-            { backgroundColor: activeTab === 'twin' ? Colors.glass.cyan30 : 'rgba(0, 211, 243, 0.30)' }
-          ]}>
+        <View style={[
+          styles.summaryButton, 
+          { backgroundColor: colors.background.glass, borderColor: colors.border.primary },
+          activeTab === 'twin' && styles.twinButtonActive
+        ]}>
+          <View style={styles.buttonContent}>
+            <TwinCallIcon width={20} height={20} />
             <Text style={[
-              styles.badgeText, 
+              styles.buttonText, 
+              { color: colors.text.muted },
               activeTab === 'twin' && { color: Colors.primary.electricCyan }
-            ]}>2</Text>
+            ]}>Twin</Text>
+            <View style={[
+              styles.badge, 
+              { backgroundColor: activeTab === 'twin' ? Colors.glass.cyan30 : 'rgba(0, 211, 243, 0.30)' }
+            ]}>
+              <Text style={[
+                styles.badgeText, 
+                { color: colors.text.muted },
+                activeTab === 'twin' && { color: Colors.primary.electricCyan }
+              ]}>2</Text>
+            </View>
           </View>
         </View>
       </TouchableOpacity>
@@ -76,25 +87,29 @@ export default function MatchingSummaryRow({ activeTab, onTabChange }: MatchingS
       <TouchableOpacity 
         activeOpacity={0.8} 
         onPress={() => onTabChange('recommend')}
-        style={[
-          styles.summaryButton, 
-          activeTab === 'recommend' && styles.recommendButtonActive
-        ]}
       >
-        <View style={styles.buttonContent}>
-          <OnRecommendIcon width={20} height={20} />
-          <Text style={[
-            styles.buttonText, 
-            activeTab === 'recommend' && { color: Colors.primary.vividPurple }
-          ]}>추천</Text>
-          <View style={[
-            styles.badge, 
-            { backgroundColor: activeTab === 'recommend' ? Colors.glass.purple30 : 'rgba(194, 122, 255, 0.30)' }
-          ]}>
+        <View style={[
+          styles.summaryButton, 
+          { backgroundColor: colors.background.glass, borderColor: colors.border.primary },
+          activeTab === 'recommend' && styles.recommendButtonActive
+        ]}>
+          <View style={styles.buttonContent}>
+            <OnRecommendIcon width={20} height={20} />
             <Text style={[
-              styles.badgeText, 
+              styles.buttonText, 
+              { color: colors.text.muted },
               activeTab === 'recommend' && { color: Colors.primary.vividPurple }
-            ]}>2</Text>
+            ]}>추천</Text>
+            <View style={[
+              styles.badge, 
+              { backgroundColor: activeTab === 'recommend' ? Colors.glass.purple30 : 'rgba(194, 122, 255, 0.30)' }
+            ]}>
+              <Text style={[
+                styles.badgeText, 
+                { color: colors.text.muted },
+                activeTab === 'recommend' && { color: Colors.primary.vividPurple }
+              ]}>2</Text>
+            </View>
           </View>
         </View>
       </TouchableOpacity>
@@ -113,8 +128,6 @@ const styles = StyleSheet.create({
     height: 45,
     borderRadius: Radii.md2,
     borderWidth: 0.612,
-    borderColor: Colors.glass.white10,
-    backgroundColor: Colors.glass.white05,
     justifyContent: 'center',
     paddingHorizontal: 4,
   },
@@ -137,8 +150,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   buttonText: {
-    color: Colors.neutral.lightGray,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '500',
     lineHeight: 20,
@@ -152,8 +164,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   badgeText: {
-    color: Colors.neutral.lightGray,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 12,
     fontWeight: '500',
     lineHeight: 16,

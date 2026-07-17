@@ -1,9 +1,10 @@
 import FormLabel from '@/src/components/signup/common/FormLabel';
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, FontFamily} from '@/src/constants/theme';
 import { isValidEmail } from '@/src/utils/validation';
 import React from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View, ActivityIndicator } from 'react-native';
 import { SectionProps } from '../types/step1';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 import EmailVerificationModal from './EmailVerificationModal';
 
 interface EmailSectionProps extends SectionProps {
@@ -35,6 +36,7 @@ export default function EmailSection({
   onResendCode = onSendCode,
   isLoading = false
 }: EmailSectionProps) {
+  const { colors } = useThemeColors();
 
   // 버튼 텍스트 및 접근성 동기화를 위한 렌더링 전 상태 처리 (DRY/SRP 유지보수)
   const sendButtonText = isTimerActive && timeLeft > 0
@@ -57,12 +59,13 @@ export default function EmailSection({
         <TextInput
           style={[
             styles.emailInput,
-            state.isEmailVerified && { width: '100%', borderColor: Colors.glass.white10 }
+            state.isEmailVerified && { width: '100%', borderColor: Colors.glass.white10 },
+            { color: colors.text.primary }
           ]}
           value={state.email}
           onChangeText={(text) => onChange({ email: text })}
           placeholder="your@email.com"
-          placeholderTextColor="#6A7282"
+          placeholderTextColor={colors.text.muted}
           keyboardType="email-address"
           autoCapitalize="none"
           editable={!state.isEmailVerified}
@@ -81,9 +84,9 @@ export default function EmailSection({
             accessibilityState={{ disabled: !isValidEmail(state.email) || isLoading }}
           >
             {isLoading ? (
-              <ActivityIndicator size="small" color="#FFF" />
+              <ActivityIndicator size="small" color={colors.text.primary} />
             ) : (
-              <Text style={styles.sendButtonText}>
+              <Text style={[styles.sendButtonText, { color: colors.text.primary }]}>
                 {sendButtonText}
               </Text>
             )}
@@ -139,10 +142,9 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: Radii.lg,
     borderWidth: 0.612,
-    borderColor: 'rgba(255, 255, 255, 0.10)',
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    color: '#FFF',
-    fontFamily: 'Inter',
+    borderColor: Colors.glass.white10,
+    backgroundColor: Colors.glass.white5,
+    fontFamily: FontFamily.sans,
     fontSize: 16,
     fontWeight: '400',
     letterSpacing: -0.312,
@@ -154,12 +156,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: Radii.lg,
-    backgroundColor: 'rgba(255, 255, 255, 0.10)',
+    backgroundColor: Colors.glass.white10,
   },
   sendButtonText: {
-    color: '#FFF',
     textAlign: 'center',
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '500',
     lineHeight: 20,
@@ -167,7 +168,7 @@ const styles = StyleSheet.create({
   },
   successText: {
     color: Colors.primary.successGreen,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 12,
     marginTop: 4,
   },
@@ -178,7 +179,7 @@ const styles = StyleSheet.create({
   },
   timerOutsideText: {
     color: Colors.primary.electricCyan,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 12,
     fontWeight: '400',
   },

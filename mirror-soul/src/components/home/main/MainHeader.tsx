@@ -1,8 +1,9 @@
 import SettingIcon from '@/assets/images/common/Setting.svg';
 import TimerIcon from '@/assets/images/common/main/Timer.svg';
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, FontFamily} from '@/src/constants/theme';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface MainHeaderProps {
   timerDisplay?: string;
@@ -17,22 +18,24 @@ export default function MainHeader({
   timerDisplay = '23 : 44 : 59',
   onSettingPress,
 }: MainHeaderProps) {
+  const { colors } = useThemeColors();
+
   return (
     <View style={styles.container}>
       {/* Title */}
-      <Text style={styles.title}>Mirror Soul</Text>
+      <Text style={[styles.title, { color: colors.text.primary }]}>Mirror Soul</Text>
 
       {/* Timer + Setting */}
       <View style={styles.rightSection}>
         {/* Timer Badge */}
-        <View style={styles.timerBadge}>
+        <View style={[styles.timerBadge, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
           <TimerIcon width={16} height={16} />
           <Text style={styles.timerText}>{timerDisplay}</Text>
         </View>
 
         {/* Setting Button */}
         <TouchableOpacity
-          style={styles.settingButton}
+          style={[styles.settingButton, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
           onPress={onSettingPress}
           activeOpacity={0.7}
           accessibilityRole="button"
@@ -54,8 +57,7 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
   },
   title: {
-    color: Colors.neutral.pureWhite,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 24,
     fontWeight: '500',
     lineHeight: 32,
@@ -74,8 +76,6 @@ const styles = StyleSheet.create({
     height: 30,
     borderRadius: Radii.full,
     borderWidth: 0.612,
-    borderColor: Colors.glass.white10,
-    backgroundColor: Colors.glass.white5,
   },
   timerText: {
     color: Colors.primary.electricCyan,
@@ -91,8 +91,6 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: Radii.full,
     borderWidth: 0.612,
-    borderColor: Colors.glass.white10,
-    backgroundColor: Colors.glass.white5,
     justifyContent: 'center',
     alignItems: 'center',
   },

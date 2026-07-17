@@ -1,13 +1,16 @@
 import MyselfIcon from '@/assets/images/common/evlove/evlove_myself.svg';
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, FontFamily} from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 /**
  * 내 트윈과 대화하기 배너 (SRP)
  */
 export default function EvolveMyselfCard() {
+  const { colors } = useThemeColors();
+
   return (
     <TouchableOpacity
       activeOpacity={0.85}
@@ -34,8 +37,8 @@ export default function EvolveMyselfCard() {
 
           {/* 텍스트 영역 */}
           <View style={styles.textContainer}>
-            <Text style={styles.title}>내 트윈과 대화하기</Text>
-            <Text style={styles.subTitle}>지금 어떻게 답변하는지 확인해보세요</Text>
+            <Text style={[styles.title, { color: colors.text.primary }]}>내 트윈과 대화하기</Text>
+            <Text style={[styles.subTitle, { color: colors.text.secondary }]}>지금 어떻게 답변하는지 확인해보세요</Text>
           </View>
 
           {/* 우측 화살표 */}
@@ -72,23 +75,21 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   title: {
-    color: Colors.neutral.pureWhite,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '500',
     lineHeight: 20,
     letterSpacing: -0.15,
   },
   subTitle: {
-    color: Colors.neutral.lightGray,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 12,
     fontWeight: '500',
     lineHeight: 16,
   },
   arrow: {
     color: Colors.primary.electricCyan,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 18,
     fontWeight: '500',
     lineHeight: 28,

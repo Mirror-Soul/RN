@@ -1,8 +1,9 @@
 import EvolveHighIcon from '@/assets/images/common/evlove/EvolveHigh.svg';
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, FontFamily} from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface EvolveTwinCardProps {
   completionPercent: number;
@@ -21,6 +22,8 @@ export default function EvolveTwinCard({ completionPercent }: EvolveTwinCardProp
   // 단일 소스 원칙: completion을 기반으로 남은 퍼센트 자동 계산
   const safeRemaining = 100 - safeCompletion;
 
+  const { colors } = useThemeColors();
+
   return (
     <LinearGradient
       colors={[Colors.glass.purple20, Colors.glass.cyan20]}
@@ -31,8 +34,8 @@ export default function EvolveTwinCard({ completionPercent }: EvolveTwinCardProp
       {/* 상단 정보 영역 */}
       <View style={styles.topRow}>
         <View style={styles.percentageInfo}>
-          <Text style={styles.label}>내 트윈 완성도</Text>
-          <Text style={styles.percentText}>{safeCompletion}%</Text>
+          <Text style={[styles.label, { color: colors.text.secondary }]}>내 트윈 완성도</Text>
+          <Text style={[styles.percentText, { color: colors.text.primary }]}>{safeCompletion}%</Text>
         </View>
         
         {/* 아이콘 배지 */}
@@ -60,7 +63,7 @@ export default function EvolveTwinCard({ completionPercent }: EvolveTwinCardProp
       <View style={styles.bottomRow}>
         <Text style={styles.bottomText}>
           <Text style={styles.highlightText}>100%</Text>
-          <Text style={styles.neutralText}> 완성까지 {safeRemaining}% 남았어요!</Text>
+          <Text style={[styles.neutralText, { color: colors.text.secondary }]}> 완성까지 {safeRemaining}% 남았어요!</Text>
         </Text>
       </View>
     </LinearGradient>
@@ -87,15 +90,13 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   label: {
-    color: Colors.neutral.lightGray,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 12,
     fontWeight: '400',
     lineHeight: 16,
   },
   percentText: {
-    color: Colors.neutral.pureWhite,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 24,
     fontWeight: '400',
     lineHeight: 32,
@@ -126,13 +127,12 @@ const styles = StyleSheet.create({
   },
   bottomText: {
     fontSize: 12,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     lineHeight: 16,
   },
   highlightText: {
     color: Colors.primary.electricCyan,
   },
   neutralText: {
-    color: Colors.neutral.lightGray,
   },
 });

@@ -127,11 +127,11 @@ const styles = StyleSheet.create({
     letterSpacing: -0.15,
   },
   tipContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: Colors.glass.white5,
     padding: 10,
     borderRadius: Radii.md,
     borderWidth: 0.5,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: Colors.glass.white10,
     marginBottom: 8,
   },
   tipText: {

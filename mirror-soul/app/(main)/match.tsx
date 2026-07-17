@@ -8,7 +8,8 @@ import MatchingSummaryRow, { MatchingTabType } from '@/src/components/home/match
 import MatchingTabIndicator from '@/src/components/home/match/parts/MatchingTabIndicator';
 import { Colors, Layout } from '@/src/constants/theme';
 import React from 'react';
-import { Animated, FlatList, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Animated as RNAnimated, FlatList, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const MEET_DATA = [
@@ -92,9 +93,10 @@ const TWIN_DATA = [
 export default function MatchScreen() {
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
+  const { colors } = useThemeColors();
   const [activeTab, setActiveTab] = React.useState<MatchingTabType>('meet');
   const [activeIndex, setActiveIndex] = React.useState(0);
-  const fadeAnim = React.useRef(new Animated.Value(1)).current;
+  const fadeAnim = React.useRef(new RNAnimated.Value(1)).current;
   const flatListRef = React.useRef<FlatList>(null);
 
   // 피그마 기준 가로 패딩 적용
@@ -104,7 +106,7 @@ export default function MatchScreen() {
   const handleTabChange = (tab: MatchingTabType) => {
     if (tab === activeTab) return;
 
-    Animated.timing(fadeAnim, {
+    RNAnimated.timing(fadeAnim, {
       toValue: 0,
       duration: 150,
       useNativeDriver: true,
@@ -113,7 +115,7 @@ export default function MatchScreen() {
       setActiveIndex(0);
       flatListRef.current?.scrollToOffset({ offset: 0, animated: false });
 
-      Animated.timing(fadeAnim, {
+      RNAnimated.timing(fadeAnim, {
         toValue: 1,
         duration: 200,
         useNativeDriver: true,
@@ -144,7 +146,7 @@ export default function MatchScreen() {
   const activeColor = getActiveColor();
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background.primary }]} edges={['top', 'left', 'right']}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={[
@@ -167,7 +169,7 @@ export default function MatchScreen() {
           </View>
 
           {/* 중앙 섹션 (카드 영역) */}
-          <Animated.View style={[styles.cardSection, { opacity: fadeAnim }]}>
+          <RNAnimated.View style={[styles.cardSection, { opacity: fadeAnim }]}>
             <FlatList
               ref={flatListRef}
               data={currentData}
@@ -188,7 +190,7 @@ export default function MatchScreen() {
               snapToAlignment="center"
               contentContainerStyle={{ alignItems: 'flex-start' }}
             />
-          </Animated.View>
+          </RNAnimated.View>
 
           {/* 하단 섹션 */}
           <View style={[styles.bottomSection, { paddingHorizontal: horizontalPadding }]}>
@@ -203,7 +205,6 @@ export default function MatchScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: Colors.primary.soulBlack,
   },
   scrollView: {
     flex: 1,

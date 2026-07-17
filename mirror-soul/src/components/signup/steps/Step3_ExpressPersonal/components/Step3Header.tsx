@@ -1,18 +1,22 @@
 import React from 'react';
+import { FontFamily } from '@/src/constants/theme';
+
 import { View, Text, StyleSheet } from 'react-native';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 /**
  * Step3Header 컴포넌트 (SRP)
  * 회원가입 3단계의 타이틀과 서브타이틀을 렌더링합니다.
  */
 export default function Step3Header() {
+  const { colors } = useThemeColors();
   return (
     <View style={styles.header}>
       <View style={styles.titleContainer}>
-        <Text style={styles.title}>성격 유형</Text>
+        <Text style={[styles.title, { color: colors.text.primary }]}>성격 유형</Text>
       </View>
       <View style={styles.subtitleContainer}>
-        <Text style={styles.subtitle}>당신의 성격을 알려주세요</Text>
+        <Text style={[styles.subtitle, { color: colors.text.muted }]}>당신의 성격을 알려주세요</Text>
       </View>
     </View>
   );
@@ -33,9 +37,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    color: '#FFF',
     textAlign: 'center',
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 30,
     fontWeight: '500',
     lineHeight: 36,
@@ -48,9 +51,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   subtitle: {
-    color: '#99A1AF',
     textAlign: 'center',
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '400',
     lineHeight: 20,

@@ -7,7 +7,8 @@ import Animated, {
   withSpring,
   interpolateColor,
 } from 'react-native-reanimated';
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, FontFamily} from '@/src/constants/theme';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface AuthTabToggleProps {
   activeTab: 'login' | 'signup';
@@ -16,6 +17,8 @@ interface AuthTabToggleProps {
 
 const TAB_HEIGHT = 53.2;
 const PADDING = 4;
+const BORDER_WIDTH = 1;
+const ACTUAL_PADDING = PADDING - BORDER_WIDTH; // 3
 const TAB_CONTAINER_RADIUS = TAB_HEIGHT / 2;
 
 /**
@@ -25,11 +28,12 @@ const TAB_CONTAINER_RADIUS = TAB_HEIGHT / 2;
  * onLayout을 통해 실제 컨테이너 너비를 측정하여 반응형으로 동작합니다.
  */
 export default function AuthTabToggle({ activeTab, onTabChange }: AuthTabToggleProps) {
+  const { colors } = useThemeColors();
   const [containerWidth, setContainerWidth] = useState(0);
   const isLogin = activeTab === 'login';
 
-  // 인디케이터 너비 계산 (PADDING 제외한 영역의 절반)
-  const indicatorWidth = containerWidth > 0 ? (containerWidth - PADDING * 2) / 2 : 0;
+  // 인디케이터 너비 계산 (실제 컨테이너 내부 너비에서 양옆 여백을 뺀 값의 절반)
+  const indicatorWidth = containerWidth > 0 ? (containerWidth - (BORDER_WIDTH * 2) - (ACTUAL_PADDING * 2)) / 2 : 0;
 
   // --- Animation States ---
   const translateX = useSharedValue(0);
@@ -56,12 +60,11 @@ export default function AuthTabToggle({ activeTab, onTabChange }: AuthTabToggleP
     transform: [{ translateX: translateX.value }],
   }));
 
-  // 텍스트 색상 애니메이션 보간 (0: Login, indicatorWidth: Signup)
   const loginTextStyle = useAnimatedStyle(() => {
     const color = interpolateColor(
       translateX.value,
       [0, Math.max(1, indicatorWidth)],
-      ['#000', '#99A1AF']
+      [colors.text.primary, colors.text.muted]
     );
     return { color };
   });
@@ -70,18 +73,18 @@ export default function AuthTabToggle({ activeTab, onTabChange }: AuthTabToggleP
     const color = interpolateColor(
       translateX.value,
       [0, Math.max(1, indicatorWidth)],
-      ['#99A1AF', '#000']
+      [colors.text.muted, colors.text.primary]
     );
     return { color };
   });
 
   return (
-    <View style={styles.container} onLayout={onLayout}>
+    <View style={[styles.container, { borderColor: colors.border.primary, backgroundColor: colors.background.glass }]} onLayout={onLayout}>
       {/* Sliding Background Indicator */}
       {containerWidth > 0 && (
         <Animated.View style={[styles.indicatorWrapper, animatedIndicatorStyle]}>
           <LinearGradient
-            colors={Colors.gradient.cyanToPurple}
+            colors={Colors.gradient.subtleLimeGradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.activeTab}
@@ -117,15 +120,13 @@ const styles = StyleSheet.create({
     height: TAB_HEIGHT,
     padding: PADDING,
     borderRadius: TAB_CONTAINER_RADIUS,
-    borderWidth: 0.612,
-    borderColor: 'rgba(255, 255, 255, 0.10)',
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderWidth: BORDER_WIDTH,
     position: 'relative', 
   },
   indicatorWrapper: {
     position: 'absolute',
-    top: PADDING,
-    left: PADDING,
+    top: ACTUAL_PADDING,
+    left: ACTUAL_PADDING,
     height: TAB_HEIGHT - PADDING * 2,
     zIndex: 0,
   },
@@ -141,7 +142,7 @@ const styles = StyleSheet.create({
     borderRadius: Radii.full,
   },
   tabText: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '500',
     lineHeight: 20,

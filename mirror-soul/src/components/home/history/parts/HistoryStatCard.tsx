@@ -1,6 +1,7 @@
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, FontFamily} from '@/src/constants/theme';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View, Text } from 'react-native';
 
 interface HistoryStatCardProps {
   count: number | string;
@@ -14,15 +15,17 @@ interface HistoryStatCardProps {
 export default function HistoryStatCard({
   count,
   label,
-  countColor = Colors.neutral.pureWhite,
+  countColor,
 }: HistoryStatCardProps) {
+  const { colors } = useThemeColors();
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
       <View style={styles.countWrapper}>
-        <Text style={[styles.countText, { color: countColor }]}>{count}</Text>
+        <Text style={[styles.countText, countColor ? { color: countColor } : { color: colors.text.primary }]}>{count}</Text>
       </View>
       <View style={styles.labelWrapper}>
-        <Text style={styles.labelText}>{label}</Text>
+        <Text style={[styles.labelText, { color: colors.text.secondary }]}>{label}</Text>
       </View>
     </View>
   );
@@ -40,8 +43,6 @@ const styles = StyleSheet.create({
     gap: 4,
     borderRadius: Radii.lg,
     borderWidth: 0.612,
-    borderColor: Colors.glass.white10,
-    backgroundColor: Colors.glass.white5,
   },
   countWrapper: {
     alignSelf: 'stretch',
@@ -49,7 +50,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   countText: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 24,
     fontWeight: '400',
     lineHeight: 32, // 133.333%
@@ -62,8 +63,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   labelText: {
-    color: Colors.neutral.lightGray,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 12,
     fontWeight: '400',
     lineHeight: 16, // 133.333%

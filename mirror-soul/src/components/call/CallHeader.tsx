@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { Colors } from '@/src/constants/theme';
+import {Colors, FontFamily} from '@/src/constants/theme';
 import type { CallStatus } from '@/src/hooks/useAICallFlow';
 
 interface CallHeaderProps {
@@ -37,7 +37,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     color: Colors.neutral.lightGray,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '500',
   },

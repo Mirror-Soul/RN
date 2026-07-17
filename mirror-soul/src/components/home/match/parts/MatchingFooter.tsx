@@ -1,6 +1,7 @@
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, FontFamily} from '@/src/constants/theme';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View, Text } from 'react-native';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { MatchingTabType } from './MatchingSummaryRow';
 
 interface MatchingFooterProps {
@@ -11,6 +12,8 @@ interface MatchingFooterProps {
  * 매칭 화면 하단 안내 배너
  */
 export default function MatchingFooter({ activeTab }: MatchingFooterProps) {
+  const { colors } = useThemeColors();
+
   const getFooterText = () => {
     if (activeTab === 'twin') return '상대의 Twin이 내 Twin과 대화한 결과예요';
     if (activeTab === 'recommend') return '통화 패턴을 분석하여 추천해드려요';
@@ -18,8 +21,8 @@ export default function MatchingFooter({ activeTab }: MatchingFooterProps) {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.text}>{getFooterText()}</Text>
+    <View style={[styles.container, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
+      <Text style={[styles.text, { color: colors.text.muted }]}>{getFooterText()}</Text>
     </View>
   );
 }
@@ -33,13 +36,10 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
     borderRadius: Radii.md2,
     borderWidth: 0.612,
-    borderColor: Colors.glass.white10,
-    backgroundColor: Colors.glass.white05,
   },
   text: {
-    color: Colors.neutral.lightGray,
     textAlign: 'center',
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 12,
     fontWeight: '400',
     lineHeight: 19.5,

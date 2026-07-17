@@ -1,0 +1,67 @@
+import React from 'react';
+import { FontFamily } from '@/src/constants/theme';
+
+import { View, StyleSheet } from 'react-native';
+import Animated from 'react-native-reanimated';
+import { AnimatedSwitch } from './AnimatedSwitch';
+import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
+
+interface NotificationItemProps {
+  title: string;
+  description: string;
+  value: boolean;
+  onToggle: () => void;
+  isLast?: boolean;
+}
+
+export const NotificationItem = ({
+  title,
+  description,
+  value,
+  onToggle,
+  isLast = false,
+}: NotificationItemProps) => {
+  const { animatedText, animatedTextMuted, animatedBorder } = useAnimatedTheme();
+
+  return (
+    <Animated.View style={[styles.container, !isLast && styles.borderBottom, !isLast && animatedBorder]}>
+      <View style={styles.textContainer}>
+        <Animated.Text style={[styles.title, animatedText]}>{title}</Animated.Text>
+        <Animated.Text style={[styles.description, animatedTextMuted]}>{description}</Animated.Text>
+      </View>
+
+      <AnimatedSwitch value={value} onToggle={onToggle} accessibilityLabel={title} />
+    </Animated.View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    gap: 16,
+  },
+  borderBottom: {
+    borderBottomWidth: 0.61,
+  },
+  textContainer: {
+    flex: 1,
+    gap: 2,
+  },
+  title: {
+    fontFamily: FontFamily.sans,
+    fontWeight: '400',
+    fontSize: 14,
+    lineHeight: 20,
+    letterSpacing: -0.15,
+  },
+  description: {
+    fontFamily: FontFamily.sans,
+    fontWeight: '400',
+    fontSize: 12,
+    lineHeight: 20,
+    marginTop: 2,
+  },
+});

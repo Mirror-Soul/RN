@@ -1,5 +1,5 @@
 import CameraIcon from '@/assets/images/common/Camera_icon.svg';
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, FontFamily} from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity } from 'react-native';
@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
   text: {
     color: Colors.primary.soulBlack,
     textAlign: 'center',
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 16,
     fontWeight: '500',
     lineHeight: 24,

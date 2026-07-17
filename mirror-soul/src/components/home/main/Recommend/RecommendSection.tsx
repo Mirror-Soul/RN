@@ -1,7 +1,8 @@
-import { Colors } from '@/src/constants/theme';
+import {Colors, FontFamily} from '@/src/constants/theme';
 import { useLayout } from '@/src/hooks/useLayout';
 import React, { useRef, useState } from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View, ViewToken } from 'react-native';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 import RecommendStepIndicator from '../RecommendStepIndicator';
 import RecommendCard, { RecommendCardData } from './RecommendCard';
 
@@ -69,6 +70,7 @@ export default function RecommendSection({
 }: RecommendSectionProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const { cardWidth, contentWidth } = useLayout();
+  const { colors } = useThemeColors();
   const CARD_GAP = 12; // 카드 사이 간격
   const sidePadding = (contentWidth - cardWidth) / 2; // 중앙 정렬을 위한 양옆 패딩 (24px)
 
@@ -86,7 +88,7 @@ export default function RecommendSection({
     <View style={styles.container}>
       {/* 헤딩 + 전체 보기 */}
       <View style={styles.header}>
-        <Text style={styles.heading}>추천</Text>
+        <Text style={[styles.heading, { color: colors.text.primary }]}>추천</Text>
         <TouchableOpacity
           onPress={onViewAll}
           activeOpacity={0.7}
@@ -143,8 +145,7 @@ const styles = StyleSheet.create({
     height: 30,
   },
   heading: {
-    color: Colors.neutral.pureWhite,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 20,
     fontWeight: '500',
     lineHeight: 30,
@@ -152,7 +153,7 @@ const styles = StyleSheet.create({
   },
   viewAllText: {
     color: Colors.primary.electricCyan,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '500',
     lineHeight: 20,

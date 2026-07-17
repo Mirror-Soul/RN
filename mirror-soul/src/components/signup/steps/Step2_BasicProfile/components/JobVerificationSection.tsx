@@ -2,9 +2,10 @@ import VerificationSuccessIcon from '@/assets/images/common/Verification_sucess.
 import VerifySendIcon from '@/assets/images/common/Verify_send.svg';
 import FormLabel from '@/src/components/signup/common/FormLabel';
 import StepSelectDropdown from '@/src/components/signup/common/StepSelectDropdown';
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, FontFamily} from '@/src/constants/theme';
 import React, { useState } from 'react';
 import { Platform, StyleSheet, Text, TextInput, TouchableOpacity, View, ActivityIndicator, Alert } from 'react-native';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 import JobCategoryDropdown from '../Professional/JobCategoryDropdown';
 import { SectionProps } from '../types/step2';
 import * as DocumentPicker from 'expo-document-picker';
@@ -20,6 +21,7 @@ interface JobVerificationSectionProps extends SectionProps {
  * 직군 선택 및 직업 인증(S3 업로드) 로직을 관리합니다.
  */
 export default function JobVerificationSection({ state, onChange, onVerify }: JobVerificationSectionProps) {
+  const { colors } = useThemeColors();
   const [isOpen, setIsOpen] = useState(false);
 
   // 파일 선택 및 업로드 핸들러 (C안: 갤러리/파일 + 카메라)
@@ -97,11 +99,11 @@ export default function JobVerificationSection({ state, onChange, onVerify }: Jo
       </View>
 
       <TextInput
-        style={styles.jobTitleInput}
+        style={[styles.jobTitleInput, { color: colors.text.primary }]}
         value={state.jobTitle}
         onChangeText={(text) => onChange({ jobTitle: text })}
         placeholder="상세 직무를 입력해주세요 (선택 사항)"
-        placeholderTextColor="#6A7282"
+        placeholderTextColor={colors.text.muted}
         autoCapitalize="none"
       />
 
@@ -117,10 +119,10 @@ export default function JobVerificationSection({ state, onChange, onVerify }: Jo
               )}
             </View>
             <View style={styles.verifyTitleGroup}>
-              <Text style={styles.verifyTitle}>
+              <Text style={[styles.verifyTitle, { color: colors.text.primary }]}>
                 {state.isJobVerified ? '인증 완료 ✓' : '선택 사항 (권장)'}
               </Text>
-              <Text style={styles.verifySubtitle}>
+              <Text style={[styles.verifySubtitle, { color: colors.text.muted }]}>
                 {state.isJobVerified
                   ? '직업 인증이 완료되었습니다.'
                   : '3배 더 많은 고품질 매칭을 보장합니다'}
@@ -147,7 +149,7 @@ export default function JobVerificationSection({ state, onChange, onVerify }: Jo
           )}
         </View>
 
-        <Text style={styles.verifyDescription}>
+        <Text style={[styles.verifyDescription, { color: colors.text.muted }]}>
           {state.isJobVerified
             ? '신뢰도와 매칭 품질이 향상되었습니다.'
             : '재직증명서나 LinkedIn 프로필을 업로드하여 인증하세요. 인증된 프로필은 3배 더 많은 고품질 매칭을 받습니다.'}
@@ -178,10 +180,9 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: Radii.lg,
     borderWidth: 0.612,
-    borderColor: 'rgba(255, 255, 255, 0.10)',
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    color: '#FFF',
-    fontFamily: 'Inter',
+    borderColor: Colors.glass.white10,
+    backgroundColor: Colors.glass.white5,
+    fontFamily: FontFamily.sans,
     fontSize: 16,
     fontWeight: '400',
     letterSpacing: -0.312,
@@ -219,16 +220,14 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
   },
   verifyTitle: {
-    color: Colors.neutral.pureWhite,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '500',
     lineHeight: 20,
     letterSpacing: -0.15,
   },
   verifySubtitle: {
-    color: '#99A1AF',
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 12,
     fontWeight: '400',
     lineHeight: 16,
@@ -247,15 +246,14 @@ const styles = StyleSheet.create({
   },
   verifyButtonText: {
     color: '#C27AFF',
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '500',
     lineHeight: 20,
     letterSpacing: -0.15,
   },
   verifyDescription: {
-    color: '#99A1AF',
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 12,
     fontWeight: '400',
     lineHeight: 18,

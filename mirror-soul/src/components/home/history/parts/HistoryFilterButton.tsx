@@ -1,6 +1,7 @@
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, FontFamily} from '@/src/constants/theme';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { StyleSheet, TouchableOpacity, Text } from 'react-native';
 
 export interface HistoryFilterButtonProps {
   label: string;
@@ -16,18 +17,22 @@ export default function HistoryFilterButton({
   isActive,
   onPress,
 }: HistoryFilterButtonProps) {
+  const { colors } = useThemeColors();
+
   return (
     <TouchableOpacity
       style={[
         styles.container,
-        isActive ? styles.activeContainer : styles.inactiveContainer,
+        isActive 
+          ? { backgroundColor: colors.background.card, borderColor: colors.border.primary } 
+          : { backgroundColor: colors.background.glass, borderColor: colors.border.primary },
       ]}
       onPress={onPress}
       activeOpacity={0.7}
       accessibilityRole="button"
       accessibilityState={{ selected: isActive }}
     >
-      <Text style={[styles.label, isActive ? styles.activeLabel : styles.inactiveLabel]}>
+      <Text style={[styles.label, isActive ? { color: colors.text.primary } : { color: colors.text.muted }]}>
         {label}
       </Text>
     </TouchableOpacity>
@@ -43,26 +48,12 @@ const styles = StyleSheet.create({
     borderRadius: Radii.md2, // 14px
     borderWidth: 0.612,
   },
-  activeContainer: {
-    borderColor: Colors.glass.white20,
-    backgroundColor: Colors.glass.white10,
-  },
-  inactiveContainer: {
-    borderColor: Colors.glass.white10,
-    backgroundColor: Colors.glass.white5,
-  },
   label: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '500',
     lineHeight: 20, // 142.857%
     letterSpacing: -0.15,
     textAlign: 'center',
-  },
-  activeLabel: {
-    color: Colors.neutral.pureWhite, // #FFF
-  },
-  inactiveLabel: {
-    color: Colors.neutral.lightGray, // #99A1AF
   },
 });

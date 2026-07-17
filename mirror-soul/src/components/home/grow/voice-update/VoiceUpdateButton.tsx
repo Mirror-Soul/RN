@@ -1,11 +1,12 @@
 import CompleteIcon from '@/assets/images/common/evlove/voice-update/voice_update_complete.svg';
 import StopIcon from '@/assets/images/common/evlove/voice-update/voice_update_stop.svg';
 import VoiceIcon from '@/assets/images/common/Voice_icon_white.svg';
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, FontFamily} from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 export type VoiceUpdateStatus = 'idle' | 'recording' | 'analyzing' | 'done';
 
@@ -27,6 +28,7 @@ export default function VoiceUpdateButton({
 }: VoiceUpdateButtonProps) {
   const router = useRouter();
   const { width } = useWindowDimensions();
+  const { colors } = useThemeColors();
   
   // 기기 폭에 비례하는 동적 크기 계산 (기준 393px에서 96px은 약 24.4%)
   // 너무 작아지거나 커지는 것을 방지하기 위해 clamp 적용
@@ -100,8 +102,8 @@ export default function VoiceUpdateButton({
       <View style={styles.infoArea}>
         {isIdle && (
           <View style={styles.idleInfo}>
-            <Text style={styles.statusText}>녹음 시작</Text>
-            <Text style={styles.footerText}>마이크 버튼을 눌러 녹음을 시작하세요</Text>
+            <Text style={[styles.statusText, { color: colors.text.primary }]}>녹음 시작</Text>
+            <Text style={[styles.footerText, { color: colors.text.secondary }]}>마이크 버튼을 눌러 녹음을 시작하세요</Text>
           </View>
         )}
 
@@ -109,9 +111,9 @@ export default function VoiceUpdateButton({
           <View style={styles.recordingInfo}>
             <View style={styles.recordingStatusRow}>
               <View style={styles.recordingDot} />
-              <Text style={styles.statusText}>녹음 중...</Text>
+              <Text style={[styles.statusText, { color: colors.text.primary }]}>녹음 중...</Text>
             </View>
-            <Text style={styles.elapsedText}>{elapsedTime}초</Text>
+            <Text style={[styles.elapsedText, { color: colors.text.secondary }]}>{elapsedTime}초</Text>
           </View>
         )}
 
@@ -120,7 +122,7 @@ export default function VoiceUpdateButton({
             <Text style={[styles.statusText, { color: Colors.primary.successGreen, fontWeight: '600' }]}>
               목소리 분석 중...
             </Text>
-            <Text style={styles.footerText}>인공지능이 당신의 말투를 학습하고 있습니다</Text>
+            <Text style={[styles.footerText, { color: colors.text.secondary }]}>인공지능이 당신의 말투를 학습하고 있습니다</Text>
           </View>
         )}
 
@@ -133,7 +135,7 @@ export default function VoiceUpdateButton({
                 onPress={onRetry}
                 style={styles.actionChip}
               >
-                <Text style={styles.actionChipText}>다른 문장 읽어보기</Text>
+                <Text style={[styles.actionChipText, { color: colors.text.secondary }]}>다른 문장 읽어보기</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -141,7 +143,7 @@ export default function VoiceUpdateButton({
                 onPress={() => router.back()}
                 style={[styles.actionChip, styles.primaryChip]}
               >
-                <Text style={[styles.actionChipText, styles.primaryChipText]}>완료하기</Text>
+                <Text style={[styles.actionChipText, { color: colors.text.secondary }, styles.primaryChipText]}>완료하기</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -197,27 +199,24 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   statusText: {
-    color: Colors.neutral.pureWhite,
     textAlign: 'center',
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 16,
     fontWeight: '400',
     lineHeight: 24,
     letterSpacing: -0.312,
   },
   elapsedText: {
-    color: Colors.neutral.lightGray,
     textAlign: 'center',
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '400',
     lineHeight: 20,
     letterSpacing: -0.15,
   },
   footerText: {
-    color: Colors.neutral.darkGray,
     textAlign: 'center',
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 12,
     fontWeight: '400',
     lineHeight: 16,
@@ -242,7 +241,6 @@ const styles = StyleSheet.create({
     borderColor: Colors.glass.white20,
   },
   actionChipText: {
-    color: Colors.neutral.lightGray,
     fontSize: 15,
     fontWeight: '500',
     letterSpacing: -0.3,

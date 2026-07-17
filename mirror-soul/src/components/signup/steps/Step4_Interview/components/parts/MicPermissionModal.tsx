@@ -1,6 +1,7 @@
 import { Colors, Radii } from '@/src/constants/theme';
 import React from 'react';
 import { Linking, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface MicPermissionModalProps {
   visible: boolean;
@@ -17,6 +18,7 @@ export default function MicPermissionModal({
   onRequestPermission,
   onClose,
 }: MicPermissionModalProps) {
+  const { colors } = useThemeColors();
   const handleOpenSettings = () => {
     Linking.openSettings();
     onClose();
@@ -29,16 +31,16 @@ export default function MicPermissionModal({
       animationType="fade"
       statusBarTranslucent
     >
-      <View style={styles.overlay}>
-        <View style={styles.container}>
+      <View style={[styles.overlay, { backgroundColor: colors.background.overlay || 'rgba(0, 0, 0, 0.70)' }]}>
+        <View style={[styles.container, { backgroundColor: colors.background.card || 'rgba(20, 20, 30, 0.95)' }]}>
           {/* 아이콘 영역 */}
           <View style={styles.iconCircle}>
             <Text style={styles.iconText}>🎤</Text>
           </View>
 
           {/* 텍스트 영역 */}
-          <Text style={styles.title}>마이크 접근 권한 필요</Text>
-          <Text style={styles.description}>
+          <Text style={[styles.title, { color: colors.text.primary }]}>마이크 접근 권한 필요</Text>
+          <Text style={[styles.description, { color: colors.text.secondary }]}>
             AI 인터뷰 녹음을 위해 마이크 접근 권한이 필요합니다.{'\n'}
             음성 데이터는 안전하게 보호됩니다.
           </Text>
@@ -58,7 +60,7 @@ export default function MicPermissionModal({
               activeOpacity={0.8}
               onPress={handleOpenSettings}
             >
-              <Text style={styles.secondaryButtonText}>설정에서 변경</Text>
+              <Text style={[styles.secondaryButtonText, { color: colors.text.primary }]}>설정에서 변경</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -66,7 +68,7 @@ export default function MicPermissionModal({
               activeOpacity={0.8}
               onPress={onClose}
             >
-              <Text style={styles.cancelButtonText}>나중에 하기</Text>
+              <Text style={[styles.cancelButtonText, { color: colors.text.muted }]}>나중에 하기</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -80,7 +82,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.70)',
   },
   container: {
     width: '85%',
@@ -88,7 +89,6 @@ const styles = StyleSheet.create({
     borderRadius: Radii.xl,
     borderWidth: 0.612,
     borderColor: Colors.glass.white10,
-    backgroundColor: 'rgba(20, 20, 30, 0.95)',
     padding: 32,
     alignItems: 'center',
     gap: 16,
@@ -106,14 +106,12 @@ const styles = StyleSheet.create({
     fontSize: 28,
   },
   title: {
-    color: Colors.neutral.pureWhite,
     fontSize: 20,
     fontWeight: '700',
     lineHeight: 28,
     textAlign: 'center',
   },
   description: {
-    color: Colors.neutral.lightGray,
     fontSize: 14,
     fontWeight: '400',
     lineHeight: 22,
@@ -149,7 +147,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   secondaryButtonText: {
-    color: Colors.neutral.pureWhite,
     fontSize: 16,
     fontWeight: '500',
   },
@@ -160,7 +157,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cancelButtonText: {
-    color: Colors.neutral.darkGray,
     fontSize: 14,
     fontWeight: '400',
   },

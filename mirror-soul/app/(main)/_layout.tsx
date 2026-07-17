@@ -4,16 +4,20 @@ import { ROUTE_TO_TAB, TAB_TO_ROUTE } from '@/src/constants/routes/mainRoutes';
 import { Tabs } from 'expo-router';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 /**
  * (main) 그룹 탭 레이아웃
  * expo-router의 Tabs를 사용하여 탭별 네비게이션 스택을 독립적으로 유지합니다.
  */
 export default function MainLayout() {
+  const { colors } = useThemeColors();
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background.primary }]}>
       <Tabs
         initialRouteName="index"
+        backBehavior="none"
         screenOptions={{
           headerShown: false,
         }}
@@ -39,6 +43,10 @@ export default function MainLayout() {
         <Tabs.Screen name="index" />
         <Tabs.Screen name="match" />
         <Tabs.Screen name="profile" />
+        <Tabs.Screen name="voice-audio" options={{ unmountOnBlur: true }} />
+        <Tabs.Screen name="notification" options={{ unmountOnBlur: true }} />
+        <Tabs.Screen name="customer-center" options={{ unmountOnBlur: true }} />
+        <Tabs.Screen name="terms-policy" options={{ unmountOnBlur: true }} />
       </Tabs>
     </View>
   );

@@ -1,4 +1,5 @@
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, FontFamily} from '@/src/constants/theme';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
@@ -22,21 +23,23 @@ export default function CallProfile({
   profileImageUrl,
   callTypeDesc,
 }: CallProfileProps) {
+  const { colors } = useThemeColors();
+
   return (
     <View style={styles.container}>
       {/* Profile Image */}
       <View style={styles.profileImageWrapper}>
         {profileImageUrl ? (
-          <Image source={{ uri: profileImageUrl }} style={styles.profileImage} />
+          <Image source={{ uri: profileImageUrl }} style={[styles.profileImage, { borderColor: colors.border.primary, borderWidth: 1 }]} />
         ) : (
-          <View style={[styles.profileImage, styles.placeholderImage]} />
+          <View style={[styles.profileImage, { backgroundColor: colors.background.glass, borderColor: colors.border.primary, borderWidth: 1 }]} />
         )}
       </View>
 
       {/* Info Section */}
       <View style={styles.infoWrapper}>
         <View style={styles.nameAgeRow}>
-          <Text style={styles.nameAgeText}>{name}, {age}</Text>
+          <Text style={[styles.nameAgeText, { color: colors.text.primary }]}>{name}, {age}</Text>
           <View style={styles.consistencyBadgeWrapper}>
             <LinearGradient
               colors={['rgba(0, 211, 243, 0.20)', 'rgba(194, 122, 255, 0.20)']}
@@ -44,17 +47,17 @@ export default function CallProfile({
               end={{ x: 1, y: 0.5 }}
               style={styles.consistencyBadge}
             >
-              <Text style={styles.consistencyText}>{consistencyPercent}%</Text>
+              <Text style={[styles.consistencyText, { color: colors.text.primary }]}>{consistencyPercent}%</Text>
             </LinearGradient>
           </View>
         </View>
-        <Text style={styles.typeDescText}>{callTypeDesc}</Text>
+        <Text style={[styles.typeDescText, { color: colors.text.secondary }]}>{callTypeDesc}</Text>
       </View>
 
       {/* Date / Time */}
       <View style={styles.dateWrapper}>
-        <Text style={styles.dateText}>{dateStr}</Text>
-        <Text style={styles.timeText}>{timeStr}</Text>
+        <Text style={[styles.dateText, { color: colors.text.secondary }]}>{dateStr}</Text>
+        <Text style={[styles.timeText, { color: colors.text.muted }]}>{timeStr}</Text>
       </View>
     </View>
   );
@@ -76,9 +79,6 @@ const styles = StyleSheet.create({
     height: 48,
     borderRadius: Radii.full,
   },
-  placeholderImage: {
-    backgroundColor: Colors.glass.white10,
-  },
   infoWrapper: {
     flex: 1,
     flexDirection: 'column',
@@ -90,8 +90,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   nameAgeText: {
-    color: Colors.neutral.pureWhite,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 18,
     fontWeight: '500',
     lineHeight: 27, // 150%
@@ -110,15 +109,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   consistencyText: {
-    color: Colors.primary.electricCyan,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 12,
     fontWeight: '400',
     lineHeight: 16, // 133.333%
   },
   typeDescText: {
-    color: Colors.neutral.lightGray,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 12,
     fontWeight: '400',
     lineHeight: 16,
@@ -129,16 +126,14 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   dateText: {
-    color: Colors.neutral.lightGray,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 12,
     fontWeight: '400',
     lineHeight: 16,
     textAlign: 'right',
   },
   timeText: {
-    color: Colors.neutral.darkGray, // #6A7282
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 12,
     fontWeight: '400',
     lineHeight: 16,

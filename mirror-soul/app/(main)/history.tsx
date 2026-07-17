@@ -3,12 +3,14 @@ import HistoryHeader from '@/src/components/home/history/HistoryHeader';
 import HistoryList from '@/src/components/home/history/HistoryList';
 import HistoryStatsRow from '@/src/components/home/history/HistoryStatsRow';
 import { Colors, Layout } from '@/src/constants/theme';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 import React, { useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { StyleSheet, View, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function HistoryScreen() {
   const insets = useSafeAreaInsets();
+  const { colors } = useThemeColors();
   const [activeFilter, setActiveFilter] = useState<HistoryFilterType>('ALL');
 
   // 임시 통계 데이터
@@ -20,7 +22,7 @@ export default function HistoryScreen() {
 
   return (
     <ScrollView
-      style={styles.scrollView}
+      style={[styles.scrollView, { backgroundColor: colors.background.primary }]}
       contentContainerStyle={[
         styles.scrollContent,
         { paddingBottom: insets.bottom + Layout.MAIN_TAB_CONTENTS_BOTTOM_PADDING }, // 네비바 높이 + 안전영역 대응
@@ -49,7 +51,6 @@ export default function HistoryScreen() {
 const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
-    backgroundColor: Colors.primary.soulBlack,
   },
   scrollContent: {
     flexGrow: 1,

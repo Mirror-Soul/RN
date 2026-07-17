@@ -1,8 +1,8 @@
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, TouchableOpacity, View, Text } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Colors, Radii } from '@/src/constants/theme';
-
+import { useThemeColors } from '@/src/hooks/useThemeColors';
+import {Colors, Radii, FontFamily} from '@/src/constants/theme';
 // 아이콘 에셋
 import SummaryIcon from '@/assets/images/common/matching/RemmendSummary.svg';
 import CallStyleIcon from '@/assets/images/common/matching/Call_Style.svg';
@@ -30,27 +30,29 @@ export default function MatchingRecommendCard({
   avgCallMinutes = 16,
   tags = ['헬스', '식단'],
 }: Partial<MatchingRecommendCardProps>) {
+  const { colors } = useThemeColors();
+
   return (
     <View style={styles.container}>
       {/* 메인 카드 영역 */}
-      <View style={styles.mainCard}>
+      <View style={[styles.mainCard, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
         {/* 1. 프로필 섹션 (헤더 그라디언트) */}
         <LinearGradient
           colors={Colors.gradient.twinCardHeader}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={styles.profileSection}
+          style={[styles.profileSection, { borderColor: colors.border.primary }]}
         >
           <View style={styles.profileRow}>
             {/* 프로필 이미지 (목업 그라디언트) */}
             <LinearGradient
               colors={[Colors.glass.purple30, Colors.glass.pink30]}
-              style={styles.profileImage}
+              style={[styles.profileImage, { borderColor: colors.border.primary }]}
             />
             
             <View style={styles.profileInfo}>
-              <Text style={styles.nameText}>{name}, {age}</Text>
-              <Text style={styles.bioText} numberOfLines={2}>
+              <Text style={[styles.nameText, { color: colors.text.primary }]}>{name}, {age}</Text>
+              <Text style={[styles.bioText, { color: colors.text.muted }]} numberOfLines={2}>
                 {bio}
               </Text>
             </View>
@@ -58,17 +60,17 @@ export default function MatchingRecommendCard({
         </LinearGradient>
 
         {/* 2. 추천 이유 섹션 */}
-        <View style={styles.summarySection}>
+        <View style={[styles.summarySection, { borderColor: colors.border.primary }]}>
           <View style={styles.sectionTitleRow}>
             <SummaryIcon width={16} height={16} />
-            <Text style={styles.sectionTitle}>추천 드린 이유</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>추천 드린 이유</Text>
           </View>
           
           <View style={styles.reasonList}>
             {reasons.map((reason, index) => (
               <View key={index} style={styles.reasonItem}>
                 <View style={styles.dot} />
-                <Text style={styles.reasonText}>{reason}</Text>
+                <Text style={[styles.reasonText, { color: colors.text.muted }]}>{reason}</Text>
               </View>
             ))}
           </View>
@@ -78,13 +80,13 @@ export default function MatchingRecommendCard({
         <View style={styles.callStyleSection}>
           <View style={styles.sectionTitleRow}>
             <CallStyleIcon width={16} height={16} />
-            <Text style={styles.sectionTitle}>통화 스타일</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>통화 스타일</Text>
           </View>
           
           <View style={styles.callStyleBox}>
             <View style={styles.avgTimeRow}>
               <TimerIcon width={16} height={16} />
-              <Text style={styles.avgTimeText}>평균 {avgCallMinutes}분</Text>
+              <Text style={[styles.avgTimeText, { color: colors.text.muted }]}>평균 {avgCallMinutes}분</Text>
             </View>
             
             <View style={styles.tagRow}>
@@ -100,9 +102,9 @@ export default function MatchingRecommendCard({
 
       {/* 하단 액션 버튼 영역 */}
       <View style={styles.actionRow}>
-        <TouchableOpacity activeOpacity={0.8} style={styles.cancelButton}>
+        <TouchableOpacity activeOpacity={0.8} style={[styles.cancelButton, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
           <CancelIcon width={24} height={24} />
-          <Text style={styles.cancelButtonText}>건너뛰기</Text>
+          <Text style={[styles.cancelButtonText, { color: colors.text.primary }]}>건너뛰기</Text>
         </TouchableOpacity>
 
         <TouchableOpacity activeOpacity={0.8} style={styles.callButtonContainer}>
@@ -113,7 +115,7 @@ export default function MatchingRecommendCard({
             style={styles.callButton}
           >
             <TwinCallButtonIcon width={20} height={20} />
-            <Text style={styles.callButtonText}>상대 Twin과 통화</Text>
+            <Text style={[styles.callButtonText, { color: colors.background.primary }]}>상대 Twin과 통화</Text>
           </LinearGradient>
         </TouchableOpacity>
       </View>
@@ -129,14 +131,11 @@ const styles = StyleSheet.create({
   mainCard: {
     borderRadius: Radii.lg,
     borderWidth: 0.612,
-    borderColor: Colors.glass.white20,
-    backgroundColor: Colors.glass.white05,
     overflow: 'hidden',
   },
   profileSection: {
     padding: 20,
     borderBottomWidth: 0.612,
-    borderColor: Colors.glass.white10,
   },
   profileRow: {
     flexDirection: 'row',
@@ -148,23 +147,20 @@ const styles = StyleSheet.create({
     height: 80,
     borderRadius: Radii.lg,
     borderWidth: 0.612,
-    borderColor: Colors.glass.white20,
   },
   profileInfo: {
     flex: 1,
     gap: 8,
   },
   nameText: {
-    color: Colors.neutral.pureWhite,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 20,
     fontWeight: '500',
     lineHeight: 28,
     letterSpacing: -0.45,
   },
   bioText: {
-    color: Colors.neutral.lightGray,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '400',
     lineHeight: 22.75,
@@ -174,7 +170,6 @@ const styles = StyleSheet.create({
     padding: 20,
     gap: 12,
     borderBottomWidth: 0.612,
-    borderColor: Colors.glass.white10,
   },
   sectionTitleRow: {
     flexDirection: 'row',
@@ -182,8 +177,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   sectionTitle: {
-    color: Colors.neutral.pureWhite,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '500',
     lineHeight: 20,
@@ -204,8 +198,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary.vividPurple,
   },
   reasonText: {
-    color: Colors.neutral.lightGrayText,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '400',
     lineHeight: 20,
@@ -229,8 +222,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   avgTimeText: {
-    color: Colors.neutral.lightGrayText,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '400',
     lineHeight: 20,
@@ -248,7 +240,7 @@ const styles = StyleSheet.create({
   },
   tagText: {
     color: Colors.neutral.lavender,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 12,
     fontWeight: '400',
     lineHeight: 16,
@@ -266,12 +258,9 @@ const styles = StyleSheet.create({
     gap: 8,
     borderRadius: Radii.md2,
     borderWidth: 0.612,
-    borderColor: Colors.glass.white10,
-    backgroundColor: Colors.glass.white05,
   },
   cancelButtonText: {
-    color: Colors.neutral.pureWhite,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 16,
     fontWeight: '500',
     lineHeight: 24,
@@ -290,8 +279,7 @@ const styles = StyleSheet.create({
     borderRadius: Radii.md2,
   },
   callButtonText: {
-    color: '#000', // 검정색 텍스트
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 16,
     fontWeight: '500',
     lineHeight: 24,

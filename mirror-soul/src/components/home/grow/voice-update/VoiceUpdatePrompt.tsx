@@ -1,8 +1,9 @@
 import VoiceUpdateIcon from '@/assets/images/common/evlove/voice-update/voice_update_icon.svg';
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, FontFamily} from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface VoiceUpdatePromptProps {
   sentence: string;
@@ -12,11 +13,13 @@ interface VoiceUpdatePromptProps {
  * 목소리 업데이트 문장 안내 카드 (SRP)
  */
 export default function VoiceUpdatePrompt({ sentence }: VoiceUpdatePromptProps) {
+  const { colors } = useThemeColors();
+
   return (
     <View style={styles.container}>
       <View style={styles.head}>
-        <Text style={styles.title}>다음 문장을 읽어주세요</Text>
-        <Text style={styles.subTitle}>자연스럽게, 평소 말하는 톤으로 읽어주시면 됩니다</Text>
+        <Text style={[styles.title, { color: colors.text.primary }]}>다음 문장을 읽어주세요</Text>
+        <Text style={[styles.subTitle, { color: colors.text.secondary }]}>자연스럽게, 평소 말하는 톤으로 읽어주시면 됩니다</Text>
       </View>
 
       <LinearGradient
@@ -27,7 +30,7 @@ export default function VoiceUpdatePrompt({ sentence }: VoiceUpdatePromptProps) 
       >
         <View style={styles.bodyContainer}>
           <VoiceUpdateIcon width={24} height={24} />
-          <Text style={styles.sentenceText}>{sentence}</Text>
+          <Text style={[styles.sentenceText, { color: colors.text.primary }]}>{sentence}</Text>
         </View>
       </LinearGradient>
     </View>
@@ -44,18 +47,16 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   title: {
-    color: Colors.neutral.pureWhite,
     textAlign: 'center',
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 18,
     fontWeight: '500',
     lineHeight: 28,
     letterSpacing: -0.439,
   },
   subTitle: {
-    color: Colors.neutral.lightGray,
     textAlign: 'center',
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '400',
     lineHeight: 20,
@@ -75,9 +76,8 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   sentenceText: {
-    color: Colors.neutral.pureWhite,
     textAlign: 'center',
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 18,
     fontWeight: '400',
     lineHeight: 29.25,

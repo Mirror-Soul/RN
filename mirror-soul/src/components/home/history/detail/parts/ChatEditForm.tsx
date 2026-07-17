@@ -1,6 +1,6 @@
 import CancelIcon from '@/assets/images/common/Cancel.svg';
 import CompleteIcon from '@/assets/images/common/Complete.svg';
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, FontFamily} from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
   },
   saveText: {
     color: Colors.primary.soulBlack,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 12,
     fontWeight: '500',
   },

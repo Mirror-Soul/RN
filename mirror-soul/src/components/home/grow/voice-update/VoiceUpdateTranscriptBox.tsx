@@ -1,6 +1,7 @@
 import { Colors, Radii } from '@/src/constants/theme';
 import React, { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface VoiceUpdateTranscriptBoxProps {
   transcript: string;
@@ -16,6 +17,7 @@ export default function VoiceUpdateTranscriptBox({
   isRecording,
 }: VoiceUpdateTranscriptBoxProps) {
   const blinkAnim = useRef(new Animated.Value(0.8)).current;
+  const { colors } = useThemeColors();
 
   useEffect(() => {
     let animation: Animated.CompositeAnimation | null = null;
@@ -46,7 +48,7 @@ export default function VoiceUpdateTranscriptBox({
   }, [isRecording]);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { borderColor: colors.border.primary, backgroundColor: colors.background.card }]}>
       <View style={styles.header}>
         {isRecording && (
           <View style={styles.recordingIndicator}>
@@ -58,9 +60,9 @@ export default function VoiceUpdateTranscriptBox({
 
       <View style={styles.content}>
         {transcript ? (
-          <Text style={styles.transcriptText}>{transcript}</Text>
+          <Text style={[styles.transcriptText, { color: colors.text.primary }]}>{transcript}</Text>
         ) : (
-          <Text style={styles.placeholderText}>
+          <Text style={[styles.placeholderText, { color: colors.text.secondary }]}>
             {isRecording ? '말씀해 주세요...' : '녹음 버튼을 눌러 문장을 읽어주세요'}
           </Text>
         )}
@@ -76,8 +78,6 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: Radii.lg2,
     borderWidth: 0.612,
-    borderColor: Colors.glass.white10,
-    backgroundColor: 'rgba(0, 0, 0, 0.2)',
     gap: 12,
   },
   header: {
@@ -106,14 +106,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   transcriptText: {
-    color: Colors.neutral.pureWhite,
     fontSize: 16,
     fontWeight: '400',
     lineHeight: 24,
     textAlign: 'center',
   },
   placeholderText: {
-    color: Colors.neutral.darkGray,
     fontSize: 15,
     fontStyle: 'italic',
     fontWeight: '400',

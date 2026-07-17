@@ -10,6 +10,7 @@ import { Colors, Layout } from '@/src/constants/theme';
 import React from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 /**
  * 성장(Evolve) 탭 화면
@@ -23,9 +24,11 @@ export default function GrowScreen() {
     completionPercent: 92,
   };
 
+  const { colors } = useThemeColors();
+
   return (
     <ScrollView
-      style={styles.scrollView}
+      style={[styles.scrollView, { backgroundColor: colors.background.primary }]}
       contentContainerStyle={[
         styles.scrollContent,
         { paddingBottom: insets.bottom + Layout.MAIN_TAB_CONTENTS_BOTTOM_PADDING },
@@ -67,7 +70,6 @@ export default function GrowScreen() {
 const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
-    backgroundColor: Colors.primary.soulBlack,
   },
   scrollContent: {
     flexGrow: 1,

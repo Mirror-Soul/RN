@@ -1,9 +1,10 @@
 import VerificationSuccessIcon from '@/assets/images/common/Verification_sucess.svg';
 import FormLabel from '@/src/components/signup/common/FormLabel';
-import { Radii } from '@/src/constants/theme';
+import {Radii, FontFamily, Colors} from '@/src/constants/theme';
 import React from 'react';
 import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SectionProps } from '../types/step2';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface NicknameSectionProps extends SectionProps {
   onCheck: () => void;
@@ -15,17 +16,18 @@ interface NicknameSectionProps extends SectionProps {
  * 닉네임 입력 필드와 중복 확인 버튼, 상태 피드백을 표시합니다.
  */
 export default function NicknameSection({ state, onChange, onCheck, isChecking }: NicknameSectionProps) {
+  const { colors } = useThemeColors();
   return (
     <View style={styles.container}>
       <FormLabel label="닉네임" />
 
       <View style={styles.infoRow}>
         <TextInput
-          style={styles.textInput}
+          style={[styles.textInput, { color: colors.text.primary }]}
           value={state.nickname}
           onChangeText={(text) => onChange({ nickname: text, isNicknameVerified: false })}
           placeholder="2자 이상 입력해주세요"
-          placeholderTextColor="#6A7282"
+          placeholderTextColor={colors.text.muted}
           autoCapitalize="none"
           editable={!isChecking}
         />
@@ -37,9 +39,9 @@ export default function NicknameSection({ state, onChange, onCheck, isChecking }
           disabled={isChecking || state.nickname.length < 2}
         >
           {isChecking ? (
-            <ActivityIndicator size="small" color="#FFF" />
+            <ActivityIndicator size="small" color={colors.text.primary} />
           ) : (
-            <Text style={styles.checkButtonText}>중복 확인</Text>
+            <Text style={[styles.checkButtonText, { color: colors.text.primary }]}>중복 확인</Text>
           )}
         </TouchableOpacity>
       </View>
@@ -79,10 +81,9 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: Radii.lg,
     borderWidth: 0.612,
-    borderColor: 'rgba(255, 255, 255, 0.10)',
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    color: '#FFF',
-    fontFamily: 'Inter',
+    borderColor: Colors.glass.white10,
+    backgroundColor: Colors.glass.white5,
+    fontFamily: FontFamily.sans,
     fontSize: 16,
     fontWeight: '400',
     letterSpacing: -0.312,
@@ -95,12 +96,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: Radii.lg,
-    backgroundColor: 'rgba(255, 255, 255, 0.10)',
+    backgroundColor: Colors.glass.white10,
   },
   checkButtonText: {
-    color: '#FFF',
     textAlign: 'center',
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '500',
     lineHeight: 20,
@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
   },
   successText: {
     color: '#05DF72',
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '400',
     lineHeight: 20,
