@@ -14,6 +14,7 @@ import Animated, {
   cancelAnimation,
 } from 'react-native-reanimated';
 import { Colors, FontFamily } from '@/src/constants/theme';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 // 피그마 원본 파형 높이 데이터 (px 단위, 최대 ~4px)
 const WAVEFORM_HEIGHTS = [
@@ -87,6 +88,7 @@ export const ProfileDigitalVoiceSection = ({
   delay = 200,
 }: ProfileDigitalVoiceSectionProps) => {
   const [isPlaying, setIsPlaying] = React.useState(false);
+  const { colors } = useThemeColors();
 
   const handlePlayToggle = useCallback(() => {
     setIsPlaying((prev) => !prev);
@@ -101,9 +103,15 @@ export const ProfileDigitalVoiceSection = ({
       <Text style={styles.headingText}>Digital Voice</Text>
 
       {/* 음성 카드 */}
-      <View style={styles.card}>
+      <View style={[styles.card, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
         {/* 재생 버튼 */}
-        <Pressable onPress={handlePlayToggle} style={styles.playButtonWrapper}>
+        <Pressable 
+          onPress={handlePlayToggle} 
+          style={styles.playButtonWrapper}
+          accessibilityRole="button"
+          accessibilityLabel={isPlaying ? "일시정지" : "재생하기"}
+          accessibilityState={{ expanded: isPlaying }}
+        >
           <LinearGradient
             colors={['#00D3F3', '#AD46FF']}
             start={{ x: 0, y: 0 }}
@@ -123,7 +131,7 @@ export const ProfileDigitalVoiceSection = ({
         {/* 음성 정보 */}
         <View style={styles.voiceInfo}>
           {/* 제목 */}
-          <Text style={styles.voiceTitle} numberOfLines={1}>
+          <Text style={[styles.voiceTitle, { color: colors.text.primary }]} numberOfLines={1}>
             {voiceTitle}
           </Text>
 
@@ -139,7 +147,7 @@ export const ProfileDigitalVoiceSection = ({
                 />
               ))}
             </View>
-            <Text style={styles.durationText}>{duration}</Text>
+            <Text style={[styles.durationText, { color: colors.text.muted }]}>{duration}</Text>
           </View>
         </View>
       </View>
@@ -170,9 +178,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
     gap: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
     borderWidth: 1,
-    borderColor: Colors.glass.white10,
     borderRadius: 40,
   },
 
@@ -206,7 +212,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     letterSpacing: -0.15,
-    color: '#FFFFFF',
   },
 
   // 파형
@@ -232,6 +237,5 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     fontSize: 10,
     lineHeight: 15,
-    color: Colors.neutral.darkGray,
   },
 });

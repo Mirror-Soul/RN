@@ -1,12 +1,13 @@
 import React, { useEffect } from 'react';
 import {FontFamily, Colors} from '@/src/constants/theme';
 
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import MaskedView from '@react-native-masked-view/masked-view';
 import { Feather } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { usePulseAnimation, usePressAnimation } from '../hooks/useProfileAnimations';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface AvailableTimeCardProps {
   timeString: string;
@@ -17,6 +18,7 @@ interface AvailableTimeCardProps {
 export const AvailableTimeCard = ({ timeString, delay = 100, onPressRefill }: AvailableTimeCardProps) => {
   const { startPulse, animatedStyle: pulseStyle } = usePulseAnimation();
   const { handlePressIn, handlePressOut, animatedStyle: pressStyle } = usePressAnimation();
+  const { colors } = useThemeColors();
 
   useEffect(() => {
     startPulse();
@@ -27,7 +29,7 @@ export const AvailableTimeCard = ({ timeString, delay = 100, onPressRefill }: Av
       entering={FadeInDown.delay(delay).duration(600).springify()}
       style={styles.containerMargin}
     >
-      <View style={styles.cardContainer}>
+      <View style={[styles.cardContainer, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
         {/* Glow Background animated */}
         <Animated.View style={[StyleSheet.absoluteFill, pulseStyle]}>
           <LinearGradient
@@ -38,7 +40,7 @@ export const AvailableTimeCard = ({ timeString, delay = 100, onPressRefill }: Av
           />
         </Animated.View>
 
-        <Text style={styles.titleText}>대화 가능한 시간</Text>
+        <Text style={[styles.titleText, { color: colors.text.muted }]}>대화 가능한 시간</Text>
 
         <View style={styles.timeContainer}>
           <MaskedView
@@ -56,15 +58,14 @@ export const AvailableTimeCard = ({ timeString, delay = 100, onPressRefill }: Av
           </MaskedView>
         </View>
 
-        <Animated.View
-          style={[styles.buttonContainer, pressStyle]}
-          onTouchStart={handlePressIn}
-          onTouchEnd={(e) => {
-            handlePressOut();
-            if (onPressRefill) onPressRefill();
-          }}
-          onTouchCancel={handlePressOut}
+        <Pressable
+          onPress={onPressRefill}
+          onPressIn={handlePressIn}
+          onPressOut={handlePressOut}
+          accessibilityRole="button"
+          accessibilityLabel="시간 채우기"
         >
+          <Animated.View style={[styles.buttonContainer, pressStyle]}>
           <LinearGradient
             colors={['rgba(0, 255, 255, 0.22)', 'rgba(168, 85, 247, 0.22)']}
             start={{ x: 0, y: 0 }}
@@ -74,7 +75,8 @@ export const AvailableTimeCard = ({ timeString, delay = 100, onPressRefill }: Av
             <Feather name="plus" size={16} color="#53EAFD" style={styles.buttonIcon} />
             <Text style={styles.buttonText}>시간 채우기</Text>
           </LinearGradient>
-        </Animated.View>
+          </Animated.View>
+        </Pressable>
       </View>
     </Animated.View>
   );
@@ -88,9 +90,7 @@ const styles = StyleSheet.create({
   cardContainer: {
     width: '100%',
     height: 198,
-    backgroundColor: Colors.glass.white5,
     borderWidth: 0.61,
-    borderColor: Colors.glass.white10,
     borderRadius: 24,
     overflow: 'hidden',
     position: 'relative',
@@ -108,7 +108,6 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     letterSpacing: 1.2,
     textTransform: 'uppercase',
-    color: '#99A1AF',
   },
   timeContainer: {
     position: 'absolute',

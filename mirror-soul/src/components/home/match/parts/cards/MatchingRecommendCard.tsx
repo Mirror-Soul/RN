@@ -115,7 +115,7 @@ export default function MatchingRecommendCard({
             style={styles.callButton}
           >
             <TwinCallButtonIcon width={20} height={20} />
-            <Text style={styles.callButtonText}>상대 Twin과 통화</Text>
+            <Text style={[styles.callButtonText, { color: colors.background.primary }]}>상대 Twin과 통화</Text>
           </LinearGradient>
         </TouchableOpacity>
       </View>
@@ -279,7 +279,6 @@ const styles = StyleSheet.create({
     borderRadius: Radii.md2,
   },
   callButtonText: {
-    color: '#000', // 검정색 텍스트
     fontFamily: FontFamily.sans,
     fontSize: 16,
     fontWeight: '500',

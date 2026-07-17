@@ -6,10 +6,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
 import Animated from 'react-native-reanimated';
 import { SUPPORT_EMAIL } from '../constants/faqData';
-import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 export const EmailContactButton = () => {
-  const { animatedTextMuted } = useAnimatedTheme();
+  const { colors } = useThemeColors();
 
   const handlePress = async () => {
     const subject = encodeURIComponent('[Mirror Soul] 고객센터 문의');
@@ -50,7 +50,7 @@ export const EmailContactButton = () => {
 
   return (
     <View style={styles.container}>
-      <Animated.Text style={[styles.label, animatedTextMuted]}>해결되지 않은 문제가 있으신가요?</Animated.Text>
+      <Text style={[styles.label, { color: colors.text.muted }]}>해결되지 않은 문제가 있으신가요?</Text>
 
       <View style={styles.buttonWrapper}>
         <Pressable
@@ -70,7 +70,7 @@ export const EmailContactButton = () => {
         </Pressable>
       </View>
 
-      <Animated.Text style={[styles.emailAddress, animatedTextMuted]}>{SUPPORT_EMAIL}</Animated.Text>
+      <Text style={[styles.emailAddress, { color: colors.text.muted }]}>{SUPPORT_EMAIL}</Text>
     </View>
   );
 };

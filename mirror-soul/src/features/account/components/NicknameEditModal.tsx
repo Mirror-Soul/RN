@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import {FontFamily, Colors} from '@/src/constants/theme';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 import { 
   View, 
@@ -34,6 +35,8 @@ interface NicknameEditModalProps {
 }
 
 export const NicknameEditModal = ({ isOpen, onClose }: NicknameEditModalProps) => {
+  const { colors, isDark } = useThemeColors();
+  
   const { nickname, setNickname } = useAccountStore();
 
   const {
@@ -68,13 +71,13 @@ export const NicknameEditModal = ({ isOpen, onClose }: NicknameEditModalProps) =
     >
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.overlay}
+        style={[styles.overlay, { backgroundColor: isDark ? 'rgba(0, 0, 0, 0.7)' : 'rgba(0, 0, 0, 0.5)' }]}
       >
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
           
           {/* Header */}
-          <Text style={styles.title}>닉네임 수정</Text>
-          <Text style={styles.subtitle}>앱에서 표시될 이름을 입력해 주세요.</Text>
+          <Text style={[styles.title, { color: colors.text.primary }]}>닉네임 수정</Text>
+          <Text style={[styles.subtitle, { color: colors.text.secondary }]}>앱에서 표시될 이름을 입력해 주세요.</Text>
 
           {/* Form */}
           <View style={styles.formContainer}>
@@ -84,7 +87,15 @@ export const NicknameEditModal = ({ isOpen, onClose }: NicknameEditModalProps) =
               render={({ field: { onChange, onBlur, value } }) => (
                 <View>
                   <TextInput
-                    style={[styles.input, errors.nickname && styles.inputError]}
+                    style={[
+                      styles.input, 
+                      { 
+                        color: colors.text.primary, 
+                        backgroundColor: colors.background.glass, 
+                        borderColor: colors.border.primary 
+                      },
+                      errors.nickname && styles.inputError
+                    ]}
                     value={value}
                     onChangeText={onChange}
                     onBlur={onBlur}
@@ -92,6 +103,7 @@ export const NicknameEditModal = ({ isOpen, onClose }: NicknameEditModalProps) =
                     autoFocus={true}
                     autoCapitalize="none"
                     autoCorrect={false}
+                    placeholderTextColor={colors.text.muted}
                   />
                   {errors.nickname && (
                     <Text style={styles.errorText}>{errors.nickname.message}</Text>
@@ -105,11 +117,15 @@ export const NicknameEditModal = ({ isOpen, onClose }: NicknameEditModalProps) =
           <View style={styles.buttonRow}>
             {/* 취소 버튼 */}
             <Pressable 
-              style={({ pressed }) => [styles.cancelButton, pressed && styles.pressedState]} 
+              style={({ pressed }) => [
+                styles.cancelButton,
+                { backgroundColor: colors.background.glass, borderColor: colors.border.primary },
+                pressed && styles.pressedState
+              ]} 
               onPress={onClose}
               disabled={isSubmitting}
             >
-              <Text style={styles.cancelButtonText}>취소</Text>
+              <Text style={[styles.cancelButtonText, { color: colors.text.secondary }]}>취소</Text>
             </Pressable>
 
             {/* 저장 버튼 */}
@@ -146,7 +162,6 @@ export const NicknameEditModal = ({ isOpen, onClose }: NicknameEditModalProps) =
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 24,
@@ -154,9 +169,7 @@ const styles = StyleSheet.create({
   container: {
     width: '100%',
     maxWidth: 384,
-    backgroundColor: 'rgba(0, 0, 0, 0.95)',
     borderWidth: 0.61,
-    borderColor: Colors.glass.white10,
     borderRadius: 24,
     padding: 24,
   },
@@ -166,7 +179,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     lineHeight: 27,
     letterSpacing: -0.44,
-    color: '#FFFFFF',
     marginBottom: 4,
   },
   subtitle: {
@@ -174,7 +186,6 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     fontSize: 12,
     lineHeight: 16,
-    color: '#6A7282',
     marginBottom: 20,
   },
   formContainer: {
@@ -182,12 +193,9 @@ const styles = StyleSheet.create({
   },
   input: {
     height: 45,
-    backgroundColor: Colors.glass.white5,
     borderWidth: 0.61,
-    borderColor: 'rgba(139, 230, 248, 0.19)',
     borderRadius: 14,
     paddingHorizontal: 16,
-    color: '#FFFFFF',
     fontFamily: FontFamily.sans,
     fontSize: 14,
   },
@@ -214,16 +222,13 @@ const styles = StyleSheet.create({
     height: 45,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: Colors.glass.white5,
     borderWidth: 0.61,
-    borderColor: Colors.glass.white10,
     borderRadius: 16,
   },
   cancelButtonText: {
     fontFamily: FontFamily.sans,
     fontWeight: '500',
     fontSize: 14,
-    color: '#D1D5DC',
     letterSpacing: -0.15,
   },
   saveButtonContainer: {

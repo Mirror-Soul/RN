@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View, Alert, ActivityIndicator, Text } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 
 // Step 2 Specific Parts
@@ -25,6 +26,7 @@ import { jobCategories } from './Professional/jobData';
  */
 export default function Step2BasicProfileContainer() {
   const router = useRouter();
+  const { colors } = useThemeColors();
   const [isSaving, setIsSaving] = useState(false);
 
   const {
@@ -142,12 +144,12 @@ export default function Step2BasicProfileContainer() {
       {/* 로딩 오버레이 */}
       {isSaving && (
         <Animated.View
-          style={[styles.loadingOverlay, overlayAnimatedStyle]}
+          style={[styles.loadingOverlay, overlayAnimatedStyle, { backgroundColor: colors.background.overlay || 'rgba(0, 0, 0, 0.7)' }]}
           pointerEvents="auto"
         >
           <View style={styles.loadingContent}>
             <ActivityIndicator size="large" color={Colors.primary.electricCyan} />
-            <Text style={styles.loadingText}>프로필을 저장하고 있습니다...</Text>
+            <Text style={[styles.loadingText, { color: colors.text.primary }]}>프로필을 저장하고 있습니다...</Text>
           </View>
         </Animated.View>
       )}
@@ -191,7 +193,6 @@ const styles = StyleSheet.create({
   },
   loadingOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 1000,
@@ -201,7 +202,6 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   loadingText: {
-    color: '#FFF',
     fontSize: 16,
     fontWeight: '500',
   },

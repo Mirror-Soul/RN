@@ -1,8 +1,11 @@
 import { ProfileSection } from '../types';
 import { Colors } from '@/src/constants/theme';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
+export const useProfileSections = (): ProfileSection[] => {
+  const { colors } = useThemeColors();
 
-export const PROFILE_SECTIONS: ProfileSection[] = [
+  return [
   {
     id: 'service_settings',
     title: '서비스 설정',
@@ -12,8 +15,8 @@ export const PROFILE_SECTIONS: ProfileSection[] = [
         label: '계정 관리',
         description: '닉네임, 로그아웃 등',
         iconName: 'user',
-        iconColor: '#FFFFFF',
-        iconBgColor: Colors.glass.white10,
+        iconColor: colors.text.primary,
+        iconBgColor: colors.background.glass,
       },
       {
         id: 'voice_audio',
@@ -26,7 +29,7 @@ export const PROFILE_SECTIONS: ProfileSection[] = [
       {
         id: 'notifications',
         label: '알림 설정',
-        description: '푸시 알림 켜짐',
+        description: '푸시 알림 수신 설정',
         iconName: 'bell',
         iconColor: '#C27AFF',
         iconBgColor: 'rgba(194, 122, 255, 0.1)',
@@ -50,9 +53,10 @@ export const PROFILE_SECTIONS: ProfileSection[] = [
         label: '약관 및 정책',
         description: undefined,
         iconName: 'file-text',
-        iconColor: '#99A1AF',
-        iconBgColor: 'rgba(153, 161, 175, 0.1)',
+        iconColor: colors.text.muted,
+        iconBgColor: colors.background.glass,
       },
     ],
   },
-];
+  ];
+};

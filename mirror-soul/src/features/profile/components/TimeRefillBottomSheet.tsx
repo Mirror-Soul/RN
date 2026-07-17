@@ -5,6 +5,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { BottomSheet } from '../../../components/common/BottomSheet/BottomSheet';
 import { TIME_REFILL_OPTIONS } from '../constants/timeRefillOptions';
 import { TimeRefillOption } from './TimeRefillOption';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface TimeRefillBottomSheetProps {
   isOpen: boolean;
@@ -12,6 +13,8 @@ interface TimeRefillBottomSheetProps {
 }
 
 export const TimeRefillBottomSheet = ({ isOpen, onClose }: TimeRefillBottomSheetProps) => {
+  const { colors } = useThemeColors();
+
   return (
     <BottomSheet isOpen={isOpen} onClose={onClose} height={580}>
       <View style={styles.container}>
@@ -20,8 +23,8 @@ export const TimeRefillBottomSheet = ({ isOpen, onClose }: TimeRefillBottomSheet
         
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>대화 시간 채우기</Text>
-          <Text style={styles.subtitle}>현재 남은 시간: 02:30:00</Text>
+          <Text style={[styles.title, { color: colors.text.primary }]}>대화 시간 채우기</Text>
+          <Text style={[styles.subtitle, { color: colors.text.secondary }]}>현재 남은 시간: 02:30:00</Text>
         </View>
 
         {/* Options */}
@@ -41,9 +44,9 @@ export const TimeRefillBottomSheet = ({ isOpen, onClose }: TimeRefillBottomSheet
 
         {/* Terms footer */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>
+          <Text style={[styles.footerText, { color: colors.text.muted }]}>
             구매 시 앱스토어 계정으로 결제되며, 충전된 시간의 유효기간 및 환불 정책은{' '}
-            <Text style={styles.linkText} onPress={() => console.log('약관 클릭')}>
+            <Text style={[styles.linkText, { color: colors.text.secondary }]} onPress={() => console.log('약관 클릭')}>
               이용 약관
             </Text>
             을 확인해 주세요.
@@ -70,14 +73,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     lineHeight: 28,
     letterSpacing: -0.44,
-    color: '#FFFFFF',
   },
   subtitle: {
     fontFamily: FontFamily.sans,
     fontWeight: '400',
     fontSize: 12,
     lineHeight: 16,
-    color: '#6A7282',
     marginTop: 4,
   },
   optionsContainer: {
@@ -93,7 +94,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 20,
     textAlign: 'center',
-    color: '#4A5565',
   },
   linkText: {
     fontFamily: FontFamily.sans,
@@ -102,6 +102,5 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     letterSpacing: -0.31,
     textDecorationLine: 'underline',
-    color: '#6A7282',
   },
 });

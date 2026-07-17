@@ -122,7 +122,7 @@ export default function BottomNavbar({ activeTab = 'discover', onTabPress }: Bot
       <View
         style={[
           styles.bar,
-          { backgroundColor: colors.background.glass, borderColor: colors.border.primary },
+          { backgroundColor: colors.background.glass, borderColor: colors.border.primary, shadowColor: colors.text.primary },
         ]}
       >
         {TABS.map((tab) => (
@@ -156,7 +156,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: Radii.full,
     borderWidth: 1,
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.3,
     shadowRadius: 20,

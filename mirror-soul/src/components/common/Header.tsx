@@ -43,7 +43,12 @@ export const Header = ({
       style={[styles.header, { paddingTop: insets.top + 16 }]}
     >
       {showBackButton ? (
-        <Pressable onPress={handleBack}>
+        <Pressable 
+          onPress={handleBack}
+          accessibilityLabel="뒤로 가기"
+          accessibilityRole="button"
+          hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+        >
           <View style={[styles.backButton, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
             <Feather name="arrow-left" size={20} color={colors.text.primary} />
           </View>

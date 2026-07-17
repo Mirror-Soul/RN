@@ -84,7 +84,7 @@ export const BottomSheet = ({ isOpen, onClose, children, height = SCREEN_HEIGHT 
         <GestureDetector gesture={panGesture}>
           <Animated.View style={[styles.sheet, animatedSheetStyle, { height, backgroundColor: colors.background.card, borderTopColor: colors.border.primary }]}>
             <View style={styles.handleContainer}>
-              <View style={styles.handle} />
+              <View style={[styles.handle, { backgroundColor: colors.border.strong }]} />
             </View>
             
             <View style={styles.contentContainer}>
@@ -120,7 +120,6 @@ const styles = StyleSheet.create({
   handle: {
     width: 40,
     height: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     borderRadius: 2,
   },
   contentContainer: {

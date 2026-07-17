@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useColorScheme } from 'react-native';
 
 type ThemeMode = 'system' | 'light' | 'dark';
@@ -8,10 +10,18 @@ interface ThemeState {
   setThemeMode: (mode: ThemeMode) => void;
 }
 
-export const useThemeStore = create<ThemeState>((set) => ({
-  themeMode: 'light', // 기본값을 system에서 light로 변경하여 항상 흰색 계열 배경이 나오도록 함
-  setThemeMode: (mode: ThemeMode) => set({ themeMode: mode }),
-}));
+export const useThemeStore = create<ThemeState>()(
+  persist(
+    (set) => ({
+      themeMode: 'system', // 시스템 모드를 기본값으로 변경
+      setThemeMode: (mode: ThemeMode) => set({ themeMode: mode }),
+    }),
+    {
+      name: 'theme-storage',
+      storage: createJSONStorage(() => AsyncStorage),
+    }
+  )
+);
 
 /**
  * 컴포넌트 렌더링 시 현재 활성화된 테마('light' | 'dark')를 반환하는 헬퍼 훅

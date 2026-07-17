@@ -5,6 +5,7 @@ import { Feather } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import { Colors, FontFamily } from '@/src/constants/theme';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { usePressAnimation } from '../hooks/useProfileAnimations';
 
 interface ProfileSettingsBannerProps {
@@ -16,6 +17,7 @@ export const ProfileSettingsBanner = ({
 }: ProfileSettingsBannerProps) => {
   const router = useRouter();
   const { handlePressIn, handlePressOut, animatedStyle } = usePressAnimation();
+  const { colors } = useThemeColors();
 
   const handlePress = () => {
     router.push('/(main)/profile-settings');
@@ -38,12 +40,12 @@ export const ProfileSettingsBanner = ({
           ]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
-          style={styles.banner}
+          style={[styles.banner, { borderColor: colors.border.primary }]}
         >
           {/* 왼쪽: 아이콘 + 텍스트 */}
           <View style={styles.leftContent}>
             {/* 아이콘 컨테이너 */}
-            <View style={styles.iconContainer}>
+            <View style={[styles.iconContainer, { backgroundColor: colors.background.glass }]}>
               <Feather
                 name="user"
                 size={24}
@@ -53,13 +55,13 @@ export const ProfileSettingsBanner = ({
 
             {/* 텍스트 */}
             <View style={styles.textContainer}>
-              <Text style={styles.titleText}>공간 관리 및 설정</Text>
-              <Text style={styles.subtitleText}>시간 설정 및 계정 정보 관리</Text>
+              <Text style={[styles.titleText, { color: colors.text.primary }]}>공간 관리 및 설정</Text>
+              <Text style={[styles.subtitleText, { color: colors.text.secondary }]}>시간 설정 및 계정 정보 관리</Text>
             </View>
           </View>
 
           {/* 오른쪽: chevron */}
-          <Feather name="chevron-right" size={20} color={Colors.neutral.disabledText} />
+          <Feather name="chevron-right" size={20} color={colors.text.muted} />
         </LinearGradient>
       </Pressable>
     </Animated.View>
@@ -76,7 +78,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 24,
     borderWidth: 1,
-    borderColor: Colors.glass.white10,
     borderRadius: 40,
     minHeight: 98,
   },
@@ -90,7 +91,6 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 16,
-    backgroundColor: Colors.glass.white5,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -104,13 +104,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     letterSpacing: -0.15,
-    color: '#FFFFFF',
   },
   subtitleText: {
     fontFamily: FontFamily.sans,
     fontWeight: '500',
     fontSize: 12,
     lineHeight: 16,
-    color: Colors.neutral.darkGray,
   },
 });

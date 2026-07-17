@@ -12,6 +12,7 @@ import Animated, {
 import { LinearGradient } from 'expo-linear-gradient';
 import { SpeedOption } from '../../../store/useVoiceAudioStore';
 import { SPEED_OPTIONS, SEGMENT_CONFIG } from '../constants/voiceAudioConfig';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface SpeedSegmentControlProps {
   selectedSpeed: SpeedOption;
@@ -32,6 +33,7 @@ const SPRING_CONFIG = {
  * - UI Thread에서 동작하므로 60FPS 보장
  */
 export const SpeedSegmentControl = ({ selectedSpeed, onSelect }: SpeedSegmentControlProps) => {
+  const { colors } = useThemeColors();
   const containerWidth = useSharedValue(0);
   const selectedIndex = useSharedValue(SPEED_OPTIONS.findIndex((o) => o.value === selectedSpeed));
 
@@ -63,7 +65,7 @@ export const SpeedSegmentControl = ({ selectedSpeed, onSelect }: SpeedSegmentCon
   }));
 
   return (
-    <View style={styles.container} onLayout={onContainerLayout}>
+    <View style={[styles.container, { borderColor: colors.border.primary }]} onLayout={onContainerLayout}>
       {/* 슬라이딩 선택 배경 */}
       <Animated.View style={[styles.slidingBg, animatedBgStyle]} pointerEvents="none">
         <LinearGradient
@@ -97,6 +99,8 @@ interface SegmentButtonProps {
 }
 
 const SegmentButton = ({ label, index, selectedIndex, onPress }: SegmentButtonProps) => {
+  const { colors } = useThemeColors();
+
   // 선택 여부에 따라 텍스트 색상을 UI Thread에서 직접 보간
   const progress = useDerivedValue(() => {
     const diff = Math.abs(selectedIndex.value - index);
@@ -108,7 +112,7 @@ const SegmentButton = ({ label, index, selectedIndex, onPress }: SegmentButtonPr
     color: interpolateColor(
       progress.value,
       [0, 1],
-      ['rgba(255, 255, 255, 0.35)', 'rgba(0, 255, 255, 0.9)']
+      [colors.text.muted, 'rgba(0, 255, 255, 0.9)']
     ),
   }));
 
@@ -126,7 +130,6 @@ const styles = StyleSheet.create({
     height: SEGMENT_CONFIG.containerHeight,
     backgroundColor: Colors.glass.white5,
     borderWidth: 0.61,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
     borderRadius: SEGMENT_CONFIG.containerBorderRadius,
     flexDirection: 'row',
     position: 'relative',

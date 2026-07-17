@@ -1,16 +1,18 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import {Colors, FontFamily} from '@/src/constants/theme';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 /**
  * Step1Header 컴포넌트
  * 계정 생성 타이틀과 안전 인증 문구를 표시합니다.
  */
 export default function Step1Header() {
+  const { colors } = useThemeColors();
   return (
     <View style={styles.container}>
       <View style={styles.titleContainer}>
-        <Text style={styles.title}>계정 생성</Text>
+        <Text style={[styles.title, { color: colors.text.primary }]}>계정 생성</Text>
       </View>
       <View style={styles.subtitleContainer}>
         <Text style={styles.subtitle}>안전한 계정 생성을 위해 본인인증이 필요합니다</Text>
@@ -34,7 +36,6 @@ const styles = StyleSheet.create({
   },
   title: {
     flex: 1,
-    color: '#FFF',
     textAlign: 'center',
     fontFamily: FontFamily.sans,
     fontSize: 30,

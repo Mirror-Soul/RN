@@ -144,7 +144,7 @@ export default function MatchingTwinCard({
             style={styles.callButton}
           >
             <TwinCallButtonIcon width={rw(20)} height={rw(20)} />
-            <Text style={[styles.buttonText, { color: '#000' }]}>상대 Twin과 통화</Text>
+            <Text style={[styles.buttonText, { color: colors.background.primary }]}>상대 Twin과 통화</Text>
           </LinearGradient>
         </TouchableOpacity>
       </View>

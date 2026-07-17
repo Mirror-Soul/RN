@@ -39,7 +39,7 @@ export default function SignupTabView({ onLoginTabPress }: SignupTabViewProps) {
           style={styles.maskedView}
           maskElement={
             <View style={styles.maskContainer}>
-              <Text style={styles.headlineText}>
+              <Text style={[styles.headlineText, { color: colors.text.primary }]}>
                 알고리즘이 찾아낸{'\n'}나의 완벽한 주파수
               </Text>
             </View>
@@ -53,7 +53,7 @@ export default function SignupTabView({ onLoginTabPress }: SignupTabViewProps) {
           />
         </MaskedView>
         {/* 레이아웃 스페이서 (MaskedView absolute 기준점) */}
-        <Text style={[styles.headlineText, styles.spacer]}>
+        <Text style={[styles.headlineText, styles.spacer, { color: colors.text.primary }]}>
           알고리즘이 찾아낸{'\n'}나의 완벽한 주파수
         </Text>
       </View>
@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
     lineHeight: 42,
     letterSpacing: 0.2,
     textAlign: 'center',
-    color: '#FFF', // 마스킹 텍스트는 색상 무관, 기준점용 텍스트는 투명처리됨
+    // 마스킹 텍스트는 색상 무관, 기준점용 텍스트는 투명처리됨
   },
   spacer: {
     opacity: 0, // 레이아웃 기준점만 잡고 숨김

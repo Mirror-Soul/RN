@@ -30,9 +30,9 @@ export default function CallProfile({
       {/* Profile Image */}
       <View style={styles.profileImageWrapper}>
         {profileImageUrl ? (
-          <Image source={{ uri: profileImageUrl }} style={styles.profileImage} />
+          <Image source={{ uri: profileImageUrl }} style={[styles.profileImage, { borderColor: colors.border.primary, borderWidth: 1 }]} />
         ) : (
-          <View style={[styles.profileImage, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]} />
+          <View style={[styles.profileImage, { backgroundColor: colors.background.glass, borderColor: colors.border.primary, borderWidth: 1 }]} />
         )}
       </View>
 
@@ -47,7 +47,7 @@ export default function CallProfile({
               end={{ x: 1, y: 0.5 }}
               style={styles.consistencyBadge}
             >
-              <Text style={styles.consistencyText}>{consistencyPercent}%</Text>
+              <Text style={[styles.consistencyText, { color: colors.text.primary }]}>{consistencyPercent}%</Text>
             </LinearGradient>
           </View>
         </View>
@@ -109,7 +109,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   consistencyText: {
-    color: Colors.primary.electricCyan,
     fontFamily: FontFamily.sans,
     fontSize: 12,
     fontWeight: '400',

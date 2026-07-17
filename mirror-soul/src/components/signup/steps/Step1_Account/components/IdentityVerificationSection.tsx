@@ -5,6 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Step1State } from '../types/step1';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface IdentityVerificationSectionProps {
   state: Step1State;
@@ -16,12 +17,13 @@ interface IdentityVerificationSectionProps {
  * PASS 본인인증 버튼 및 완료 상태를 관리합니다.
  */
 export default function IdentityVerificationSection({ state, onVerify }: IdentityVerificationSectionProps) {
+  const { colors } = useThemeColors();
   return (
     <View style={styles.container}>
       {/* Heading */}
       <View style={styles.heading}>
         <ProtectIcon width={24} height={24} />
-        <Text style={styles.headingTitle}>본인인증</Text>
+        <Text style={[styles.headingTitle, { color: colors.text.primary }]}>본인인증</Text>
       </View>
 
       {!state.isIdentityVerified ? (
@@ -70,7 +72,6 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
   },
   headingTitle: {
-    color: '#FFF',
     fontFamily: FontFamily.sans,
     fontSize: 16,
     fontWeight: '500',

@@ -3,7 +3,8 @@ import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import {Colors, FontFamily} from '@/src/constants/theme';
+import { Colors, FontFamily } from '@/src/constants/theme';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface ProfilePersonaSectionProps {
   tags: string[];
@@ -14,6 +15,8 @@ export const ProfilePersonaSection = ({
   tags,
   delay = 120,
 }: ProfilePersonaSectionProps) => {
+  const { colors } = useThemeColors();
+
   return (
     <Animated.View
       entering={FadeInDown.delay(delay).duration(550).springify()}
@@ -21,7 +24,7 @@ export const ProfilePersonaSection = ({
     >
       {/* 섹션 헤딩 */}
       <View style={styles.headingRow}>
-        <Text style={styles.headingText}>Persona Analysis</Text>
+        <Text style={[styles.headingText, { color: colors.text.muted }]}>Persona Analysis</Text>
         <Feather
           name="activity"
           size={16}
@@ -44,9 +47,9 @@ export const ProfilePersonaSection = ({
             ]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            style={styles.tagBadge}
+            style={[styles.tagBadge, { borderColor: colors.border.primary }]}
           >
-            <Text style={styles.tagText}>#{tag}</Text>
+            <Text style={[styles.tagText, { color: colors.text.primary }]}>#{tag}</Text>
           </LinearGradient>
         ))}
       </ScrollView>
@@ -73,7 +76,6 @@ const styles = StyleSheet.create({
     lineHeight: 15,
     letterSpacing: 2.12,
     textTransform: 'uppercase',
-    color: Colors.neutral.disabledText,
   },
 
   // 태그
@@ -87,7 +89,6 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(0, 211, 243, 0.2)',
     // shadow glow
     shadowColor: 'rgba(34, 211, 238, 0.1)',
     shadowOffset: { width: 0, height: 4 },
@@ -100,6 +101,5 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontSize: 12,
     lineHeight: 16,
-    color: '#53EAFD',
   },
 });

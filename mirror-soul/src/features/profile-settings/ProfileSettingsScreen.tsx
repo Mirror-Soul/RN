@@ -7,10 +7,11 @@ import { SettingsSection } from '../profile/components/SettingsSection';
 import { TimeRefillBottomSheet } from '../profile/components/TimeRefillBottomSheet';
 import { Header } from '@/src/components/common/Header';
 import { ScreenLayout } from '@/src/components/common/ScreenLayout';
-import { PROFILE_SECTIONS } from '../profile/constants/profileMenu';
+import { useProfileSections } from '../profile/constants/profileMenu';
 
 export const ProfileSettingsScreen = () => {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const profileSections = useProfileSections();
 
   const handleOpenSheet = useCallback(() => setIsSheetOpen(true), []);
   const handleCloseSheet = useCallback(() => setIsSheetOpen(false), []);
@@ -29,7 +30,7 @@ export const ProfileSettingsScreen = () => {
           />
 
           {/* 서비스 설정 섹션 목록 */}
-          {PROFILE_SECTIONS.map((section, index) => (
+          {profileSections.map((section, index) => (
             <SettingsSection
               key={section.id}
               section={section}

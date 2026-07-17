@@ -4,6 +4,7 @@ import { Feather } from '@expo/vector-icons';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { Badge } from '@/src/components/common/Badge';
 import { Colors, FontFamily } from '@/src/constants/theme';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { ProfileViewData } from '../types';
 
 interface ProfileInfoOverlayProps
@@ -32,6 +33,8 @@ export const ProfileInfoOverlay = ({
   isOwnProfile,
   onEditPress,
 }: ProfileInfoOverlayProps) => {
+  const { colors } = useThemeColors();
+
   return (
     <Animated.View
       entering={FadeInUp.delay(80).duration(550).springify()}
@@ -56,13 +59,19 @@ export const ProfileInfoOverlay = ({
 
       {/* 이름 + 나이 Row */}
       <View style={styles.nameRow}>
-        <Text style={styles.nameText}>{name}</Text>
-        <Text style={styles.ageText}> {age}</Text>
+        <Text style={[styles.nameText, { color: colors.text.primary }]}>{name}</Text>
+        <Text style={[styles.ageText, { color: colors.text.muted }]}> {age}</Text>
 
         {/* 편집 아이콘 (내 프로필만) */}
-        {isOwnProfile && (
-          <Pressable onPress={onEditPress} style={styles.editButton} hitSlop={8}>
-            <Feather name="edit-2" size={14} color={Colors.neutral.darkGray} />
+        {isOwnProfile && !!onEditPress && (
+          <Pressable 
+            onPress={onEditPress} 
+            style={styles.editButton} 
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="프로필 수정"
+          >
+            <Feather name="edit-2" size={14} color={colors.text.secondary} />
           </Pressable>
         )}
       </View>
@@ -71,14 +80,14 @@ export const ProfileInfoOverlay = ({
       <View style={styles.metaRow}>
         {/* 지역 */}
         <View style={styles.metaItem}>
-          <Feather name="map-pin" size={14} color={Colors.neutral.lightGray} />
-          <Text style={styles.metaText}>{location}</Text>
+          <Feather name="map-pin" size={14} color={colors.text.muted} />
+          <Text style={[styles.metaText, { color: colors.text.secondary }]}>{location}</Text>
         </View>
 
         {/* 직업 */}
         <View style={styles.metaItem}>
-          <Feather name="briefcase" size={14} color={Colors.neutral.lightGray} />
-          <Text style={styles.metaText}>{job}</Text>
+          <Feather name="briefcase" size={14} color={colors.text.muted} />
+          <Text style={[styles.metaText, { color: colors.text.secondary }]}>{job}</Text>
         </View>
 
         {/* 프리미엄 아이콘 */}
@@ -117,7 +126,6 @@ const styles = StyleSheet.create({
     fontSize: 48,
     lineHeight: 48,
     letterSpacing: -2.05,
-    color: '#FFFFFF',
   },
   ageText: {
     fontFamily: FontFamily.sans,
@@ -125,7 +133,6 @@ const styles = StyleSheet.create({
     fontSize: 48,
     lineHeight: 48,
     letterSpacing: -2.05,
-    color: Colors.neutral.disabledText,
   },
   editButton: {
     paddingTop: 8,
@@ -151,6 +158,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     letterSpacing: -0.15,
-    color: Colors.neutral.lightGray,
   },
 });

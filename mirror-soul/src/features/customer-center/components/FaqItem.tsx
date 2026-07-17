@@ -13,7 +13,7 @@ import Animated, {
   LinearTransition,
 } from 'react-native-reanimated';
 import { FaqItem as FaqItemType } from '../constants/faqData';
-import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface FaqItemProps {
   item: FaqItemType;
@@ -24,7 +24,7 @@ interface FaqItemProps {
 
 export const FaqItem = ({ item, isOpen, onToggle, isLast = false }: FaqItemProps) => {
   const rotation = useSharedValue(0);
-  const { colors, animatedText, animatedTextMuted, animatedBorder } = useAnimatedTheme();
+  const { colors } = useThemeColors();
 
   React.useEffect(() => {
     rotation.value = withTiming(isOpen ? 180 : 0, { 
@@ -40,16 +40,16 @@ export const FaqItem = ({ item, isOpen, onToggle, isLast = false }: FaqItemProps
   return (
     <Animated.View 
       layout={LinearTransition.duration(250).easing(Easing.out(Easing.cubic))}
-      style={[styles.wrapper, !isLast && styles.borderBottom, !isLast && animatedBorder]}
+      style={[styles.wrapper, !isLast && styles.borderBottom, !isLast && { borderColor: colors.border.primary }]}
     >
       <Pressable
         onPress={onToggle}
-        style={({ pressed }) => [styles.questionRow, pressed && styles.questionRowPressed]}
+        style={({ pressed }) => [styles.questionRow, pressed && { backgroundColor: colors.background.glass }]}
         accessibilityRole="button"
         accessibilityState={{ expanded: isOpen }}
         accessibilityLabel={item.question}
       >
-        <Animated.Text style={[styles.questionText, animatedText]}>{item.question}</Animated.Text>
+        <Text style={[styles.questionText, { color: colors.text.primary }]}>{item.question}</Text>
         <Animated.View style={iconStyle}>
           <Feather name="chevron-down" size={16} color={colors.text.muted} />
         </Animated.View>
@@ -62,7 +62,7 @@ export const FaqItem = ({ item, isOpen, onToggle, isLast = false }: FaqItemProps
         >
           <View style={styles.answerInner}>
             {/* answerText는 #99A1AF (neutral.lightGray) -> text.muted 로 대체 */}
-            <Animated.Text style={[styles.answerText, animatedTextMuted]}>{item.answer}</Animated.Text>
+            <Text style={[styles.answerText, { color: colors.text.muted }]}>{item.answer}</Text>
           </View>
         </Animated.View>
       )}
@@ -88,7 +88,6 @@ const styles = StyleSheet.create({
     minHeight: 52,
   },
   questionRowPressed: {
-    backgroundColor: 'rgba(255, 255, 255, 0.02)', // 매우 연한 프레스 상태 (공통)
   },
   questionText: {
     flex: 1,

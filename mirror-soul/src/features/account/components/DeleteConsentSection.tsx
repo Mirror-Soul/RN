@@ -82,7 +82,13 @@ export const DeleteConsentSection = ({ isAgreed, onToggleAgree, onSubmit }: Dele
       entering={FadeInDown.delay(200).duration(500).springify()}
       style={styles.container}
     >
-      <Pressable onPress={onToggleAgree} style={styles.checkboxRow}>
+      <Pressable 
+        onPress={onToggleAgree} 
+        style={styles.checkboxRow}
+        accessibilityRole="checkbox"
+        accessibilityState={{ checked: isAgreed }}
+        accessibilityLabel="데이터 영구 삭제 동의"
+      >
         <View style={styles.checkboxWrapper}>
           <Animated.View style={[styles.checkbox, animatedCheckboxStyle]}>
             <Animated.View style={animatedCheckIconStyle}>
@@ -100,6 +106,8 @@ export const DeleteConsentSection = ({ isAgreed, onToggleAgree, onSubmit }: Dele
       <Pressable 
         onPress={onSubmit} 
         disabled={!isAgreed}
+        accessibilityRole="button"
+        accessibilityLabel="탈퇴하기"
       >
         <Animated.View style={[styles.submitButton, animatedButtonStyle]}>
           <Animated.Text style={[styles.submitButtonText, animatedButtonTextStyle]}>

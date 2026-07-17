@@ -1,6 +1,7 @@
 import FormLabel from '@/src/components/signup/common/FormLabel';
 import {Colors, Radii, FontFamily} from '@/src/constants/theme';
 import React from 'react';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SectionProps } from '../types/step1';
 import { isValidPassword } from '@/src/utils/validation';
@@ -12,6 +13,7 @@ import SeePasswordIcon from '@/assets/images/common/login/login_SeePassword.svg'
  * 비밀번호 및 비밀번호 확인 입력을 관리합니다.
  */
 export default function PasswordSection({ state, onChange }: SectionProps) {
+  const { colors } = useThemeColors();
   const isInvalidPassword = state.password.length > 0 && !isValidPassword(state.password);
   const isMatch = isValidPassword(state.password) && state.password === state.passwordConfirm;
   const isMismatch = state.passwordConfirm.length > 0 && state.password !== state.passwordConfirm;
@@ -23,11 +25,11 @@ export default function PasswordSection({ state, onChange }: SectionProps) {
         <FormLabel label="비밀번호" />
         <View style={styles.inputWrapper}>
           <TextInput
-            style={[styles.textInput, isInvalidPassword && styles.inputError]}
+            style={[styles.textInput, isInvalidPassword && styles.inputError, { color: colors.text.primary }]}
             value={state.password}
             onChangeText={(text) => onChange({ password: text })}
             placeholder="영문, 숫자 포함 8~20자"
-            placeholderTextColor="#6A7282"
+            placeholderTextColor={colors.text.muted}
             secureTextEntry={!state.isPasswordVisible}
             autoCapitalize="none"
           />
@@ -57,12 +59,13 @@ export default function PasswordSection({ state, onChange }: SectionProps) {
           <TextInput
             style={[
               styles.textInput,
-              isMismatch && styles.inputError
+              isMismatch && styles.inputError,
+              { color: colors.text.primary }
             ]}
             value={state.passwordConfirm}
             onChangeText={(text) => onChange({ passwordConfirm: text })}
             placeholder="다시 한번 입력해주세요"
-            placeholderTextColor="#6A7282"
+            placeholderTextColor={colors.text.muted}
             secureTextEntry={!state.isPasswordConfirmVisible}
             autoCapitalize="none"
           />
@@ -121,7 +124,6 @@ const styles = StyleSheet.create({
     borderWidth: 0.612,
     borderColor: Colors.glass.white10,
     backgroundColor: Colors.glass.white5,
-    color: '#FFF',
     fontFamily: FontFamily.sans,
     fontSize: 16,
     fontWeight: '400',

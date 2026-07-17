@@ -119,7 +119,7 @@ export default function VoiceUpdateButton({
 
         {isAnalyzing && (
           <View style={styles.doneInfo}>
-            <Text style={[styles.statusText, { color: colors.text.primary }, { color: Colors.primary.successGreen, fontWeight: '600' }]}>
+            <Text style={[styles.statusText, { color: Colors.primary.successGreen, fontWeight: '600' }]}>
               목소리 분석 중...
             </Text>
             <Text style={[styles.footerText, { color: colors.text.secondary }]}>인공지능이 당신의 말투를 학습하고 있습니다</Text>

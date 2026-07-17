@@ -76,7 +76,7 @@ export const AccountSettingsScreen = () => {
         
         <View style={[styles.controlCardContainer, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
           <View style={styles.themeToggleRow}>
-            <ThemeToggle showLabel={true} />
+            <ThemeToggle />
           </View>
         </View>
       </Animated.View>
@@ -89,7 +89,10 @@ export const AccountSettingsScreen = () => {
         
         <View style={[styles.controlCardContainer, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
           <Pressable 
-            style={({ pressed }) => [styles.controlRow, pressed && styles.controlRowPressed]}
+            style={({ pressed }) => [
+              styles.controlRow, 
+              pressed && { backgroundColor: colors.background.glass }
+            ]}
             onPress={handleLogout}
           >
             <Text style={[styles.controlText, { color: colors.text.primary }]}>로그아웃</Text>
@@ -98,7 +101,10 @@ export const AccountSettingsScreen = () => {
           <View style={[styles.divider, { borderColor: colors.border.primary }]} />
           
           <Pressable 
-            style={({ pressed }) => [styles.controlRow, pressed && styles.controlRowPressed]}
+            style={({ pressed }) => [
+              styles.controlRow, 
+              pressed && { backgroundColor: colors.background.glass }
+            ]}
             onPress={handleWithdraw}
           >
             <Text style={[styles.controlText, { color: colors.state.danger }]}>회원 탈퇴</Text>
@@ -185,9 +191,7 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
     paddingHorizontal: 20,
   },
-  controlRowPressed: {
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-  },
+
   controlText: {
     fontFamily: FontFamily.sans,
     fontWeight: '500',

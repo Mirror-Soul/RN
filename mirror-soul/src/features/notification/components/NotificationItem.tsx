@@ -30,7 +30,7 @@ export const NotificationItem = ({
         <Animated.Text style={[styles.description, animatedTextMuted]}>{description}</Animated.Text>
       </View>
 
-      <AnimatedSwitch value={value} onToggle={onToggle} />
+      <AnimatedSwitch value={value} onToggle={onToggle} accessibilityLabel={title} />
     </Animated.View>
   );
 };

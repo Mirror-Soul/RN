@@ -5,6 +5,7 @@ import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View, TextInput } from 'react-native';
 import { ChatMessage } from '../../parts/HistoryCallCard';
 import ChatEditForm from './ChatEditForm';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface ChatBubbleProps {
   message: ChatMessage;
@@ -29,6 +30,7 @@ export default function ChatBubble({
   onEditCancel,
   onEditTextChange,
 }: ChatBubbleProps) {
+  const { colors } = useThemeColors();
   const isSent = message.direction === 'SENT';
   const isEditing = editingId === message.id;
 
@@ -86,7 +88,7 @@ export default function ChatBubble({
         {/* 수정 버튼: 평상시에만 노출하며 우측 상단 오버랩 */}
         {!isEditing && (
           <TouchableOpacity
-            style={styles.editButtonAbsolute}
+            style={[styles.editButtonAbsolute, { backgroundColor: colors.background.card }]}
             onPress={() => onEditStart(message.id, message.text)}
             activeOpacity={0.8}
             accessibilityRole="button"
@@ -182,7 +184,6 @@ const styles = StyleSheet.create({
     borderRadius: Radii.full,
     borderWidth: 0.612,
     borderColor: Colors.glass.purple50,
-    backgroundColor: 'rgba(20, 20, 20, 0.9)',
     zIndex: 10,
   },
   timestamp: {

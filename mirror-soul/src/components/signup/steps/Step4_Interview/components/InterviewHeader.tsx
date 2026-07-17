@@ -2,6 +2,7 @@ import React from 'react';
 import { FontFamily } from '@/src/constants/theme';
 
 import { StyleSheet, Text, View } from 'react-native';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface InterviewHeaderProps {
   currentQuestion: number;
@@ -16,13 +17,14 @@ export default function InterviewHeader({
   currentQuestion,
   totalQuestions,
 }: InterviewHeaderProps) {
+  const { colors } = useThemeColors();
   return (
     <View style={styles.header}>
       <View style={styles.titleContainer}>
-        <Text style={styles.title}>음성 인터뷰</Text>
+        <Text style={[styles.title, { color: colors.text.primary }]}>음성 인터뷰</Text>
       </View>
       <View style={styles.subtitleContainer}>
-        <Text style={styles.subtitle}>
+        <Text style={[styles.subtitle, { color: colors.text.muted }]}>
           질문 {currentQuestion} / {totalQuestions}
         </Text>
       </View>
@@ -45,7 +47,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    color: '#FFF',
     textAlign: 'center',
     fontFamily: FontFamily.sans,
     fontSize: 30,
@@ -60,7 +61,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   subtitle: {
-    color: '#99A1AF',
     textAlign: 'center',
     fontFamily: FontFamily.sans,
     fontSize: 14,

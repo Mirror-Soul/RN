@@ -48,7 +48,7 @@ export default function VoiceUpdateTranscriptBox({
   }, [isRecording]);
 
   return (
-    <View style={[styles.container, { borderColor: colors.border.primary }]}>
+    <View style={[styles.container, { borderColor: colors.border.primary, backgroundColor: colors.background.card }]}>
       <View style={styles.header}>
         {isRecording && (
           <View style={styles.recordingIndicator}>
@@ -78,7 +78,6 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: Radii.lg2,
     borderWidth: 0.612,
-    backgroundColor: 'rgba(0, 0, 0, 0.2)',
     gap: 12,
   },
   header: {

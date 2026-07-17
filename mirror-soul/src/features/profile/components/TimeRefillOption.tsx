@@ -5,6 +5,7 @@ import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { TimeRefillOptionData } from '../constants/timeRefillOptions';
 import { usePressAnimation } from '../hooks/useProfileAnimations';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface TimeRefillOptionProps {
   option: TimeRefillOptionData;
@@ -14,6 +15,7 @@ interface TimeRefillOptionProps {
 
 export const TimeRefillOption = ({ option, delay = 0, onPress }: TimeRefillOptionProps) => {
   const { handlePressIn, handlePressOut, animatedStyle } = usePressAnimation();
+  const { colors } = useThemeColors();
   
   const isHighlighted = option.styleType === 'highlighted';
 
@@ -29,22 +31,22 @@ export const TimeRefillOption = ({ option, delay = 0, onPress }: TimeRefillOptio
           onPressOut={handlePressOut}
           style={[
             styles.card,
-            isHighlighted ? styles.cardHighlighted : styles.cardDefault
+            isHighlighted ? styles.cardHighlighted : { backgroundColor: colors.background.glass, borderColor: colors.border.primary }
           ]}
         >
           <View style={styles.topRow}>
-            <Text style={[styles.addedTime, isHighlighted && styles.textCyan]}>
+            <Text style={[styles.addedTime, { color: colors.text.primary }, isHighlighted && styles.textCyan]}>
               {option.addedTime}
             </Text>
             
             {option.badge && (
               <View style={[
                 styles.badge, 
-                option.badge.type === 'popular' ? styles.badgePopular : styles.badgeBest
+                option.badge.type === 'popular' ? styles.badgePopular : { backgroundColor: colors.background.glass, borderColor: colors.border.primary }
               ]}>
                 <Text style={[
                   styles.badgeText, 
-                  option.badge.type === 'popular' ? styles.badgeTextPopular : styles.badgeTextBest
+                  option.badge.type === 'popular' ? styles.badgeTextPopular : { color: colors.text.muted }
                 ]}>
                   {option.badge.icon ? `${option.badge.icon} ` : ''}{option.badge.text}
                 </Text>
@@ -52,9 +54,9 @@ export const TimeRefillOption = ({ option, delay = 0, onPress }: TimeRefillOptio
             )}
           </View>
 
-          <Text style={styles.durationLabel}>{option.durationLabel}</Text>
+          <Text style={[styles.durationLabel, { color: colors.text.secondary }]}>{option.durationLabel}</Text>
           
-          <Text style={[styles.price, isHighlighted && styles.priceHighlighted]}>
+          <Text style={[styles.price, { color: colors.text.muted }, isHighlighted && styles.priceHighlighted]}>
             {option.price}
           </Text>
         </Pressable>
@@ -75,10 +77,6 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderWidth: 0.61,
   },
-  cardDefault: {
-    backgroundColor: 'rgba(255, 255, 255, 0.04)',
-    borderColor: Colors.glass.white10,
-  },
   cardHighlighted: {
     backgroundColor: 'rgba(0, 255, 255, 0.06)',
     borderColor: 'rgba(0, 255, 255, 0.35)',
@@ -94,7 +92,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     lineHeight: 28,
     letterSpacing: -0.44,
-    color: 'rgba(255, 255, 255, 0.9)',
   },
   textCyan: {
     color: 'rgba(0, 255, 255, 0.95)',
@@ -109,10 +106,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 255, 255, 0.15)',
     borderColor: 'rgba(0, 255, 255, 0.25)',
   },
-  badgeBest: {
-    backgroundColor: 'rgba(255, 255, 255, 0.06)',
-    borderColor: Colors.glass.white10,
-  },
   badgeText: {
     fontFamily: FontFamily.sans,
     fontWeight: '500',
@@ -122,15 +115,11 @@ const styles = StyleSheet.create({
   badgeTextPopular: {
     color: 'rgba(0, 255, 255, 0.9)',
   },
-  badgeTextBest: {
-    color: 'rgba(255, 255, 255, 0.4)',
-  },
   durationLabel: {
     fontFamily: FontFamily.sans,
     fontWeight: '500',
     fontSize: 12,
     lineHeight: 16,
-    color: '#6A7282',
     marginTop: 2,
   },
   price: {
@@ -139,7 +128,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 24,
     letterSpacing: -0.31,
-    color: 'rgba(255, 255, 255, 0.6)',
     marginTop: 12,
   },
   priceHighlighted: {

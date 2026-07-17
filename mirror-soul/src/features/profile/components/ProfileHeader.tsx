@@ -28,8 +28,8 @@ export const ProfileHeader = ({ name, email, delay = 0 }: ProfileHeaderProps) =>
           end={{ x: 1, y: 1 }}
           style={styles.avatarGradient}
         >
-          <View style={styles.avatarBorder}>
-            <Feather name="user" size={32} color="rgba(255, 255, 255, 0.8)" />
+          <View style={[styles.avatarBorder, { borderColor: colors.border.primary }]}>
+            <Feather name="user" size={32} color={colors.text.primary} />
           </View>
         </LinearGradient>
       </View>
@@ -73,7 +73,6 @@ const styles = StyleSheet.create({
     height: 96,
     borderRadius: 48,
     borderWidth: 1.84,
-    borderColor: 'rgba(255, 255, 255, 0.15)',
     justifyContent: 'center',
     alignItems: 'center',
   },

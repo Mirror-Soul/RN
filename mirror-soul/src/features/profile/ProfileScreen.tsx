@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 
@@ -11,6 +11,7 @@ import { ProfileSettingsBanner } from './components/ProfileSettingsBanner';
 import { ScreenLayout } from '@/src/components/common/ScreenLayout';
 
 import { useAccountStore } from '@/src/store/useAccountStore';
+import { NicknameEditModal } from '@/src/features/account/components/NicknameEditModal';
 import { ProfileViewData } from './types';
 
 // 목업 데이터: 추후 API/store로 교체
@@ -32,6 +33,7 @@ const MOCK_PROFILE: ProfileViewData = {
 export const ProfileScreen = () => {
   const router = useRouter();
   const { nickname } = useAccountStore();
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const profile: ProfileViewData = {
     ...MOCK_PROFILE,
@@ -61,6 +63,7 @@ export const ProfileScreen = () => {
         job={profile.job}
         isPremium={profile.isPremium}
         isOwnProfile={profile.isOwnProfile}
+        onEditPress={() => setIsEditModalOpen(true)}
       />
 
       {/* 3. 컨텐츠 영역 */}
@@ -83,6 +86,11 @@ export const ProfileScreen = () => {
           <ProfileSettingsBanner delay={360} />
         )}
       </View>
+
+      <NicknameEditModal 
+        isOpen={isEditModalOpen} 
+        onClose={() => setIsEditModalOpen(false)} 
+      />
     </ScreenLayout>
   );
 };
@@ -91,6 +99,5 @@ const styles = StyleSheet.create({
   contentPadding: {
     paddingHorizontal: 24,
     paddingTop: 40,
-    paddingBottom: 120,
   },
 });

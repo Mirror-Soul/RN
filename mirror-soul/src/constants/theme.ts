@@ -142,6 +142,7 @@ export interface ThemeColors {
     card: string;      // 카드, 모달 박스
     elevated: string;  // 바텀시트, 팝오버
     glass: string;     // 반투명 글래스
+    overlay: string;   // 모달 오버레이 딤(dim) 배경
   };
   text: {
     primary: string;   // 주 텍스트
@@ -168,6 +169,7 @@ export const lightTheme: ThemeColors = {
     card: '#FFFFFF',
     elevated: '#FFFFFF',              // 바텀시트, 팝오버
     glass: 'rgba(0, 0, 0, 0.05)',
+    overlay: 'rgba(0, 0, 0, 0.4)',
   },
   text: {
     primary: '#141414',
@@ -194,6 +196,7 @@ export const darkTheme: ThemeColors = {
     card: '#2A2A2A',
     elevated: '#323232',              // 바텀시트, 팝오버
     glass: Colors.glass.white5,
+    overlay: 'rgba(0, 0, 0, 0.7)',
   },
   text: {
     primary: '#FFFFFF',

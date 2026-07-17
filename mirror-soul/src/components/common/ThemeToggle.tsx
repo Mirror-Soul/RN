@@ -1,129 +1,102 @@
-/**
- * ThemeToggle — 독립 테마 토글 컴포넌트
- *
- * 사용법:
- *   <ThemeToggle />                    // 토글만
- *   <ThemeToggle showLabel={true} />   // "다크 모드" 레이블 포함
- *   <ThemeToggle size="sm" />          // 작은 사이즈
- */
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
-import Animated, {
-  useAnimatedStyle,
-  withSpring,
-} from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { useThemeStore } from '@/src/store/useThemeStore';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
-import { Colors, FontFamily } from '@/src/constants/theme';
+import { FontFamily } from '@/src/constants/theme';
 
-const SIZES = {
-  md: { trackW: 44, trackH: 24, thumbSize: 20, radius: 12 },
-  sm: { trackW: 36, trackH: 20, thumbSize: 16, radius: 10 },
-} as const;
-
-interface ThemeToggleProps {
-  size?: 'sm' | 'md';
-  showLabel?: boolean;
-}
-
-export const ThemeToggle = ({
-  size = 'md',
-  showLabel = false,
-}: ThemeToggleProps) => {
+export const ThemeToggle = () => {
   const { themeMode, setThemeMode } = useThemeStore();
   const { colors } = useThemeColors();
-  const isDark = themeMode === 'dark';
-  const dim = SIZES[size];
+  
+  const options = [
+    { id: 'system', label: '기기 설정' },
+    { id: 'light', label: '라이트' },
+    { id: 'dark', label: '다크' }
+  ] as const;
 
-  // Thumb 이동: 끝 여백 2px + thumb 크기 반영
-  const thumbTravel = dim.trackW - dim.thumbSize - 4;
+  const selectedIndex = options.findIndex((opt) => opt.id === themeMode);
 
-  const thumbStyle = useAnimatedStyle(() => ({
-    transform: [
-      {
-        translateX: withSpring(isDark ? thumbTravel : 0, {
-          stiffness: 350,
-          damping: 28,
-          mass: 0.8,
-        }),
-      },
-    ],
-  }));
-
-  const handleToggle = () => {
-    setThemeMode(isDark ? 'light' : 'dark');
-  };
+  const indicatorStyle = useAnimatedStyle(() => {
+    return {
+      left: withSpring(`${(selectedIndex * 33.333)}%`, {
+        stiffness: 350,
+        damping: 28,
+        mass: 0.8,
+      })
+    };
+  });
 
   return (
-    <View style={styles.wrapper}>
-      {showLabel && (
-        <Text style={[styles.label, { color: colors.text.primary }]}>
-          {isDark ? '다크 모드' : '라이트 모드'}
-        </Text>
-      )}
-
-      <Pressable
-        onPress={handleToggle}
-        accessibilityRole="switch"
-        accessibilityState={{ checked: isDark }}
-        accessibilityLabel={isDark ? '다크 모드 켜짐' : '라이트 모드'}
-      >
-        {/* 트랙 */}
-        <View
-          style={[
-            styles.track,
-            {
-              width: dim.trackW,
-              height: dim.trackH,
-              borderRadius: dim.radius,
-              backgroundColor: isDark
-                ? Colors.primary.electricCyan + '66' // 40% opacity
-                : 'rgba(100, 100, 100, 0.25)',
-            },
-          ]}
-        >
-          {/* Thumb */}
-          <Animated.View
-            style={[
-              styles.thumb,
-              {
-                width: dim.thumbSize,
-                height: dim.thumbSize,
-                borderRadius: dim.thumbSize / 2,
-                backgroundColor: isDark
-                  ? Colors.primary.electricCyan
-                  : '#FFFFFF',
-              },
-              thumbStyle,
-            ]}
-          />
-        </View>
-      </Pressable>
+    <View style={[styles.container, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
+      <Animated.View 
+        style={[
+          styles.indicator, 
+          { backgroundColor: colors.background.card, borderColor: colors.border.strong, shadowColor: colors.text.primary },
+          indicatorStyle
+        ]} 
+      />
+      
+      {options.map((opt, idx) => {
+        const isSelected = selectedIndex === idx;
+        return (
+          <Pressable 
+            key={opt.id}
+            onPress={() => setThemeMode(opt.id)}
+            style={styles.optionBtn}
+            accessibilityRole="button"
+            accessibilityState={{ selected: isSelected }}
+            accessibilityLabel={`${opt.label} 모드`}
+          >
+            <Text style={[
+              styles.optionLabel, 
+              { color: isSelected ? colors.text.primary : colors.text.muted },
+              isSelected && styles.optionLabelSelected
+            ]}>
+              {opt.label}
+            </Text>
+          </Pressable>
+        );
+      })}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  wrapper: {
+  container: {
     flexDirection: 'row',
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 0.61,
+    padding: 2,
     alignItems: 'center',
-    gap: 12,
+    width: '100%',
+    position: 'relative',
   },
-  label: {
-    fontFamily: FontFamily.sans,
-    fontWeight: '500',
-    fontSize: 15,
-    lineHeight: 22,
-  },
-  track: {
-    justifyContent: 'center',
-    paddingHorizontal: 2,
-  },
-  thumb: {
-    shadowColor: '#000',
+  indicator: {
+    position: 'absolute',
+    height: '100%',
+    width: '33.333%',
+    borderRadius: 20,
+    borderWidth: 0.61,
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 2,
   },
+  optionBtn: {
+    flex: 1,
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1,
+  },
+  optionLabel: {
+    fontFamily: FontFamily.sans,
+    fontSize: 14,
+    fontWeight: '400',
+  },
+  optionLabelSelected: {
+    fontWeight: '600',
+  }
 });

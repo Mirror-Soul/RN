@@ -11,6 +11,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
 import Animated, { FadeIn } from 'react-native-reanimated';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface ProfileHeroSectionProps {
   avatarUrl?: string;
@@ -25,6 +26,11 @@ export const ProfileHeroSection = ({
 }: ProfileHeroSectionProps) => {
   const { height } = useWindowDimensions();
   const heroHeight = height * 0.45;
+  const { colors, isDark } = useThemeColors();
+
+  const fadeGradient: readonly [string, string, string] = isDark 
+    ? ['rgba(0, 0, 0, 0)', 'rgba(20, 20, 20, 0.15)', colors.background.primary]
+    : ['rgba(255, 255, 255, 0)', 'rgba(255, 255, 255, 0.15)', colors.background.primary];
 
   const content = (
     <>
@@ -45,7 +51,7 @@ export const ProfileHeroSection = ({
 
       {/* Layer 3: 하단 페이드아웃 (transparent → background) */}
       <LinearGradient
-        colors={['rgba(0, 0, 0, 0)', 'rgba(20, 20, 20, 0.15)', '#141414']}
+        colors={fadeGradient}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
         style={[StyleSheet.absoluteFill, styles.bottomFade]}
@@ -65,8 +71,10 @@ export const ProfileHeroSection = ({
               pressed && styles.settingsButtonPressed,
             ]}
             hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="프로필 설정 열기"
           >
-            <Feather name="settings" size={20} color="#FFFFFF" />
+            <Feather name="settings" size={20} color={colors.text.primary} />
           </Pressable>
         </Animated.View>
       )}
@@ -87,7 +95,7 @@ export const ProfileHeroSection = ({
 
   // 폴백: 그라디언트 배경 (Option A)
   return (
-    <View style={[styles.hero, { height: heroHeight }]}>
+    <View style={[styles.hero, { height: heroHeight, backgroundColor: colors.background.primary }]}>
       {/* 기본 배경 그라디언트 */}
       <LinearGradient
         colors={[
@@ -116,7 +124,6 @@ export const ProfileHeroSection = ({
 const styles = StyleSheet.create({
   hero: {
     width: '100%',
-    backgroundColor: '#141414',
     overflow: 'hidden',
   },
   cyanGlow: {

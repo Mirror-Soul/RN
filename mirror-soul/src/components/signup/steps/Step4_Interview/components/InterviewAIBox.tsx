@@ -2,6 +2,7 @@ import { Colors, Radii } from '@/src/constants/theme';
 import { BlurView } from 'expo-blur';
 import React from 'react';
 import { StyleSheet, Text, View, Platform } from 'react-native';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface InterviewAIBoxProps {
   category?: string;
@@ -9,9 +10,10 @@ interface InterviewAIBoxProps {
 }
 
 export default function InterviewAIBox({ category, question }: InterviewAIBoxProps) {
+  const { colors } = useThemeColors();
   return (
     <View style={styles.outerContainer}>
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: colors.background.card || 'rgba(255, 255, 255, 0.12)' }]}>
         <View style={styles.topRow}>
           <View style={styles.aiLabelWrapper}>
             <View style={styles.aiDot} />
@@ -26,7 +28,7 @@ export default function InterviewAIBox({ category, question }: InterviewAIBoxPro
         </View>
 
         <View style={styles.paragraphWrapper}>
-          <Text style={styles.paragraphText}>{question}</Text>
+          <Text style={[styles.paragraphText, { color: colors.text.primary }]}>{question}</Text>
         </View>
       </View>
     </View>
@@ -46,7 +48,6 @@ const styles = StyleSheet.create({
     paddingTop: 24,
     paddingHorizontal: 24,
     paddingBottom: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.12)', // 가독성을 위해 불투명도 약간 증가
   },
   topRow: {
     flexDirection: 'row',
@@ -89,7 +90,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   paragraphText: {
-    color: Colors.neutral.pureWhite,
     fontSize: 17,
     fontWeight: '400',
     lineHeight: 26,

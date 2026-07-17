@@ -27,6 +27,7 @@ export default function EmailVerificationModal({
   onResend,
   isLoading = false,
 }: VerificationModalProps) {
+  const { colors } = useThemeColors();
   const [code, setCode] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
@@ -81,8 +82,8 @@ export default function EmailVerificationModal({
       animationType="none"
       onRequestClose={onClose}
     >
-      <View style={styles.overlay}>
-        <Animated.View style={[styles.modalContainer, animatedStyle]}>
+      <View style={[styles.overlay, { backgroundColor: colors.background.overlay || 'rgba(0, 0, 0, 0.6)' }]}>
+        <Animated.View style={[styles.modalContainer, animatedStyle, { backgroundColor: colors.background.card || 'rgba(16, 24, 40, 0.95)' }]}>
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerRow}>
@@ -96,7 +97,7 @@ export default function EmailVerificationModal({
                 <VerifyEmailIcon width={24} height={24} />
               </View>
               <View style={styles.headerTextCol}>
-                <Text style={styles.title}>이메일 인증</Text>
+                <Text style={[styles.title, { color: colors.text.primary }]}>이메일 인증</Text>
                 <Text style={styles.subtitle}>인증 코드를 확인해주세요</Text>
               </View>
             </View>
@@ -119,14 +120,14 @@ export default function EmailVerificationModal({
                 </Text>
               </View>
               <TextInput
-                style={[styles.codeTextInput, errorMessage ? styles.codeTextInputError : null]}
+                style={[styles.codeTextInput, errorMessage ? styles.codeTextInputError : null, { color: colors.text.primary }]}
                 value={code}
                 onChangeText={(text) => {
                   setCode(text);
                   if (errorMessage) setErrorMessage('');
                 }}
                 placeholder="000000"
-                placeholderTextColor="#6A7282"
+                placeholderTextColor={colors.text.muted}
                 keyboardType="number-pad"
                 maxLength={6}
                 autoFocus
@@ -142,7 +143,7 @@ export default function EmailVerificationModal({
             {/* Buttons Row */}
             <View style={styles.buttonRow}>
               <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
-                <Text style={styles.cancelText}>취소</Text>
+                <Text style={[styles.cancelText, { color: colors.text.primary }]}>취소</Text>
               </TouchableOpacity>
               
               {timeLeft === 0 ? (
@@ -156,9 +157,9 @@ export default function EmailVerificationModal({
                   disabled={code.length !== 6 || isVerifying}
                 >
                   {isVerifying ? (
-                    <ActivityIndicator size="small" color="#FFF" />
+                    <ActivityIndicator size="small" color={colors.text.primary} />
                   ) : (
-                    <Text style={[styles.confirmText, code.length === 6 && { color: '#FFF' }]}>인증 확인</Text>
+                    <Text style={[styles.confirmText, { color: code.length === 6 ? colors.text.primary : colors.text.muted }]}>인증 확인</Text>
                   )}
                 </TouchableOpacity>
               )}
@@ -173,7 +174,6 @@ export default function EmailVerificationModal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)', // 딤 처리된 배경
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -184,7 +184,6 @@ const styles = StyleSheet.create({
     borderRadius: Radii.xl,
     borderWidth: 0.612,
     borderColor: Colors.glass.white10,
-    backgroundColor: 'rgba(16, 24, 40, 0.95)',
     overflow: 'hidden',
   },
   header: {
@@ -209,7 +208,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   title: {
-    color: '#FFF',
     fontFamily: FontFamily.sans,
     fontSize: 20,
     fontWeight: '500',
@@ -275,7 +273,6 @@ const styles = StyleSheet.create({
     borderWidth: 0.612,
     borderColor: Colors.glass.white10,
     paddingHorizontal: 16,
-    color: '#FFF',
     textAlign: 'center',
     fontFamily: 'Menlo', // 고정 폭 폰트
     fontSize: 24,
@@ -294,7 +291,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cancelText: {
-    color: '#FFF',
     fontFamily: FontFamily.sans,
     fontSize: 16,
     fontWeight: '500',
@@ -311,7 +307,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.glass.white10, // 살짝 밝게
   },
   confirmText: {
-    color: '#4A5565', // 비활성 컬러
     fontFamily: FontFamily.sans,
     fontSize: 16,
     fontWeight: '500',

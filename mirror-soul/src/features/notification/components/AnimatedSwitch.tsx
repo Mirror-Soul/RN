@@ -6,11 +6,13 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface AnimatedSwitchProps {
   value: boolean;
   onToggle: () => void;
   disabled?: boolean;
+  accessibilityLabel?: string;
 }
 
 // CSS 명세에서 추출한 정확한 수치
@@ -35,7 +37,9 @@ const SPRING_CONFIG = {
  * - 배경 크로스페이드: ON 배경(그라디언트)과 OFF 배경을 겹쳐두고
  *   opacity를 보간하는 방식으로 색상 전환 → interpolateColor보다 성능 우수
  */
-export const AnimatedSwitch = ({ value, onToggle, disabled = false }: AnimatedSwitchProps) => {
+export const AnimatedSwitch = ({ value, onToggle, disabled = false, accessibilityLabel }: AnimatedSwitchProps) => {
+  const { colors } = useThemeColors();
+  
   // 0 = OFF, 1 = ON
   const progress = useSharedValue(value ? 1 : 0);
 
@@ -68,11 +72,12 @@ export const AnimatedSwitch = ({ value, onToggle, disabled = false }: AnimatedSw
       onPress={disabled ? undefined : onToggle}
       accessibilityRole="switch"
       accessibilityState={{ checked: value, disabled }}
+      accessibilityLabel={accessibilityLabel}
       style={styles.hitArea}
     >
-      <Animated.View style={styles.track}>
+      <Animated.View style={[styles.track, { borderColor: colors.border.primary }]}>
         {/* OFF 배경 레이어 */}
-        <Animated.View style={[StyleSheet.absoluteFill, styles.offBackground, offBgStyle]} />
+        <Animated.View style={[StyleSheet.absoluteFill, styles.offBackground, offBgStyle, { backgroundColor: colors.background.glass }]} />
 
         {/* ON 배경 레이어 (그라디언트, 위에 겹침) */}
         <Animated.View style={[StyleSheet.absoluteFill, styles.gradientWrapper, onBgStyle]}>
@@ -85,7 +90,7 @@ export const AnimatedSwitch = ({ value, onToggle, disabled = false }: AnimatedSw
         </Animated.View>
 
         {/* Thumb */}
-        <Animated.View style={[styles.thumb, thumbStyle]} />
+        <Animated.View style={[styles.thumb, thumbStyle, { backgroundColor: colors.text.primary, shadowColor: colors.text.primary }]} />
       </Animated.View>
     </Pressable>
   );
@@ -102,13 +107,11 @@ const styles = StyleSheet.create({
     height: TRACK_HEIGHT,
     borderRadius: 9999,
     borderWidth: 0.61,
-    borderColor: 'rgba(255, 255, 255, 0.12)',
     overflow: 'hidden',
     justifyContent: 'center',
     position: 'relative',
   },
   offBackground: {
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
     borderRadius: 9999,
   },
   gradientWrapper: {
@@ -120,10 +123,8 @@ const styles = StyleSheet.create({
     width: THUMB_SIZE,
     height: THUMB_SIZE,
     borderRadius: 9999,
-    backgroundColor: '#FFFFFF',
     top: THUMB_OFFSET,
     left: 0,
-    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,

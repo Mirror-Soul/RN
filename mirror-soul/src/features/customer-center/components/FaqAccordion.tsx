@@ -4,14 +4,14 @@ import Animated from 'react-native-reanimated';
 import { FaqItem } from './FaqItem';
 import { useFaqAccordion } from '../hooks/useFaqAccordion';
 import { FAQ_ITEMS } from '../constants/faqData';
-import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 export const FaqAccordion = () => {
   const { toggle, isOpen } = useFaqAccordion();
-  const { animatedGlassBackground } = useAnimatedTheme();
+  const { colors } = useThemeColors();
 
   return (
-    <Animated.View style={[styles.card, animatedGlassBackground]}>
+    <Animated.View style={[styles.card, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
       {FAQ_ITEMS.map((item, index) => (
         <FaqItem
           key={item.id}
