@@ -3,7 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
-import {Colors, FontFamily} from '@/src/constants/theme';
+import {Colors, FontFamily, FontSize, FontWeight, Radii, Spacing} from '@/src/constants/theme';
 
 export const DeleteWarningSection = () => {
   const { colors } = useThemeColors();
@@ -34,43 +34,43 @@ export const DeleteWarningSection = () => {
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 24,
-    marginBottom: 40,
+    paddingHorizontal: Spacing.xxl,
+    marginBottom: Spacing.giant,
   },
   titleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
-    gap: 12,
+    marginBottom: Spacing.xl,
+    gap: Spacing.md,
   },
   iconBox: {
     width: 48,
     height: 48,
     backgroundColor: 'rgba(251, 44, 54, 0.1)',
-    borderRadius: 16,
+    borderRadius: Radii.lg,
     justifyContent: 'center',
     alignItems: 'center',
   },
   title: {
     fontFamily: FontFamily.sans,
-    fontWeight: '500',
-    fontSize: 20,
+    fontWeight: FontWeight.medium,
+    fontSize: FontSize.xxl,
     letterSpacing: -0.45,
   },
   warningBox: {
-    padding: 20,
+    padding: Spacing.xl,
     borderWidth: 0.61,
-    borderRadius: 16,
+    borderRadius: Radii.lg,
   },
   warningText: {
     fontFamily: FontFamily.sans,
-    fontWeight: '400',
-    fontSize: 14,
+    fontWeight: FontWeight.regular,
+    fontSize: FontSize.base,
     lineHeight: 23,
     letterSpacing: -0.15,
   },
   boldText: {
-    fontWeight: '600',
-    color: '#FF6467',
+    fontWeight: FontWeight.semibold,
+    color: Colors.primary.activeRedText,
   },
 });

@@ -1,4 +1,4 @@
-import {Colors, FontFamily} from '@/src/constants/theme';
+import {Colors, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -23,14 +23,14 @@ const styles = StyleSheet.create({
     width: '100%',
     flexDirection: 'column',
     alignItems: 'center', // Figma has align-items: flex-start in parent, but text-align: center. I will use 'center' to match text alignment.
-    gap: 8,
+    gap: Spacing.sm,
   },
   title: {
     color: Colors.neutral.pureWhite,
     textAlign: 'center',
     fontFamily: FontFamily.sans,
     fontSize: 30,
-    fontWeight: '500',
+    fontWeight: FontWeight.medium,
     lineHeight: 36,
     letterSpacing: 0.396,
   },
@@ -38,8 +38,8 @@ const styles = StyleSheet.create({
     color: Colors.neutral.lightGray,
     textAlign: 'center',
     fontFamily: FontFamily.sans,
-    fontSize: 14,
-    fontWeight: '400',
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.regular,
     lineHeight: 20,
     letterSpacing: -0.15,
     paddingHorizontal: 71,

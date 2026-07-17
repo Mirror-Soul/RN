@@ -1,5 +1,5 @@
 import BackIcon from '@/assets/images/common/back.svg';
-import {Colors, FontFamily} from '@/src/constants/theme';
+import {Colors, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -38,11 +38,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'stretch',
-    paddingTop: 8,
+    paddingTop: Spacing.sm,
   },
   backButton: {
     position: 'absolute',
-    left: 0,
+    left: Spacing.none,
     zIndex: 10,
   },
   titleContainer: {
@@ -52,8 +52,8 @@ const styles = StyleSheet.create({
   title: {
     textAlign: 'center',
     fontFamily: FontFamily.sans,
-    fontSize: 20,
-    fontWeight: '500',
+    fontSize: FontSize.xxl,
+    fontWeight: FontWeight.medium,
     lineHeight: 28,
     letterSpacing: -0.449,
   },

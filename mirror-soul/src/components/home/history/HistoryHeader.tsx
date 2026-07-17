@@ -1,4 +1,4 @@
-import {Colors, FontFamily} from '@/src/constants/theme';
+import {Colors, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import React from 'react';
 import { StyleSheet, View, Text } from 'react-native';
@@ -22,12 +22,12 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingTop: 8,
+    paddingTop: Spacing.sm,
   },
   title: {
     fontFamily: FontFamily.sans,
-    fontSize: 20,
-    fontWeight: '500',
+    fontSize: FontSize.xxl,
+    fontWeight: FontWeight.medium,
     lineHeight: 28, // 140%
     letterSpacing: -0.449,
   },

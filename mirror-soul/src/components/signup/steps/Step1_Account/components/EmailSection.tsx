@@ -1,5 +1,5 @@
 import FormLabel from '@/src/components/signup/common/FormLabel';
-import {Colors, Radii, FontFamily} from '@/src/constants/theme';
+import {Colors, Radii, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import { isValidEmail } from '@/src/utils/validation';
 import React from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View, ActivityIndicator } from 'react-native';
@@ -138,15 +138,15 @@ const styles = StyleSheet.create({
   emailInput: {
     width: 224.942,
     height: 49.202,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
     borderRadius: Radii.lg,
     borderWidth: 0.612,
     borderColor: Colors.glass.white10,
     backgroundColor: Colors.glass.white5,
     fontFamily: FontFamily.sans,
-    fontSize: 16,
-    fontWeight: '400',
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.regular,
     letterSpacing: -0.312,
   },
   sendButton: {
@@ -161,27 +161,27 @@ const styles = StyleSheet.create({
   sendButtonText: {
     textAlign: 'center',
     fontFamily: FontFamily.sans,
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.medium,
     lineHeight: 20,
     letterSpacing: -0.15,
   },
   successText: {
     color: Colors.primary.successGreen,
     fontFamily: FontFamily.sans,
-    fontSize: 12,
-    marginTop: 4,
+    fontSize: FontSize.sm,
+    marginTop: Spacing.xs,
   },
   timerOutsideRow: {
     position: 'absolute',
     bottom: -22, // 컴포넌트 하단 바깥(여백 공간)으로 띄움으로써 UI 밀림 원천 차단
-    right: 0, // 컨테이너 우측 끝 정렬 (버튼 우측 끝과 일치)
+    right: Spacing.none, // 컨테이너 우측 끝 정렬 (버튼 우측 끝과 일치)
   },
   timerOutsideText: {
     color: Colors.primary.electricCyan,
     fontFamily: FontFamily.sans,
-    fontSize: 12,
-    fontWeight: '400',
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.regular,
   },
 });
 

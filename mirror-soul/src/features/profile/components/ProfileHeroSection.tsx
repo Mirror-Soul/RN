@@ -1,5 +1,5 @@
 import React from 'react';
-import { Colors } from '@/src/constants/theme';
+import {Colors, Radii, Spacing} from '@/src/constants/theme';
 
 import {
   View,
@@ -30,7 +30,7 @@ export const ProfileHeroSection = ({
 
   const fadeGradient: readonly [string, string, string] = isDark 
     ? ['rgba(0, 0, 0, 0)', 'rgba(20, 20, 20, 0.15)', colors.background.primary]
-    : ['rgba(255, 255, 255, 0)', 'rgba(255, 255, 255, 0.15)', colors.background.primary];
+    : ['rgba(255, 255, 255, 0)', Colors.glass.white15, colors.background.primary];
 
   const content = (
     <>
@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
     opacity: 0.4,
     // React Native에서는 radial gradient를 직접 지원하지 않으므로
     // 중앙에 시안색 원형 glow를 shadow로 근사
-    shadowColor: '#00D3F3',
+    shadowColor: Colors.primary.electricCyan,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.35,
     shadowRadius: 80,
@@ -139,20 +139,20 @@ const styles = StyleSheet.create({
   bottomFade: {
     // 하단 1/3 부분에만 적용하기 위해 top 오프셋 사용
     top: '55%',
-    bottom: 0,
-    left: 0,
-    right: 0,
+    bottom: Spacing.none,
+    left: Spacing.none,
+    right: Spacing.none,
     position: 'absolute',
   },
   settingsBtnWrapper: {
     position: 'absolute',
     top: 56,
-    right: 20,
+    right: Spacing.xl,
   },
   settingsButton: {
     width: 44,
     height: 44,
-    borderRadius: 16,
+    borderRadius: Radii.lg,
     backgroundColor: 'rgba(0, 0, 0, 0.2)',
     borderWidth: 1,
     borderColor: Colors.glass.white10,
@@ -160,6 +160,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   settingsButtonPressed: {
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    backgroundColor: Colors.glass.white15,
   },
 });

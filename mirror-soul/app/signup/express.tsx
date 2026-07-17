@@ -3,7 +3,7 @@ import GradientButton from '@/src/components/common/GradientButton';
 import Step3Header from '@/src/components/signup/steps/Step3_ExpressPersonal/components/Step3Header';
 import SelfDescriptionInput from '@/src/components/signup/steps/Step3_ExpressPersonal/Description/SelfDescriptionInput';
 import MbtiSelector from '@/src/components/signup/steps/Step3_ExpressPersonal/Mbti/MbtiSelector';
-import { Layout } from '@/src/constants/theme';
+import {Layout, Spacing} from '@/src/constants/theme';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
@@ -97,18 +97,18 @@ const styles = StyleSheet.create({
     marginTop: 25,
   },
   headerWrapper: {
-    marginBottom: 40, // 40px gap between header and content
+    marginBottom: Spacing.giant, // 40px gap between header and content
   },
   body: {
     width: '100%',
-    gap: 40,
+    gap: Spacing.giant,
   },
   buttonWrapper: {
     width: '100%',
-    marginTop: 40,
+    marginTop: Spacing.giant,
   },
   button: {
-    marginBottom: 24,
+    marginBottom: Spacing.xxl,
   }
 });
 

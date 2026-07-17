@@ -1,5 +1,5 @@
 import FormLabel from '@/src/components/signup/common/FormLabel';
-import {Colors, Radii, FontFamily} from '@/src/constants/theme';
+import {Colors, Radii, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import React from 'react';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -117,22 +117,22 @@ const styles = StyleSheet.create({
   },
   textInput: {
     height: 49.202,
-    paddingLeft: 16,
-    paddingRight: 48, // Icon space
-    paddingVertical: 12,
+    paddingLeft: Spacing.lg,
+    paddingRight: Spacing.massive, // Icon space
+    paddingVertical: Spacing.md,
     borderRadius: Radii.lg,
     borderWidth: 0.612,
     borderColor: Colors.glass.white10,
     backgroundColor: Colors.glass.white5,
     fontFamily: FontFamily.sans,
-    fontSize: 16,
-    fontWeight: '400',
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.regular,
     letterSpacing: -0.312,
     alignSelf: 'stretch',
   },
   toggleIcon: {
     position: 'absolute',
-    right: 16,
+    right: Spacing.lg,
     zIndex: 10,
   },
   inputError: {
@@ -143,14 +143,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   errorText: {
-    color: '#FB2C36',
+    color: Colors.primary.recordingRed,
     fontFamily: FontFamily.sans,
-    fontSize: 12,
+    fontSize: FontSize.sm,
   },
   successText: {
     color: Colors.primary.successGreen,
     fontFamily: FontFamily.sans,
-    fontSize: 12,
+    fontSize: FontSize.sm,
   }
 });
 

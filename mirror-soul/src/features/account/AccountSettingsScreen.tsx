@@ -13,7 +13,7 @@ import { Header } from '@/src/components/common/Header';
 import { ScreenLayout } from '@/src/components/common/ScreenLayout';
 import { ThemeToggle } from '@/src/components/common/ThemeToggle';
 import { SectionHeading } from '@/src/components/common/SectionHeading';
-import { FontFamily } from '@/src/constants/theme';
+import {FontFamily, FontSize, FontWeight, Radii, Spacing} from '@/src/constants/theme';
 
 export const AccountSettingsScreen = () => {
   const router = useRouter();
@@ -70,7 +70,7 @@ export const AccountSettingsScreen = () => {
 
       <Animated.View 
         entering={FadeInDown.delay(180).duration(550).springify()}
-        style={[styles.section, { marginTop: 32 }]}
+        style={[styles.section, { marginTop: Spacing.xxxl }]}
       >
         <SectionHeading title="디스플레이" style={styles.sectionLabelSpacing} />
         
@@ -83,7 +83,7 @@ export const AccountSettingsScreen = () => {
 
       <Animated.View 
         entering={FadeInDown.delay(240).duration(550).springify()}
-        style={[styles.section, { marginTop: 32 }]}
+        style={[styles.section, { marginTop: Spacing.xxxl }]}
       >
         <SectionHeading title="계정 제어" style={styles.sectionLabelSpacing} />
         
@@ -149,25 +149,25 @@ const styles = StyleSheet.create({
     right: -200,
   },
   section: {
-    paddingHorizontal: 24,
+    paddingHorizontal: Spacing.xxl,
   },
   sectionLabelSpacing: {
-    marginBottom: 8,
-    paddingHorizontal: 8,
+    marginBottom: Spacing.sm,
+    paddingHorizontal: Spacing.sm,
   },
   cardContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.lg,
     borderWidth: 0.61,
-    borderRadius: 16,
+    borderRadius: Radii.lg,
   },
   nicknameText: {
     fontFamily: FontFamily.sans,
-    fontWeight: '400',
-    fontSize: 14,
+    fontWeight: FontWeight.regular,
+    fontSize: FontSize.base,
     lineHeight: 20,
     letterSpacing: -0.15,
   },
@@ -178,24 +178,24 @@ const styles = StyleSheet.create({
   },
   editButtonText: {
     fontFamily: FontFamily.sans,
-    fontWeight: '500',
-    fontSize: 12,
+    fontWeight: FontWeight.medium,
+    fontSize: FontSize.sm,
     lineHeight: 16,
   },
   controlCardContainer: {
     borderWidth: 0.61,
-    borderRadius: 16,
+    borderRadius: Radii.lg,
     overflow: 'hidden',
   },
   controlRow: {
     paddingVertical: 18,
-    paddingHorizontal: 20,
+    paddingHorizontal: Spacing.xl,
   },
 
   controlText: {
     fontFamily: FontFamily.sans,
-    fontWeight: '500',
-    fontSize: 15,
+    fontWeight: FontWeight.medium,
+    fontSize: FontSize.md,
   },
   destructiveText: {
     color: '#FF4C4C',
@@ -203,19 +203,19 @@ const styles = StyleSheet.create({
   divider: {
     height: 0,
     borderBottomWidth: 0.61,
-    marginHorizontal: 20,
+    marginHorizontal: Spacing.xl,
   },
   versionContainer: {
-    marginTop: 48,
+    marginTop: Spacing.massive,
     alignItems: 'center',
   },
   versionText: {
     fontFamily: FontFamily.sans,
-    fontWeight: '400',
-    fontSize: 12,
+    fontWeight: FontWeight.regular,
+    fontSize: FontSize.sm,
   },
   themeToggleRow: {
     paddingVertical: 18,
-    paddingHorizontal: 20,
+    paddingHorizontal: Spacing.xl,
   },
 });

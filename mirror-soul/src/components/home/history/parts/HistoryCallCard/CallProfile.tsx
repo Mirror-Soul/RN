@@ -1,4 +1,4 @@
-import {Colors, Radii, FontFamily} from '@/src/constants/theme';
+import {Colors, Radii, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
@@ -42,7 +42,7 @@ export default function CallProfile({
           <Text style={[styles.nameAgeText, { color: colors.text.primary }]}>{name}, {age}</Text>
           <View style={styles.consistencyBadgeWrapper}>
             <LinearGradient
-              colors={['rgba(0, 211, 243, 0.20)', 'rgba(194, 122, 255, 0.20)']}
+              colors={[Colors.glass.cyan20, Colors.glass.purple20]}
               start={{ x: 0, y: 0.5 }}
               end={{ x: 1, y: 0.5 }}
               style={styles.consistencyBadge}
@@ -67,7 +67,7 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: Spacing.md,
     alignSelf: 'stretch',
   },
   profileImageWrapper: {
@@ -82,24 +82,24 @@ const styles = StyleSheet.create({
   infoWrapper: {
     flex: 1,
     flexDirection: 'column',
-    gap: 4,
+    gap: Spacing.xs,
   },
   nameAgeRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: Spacing.sm,
   },
   nameAgeText: {
     fontFamily: FontFamily.sans,
-    fontSize: 18,
-    fontWeight: '500',
+    fontSize: FontSize.xl,
+    fontWeight: FontWeight.medium,
     lineHeight: 27, // 150%
     letterSpacing: -0.439,
   },
   consistencyBadgeWrapper: {
     borderRadius: Radii.full,
     borderWidth: 0.612,
-    borderColor: 'rgba(0, 211, 243, 0.30)',
+    borderColor: Colors.glass.cyan30_d3,
     overflow: 'hidden',
   },
   consistencyBadge: {
@@ -110,32 +110,32 @@ const styles = StyleSheet.create({
   },
   consistencyText: {
     fontFamily: FontFamily.sans,
-    fontSize: 12,
-    fontWeight: '400',
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.regular,
     lineHeight: 16, // 133.333%
   },
   typeDescText: {
     fontFamily: FontFamily.sans,
-    fontSize: 12,
-    fontWeight: '400',
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.regular,
     lineHeight: 16,
   },
   dateWrapper: {
     flexDirection: 'column',
     alignItems: 'flex-end',
-    gap: 4,
+    gap: Spacing.xs,
   },
   dateText: {
     fontFamily: FontFamily.sans,
-    fontSize: 12,
-    fontWeight: '400',
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.regular,
     lineHeight: 16,
     textAlign: 'right',
   },
   timeText: {
     fontFamily: FontFamily.sans,
-    fontSize: 12,
-    fontWeight: '400',
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.regular,
     lineHeight: 16,
     textAlign: 'right',
   },

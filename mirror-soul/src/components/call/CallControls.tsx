@@ -1,6 +1,6 @@
 import React from 'react';
 import { ActivityIndicator, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, Spacing} from '@/src/constants/theme';
 import type { CallStatus } from '@/src/hooks/useAICallFlow';
 
 interface CallControlsProps {
@@ -67,7 +67,7 @@ export default function CallControls({ callStatus, onStartCall, onHangUp }: Call
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
-    paddingBottom: 48,
+    paddingBottom: Spacing.massive,
   },
   startButton: {
     width: 72,
@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
   startInner: {
     width: 28,
     height: 28,
-    borderRadius: 14,
+    borderRadius: Radii.md2,
     backgroundColor: Colors.primary.soulBlack,
   },
   endButton: {

@@ -1,4 +1,4 @@
-import {Colors, FontFamily} from '@/src/constants/theme';
+import {Colors, FontFamily, FontSize, FontWeight} from '@/src/constants/theme';
 import React from 'react';
 import { StyleSheet, View, Text } from 'react-native';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
@@ -27,8 +27,8 @@ const styles = StyleSheet.create({
   title: {
     textAlign: 'center',
     fontFamily: FontFamily.sans,
-    fontSize: 18,
-    fontWeight: '500',
+    fontSize: FontSize.xl,
+    fontWeight: FontWeight.medium,
     lineHeight: 28,
     letterSpacing: -0.439,
   },

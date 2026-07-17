@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import VerificationSuccessIcon from '@/assets/images/common/Verification_sucess.svg';
 import VerifiedDataBox from './VerifiedDataBox';
 
@@ -19,7 +19,7 @@ export default function VerifiedCard({ userData }: Props) {
   return (
     <View style={styles.cardContainer}>
       <LinearGradient
-        colors={[Colors.glass.green10, 'rgba(0, 211, 243, 0.10)']}
+        colors={[Colors.glass.green10, Colors.glass.cyan10_d3]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={[StyleSheet.absoluteFill, { borderRadius: Radii.lg }]}
@@ -63,12 +63,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24.6,
     paddingBottom: 24.6, 
     alignItems: 'flex-start',
-    gap: 16,
+    gap: Spacing.lg,
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 16,
+    gap: Spacing.lg,
     width: '100%',
   },
   iconWrapper: {
@@ -82,24 +82,24 @@ const styles = StyleSheet.create({
   titleCol: {
     flexDirection: 'column',
     alignItems: 'flex-start',
-    gap: 4,
+    gap: Spacing.xs,
     flex: 1,
   },
   titleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: Spacing.sm,
   },
   titleText: {
     color: Colors.neutral.pureWhite,
-    fontSize: 18,
-    fontWeight: '500',
+    fontSize: FontSize.xl,
+    fontWeight: FontWeight.medium,
     lineHeight: 27,
     letterSpacing: -0.439,
   },
   badgeWrapper: {
     paddingVertical: 2.6,
-    paddingHorizontal: 8,
+    paddingHorizontal: Spacing.sm,
     borderRadius: Radii.lg2,
     backgroundColor: Colors.glass.green20,
     justifyContent: 'center',
@@ -107,27 +107,27 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     color: Colors.primary.successGreen,
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.medium,
     lineHeight: 16,
   },
   descriptionText: {
     color: Colors.neutral.lightGray,
-    fontSize: 14,
-    fontWeight: '400',
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.regular,
     lineHeight: 20,
     letterSpacing: -0.15,
   },
   dataGrid: {
     width: '100%',
     flexDirection: 'column',
-    gap: 12, 
+    gap: Spacing.md, 
   },
   rowWrapper: {
     width: '100%',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    gap: 12, 
+    gap: Spacing.md, 
   },
   halfBox: {
     flex: 1,

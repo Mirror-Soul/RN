@@ -1,5 +1,5 @@
 import React from 'react';
-import {FontFamily, Colors} from '@/src/constants/theme';
+import {FontFamily, Colors, FontSize, FontWeight, Radii, Spacing} from '@/src/constants/theme';
 
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -67,14 +67,14 @@ export const TimeRefillOption = ({ option, delay = 0, onPress }: TimeRefillOptio
 
 const styles = StyleSheet.create({
   containerMargin: {
-    marginBottom: 12,
+    marginBottom: Spacing.md,
   },
   card: {
     width: '100%',
     height: 115,
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
+    borderRadius: Radii.lg,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.lg,
     borderWidth: 0.61,
   },
   cardHighlighted: {
@@ -88,8 +88,8 @@ const styles = StyleSheet.create({
   },
   addedTime: {
     fontFamily: FontFamily.sans,
-    fontWeight: '500',
-    fontSize: 18,
+    fontWeight: FontWeight.medium,
+    fontSize: FontSize.xl,
     lineHeight: 28,
     letterSpacing: -0.44,
   },
@@ -97,9 +97,9 @@ const styles = StyleSheet.create({
     color: 'rgba(0, 255, 255, 0.95)',
   },
   badge: {
-    paddingVertical: 2,
-    paddingHorizontal: 8,
-    borderRadius: 20,
+    paddingVertical: Spacing.xxs,
+    paddingHorizontal: Spacing.sm,
+    borderRadius: Radii.lg2,
     borderWidth: 0.61,
   },
   badgePopular: {
@@ -108,8 +108,8 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     fontFamily: FontFamily.sans,
-    fontWeight: '500',
-    fontSize: 12,
+    fontWeight: FontWeight.medium,
+    fontSize: FontSize.sm,
     lineHeight: 16,
   },
   badgeTextPopular: {
@@ -117,18 +117,18 @@ const styles = StyleSheet.create({
   },
   durationLabel: {
     fontFamily: FontFamily.sans,
-    fontWeight: '500',
-    fontSize: 12,
+    fontWeight: FontWeight.medium,
+    fontSize: FontSize.sm,
     lineHeight: 16,
-    marginTop: 2,
+    marginTop: Spacing.xxs,
   },
   price: {
     fontFamily: FontFamily.sans,
-    fontWeight: '500',
-    fontSize: 16,
+    fontWeight: FontWeight.medium,
+    fontSize: FontSize.lg,
     lineHeight: 24,
     letterSpacing: -0.31,
-    marginTop: 12,
+    marginTop: Spacing.md,
   },
   priceHighlighted: {
     color: 'rgba(0, 255, 255, 0.8)',

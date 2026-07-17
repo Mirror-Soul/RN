@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import MaskedView from '@react-native-masked-view/masked-view';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Colors, FontFamily } from '@/src/constants/theme';
+import {Colors, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 /**
@@ -50,7 +50,7 @@ const styles = StyleSheet.create({
     width: '100%',
     flexDirection: 'column',
     alignItems: 'center',
-    gap: 8,
+    gap: Spacing.sm,
   },
   heading1: {
     alignSelf: 'stretch',
@@ -84,8 +84,8 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontFamily: FontFamily.sans,
-    fontSize: 14,
-    fontWeight: '400',
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.regular,
     lineHeight: 20,
     textAlign: 'center',
     letterSpacing: -0.15,

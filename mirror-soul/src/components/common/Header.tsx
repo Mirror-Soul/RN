@@ -1,5 +1,5 @@
 import React from 'react';
-import { FontFamily } from '@/src/constants/theme';
+import {FontFamily, FontSize, FontWeight, Radii, Spacing} from '@/src/constants/theme';
 
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -72,23 +72,23 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 16,
+    paddingHorizontal: Spacing.xxl,
+    paddingVertical: Spacing.lg,
     justifyContent: 'space-between',
     width: '100%',
   },
   backButton: {
     width: 40,
     height: 40,
-    borderRadius: 20,
+    borderRadius: Radii.lg2,
     borderWidth: 0.61,
     justifyContent: 'center',
     alignItems: 'center',
   },
   headerTitle: {
     fontFamily: FontFamily.sans,
-    fontWeight: '500',
-    fontSize: 18,
+    fontWeight: FontWeight.medium,
+    fontSize: FontSize.xl,
     letterSpacing: -0.44,
   },
   emptySlot: {

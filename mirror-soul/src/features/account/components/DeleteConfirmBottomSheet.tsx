@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { BottomSheet } from '@/src/components/common/BottomSheet/BottomSheet';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
-import {Colors, FontFamily} from '@/src/constants/theme';
+import {Colors, FontFamily, FontSize, FontWeight, Radii, Spacing} from '@/src/constants/theme';
 import { Feather } from '@expo/vector-icons';
 
 interface DeleteConfirmBottomSheetProps {
@@ -57,22 +57,22 @@ export const DeleteConfirmBottomSheet = ({ isOpen, onClose, onConfirm }: DeleteC
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 8,
+    paddingHorizontal: Spacing.xxl,
+    paddingTop: Spacing.sm,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 32,
+    marginBottom: Spacing.xxxl,
   },
   iconContainer: {
     width: 48,
     height: 48,
-    borderRadius: 16,
+    borderRadius: Radii.lg,
     backgroundColor: 'rgba(251, 44, 54, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: Spacing.md,
   },
   textContainer: {
     flex: 1,
@@ -80,26 +80,26 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: FontFamily.sans,
-    fontWeight: '600',
-    fontSize: 18,
+    fontWeight: FontWeight.semibold,
+    fontSize: FontSize.xl,
     lineHeight: 27,
     letterSpacing: -0.44,
-    marginBottom: 4,
+    marginBottom: Spacing.xs,
   },
   subtitle: {
     fontFamily: FontFamily.sans,
-    fontWeight: '400',
+    fontWeight: FontWeight.regular,
     fontSize: 13,
     lineHeight: 20,
   },
   buttonContainer: {
     flexDirection: 'row',
-    gap: 12,
+    gap: Spacing.md,
   },
   button: {
     flex: 1,
     height: 48,
-    borderRadius: 16,
+    borderRadius: Radii.lg,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 0.61,
@@ -113,8 +113,8 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontFamily: FontFamily.sans,
-    fontWeight: '500',
-    fontSize: 14,
+    fontWeight: FontWeight.medium,
+    fontSize: FontSize.base,
     letterSpacing: -0.15,
   },
 });

@@ -7,6 +7,8 @@ import Animated, {
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
+import {Radii, Spacing} from '@/src/constants/theme';
+
 
 interface AnimatedSwitchProps {
   value: boolean;
@@ -99,32 +101,32 @@ export const AnimatedSwitch = ({ value, onToggle, disabled = false, accessibilit
 const styles = StyleSheet.create({
   // 탭 영역을 넉넉하게 확보
   hitArea: {
-    padding: 4,
+    padding: Spacing.xs,
     margin: -4,
   },
   track: {
     width: TRACK_WIDTH,
     height: TRACK_HEIGHT,
-    borderRadius: 9999,
+    borderRadius: Radii.full,
     borderWidth: 0.61,
     overflow: 'hidden',
     justifyContent: 'center',
     position: 'relative',
   },
   offBackground: {
-    borderRadius: 9999,
+    borderRadius: Radii.full,
   },
   gradientWrapper: {
-    borderRadius: 9999,
+    borderRadius: Radii.full,
     overflow: 'hidden',
   },
   thumb: {
     position: 'absolute',
     width: THUMB_SIZE,
     height: THUMB_SIZE,
-    borderRadius: 9999,
+    borderRadius: Radii.full,
     top: THUMB_OFFSET,
-    left: 0,
+    left: Spacing.none,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,

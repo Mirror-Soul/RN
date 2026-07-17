@@ -13,6 +13,8 @@ import { ScreenLayout } from '@/src/components/common/ScreenLayout';
 import { useAccountStore } from '@/src/store/useAccountStore';
 import { NicknameEditModal } from '@/src/features/account/components/NicknameEditModal';
 import { ProfileViewData } from './types';
+import { Spacing } from '@/src/constants/theme';
+
 
 // 목업 데이터: 추후 API/store로 교체
 const MOCK_PROFILE: ProfileViewData = {
@@ -97,7 +99,7 @@ export const ProfileScreen = () => {
 
 const styles = StyleSheet.create({
   contentPadding: {
-    paddingHorizontal: 24,
-    paddingTop: 40,
+    paddingHorizontal: Spacing.xxl,
+    paddingTop: Spacing.giant,
   },
 });

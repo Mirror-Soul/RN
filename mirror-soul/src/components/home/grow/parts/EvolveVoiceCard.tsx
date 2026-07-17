@@ -1,6 +1,6 @@
 import TimerIcon from '@/assets/images/common/evlove/evlove_timer.svg';
 import VoiceIcon from '@/assets/images/common/evlove/evlove_voice.svg';
-import {Colors, Radii, FontFamily} from '@/src/constants/theme';
+import {Colors, Radii, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React from 'react';
@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   container: {
-    padding: 16,
+    padding: Spacing.lg,
     borderRadius: Radii.md2,
     borderWidth: 0.612,
     borderColor: Colors.glass.pink30,
@@ -77,35 +77,35 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontFamily: FontFamily.sans,
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.medium,
     lineHeight: 16,
   },
   content: {
-    gap: 2,
+    gap: Spacing.xxs,
   },
   title: {
     fontFamily: FontFamily.sans,
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.medium,
     lineHeight: 20,
     letterSpacing: -0.15,
   },
   subTitle: {
     fontFamily: FontFamily.sans,
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.medium,
     lineHeight: 16,
   },
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: Spacing.xs,
   },
   timeText: {
     fontFamily: FontFamily.sans,
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.medium,
     lineHeight: 16,
   },
 });

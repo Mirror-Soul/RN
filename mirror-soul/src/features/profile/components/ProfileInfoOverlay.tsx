@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { Badge } from '@/src/components/common/Badge';
-import { Colors, FontFamily } from '@/src/constants/theme';
+import {Colors, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { ProfileViewData } from '../types';
 
@@ -101,51 +101,51 @@ export const ProfileInfoOverlay = ({
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 24,
-    paddingBottom: 24,
-    gap: 0,
+    paddingHorizontal: Spacing.xxl,
+    paddingBottom: Spacing.xxl,
+    gap: Spacing.none,
   },
 
   // 뱃지 Row
   badgeRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 16,
+    gap: Spacing.sm,
+    marginBottom: Spacing.lg,
   },
 
   // 이름 Row
   nameRow: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    marginBottom: 8,
+    marginBottom: Spacing.sm,
   },
   nameText: {
     fontFamily: FontFamily.sans,
-    fontWeight: '900',
-    fontSize: 48,
+    fontWeight: FontWeight.black,
+    fontSize: FontSize.giant,
     lineHeight: 48,
     letterSpacing: -2.05,
   },
   ageText: {
     fontFamily: FontFamily.sans,
     fontWeight: '300',
-    fontSize: 48,
+    fontSize: FontSize.giant,
     lineHeight: 48,
     letterSpacing: -2.05,
   },
   editButton: {
-    paddingTop: 8,
-    paddingLeft: 8,
+    paddingTop: Spacing.sm,
+    paddingLeft: Spacing.sm,
     alignSelf: 'flex-end',
-    paddingBottom: 4,
+    paddingBottom: Spacing.xs,
   },
 
   // 메타 Row
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 16,
+    gap: Spacing.lg,
   },
   metaItem: {
     flexDirection: 'row',
@@ -154,8 +154,8 @@ const styles = StyleSheet.create({
   },
   metaText: {
     fontFamily: FontFamily.sans,
-    fontWeight: '400',
-    fontSize: 14,
+    fontWeight: FontWeight.regular,
+    fontSize: FontSize.base,
     lineHeight: 20,
     letterSpacing: -0.15,
   },

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, Animated } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Colors, Radii, Layout } from '@/src/constants/theme';
+import {Colors, Radii, Layout, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 
 interface CallErrorFallbackProps {
   message: string;
@@ -50,7 +50,7 @@ const styles = StyleSheet.create({
     padding: Layout.SCREEN_PADDING || 24,
   },
   errorIcon: {
-    marginBottom: 24,
+    marginBottom: Spacing.xxl,
   },
   errorCard: {
     width: '100%',
@@ -58,19 +58,19 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.glass.white15,
     borderRadius: Radii.lg2,
-    padding: 24,
+    padding: Spacing.xxl,
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: Spacing.giant,
   },
   errorTitle: {
     color: Colors.neutral.pureWhite,
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 12,
+    fontSize: FontSize.xl,
+    fontWeight: FontWeight.semibold,
+    marginBottom: Spacing.md,
   },
   errorMessage: {
     color: Colors.neutral.lightGray,
-    fontSize: 15,
+    fontSize: FontSize.md,
     textAlign: 'center',
     lineHeight: 22,
   },
@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
   },
   backButtonText: {
     color: Colors.neutral.pureWhite,
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.semibold,
   },
 });

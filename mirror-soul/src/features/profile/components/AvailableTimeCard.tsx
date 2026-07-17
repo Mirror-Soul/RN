@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import {FontFamily, Colors} from '@/src/constants/theme';
+import {FontFamily, Colors, FontSize, FontWeight, Radii, Spacing} from '@/src/constants/theme';
 
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -85,13 +85,13 @@ export const AvailableTimeCard = ({ timeString, delay = 100, onPressRefill }: Av
 const styles = StyleSheet.create({
   containerMargin: {
     width: '100%',
-    marginBottom: 32,
+    marginBottom: Spacing.xxxl,
   },
   cardContainer: {
     width: '100%',
     height: 198,
     borderWidth: 0.61,
-    borderRadius: 24,
+    borderRadius: Radii.xl,
     overflow: 'hidden',
     position: 'relative',
   },
@@ -100,11 +100,11 @@ const styles = StyleSheet.create({
   },
   titleText: {
     position: 'absolute',
-    top: 24,
-    left: 24,
+    top: Spacing.xxl,
+    left: Spacing.xxl,
     fontFamily: FontFamily.sans,
-    fontWeight: '400',
-    fontSize: 12,
+    fontWeight: FontWeight.regular,
+    fontSize: FontSize.sm,
     lineHeight: 16,
     letterSpacing: 1.2,
     textTransform: 'uppercase',
@@ -112,7 +112,7 @@ const styles = StyleSheet.create({
   timeContainer: {
     position: 'absolute',
     top: 56,
-    left: 24,
+    left: Spacing.xxl,
     width: 295,
     height: 48,
     // Note: Drop shadow on mask might need wrapper or separate layer in RN
@@ -123,8 +123,8 @@ const styles = StyleSheet.create({
   },
   timeTextMask: {
     fontFamily: 'Menlo', // Menlo/Monospace font for time
-    fontWeight: '400',
-    fontSize: 48,
+    fontWeight: FontWeight.regular,
+    fontSize: FontSize.giant,
     lineHeight: 48,
     letterSpacing: 4.8,
     backgroundColor: 'transparent',
@@ -132,10 +132,10 @@ const styles = StyleSheet.create({
   buttonContainer: {
     position: 'absolute',
     top: 128,
-    left: 24,
+    left: Spacing.xxl,
     width: 295, // matching css ~295.73
     height: 45,
-    borderRadius: 16,
+    borderRadius: Radii.lg,
     overflow: 'hidden',
   },
   buttonGradient: {
@@ -145,16 +145,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 0.61,
     borderColor: 'rgba(0, 255, 255, 0.22)',
-    borderRadius: 16,
-    gap: 8,
+    borderRadius: Radii.lg,
+    gap: Spacing.sm,
   },
   buttonIcon: {
-    marginRight: 4,
+    marginRight: Spacing.xs,
   },
   buttonText: {
     fontFamily: FontFamily.sans,
-    fontWeight: '500',
-    fontSize: 14,
+    fontWeight: FontWeight.medium,
+    fontSize: FontSize.base,
     lineHeight: 20,
     letterSpacing: -0.15,
     color: '#53EAFD',

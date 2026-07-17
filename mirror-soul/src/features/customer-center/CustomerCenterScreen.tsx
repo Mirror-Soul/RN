@@ -1,5 +1,5 @@
 import React from 'react';
-import { FontFamily } from '@/src/constants/theme';
+import {FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 
 import { StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -46,26 +46,26 @@ export const CustomerCenterScreen = () => {
 
 const styles = StyleSheet.create({
   contentPadding: {
-    paddingHorizontal: 24,
+    paddingHorizontal: Spacing.xxl,
   },
   subtitleContainer: {
     width: '100%',
-    marginBottom: 32,
+    marginBottom: Spacing.xxxl,
   },
   subtitleMain: {
     fontFamily: FontFamily.sans,
-    fontWeight: '400',
-    fontSize: 20,
+    fontWeight: FontWeight.regular,
+    fontSize: FontSize.xxl,
     lineHeight: 28,
     letterSpacing: -0.45,
   },
   subtitleSub: {
     fontFamily: FontFamily.sans,
-    fontWeight: '400',
-    fontSize: 14,
+    fontWeight: FontWeight.regular,
+    fontSize: FontSize.base,
     lineHeight: 20,
     letterSpacing: -0.15,
-    marginTop: 4,
+    marginTop: Spacing.xs,
   },
   faqSection: {
     width: '100%',

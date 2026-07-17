@@ -1,5 +1,5 @@
 import React from 'react';
-import { FontFamily } from '@/src/constants/theme';
+import {FontFamily, FontSize, FontWeight, Radii, Spacing} from '@/src/constants/theme';
 
 import { StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -47,34 +47,34 @@ export const VoiceAudioScreen = () => {
 
 const styles = StyleSheet.create({
   contentPadding: {
-    paddingHorizontal: 24,
+    paddingHorizontal: Spacing.xxl,
   },
   card: {
     borderWidth: 0.61,
-    borderRadius: 16,
-    padding: 20,
+    borderRadius: Radii.lg,
+    padding: Spacing.xl,
     width: '100%',
   },
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 2,
+    marginBottom: Spacing.xxs,
   },
   cardTitle: {
     fontFamily: FontFamily.sans,
-    fontWeight: '400',
-    fontSize: 14,
+    fontWeight: FontWeight.regular,
+    fontSize: FontSize.base,
     lineHeight: 20,
     letterSpacing: -0.15,
   },
   cardDescription: {
-    marginBottom: 20,
+    marginBottom: Spacing.xl,
   },
   descriptionText: {
     fontFamily: FontFamily.sans,
-    fontWeight: '400',
-    fontSize: 12,
+    fontWeight: FontWeight.regular,
+    fontSize: FontSize.sm,
     lineHeight: 16,
   },
   segmentWrapper: {

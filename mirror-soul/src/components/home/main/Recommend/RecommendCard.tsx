@@ -3,7 +3,7 @@ import LocationIcon from '@/assets/images/common/Location.svg';
 import HeartIcon from '@/assets/images/common/main/Heart.svg';
 import InfoIcon from '@/assets/images/common/main/Info.svg';
 import SimilarityIcon from '@/assets/images/common/main/Similarity.svg';
-import {Colors, Radii, FontFamily} from '@/src/constants/theme';
+import {Colors, Radii, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -91,7 +91,7 @@ export default function RecommendCard({ data, onPass, onLike, onInfo }: Recommen
 
           {/* 관심 버튼 */}
           <LinearGradient
-            colors={['rgba(0,211,243,0.20)', 'rgba(194,122,255,0.20)']}
+            colors={[Colors.glass.cyan20, Colors.glass.purple20]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.likeButtonGradient}
@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    padding: 16,
+    padding: Spacing.lg,
   },
   iconButton: {
     width: 36,
@@ -139,70 +139,70 @@ const styles = StyleSheet.create({
   similarityBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    paddingLeft: 12,
-    paddingRight: 8,
+    gap: Spacing.xs,
+    paddingLeft: Spacing.md,
+    paddingRight: Spacing.sm,
     height: 34,
     borderRadius: Radii.full,
     borderWidth: 0.612,
   },
   similarityText: {
     fontFamily: FontFamily.sans,
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.medium,
     lineHeight: 20,
     letterSpacing: -0.15,
   },
   infoGradient: {
-    padding: 16,
-    gap: 8,
+    padding: Spacing.lg,
+    gap: Spacing.sm,
   },
   nameText: {
     fontFamily: FontFamily.sans,
-    fontSize: 24,
-    fontWeight: '500',
+    fontSize: FontSize.xxxl,
+    fontWeight: FontWeight.medium,
     lineHeight: 32,
     letterSpacing: 0.07,
   },
   locationRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: Spacing.sm,
   },
   locationText: {
     fontFamily: FontFamily.sans,
-    fontSize: 14,
-    fontWeight: '400',
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.regular,
     lineHeight: 20,
     letterSpacing: -0.15,
   },
   descriptionText: {
     fontFamily: FontFamily.sans,
-    fontSize: 14,
-    fontWeight: '400',
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.regular,
     lineHeight: 20,
     letterSpacing: -0.15,
     width: '100%',
   },
   actionRow: {
     flexDirection: 'row',
-    gap: 12,
-    marginTop: 8,
+    gap: Spacing.md,
+    marginTop: Spacing.sm,
   },
   passButton: {
     flex: 1,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 8,
+    gap: Spacing.sm,
     height: 46,
     borderRadius: Radii.md2,
     borderWidth: 0.612,
   },
   passText: {
     fontFamily: FontFamily.sans,
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.medium,
     lineHeight: 20,
     letterSpacing: -0.15,
     textAlign: 'center',
@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: Radii.md2,
     borderWidth: 0.612,
-    borderColor: 'rgba(0,211,243,0.30)',
+    borderColor: Colors.glass.cyan30_d3,
     overflow: 'hidden',
   },
   likeButton: {
@@ -219,14 +219,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 8,
+    gap: Spacing.sm,
     height: 46,
   },
   likeText: {
     color: Colors.primary.electricCyan,
     fontFamily: FontFamily.sans,
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.medium,
     lineHeight: 20,
     letterSpacing: -0.15,
     textAlign: 'center',

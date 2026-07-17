@@ -3,7 +3,7 @@ import VoiceUpdateHeader from '@/src/components/home/grow/voice-update/VoiceUpda
 import VoiceUpdatePrompt from '@/src/components/home/grow/voice-update/VoiceUpdatePrompt';
 import VoiceUpdateTranscriptBox from '@/src/components/home/grow/voice-update/VoiceUpdateTranscriptBox';
 import { useSTT } from '@/src/hooks/useSTT';
-import { Colors } from '@/src/constants/theme';
+import {Colors, Spacing} from '@/src/constants/theme';
 import React, { useState, useRef, useEffect } from 'react';
 import { StyleSheet, View, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -130,13 +130,13 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    paddingHorizontal: 24,
+    paddingHorizontal: Spacing.xxl,
   },
   main: {
     flex: 1,
-    paddingVertical: 40,
+    paddingVertical: Spacing.giant,
     justifyContent: 'center', // 중앙 집중형 배치
     alignItems: 'center',
-    gap: 48, // 컴포넌트 간 충분한 간격 확보
+    gap: Spacing.massive, // 컴포넌트 간 충분한 간격 확보
   },
 });

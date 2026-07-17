@@ -1,6 +1,8 @@
 import Step1AccountContainer from '@/src/components/signup/steps/Step1_Account/Step1AccountContainer';
 import React from 'react';
 import { KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
+import { Colors } from '@/src/constants/theme';
+
 
 /**
  * AccountScreen (Signup Step 1)
@@ -21,6 +23,6 @@ export default function AccountScreen() {
 const styles = StyleSheet.create({
   keyboardView: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: Colors.primary.soulBlack,
   },
 });

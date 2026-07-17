@@ -1,5 +1,5 @@
 import RightNarrowIcon from '@/assets/images/common/Right_narrow.svg';
-import {Colors, Radii, FontFamily} from '@/src/constants/theme';
+import {Colors, Radii, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import {
@@ -70,9 +70,9 @@ export default function CallDetailHeader({
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 16,
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.lg,
+    paddingBottom: Spacing.lg,
     borderBottomWidth: 0.612,
     borderBottomColor: Colors.glass.white10,
     backgroundColor: Colors.glass.black40,
@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: Spacing.md,
     alignSelf: 'stretch',
     height: 52,
   },
@@ -97,32 +97,32 @@ const styles = StyleSheet.create({
   title: {
     color: Colors.neutral.pureWhite,
     fontFamily: FontFamily.sans,
-    fontSize: 24,
-    fontWeight: '500',
+    fontSize: FontSize.xxxl,
+    fontWeight: FontWeight.medium,
     lineHeight: 36,
     letterSpacing: 0.07,
   },
   subtitle: {
     color: Colors.neutral.lightGray,
     fontFamily: FontFamily.sans,
-    fontSize: 12,
-    fontWeight: '400',
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.regular,
     lineHeight: 16,
   },
   badge: {
     paddingHorizontal: 14,
-    paddingVertical: 8,
+    paddingVertical: Spacing.sm,
     borderRadius: Radii.full,
     borderWidth: 0.612,
-    borderColor: 'rgba(0, 211, 243, 0.30)',
+    borderColor: Colors.glass.cyan30_d3,
     justifyContent: 'center',
     alignItems: 'center',
   },
   badgeText: {
     color: Colors.primary.electricCyan,
     fontFamily: FontFamily.sans,
-    fontSize: 12,
-    fontWeight: '400',
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.regular,
     lineHeight: 16,
   },
 });

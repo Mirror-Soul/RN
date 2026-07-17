@@ -1,4 +1,4 @@
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, Spacing} from '@/src/constants/theme';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useMbtiSlider } from './hooks/useMbtiSlider';
@@ -67,11 +67,11 @@ export default function MbtiSlider({
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    padding: 20,
+    padding: Spacing.xl,
     borderRadius: Radii.lg,
     borderWidth: 0.612,
     borderColor: Colors.glass.white10,
     backgroundColor: Colors.glass.white5,
-    gap: 16,
+    gap: Spacing.lg,
   },
 });

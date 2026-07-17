@@ -1,7 +1,7 @@
 import ContinueIcon from '@/assets/images/common/Continue_icon.svg';
 import VoiceIcon from '@/assets/images/common/Voice_icon.svg';
 import VoiceIconWhite from '@/assets/images/common/Voice_icon_white.svg';
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
     width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 16,
+    gap: Spacing.lg,
     height: 72,
   },
   recordButtonWrapper: {
@@ -95,9 +95,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 12,
+    gap: Spacing.md,
     borderRadius: Radii.lg,
-    paddingHorizontal: 20,
+    paddingHorizontal: Spacing.xl,
   },
   recordingContent: {
     flex: 1,
@@ -109,15 +109,15 @@ const styles = StyleSheet.create({
   },
   recordText: {
     color: Colors.primary.soulBlack,
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: FontSize.xl,
+    fontWeight: FontWeight.semibold,
     lineHeight: 28,
     letterSpacing: -0.439,
   },
   recordingText: {
     color: Colors.neutral.pureWhite,
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: FontSize.xl,
+    fontWeight: FontWeight.semibold,
     lineHeight: 28,
     letterSpacing: -0.439,
   },
@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    gap: Spacing.sm,
     borderRadius: Radii.lg,
     borderWidth: 1.836,
     borderColor: Colors.glass.white10,
@@ -135,8 +135,8 @@ const styles = StyleSheet.create({
   },
   nextText: {
     color: Colors.neutral.disabledText,
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: FontSize.xl,
+    fontWeight: FontWeight.semibold,
     lineHeight: 28,
     letterSpacing: -0.439,
   },

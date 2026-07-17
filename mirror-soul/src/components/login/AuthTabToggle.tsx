@@ -7,7 +7,7 @@ import Animated, {
   withSpring,
   interpolateColor,
 } from 'react-native-reanimated';
-import {Colors, Radii, FontFamily} from '@/src/constants/theme';
+import {Colors, Radii, FontFamily, FontSize, FontWeight} from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface AuthTabToggleProps {
@@ -143,8 +143,8 @@ const styles = StyleSheet.create({
   },
   tabText: {
     fontFamily: FontFamily.sans,
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.medium,
     lineHeight: 20,
     letterSpacing: -0.15,
   },

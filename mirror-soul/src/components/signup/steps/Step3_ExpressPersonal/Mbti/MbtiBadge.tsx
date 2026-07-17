@@ -1,4 +1,4 @@
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { Platform, StyleSheet, Text, View } from 'react-native';
@@ -33,8 +33,8 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   gradient: {
-    paddingVertical: 4,
-    paddingHorizontal: 16,
+    paddingVertical: Spacing.xs,
+    paddingHorizontal: Spacing.lg,
     borderRadius: 7,
     justifyContent: 'center',
     alignItems: 'center',
@@ -42,8 +42,8 @@ const styles = StyleSheet.create({
   text: {
     color: Colors.primary.electricCyan,
     fontFamily: monospaceFont,
-    fontSize: 18,
-    fontWeight: '400',
+    fontSize: FontSize.xl,
+    fontWeight: FontWeight.regular,
     lineHeight: 28,
     letterSpacing: 2,
   },

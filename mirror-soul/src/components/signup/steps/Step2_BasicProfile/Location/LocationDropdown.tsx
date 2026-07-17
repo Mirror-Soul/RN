@@ -1,4 +1,4 @@
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import React, { useState, useEffect, useCallback } from 'react';
 import { Dimensions, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View, ActivityIndicator, Alert } from 'react-native';
 import { getSidoList, getSigunguList, getEupmyeondongList } from '@/src/services/onboardingService';
@@ -217,7 +217,7 @@ const styles = StyleSheet.create({
   },
   tabButton: {
     flex: 1,
-    paddingVertical: 12,
+    paddingVertical: Spacing.md,
     justifyContent: 'center',
     alignItems: 'center',
     opacity: 0.5,
@@ -229,8 +229,8 @@ const styles = StyleSheet.create({
   },
   tabText: {
     color: Colors.neutral.darkGray,
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.medium,
   },
   tabTextActive: {
     color: Colors.primary.electricCyan,
@@ -240,20 +240,20 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   listContent: {
-    paddingTop: 8,
-    paddingHorizontal: 8,
-    paddingBottom: 16,
+    paddingTop: Spacing.sm,
+    paddingHorizontal: Spacing.sm,
+    paddingBottom: Spacing.lg,
   },
   listItem: {
     width: '100%',
     paddingVertical: 11.4,
-    paddingHorizontal: 16,
+    paddingHorizontal: Spacing.lg,
     borderRadius: Radii.md2,
   },
   listItemText: {
     color: Colors.neutral.pureWhite,
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.medium,
   },
   loadingContainer: {
     flex: 1,
@@ -261,11 +261,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   emptyContainer: {
-    padding: 24,
+    padding: Spacing.xxl,
     alignItems: 'center',
   },
   emptyText: {
     color: Colors.neutral.darkGray,
-    fontSize: 14,
+    fontSize: FontSize.base,
   }
 });

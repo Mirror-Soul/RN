@@ -1,4 +1,4 @@
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, Spacing} from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, View } from 'react-native';
@@ -92,12 +92,12 @@ const styles = StyleSheet.create({
     borderColor: Colors.glass.white10,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: Spacing.lg,
   },
   waveContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4, // 유저 요청: 3.997px
+    gap: Spacing.xs, // 유저 요청: 3.997px
   },
   bar: {
     width: 3,

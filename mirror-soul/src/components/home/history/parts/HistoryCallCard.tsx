@@ -1,4 +1,4 @@
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, Spacing} from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import React from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
@@ -78,7 +78,7 @@ const styles = StyleSheet.create({
     paddingBottom: 16.6, // 상단 여백과 동일하게 맞춤(16.6)
     flexDirection: 'column',
     alignItems: 'flex-start',
-    gap: 12, // 11.992px 반올림
+    gap: Spacing.md, // 11.992px 반올림
     alignSelf: 'stretch',
     borderRadius: Radii.lg, // 16px
     borderWidth: 0.612,

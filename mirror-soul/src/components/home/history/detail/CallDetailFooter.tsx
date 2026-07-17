@@ -1,4 +1,4 @@
-import {Colors, FontFamily} from '@/src/constants/theme';
+import {Colors, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -18,9 +18,9 @@ export default function CallDetailFooter() {
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 16,
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.lg,
+    paddingBottom: Spacing.lg,
     borderTopWidth: 0.612,
     borderTopColor: Colors.glass.white10,
     backgroundColor: Colors.glass.black40,
@@ -29,14 +29,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 8,
+    gap: Spacing.sm,
     alignSelf: 'stretch',
   },
   text: {
     color: Colors.neutral.lightGray,
     fontFamily: FontFamily.sans,
-    fontSize: 12,
-    fontWeight: '400',
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.regular,
     lineHeight: 16,
     textAlign: 'center',
   },

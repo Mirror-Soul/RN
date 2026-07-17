@@ -1,5 +1,5 @@
 import CompleteIcon from '@/assets/images/common/Complete.svg';
-import {Colors, Radii, FontFamily} from '@/src/constants/theme';
+import {Colors, Radii, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -26,7 +26,7 @@ export default function AgreementSection({ state, onChange }: SectionProps) {
       >
         {state.agreedToTerms ? (
           <LinearGradient
-            colors={['#00D3F3', '#C27AFF']}
+            colors={[Colors.primary.electricCyan, Colors.primary.vividPurple]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.gradientCheck}
@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
     height: 52, // Approx for vertical alignment
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: Spacing.md,
     alignSelf: 'stretch',
   },
   checkboxWrapper: {
@@ -100,8 +100,8 @@ const styles = StyleSheet.create({
   baseText: {
     color: Colors.neutral.lightGray,
     fontFamily: FontFamily.sans,
-    fontSize: 14,
-    fontWeight: '400',
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.regular,
     lineHeight: 20,
   },
   link: {

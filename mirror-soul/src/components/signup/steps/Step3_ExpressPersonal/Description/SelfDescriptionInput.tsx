@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface Props {
@@ -37,19 +37,19 @@ export default function SelfDescriptionInput({ value, onChangeText }: Props) {
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    gap: 12,
+    gap: Spacing.md,
   },
   title: {
-    fontSize: 18,
-    fontWeight: '500',
+    fontSize: FontSize.xl,
+    fontWeight: FontWeight.medium,
     lineHeight: 28,
     letterSpacing: -0.439,
-    marginBottom: 4,
+    marginBottom: Spacing.xs,
   },
   inputWrapper: {
     width: '100%',
     height: 121,
-    padding: 16,
+    padding: Spacing.lg,
     borderRadius: Radii.lg,
     borderWidth: 0.612,
     borderColor: Colors.glass.white10,
@@ -57,13 +57,13 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    fontSize: 16,
+    fontSize: FontSize.lg,
     lineHeight: 24,
     letterSpacing: -0.312,
-    padding: 0, // Reset default padding
+    padding: Spacing.none, // Reset default padding
   },
   countText: {
-    fontSize: 12,
+    fontSize: FontSize.sm,
     textAlign: 'left',
   }
 });

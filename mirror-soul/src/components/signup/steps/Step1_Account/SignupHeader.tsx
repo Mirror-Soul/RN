@@ -1,4 +1,4 @@
-import { Colors } from '@/src/constants/theme';
+import {Colors, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -18,20 +18,20 @@ const styles = StyleSheet.create({
   container: {
     width: '100%',
     alignItems: 'flex-start',
-    gap: 8,
-    marginTop: 40,
+    gap: Spacing.sm,
+    marginTop: Spacing.giant,
   },
   title: {
     color: Colors.neutral.pureWhite,
     fontSize: 30,
-    fontWeight: '500',
+    fontWeight: FontWeight.medium,
     lineHeight: 36,
     letterSpacing: 0.396,
   },
   subtitle: {
     color: Colors.neutral.lightGray,
-    fontSize: 14,
-    fontWeight: '400',
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.regular,
     lineHeight: 20,
     letterSpacing: -0.15,
   }

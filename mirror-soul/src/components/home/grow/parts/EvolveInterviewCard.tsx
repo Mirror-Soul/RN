@@ -1,6 +1,6 @@
 import InterviewIcon from '@/assets/images/common/evlove/evlove_interview.svg';
 import TimerIcon from '@/assets/images/common/evlove/evlove_timer.svg';
-import {Colors, Radii, FontFamily} from '@/src/constants/theme';
+import {Colors, Radii, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React from 'react';
@@ -56,12 +56,12 @@ export default function EvolveInterviewCard() {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
+    padding: Spacing.lg,
     borderRadius: Radii.md2,
     borderWidth: 0.612,
     borderColor: Colors.glass.purple30,
     alignSelf: 'stretch',
-    gap: 12,
+    gap: Spacing.md,
   },
   header: {
     flexDirection: 'row',
@@ -77,8 +77,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   newBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
     borderRadius: Radii.smmd,
     borderWidth: 0.612,
     borderColor: Colors.glass.gold40,
@@ -87,24 +87,24 @@ const styles = StyleSheet.create({
   newText: {
     color: Colors.primary.goldText,
     fontFamily: FontFamily.sans,
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.medium,
     lineHeight: 16,
   },
   content: {
-    gap: 4,
+    gap: Spacing.xs,
   },
   title: {
     fontFamily: FontFamily.sans,
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.medium,
     lineHeight: 20,
     letterSpacing: -0.15,
   },
   subTitle: {
     fontFamily: FontFamily.sans,
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.medium,
     lineHeight: 16,
   },
   footer: {
@@ -114,8 +114,8 @@ const styles = StyleSheet.create({
   },
   timeText: {
     fontFamily: FontFamily.sans,
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.medium,
     lineHeight: 16,
   },
 });

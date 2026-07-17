@@ -1,4 +1,4 @@
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import React, { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
@@ -75,10 +75,10 @@ const styles = StyleSheet.create({
   container: {
     width: '100%',
     minHeight: 120,
-    padding: 20,
+    padding: Spacing.xl,
     borderRadius: Radii.lg2,
     borderWidth: 0.612,
-    gap: 12,
+    gap: Spacing.md,
   },
   header: {
     height: 20,
@@ -97,8 +97,8 @@ const styles = StyleSheet.create({
   },
   recordingText: {
     color: Colors.primary.activeRedText,
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.medium,
     lineHeight: 16,
   },
   content: {
@@ -106,15 +106,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   transcriptText: {
-    fontSize: 16,
-    fontWeight: '400',
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.regular,
     lineHeight: 24,
     textAlign: 'center',
   },
   placeholderText: {
-    fontSize: 15,
+    fontSize: FontSize.md,
     fontStyle: 'italic',
-    fontWeight: '400',
+    fontWeight: FontWeight.regular,
     lineHeight: 24,
     textAlign: 'center',
   },

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Colors } from '@/src/constants/theme';
+import {Colors, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 
 interface Props {
   title: string;
@@ -24,13 +24,13 @@ const styles = StyleSheet.create({
     width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 16,
+    gap: Spacing.sm,
+    marginBottom: Spacing.lg,
   },
   title: {
     color: Colors.neutral.pureWhite,
-    fontSize: 18,
-    fontWeight: '500',
+    fontSize: FontSize.xl,
+    fontWeight: FontWeight.medium,
     lineHeight: 28,
     letterSpacing: -0.439,
   }

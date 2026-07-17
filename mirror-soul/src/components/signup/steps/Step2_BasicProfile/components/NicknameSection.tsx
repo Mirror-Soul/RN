@@ -1,6 +1,6 @@
 import VerificationSuccessIcon from '@/assets/images/common/Verification_sucess.svg';
 import FormLabel from '@/src/components/signup/common/FormLabel';
-import {Radii, FontFamily, Colors} from '@/src/constants/theme';
+import {Radii, FontFamily, Colors, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import React from 'react';
 import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SectionProps } from '../types/step2';
@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
     width: '100%',
     flexDirection: 'column',
     alignItems: 'flex-start',
-    gap: 12, // Standard label-to-field gap
+    gap: Spacing.md, // Standard label-to-field gap
     alignSelf: 'stretch',
   },
   infoRow: {
@@ -77,15 +77,15 @@ const styles = StyleSheet.create({
   textInput: {
     flex: 3,
     height: 49.202,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
     borderRadius: Radii.lg,
     borderWidth: 0.612,
     borderColor: Colors.glass.white10,
     backgroundColor: Colors.glass.white5,
     fontFamily: FontFamily.sans,
-    fontSize: 16,
-    fontWeight: '400',
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.regular,
     letterSpacing: -0.312,
   },
   checkButton: {
@@ -101,15 +101,15 @@ const styles = StyleSheet.create({
   checkButtonText: {
     textAlign: 'center',
     fontFamily: FontFamily.sans,
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.medium,
     lineHeight: 20,
     letterSpacing: -0.15,
   },
   successContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: Spacing.sm,
     height: 19.996,
     marginTop: -4, // Adjustment to bring feedback closer to input
   },
@@ -118,10 +118,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   successText: {
-    color: '#05DF72',
+    color: Colors.primary.successGreen,
     fontFamily: FontFamily.sans,
-    fontSize: 14,
-    fontWeight: '400',
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.regular,
     lineHeight: 20,
     letterSpacing: -0.15,
   },

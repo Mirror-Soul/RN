@@ -1,5 +1,5 @@
 import CompleteIcon from '@/assets/images/common/Complete.svg';
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { Dimensions, StyleSheet, Text, View } from 'react-native';
@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
   stepContainer: {
     flex: 1,
     alignItems: 'center',
-    gap: 8,
+    gap: Spacing.sm,
   },
   labelContainer: {
     height: 16,
@@ -133,7 +133,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   labelText: {
-    fontWeight: '400',
+    fontWeight: FontWeight.regular,
     lineHeight: 16,
     textAlign: 'center',
   },
@@ -164,8 +164,8 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   stepNumber: {
-    fontSize: 14,
-    fontWeight: '400',
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.regular,
     lineHeight: 20,
     letterSpacing: -0.15,
   }

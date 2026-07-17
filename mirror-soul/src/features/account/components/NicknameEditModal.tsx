@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import {FontFamily, Colors} from '@/src/constants/theme';
+import {FontFamily, Colors, FontSize, FontWeight, Radii, Spacing} from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 import { 
@@ -164,40 +164,40 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 24,
+    paddingHorizontal: Spacing.xxl,
   },
   container: {
     width: '100%',
     maxWidth: 384,
     borderWidth: 0.61,
-    borderRadius: 24,
-    padding: 24,
+    borderRadius: Radii.xl,
+    padding: Spacing.xxl,
   },
   title: {
     fontFamily: FontFamily.sans,
-    fontWeight: '500',
-    fontSize: 18,
+    fontWeight: FontWeight.medium,
+    fontSize: FontSize.xl,
     lineHeight: 27,
     letterSpacing: -0.44,
-    marginBottom: 4,
+    marginBottom: Spacing.xs,
   },
   subtitle: {
     fontFamily: FontFamily.sans,
-    fontWeight: '400',
-    fontSize: 12,
+    fontWeight: FontWeight.regular,
+    fontSize: FontSize.sm,
     lineHeight: 16,
-    marginBottom: 20,
+    marginBottom: Spacing.xl,
   },
   formContainer: {
-    marginBottom: 24,
+    marginBottom: Spacing.xxl,
   },
   input: {
     height: 45,
     borderWidth: 0.61,
-    borderRadius: 14,
-    paddingHorizontal: 16,
+    borderRadius: Radii.md2,
+    paddingHorizontal: Spacing.lg,
     fontFamily: FontFamily.sans,
-    fontSize: 14,
+    fontSize: FontSize.base,
   },
   inputError: {
     borderColor: '#FF4C4C',
@@ -205,17 +205,17 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontFamily: FontFamily.sans,
-    fontWeight: '400',
-    fontSize: 12,
+    fontWeight: FontWeight.regular,
+    fontSize: FontSize.sm,
     color: '#FF4C4C',
-    marginTop: 8,
-    paddingHorizontal: 4,
+    marginTop: Spacing.sm,
+    paddingHorizontal: Spacing.xs,
   },
   buttonRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 12,
+    gap: Spacing.md,
   },
   cancelButton: {
     flex: 1,
@@ -223,18 +223,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 0.61,
-    borderRadius: 16,
+    borderRadius: Radii.lg,
   },
   cancelButtonText: {
     fontFamily: FontFamily.sans,
-    fontWeight: '500',
-    fontSize: 14,
+    fontWeight: FontWeight.medium,
+    fontSize: FontSize.base,
     letterSpacing: -0.15,
   },
   saveButtonContainer: {
     flex: 1,
     height: 45,
-    borderRadius: 16,
+    borderRadius: Radii.lg,
     overflow: 'hidden',
     borderWidth: 0.61,
     borderColor: 'rgba(0, 255, 255, 0.25)',
@@ -246,8 +246,8 @@ const styles = StyleSheet.create({
   },
   saveButtonText: {
     fontFamily: FontFamily.sans,
-    fontWeight: '500',
-    fontSize: 14,
+    fontWeight: FontWeight.medium,
+    fontSize: FontSize.base,
     color: 'rgba(0, 255, 255, 0.9)',
     letterSpacing: -0.15,
   },

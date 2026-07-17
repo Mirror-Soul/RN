@@ -1,6 +1,6 @@
 import React from 'react';
 import { Text, TextProps, StyleSheet } from 'react-native';
-import { FontFamily } from '@/src/constants/theme';
+import {FontFamily, FontSize, FontWeight} from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface SectionHeadingProps extends TextProps {
@@ -33,8 +33,8 @@ export const SectionHeading = ({ title, style, ...props }: SectionHeadingProps) 
 const styles = StyleSheet.create({
   heading: {
     fontFamily: FontFamily.sans,
-    fontWeight: '400',
-    fontSize: 12,
+    fontWeight: FontWeight.regular,
+    fontSize: FontSize.sm,
     lineHeight: 16,
     letterSpacing: 0.6,
     textTransform: 'uppercase',

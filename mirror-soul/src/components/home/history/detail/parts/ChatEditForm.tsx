@@ -1,6 +1,6 @@
 import CancelIcon from '@/assets/images/common/Cancel.svg';
 import CompleteIcon from '@/assets/images/common/Complete.svg';
-import {Colors, Radii, FontFamily} from '@/src/constants/theme';
+import {Colors, Radii, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -68,14 +68,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 4,
+    gap: Spacing.xs,
     paddingVertical: 6,
   },
   saveText: {
     color: Colors.primary.soulBlack,
     fontFamily: FontFamily.sans,
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.medium,
   },
   cancelButton: {
     width: 32,

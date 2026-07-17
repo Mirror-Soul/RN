@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import {FontFamily, Colors} from '@/src/constants/theme';
+import {FontFamily, Colors, FontSize, FontWeight} from '@/src/constants/theme';
 
 import { View, Text, StyleSheet, Pressable, LayoutChangeEvent } from 'react-native';
 import Animated, {
@@ -155,8 +155,8 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontFamily: FontFamily.sans,
-    fontWeight: '500',
-    fontSize: 12,
+    fontWeight: FontWeight.medium,
+    fontSize: FontSize.sm,
     lineHeight: 16,
     textAlign: 'center',
   },

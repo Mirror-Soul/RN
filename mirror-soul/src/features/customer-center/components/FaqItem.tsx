@@ -1,5 +1,5 @@
 import React from 'react';
-import { FontFamily } from '@/src/constants/theme';
+import {FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { Feather } from '@expo/vector-icons';
@@ -82,9 +82,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    gap: 12,
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.xl,
+    gap: Spacing.md,
     minHeight: 52,
   },
   questionRowPressed: {
@@ -92,20 +92,20 @@ const styles = StyleSheet.create({
   questionText: {
     flex: 1,
     fontFamily: FontFamily.sans,
-    fontWeight: '500',
-    fontSize: 14,
+    fontWeight: FontWeight.medium,
+    fontSize: FontSize.base,
     lineHeight: 19,
     letterSpacing: -0.15,
   },
   answerInner: {
-    paddingHorizontal: 20,
-    paddingBottom: 16,
+    paddingHorizontal: Spacing.xl,
+    paddingBottom: Spacing.lg,
     width: '100%',
   },
   answerText: {
     fontFamily: FontFamily.sans,
-    fontWeight: '400',
-    fontSize: 14,
+    fontWeight: FontWeight.regular,
+    fontSize: FontSize.base,
     lineHeight: 23,
     letterSpacing: -0.15,
   },

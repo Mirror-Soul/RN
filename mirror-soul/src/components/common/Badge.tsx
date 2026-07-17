@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, ViewStyle, TextStyle, StyleProp } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Colors, FontFamily } from '@/src/constants/theme';
+import {Colors, FontFamily, FontSize, FontWeight, Radii, Spacing} from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 type BadgeVariant = 'solid' | 'glass' | 'outline' | 'gradient';
@@ -46,8 +46,8 @@ export const Badge = ({
 
   // 1. 사이즈 스타일 결정
   const sizeStyles = {
-    sm: { paddingVertical: 4, paddingHorizontal: 8, fontSize: 10, lineHeight: 14 },
-    md: { paddingVertical: 6, paddingHorizontal: 12, fontSize: 12, lineHeight: 16 },
+    sm: { paddingVertical: Spacing.xs, paddingHorizontal: Spacing.sm, fontSize: FontSize.xs, lineHeight: 14 },
+    md: { paddingVertical: 6, paddingHorizontal: Spacing.md, fontSize: FontSize.sm, lineHeight: 16 },
   }[size];
 
   // 2. 컬러 스킴 결정
@@ -58,14 +58,14 @@ export const Badge = ({
           solidBg: Colors.primary.electricCyan,
           glassBg: Colors.glass.cyan20_d3,
           glassBorder: Colors.glass.cyan20_d3,
-          text: variant === 'solid' || variant === 'gradient' ? '#FFFFFF' : Colors.primary.electricCyan,
+          text: variant === 'solid' || variant === 'gradient' ? Colors.neutral.pureWhite : Colors.primary.electricCyan,
         };
       case 'purple':
         return {
           solidBg: Colors.primary.vividPurple,
           glassBg: Colors.glass.purple20,
           glassBorder: Colors.glass.purple20,
-          text: variant === 'solid' || variant === 'gradient' ? '#FFFFFF' : Colors.primary.vividPurple,
+          text: variant === 'solid' || variant === 'gradient' ? Colors.neutral.pureWhite : Colors.primary.vividPurple,
         };
       case 'gold':
         return {
@@ -80,7 +80,7 @@ export const Badge = ({
           solidBg: colors.text.secondary,
           glassBg: colors.background.glass,
           glassBorder: colors.border.primary,
-          text: variant === 'solid' || variant === 'gradient' ? '#FFFFFF' : colors.text.secondary,
+          text: variant === 'solid' || variant === 'gradient' ? Colors.neutral.pureWhite : colors.text.secondary,
         };
     }
   };
@@ -92,10 +92,10 @@ export const Badge = ({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
+    gap: Spacing.xs,
     paddingVertical: sizeStyles.paddingVertical,
     paddingHorizontal: sizeStyles.paddingHorizontal,
-    borderRadius: 999, // Pill 형태
+    borderRadius: Radii.full, // Pill 형태
   };
 
   if (variant === 'solid') {
@@ -116,7 +116,7 @@ export const Badge = ({
     const gradientColors = 
       colorScheme === 'cyan' ? Colors.gradient.twinProgress :
       colorScheme === 'purple' ? Colors.gradient.voiceStart :
-      ['#99A1AF', '#6A7282'] as const;
+      [Colors.neutral.lightGray, Colors.neutral.darkGray] as const;
 
     return (
       <LinearGradient
@@ -146,7 +146,7 @@ export const Badge = ({
 const styles = StyleSheet.create({
   text: {
     fontFamily: FontFamily.sans,
-    fontWeight: '600',
+    fontWeight: FontWeight.semibold,
     letterSpacing: -0.15,
   },
 });

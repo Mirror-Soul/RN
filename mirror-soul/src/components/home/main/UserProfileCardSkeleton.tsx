@@ -9,7 +9,7 @@ import Animated, {
   withTiming,
   Easing,
 } from 'react-native-reanimated';
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, Spacing} from '@/src/constants/theme';
 
 /**
  * SkeletonBox 컴포넌트
@@ -83,14 +83,14 @@ const styles = StyleSheet.create({
     borderWidth: 0.612,
     borderColor: Colors.glass.white10,
     backgroundColor: Colors.glass.white5,
-    paddingHorizontal: 12,
+    paddingHorizontal: Spacing.md,
     height: 70,
     justifyContent: 'center',
   },
   inner: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: Spacing.md,
   },
   textGroup: {
     flex: 1,
@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
   titleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: Spacing.sm,
   },
   skeletonBase: {
     backgroundColor: Colors.glass.white10,

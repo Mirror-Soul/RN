@@ -4,6 +4,8 @@ import React from 'react';
 import { FlatList, StyleSheet, View } from 'react-native';
 import { HistoryFilterType } from './HistoryFilterRow';
 import HistoryCallCard from './parts/HistoryCallCard';
+import { Spacing } from '@/src/constants/theme';
+
 
 interface HistoryListProps {
   filter: HistoryFilterType;
@@ -45,6 +47,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   listContent: {
-    gap: 12,
+    gap: Spacing.md,
   },
 });

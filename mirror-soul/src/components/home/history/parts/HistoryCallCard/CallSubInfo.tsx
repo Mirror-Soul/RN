@@ -1,6 +1,6 @@
 import HistoryIcon from '@/assets/images/common/bottomNavbar/History_button.svg';
 import PurpleHeartIcon from '@/assets/images/common/history/purpleHeart.svg';
-import {Colors, Radii, FontFamily} from '@/src/constants/theme';
+import {Colors, Radii, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import React from 'react';
 import { StyleSheet, View, Text } from 'react-native';
@@ -37,22 +37,22 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12, // 11.992px
+    gap: Spacing.md, // 11.992px
     alignSelf: 'stretch',
   },
   chip: {
     flex: 1, // 균등 분할
     flexDirection: 'row',
     height: 32, // 31.988px
-    paddingHorizontal: 8,
+    paddingHorizontal: Spacing.sm,
     alignItems: 'center',
-    gap: 8,
+    gap: Spacing.sm,
     borderRadius: Radii.smmd, // 10px (스펙에서 새로 추가함)
   },
   chipText: {
     fontFamily: FontFamily.sans,
-    fontSize: 12,
-    fontWeight: '400',
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.regular,
     lineHeight: 16, // 133.333%
   },
 });

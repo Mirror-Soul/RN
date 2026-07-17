@@ -9,6 +9,8 @@ import Animated, {
   runOnJS,
 } from 'react-native-reanimated';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
+import { Spacing } from '@/src/constants/theme';
+
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -105,9 +107,9 @@ const styles = StyleSheet.create({
   },
   sheet: {
     position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
+    bottom: Spacing.none,
+    left: Spacing.none,
+    right: Spacing.none,
     borderTopWidth: 0.61,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
@@ -115,7 +117,7 @@ const styles = StyleSheet.create({
   },
   handleContainer: {
     alignItems: 'center',
-    paddingVertical: 16,
+    paddingVertical: Spacing.lg,
   },
   handle: {
     width: 40,

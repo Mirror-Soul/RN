@@ -1,5 +1,5 @@
 import React from 'react';
-import { FontFamily } from '@/src/constants/theme';
+import {FontFamily, FontSize, FontWeight, Radii, Colors, Spacing} from '@/src/constants/theme';
 
 import { View, Text, StyleSheet, Pressable, Linking, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -60,7 +60,7 @@ export const EmailContactButton = () => {
           accessibilityLabel="이메일로 문의하기"
         >
           <LinearGradient
-            colors={['rgba(0, 255, 255, 0.18)', 'rgba(168, 85, 247, 0.18)']}
+            colors={[Colors.glass.cyan18, 'rgba(168, 85, 247, 0.18)']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.gradientFill}
@@ -79,26 +79,26 @@ const styles = StyleSheet.create({
   container: {
     width: '100%',
     alignItems: 'center',
-    paddingTop: 32,
+    paddingTop: Spacing.xxxl,
   },
   label: {
     fontFamily: FontFamily.sans,
-    fontWeight: '400',
-    fontSize: 12,
+    fontWeight: FontWeight.regular,
+    fontSize: FontSize.sm,
     lineHeight: 16,
     textAlign: 'center',
   },
   buttonWrapper: {
     width: '100%',
-    marginTop: 16,
+    marginTop: Spacing.lg,
   },
   button: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 16,
+    paddingVertical: Spacing.lg,
     gap: 10,
-    borderRadius: 16,
+    borderRadius: Radii.lg,
     borderWidth: 0.61,
     borderColor: 'rgba(0, 255, 255, 0.2)',
     overflow: 'hidden',
@@ -112,18 +112,18 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontFamily: FontFamily.sans,
-    fontWeight: '400',
-    fontSize: 14,
+    fontWeight: FontWeight.regular,
+    fontSize: FontSize.base,
     lineHeight: 20,
     letterSpacing: -0.15,
     color: '#53EAFD',
   },
   emailAddress: {
     fontFamily: FontFamily.sans,
-    fontWeight: '400',
-    fontSize: 12,
+    fontWeight: FontWeight.regular,
+    fontSize: FontSize.sm,
     lineHeight: 16,
     textAlign: 'center',
-    marginTop: 12,
+    marginTop: Spacing.md,
   },
 });

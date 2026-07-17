@@ -1,4 +1,4 @@
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import React, { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
 
@@ -94,7 +94,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.10,
     shadowRadius: 15,
     elevation: 5,
-    gap: 12,
+    gap: Spacing.md,
   },
   header: {
     flexDirection: 'row',
@@ -114,15 +114,15 @@ const styles = StyleSheet.create({
   },
   recordingText: {
     color: Colors.primary.activeRedText,
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.medium,
     lineHeight: 20,
     letterSpacing: -0.15,
   },
   titleText: {
     color: Colors.neutral.lightGray,
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.medium,
     lineHeight: 20,
     letterSpacing: -0.15,
   },
@@ -132,44 +132,44 @@ const styles = StyleSheet.create({
     borderRadius: Radii.md,
     borderWidth: 0.5,
     borderColor: Colors.glass.white10,
-    marginBottom: 8,
+    marginBottom: Spacing.sm,
   },
   tipText: {
     color: Colors.primary.electricCyan,
-    fontSize: 12,
-    fontWeight: '400',
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.regular,
     lineHeight: 18,
   },
   guideText: {
     color: Colors.neutral.darkGray,
-    fontSize: 16,
+    fontSize: FontSize.lg,
     fontStyle: 'italic',
-    fontWeight: '400',
+    fontWeight: FontWeight.regular,
     lineHeight: 26,
     letterSpacing: -0.312,
   },
   answerText: {
     color: Colors.neutral.pureWhite,
-    fontSize: 16,
-    fontWeight: '400',
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.regular,
     lineHeight: 26,
     letterSpacing: -0.312,
   },
   recordingContent: {
-    gap: 12,
+    gap: Spacing.md,
   },
   transcriptText: {
     color: Colors.neutral.pureWhite,
-    fontSize: 15,
-    fontWeight: '400',
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.regular,
     lineHeight: 24,
     letterSpacing: -0.2,
   },
   transcriptPlaceholder: {
     color: Colors.neutral.darkGray,
-    fontSize: 15,
+    fontSize: FontSize.md,
     fontStyle: 'italic',
-    fontWeight: '400',
+    fontWeight: FontWeight.regular,
     lineHeight: 24,
     letterSpacing: -0.2,
   },

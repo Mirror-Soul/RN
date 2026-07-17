@@ -13,7 +13,7 @@ import Animated, {
   withSpring,
   cancelAnimation,
 } from 'react-native-reanimated';
-import { Colors, FontFamily } from '@/src/constants/theme';
+import {Colors, FontFamily, FontSize, FontWeight, Radii, Spacing} from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 // 피그마 원본 파형 높이 데이터 (px 단위, 최대 ~4px)
@@ -113,7 +113,7 @@ export const ProfileDigitalVoiceSection = ({
           accessibilityState={{ expanded: isPlaying }}
         >
           <LinearGradient
-            colors={['#00D3F3', '#AD46FF']}
+            colors={[Colors.primary.electricCyan, Colors.gradient.voiceStart[1]]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.playButton}
@@ -122,7 +122,7 @@ export const ProfileDigitalVoiceSection = ({
               <Feather
                 name={isPlaying ? 'pause' : 'play'}
                 size={22}
-                color="#FFFFFF"
+                color={Colors.neutral.pureWhite}
               />
             </View>
           </LinearGradient>
@@ -157,27 +157,27 @@ export const ProfileDigitalVoiceSection = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 24,
+    marginBottom: Spacing.xxl,
   },
 
   // 헤딩
   headingText: {
     fontFamily: FontFamily.sans,
-    fontWeight: '900',
-    fontSize: 10,
+    fontWeight: FontWeight.black,
+    fontSize: FontSize.xs,
     lineHeight: 15,
     letterSpacing: 2.12,
     textTransform: 'uppercase',
     color: Colors.neutral.disabledText,
-    marginBottom: 16,
+    marginBottom: Spacing.lg,
   },
 
   // 카드
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 20,
-    gap: 16,
+    padding: Spacing.xl,
+    gap: Spacing.lg,
     borderWidth: 1,
     borderRadius: 40,
   },
@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
   playButton: {
     width: 56,
     height: 56,
-    borderRadius: 9999,
+    borderRadius: Radii.full,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -204,12 +204,12 @@ const styles = StyleSheet.create({
   // 음성 정보
   voiceInfo: {
     flex: 1,
-    gap: 4,
+    gap: Spacing.xs,
   },
   voiceTitle: {
     fontFamily: FontFamily.sans,
-    fontWeight: '700',
-    fontSize: 14,
+    fontWeight: FontWeight.bold,
+    fontSize: FontSize.base,
     lineHeight: 20,
     letterSpacing: -0.15,
   },
@@ -218,24 +218,24 @@ const styles = StyleSheet.create({
   waveformRow: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    gap: 8,
-    paddingTop: 4,
+    gap: Spacing.sm,
+    paddingTop: Spacing.xs,
   },
   waveformBars: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    gap: 4,
+    gap: Spacing.xs,
     flex: 1,
   },
   waveBar: {
     width: 4,
-    borderRadius: 9999,
+    borderRadius: Radii.full,
     backgroundColor: 'rgba(0, 211, 243, 0.6)',
   },
   durationText: {
     fontFamily: FontFamily.mono,
-    fontWeight: '400',
-    fontSize: 10,
+    fontWeight: FontWeight.regular,
+    fontSize: FontSize.xs,
     lineHeight: 15,
   },
 });

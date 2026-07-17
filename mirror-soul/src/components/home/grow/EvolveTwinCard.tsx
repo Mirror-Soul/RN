@@ -1,5 +1,5 @@
 import EvolveHighIcon from '@/assets/images/common/evlove/EvolveHigh.svg';
-import {Colors, Radii, FontFamily} from '@/src/constants/theme';
+import {Colors, Radii, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
@@ -72,13 +72,13 @@ export default function EvolveTwinCard({ completionPercent }: EvolveTwinCardProp
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
-    paddingBottom: 20, // 시각적 균형을 위해 약간 조정
+    padding: Spacing.lg,
+    paddingBottom: Spacing.xl, // 시각적 균형을 위해 약간 조정
     borderRadius: Radii.lg,
     borderWidth: 0.612,
     borderColor: Colors.glass.purple30,
     alignSelf: 'stretch',
-    gap: 16,
+    gap: Spacing.lg,
   },
   topRow: {
     flexDirection: 'row',
@@ -87,25 +87,25 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
   },
   percentageInfo: {
-    gap: 4,
+    gap: Spacing.xs,
   },
   label: {
     fontFamily: FontFamily.sans,
-    fontSize: 12,
-    fontWeight: '400',
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.regular,
     lineHeight: 16,
   },
   percentText: {
     fontFamily: FontFamily.sans,
-    fontSize: 24,
-    fontWeight: '400',
+    fontSize: FontSize.xxxl,
+    fontWeight: FontWeight.regular,
     lineHeight: 32,
     letterSpacing: 0.07,
   },
   iconBadge: {
     width: 48,
     height: 48,
-    borderRadius: 24, // 원형
+    borderRadius: Radii.xl, // 원형
     borderWidth: 0.612,
     borderColor: Colors.glass.white20,
     justifyContent: 'center',
@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
   },
   bottomText: {
-    fontSize: 12,
+    fontSize: FontSize.sm,
     fontFamily: FontFamily.sans,
     lineHeight: 16,
   },

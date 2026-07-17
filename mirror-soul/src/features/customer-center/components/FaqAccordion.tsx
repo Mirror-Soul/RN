@@ -5,6 +5,8 @@ import { FaqItem } from './FaqItem';
 import { useFaqAccordion } from '../hooks/useFaqAccordion';
 import { FAQ_ITEMS } from '../constants/faqData';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
+import { Radii } from '@/src/constants/theme';
+
 
 export const FaqAccordion = () => {
   const { toggle, isOpen } = useFaqAccordion();
@@ -28,7 +30,7 @@ export const FaqAccordion = () => {
 const styles = StyleSheet.create({
   card: {
     borderWidth: 0.61,
-    borderRadius: 16,
+    borderRadius: Radii.lg,
     overflow: 'hidden',
     width: '100%',
   },

@@ -1,5 +1,5 @@
 import React from 'react';
-import { FontFamily } from '@/src/constants/theme';
+import {FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 
 import { View, Text, StyleSheet } from 'react-native';
 import { BottomSheet } from '../../../components/common/BottomSheet/BottomSheet';
@@ -61,44 +61,44 @@ export const TimeRefillBottomSheet = ({ isOpen, onClose }: TimeRefillBottomSheet
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 8,
+    paddingHorizontal: Spacing.xxl,
+    paddingTop: Spacing.sm,
   },
   header: {
-    marginBottom: 20,
+    marginBottom: Spacing.xl,
   },
   title: {
     fontFamily: FontFamily.sans,
-    fontWeight: '500',
-    fontSize: 18,
+    fontWeight: FontWeight.medium,
+    fontSize: FontSize.xl,
     lineHeight: 28,
     letterSpacing: -0.44,
   },
   subtitle: {
     fontFamily: FontFamily.sans,
-    fontWeight: '400',
-    fontSize: 12,
+    fontWeight: FontWeight.regular,
+    fontSize: FontSize.sm,
     lineHeight: 16,
-    marginTop: 4,
+    marginTop: Spacing.xs,
   },
   optionsContainer: {
     flex: 1,
   },
   footer: {
-    paddingTop: 24,
-    paddingBottom: 32, // extra padding for safe area
+    paddingTop: Spacing.xxl,
+    paddingBottom: Spacing.xxxl, // extra padding for safe area
   },
   footerText: {
     fontFamily: FontFamily.sans,
-    fontWeight: '400',
-    fontSize: 12,
+    fontWeight: FontWeight.regular,
+    fontSize: FontSize.sm,
     lineHeight: 20,
     textAlign: 'center',
   },
   linkText: {
     fontFamily: FontFamily.sans,
-    fontWeight: '500',
-    fontSize: 12, // match text size but underlined
+    fontWeight: FontWeight.medium,
+    fontSize: FontSize.sm, // match text size but underlined
     lineHeight: 24,
     letterSpacing: -0.31,
     textDecorationLine: 'underline',

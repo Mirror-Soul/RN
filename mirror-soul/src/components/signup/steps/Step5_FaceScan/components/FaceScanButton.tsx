@@ -1,5 +1,5 @@
 import CameraIcon from '@/assets/images/common/Camera_icon.svg';
-import {Colors, Radii, FontFamily} from '@/src/constants/theme';
+import {Colors, Radii, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity } from 'react-native';
@@ -68,14 +68,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 8,
+    gap: Spacing.sm,
   },
   text: {
     color: Colors.primary.soulBlack,
     textAlign: 'center',
     fontFamily: FontFamily.sans,
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.medium,
     lineHeight: 24,
     letterSpacing: -0.312,
   },

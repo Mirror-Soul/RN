@@ -1,4 +1,4 @@
-import {Colors, FontFamily} from '@/src/constants/theme';
+import {Colors, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import { useLayout } from '@/src/hooks/useLayout';
 import React, { useRef, useState } from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View, ViewToken } from 'react-native';
@@ -135,7 +135,7 @@ export default function RecommendSection({
 const styles = StyleSheet.create({
   container: {
     alignSelf: 'stretch',
-    gap: 16,
+    gap: Spacing.lg,
   },
   header: {
     flexDirection: 'row',
@@ -146,21 +146,21 @@ const styles = StyleSheet.create({
   },
   heading: {
     fontFamily: FontFamily.sans,
-    fontSize: 20,
-    fontWeight: '500',
+    fontSize: FontSize.xxl,
+    fontWeight: FontWeight.medium,
     lineHeight: 30,
     letterSpacing: -0.449,
   },
   viewAllText: {
     color: Colors.primary.electricCyan,
     fontFamily: FontFamily.sans,
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.medium,
     lineHeight: 20,
     letterSpacing: -0.15,
     textAlign: 'center',
   },
   cardWrapper: {
-    paddingRight: 0,
+    paddingRight: Spacing.none,
   },
 });

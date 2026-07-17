@@ -1,5 +1,5 @@
 import React from 'react';
-import { FontFamily } from '@/src/constants/theme';
+import {FontFamily, FontSize, FontWeight, Radii, Colors, Spacing} from '@/src/constants/theme';
 
 import { View, StyleSheet } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -33,13 +33,13 @@ export const TermsPolicyScreen = () => {
         />
         <PolicyMenuItem
           title="개인정보 처리방침"
-          iconColor="#C27AFF"
+          iconColor={Colors.primary.vividPurple}
           iconBgColor="rgba(194, 122, 255, 0.1)"
           url={TERMS_LINKS.PRIVACY_POLICY}
         />
         <PolicyMenuItem
           title="오픈소스 라이선스"
-          iconColor="#99A1AF"
+          iconColor={Colors.neutral.lightGray}
           iconBgColor="rgba(153, 161, 175, 0.1)"
           url={TERMS_LINKS.OPEN_SOURCE_LICENSES}
           isLast={true}
@@ -62,19 +62,19 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent', 
   },
   menuContainer: {
-    marginHorizontal: 24,
+    marginHorizontal: Spacing.xxl,
     borderWidth: 0.61,
-    borderRadius: 16,
+    borderRadius: Radii.lg,
     overflow: 'hidden',
   },
   footerTextContainer: {
-    marginTop: 24,
+    marginTop: Spacing.xxl,
     alignItems: 'center',
   },
   footerText: {
     fontFamily: FontFamily.sans,
-    fontWeight: '400',
-    fontSize: 12,
+    fontWeight: FontWeight.regular,
+    fontSize: FontSize.sm,
     textAlign: 'center',
   },
 });

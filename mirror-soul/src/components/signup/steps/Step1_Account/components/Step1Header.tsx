@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import {Colors, FontFamily} from '@/src/constants/theme';
+import {Colors, FontFamily, FontSize, FontWeight} from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 /**
@@ -39,7 +39,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontFamily: FontFamily.sans,
     fontSize: 30,
-    fontWeight: '500',
+    fontWeight: FontWeight.medium,
     lineHeight: 36,
     letterSpacing: 0.396,
   },
@@ -53,8 +53,8 @@ const styles = StyleSheet.create({
     color: Colors.neutral.lightGray,
     textAlign: 'center',
     fontFamily: FontFamily.sans,
-    fontSize: 14,
-    fontWeight: '400',
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.regular,
     lineHeight: 20,
     letterSpacing: -0.15,
   }

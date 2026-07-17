@@ -1,4 +1,4 @@
-import { Colors } from '@/src/constants/theme';
+import {Colors, Spacing} from '@/src/constants/theme';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import HistoryStatCard from './parts/HistoryStatCard';
@@ -42,6 +42,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignSelf: 'stretch',
     alignItems: 'center',
-    gap: 8, // 카드 사이 간격. 스펙에는 구체적으로 없으나 344px 맞춰 균등 배치
+    gap: Spacing.sm, // 카드 사이 간격. 스펙에는 구체적으로 없으나 344px 맞춰 균등 배치
   },
 });

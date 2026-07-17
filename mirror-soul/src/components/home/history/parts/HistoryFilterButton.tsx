@@ -1,4 +1,4 @@
-import {Colors, Radii, FontFamily} from '@/src/constants/theme';
+import {Colors, Radii, FontFamily, FontSize, FontWeight} from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import React from 'react';
 import { StyleSheet, TouchableOpacity, Text } from 'react-native';
@@ -50,8 +50,8 @@ const styles = StyleSheet.create({
   },
   label: {
     fontFamily: FontFamily.sans,
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.medium,
     lineHeight: 20, // 142.857%
     letterSpacing: -0.15,
     textAlign: 'center',

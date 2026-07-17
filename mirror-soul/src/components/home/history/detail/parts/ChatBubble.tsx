@@ -1,5 +1,5 @@
 import EditPencilIcon from '@/assets/images/common/history/call_history/call_edit_pencil.svg';
-import {Colors, Radii, FontFamily} from '@/src/constants/theme';
+import {Colors, Radii, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View, TextInput } from 'react-native';
@@ -108,21 +108,21 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     alignItems: 'flex-end',
     flexDirection: 'row',
-    gap: 8,
+    gap: Spacing.sm,
     maxWidth: '85%',
   },
   rowRight: {
     alignSelf: 'flex-end',
     alignItems: 'flex-end',
     flexDirection: 'row',
-    gap: 8,
+    gap: Spacing.sm,
     maxWidth: '85%', // 기기 너비에 따른 동적 대응을 위한 퍼센트 너비
   },
   metaLeft: {
     flexDirection: 'column',
     alignItems: 'flex-end',
     justifyContent: 'flex-end',
-    gap: 2,
+    gap: Spacing.xxs,
     minWidth: 40, // 메타 정보 공간 확보
   },
   sentBubbleContainer: {
@@ -130,8 +130,8 @@ const styles = StyleSheet.create({
     flexShrink: 1, // 중요: 자식(말풍선)이 부모 너비를 넘지 않고 줄어들게 함 (잘림 방지)
   },
   bubbleBase: {
-    paddingHorizontal: 12,
-    paddingVertical: 12,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.md,
     borderWidth: 0.612,
   },
   receivedBubble: {
@@ -158,18 +158,18 @@ const styles = StyleSheet.create({
   messageText: {
     color: Colors.neutral.pureWhite,
     fontFamily: FontFamily.sans,
-    fontSize: 14,
-    fontWeight: '400',
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.regular,
     lineHeight: 22,
     letterSpacing: -0.15,
   },
   textInput: {
     color: Colors.neutral.pureWhite,
     fontFamily: FontFamily.sans,
-    fontSize: 14,
+    fontSize: FontSize.base,
     lineHeight: 22,
     letterSpacing: -0.15,
-    padding: 0,
+    padding: Spacing.none,
     textAlignVertical: 'top',
     alignSelf: 'stretch',
   },
@@ -190,14 +190,14 @@ const styles = StyleSheet.create({
     color: Colors.neutral.darkGray,
     fontFamily: FontFamily.sans,
     fontSize: 11,
-    fontWeight: '400',
+    fontWeight: FontWeight.regular,
     lineHeight: 14,
   },
   editedLabel: {
     color: Colors.neutral.darkGray,
     fontFamily: FontFamily.sans,
     fontSize: 11,
-    fontWeight: '400',
+    fontWeight: FontWeight.regular,
     lineHeight: 14,
   },
 });

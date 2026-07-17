@@ -1,4 +1,4 @@
-import {Colors, Radii, FontFamily} from '@/src/constants/theme';
+import {Colors, Radii, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import React from 'react';
 import { StyleSheet, View, Text } from 'react-native';
@@ -40,7 +40,7 @@ const styles = StyleSheet.create({
     paddingBottom: 0.6,
     flexDirection: 'column',
     alignItems: 'flex-start',
-    gap: 4,
+    gap: Spacing.xs,
     borderRadius: Radii.lg,
     borderWidth: 0.612,
   },
@@ -51,8 +51,8 @@ const styles = StyleSheet.create({
   },
   countText: {
     fontFamily: FontFamily.sans,
-    fontSize: 24,
-    fontWeight: '400',
+    fontSize: FontSize.xxxl,
+    fontWeight: FontWeight.regular,
     lineHeight: 32, // 133.333%
     letterSpacing: 0.07,
     textAlign: 'center',
@@ -64,8 +64,8 @@ const styles = StyleSheet.create({
   },
   labelText: {
     fontFamily: FontFamily.sans,
-    fontSize: 12,
-    fontWeight: '400',
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.regular,
     lineHeight: 16, // 133.333%
     textAlign: 'center',
   },

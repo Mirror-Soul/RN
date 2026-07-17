@@ -4,7 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
-import { Colors, FontFamily } from '@/src/constants/theme';
+import {Colors, FontFamily, FontSize, FontWeight, Radii, Spacing} from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { usePressAnimation } from '../hooks/useProfileAnimations';
 
@@ -70,13 +70,13 @@ export const ProfileSettingsBanner = ({
 
 const styles = StyleSheet.create({
   wrapper: {
-    marginBottom: 24,
+    marginBottom: Spacing.xxl,
   },
   banner: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 24,
+    padding: Spacing.xxl,
     borderWidth: 1,
     borderRadius: 40,
     minHeight: 98,
@@ -84,31 +84,31 @@ const styles = StyleSheet.create({
   leftContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 16,
+    gap: Spacing.lg,
     flex: 1,
   },
   iconContainer: {
     width: 48,
     height: 48,
-    borderRadius: 16,
+    borderRadius: Radii.lg,
     justifyContent: 'center',
     alignItems: 'center',
   },
   textContainer: {
     flex: 1,
-    gap: 2,
+    gap: Spacing.xxs,
   },
   titleText: {
     fontFamily: FontFamily.sans,
-    fontWeight: '700',
-    fontSize: 14,
+    fontWeight: FontWeight.bold,
+    fontSize: FontSize.base,
     lineHeight: 20,
     letterSpacing: -0.15,
   },
   subtitleText: {
     fontFamily: FontFamily.sans,
-    fontWeight: '500',
-    fontSize: 12,
+    fontWeight: FontWeight.medium,
+    fontSize: FontSize.sm,
     lineHeight: 16,
   },
 });

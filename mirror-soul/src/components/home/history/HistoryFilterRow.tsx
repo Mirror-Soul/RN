@@ -1,6 +1,8 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import HistoryFilterButton from './parts/HistoryFilterButton';
+import { Spacing } from '@/src/constants/theme';
+
 
 export type HistoryFilterType = 'ALL' | 'RECEIVED' | 'SENT';
 
@@ -42,6 +44,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignSelf: 'stretch',
     alignItems: 'center',
-    gap: 8, // 7.995px 반올림
+    gap: Spacing.sm, // 7.995px 반올림
   },
 });

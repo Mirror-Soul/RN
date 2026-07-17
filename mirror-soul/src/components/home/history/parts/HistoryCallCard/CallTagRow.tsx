@@ -1,4 +1,4 @@
-import {Colors, Radii, FontFamily} from '@/src/constants/theme';
+import {Colors, Radii, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
@@ -30,37 +30,37 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'column',
     alignItems: 'flex-start',
-    gap: 4,
+    gap: Spacing.xs,
     alignSelf: 'stretch',
   },
   titleText: {
     fontFamily: FontFamily.sans,
-    fontSize: 12,
-    fontWeight: '400',
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.regular,
     lineHeight: 16, // 133.333%
   },
   tagsWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
     flexWrap: 'wrap',
-    gap: 4,
+    gap: Spacing.xs,
     alignSelf: 'stretch',
   },
   tagBadge: {
     paddingHorizontal: 8.6,
-    paddingVertical: 2, // 상하 패딩 원본 패딩을 근사
+    paddingVertical: Spacing.xxs, // 상하 패딩 원본 패딩을 근사
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: Radii.full,
     borderWidth: 0.612,
-    borderColor: 'rgba(194, 122, 255, 0.20)',
-    backgroundColor: 'rgba(194, 122, 255, 0.10)',
+    borderColor: Colors.glass.purple20,
+    backgroundColor: Colors.glass.purple10,
   },
   tagText: {
     color: Colors.primary.vividPurple, // #C27AFF
     fontFamily: FontFamily.sans,
-    fontSize: 12,
-    fontWeight: '400',
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.regular,
     lineHeight: 16, // 133.333%
   },
 });

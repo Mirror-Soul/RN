@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, ViewStyle, StyleProp } from 'react-native';
-import { Colors } from '@/src/constants/theme';
+import {Colors, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 
 interface Props {
   label: string;
@@ -24,7 +24,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12.6,
     flexDirection: 'column',
     alignItems: 'flex-start',
-    gap: 4,
+    gap: Spacing.xs,
     borderRadius: Radii.md2,
     borderWidth: 0.612,
     borderColor: Colors.glass.white10,
@@ -32,14 +32,14 @@ const styles = StyleSheet.create({
   },
   label: {
     color: Colors.neutral.darkGray,
-    fontSize: 12,
-    fontWeight: '400',
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.regular,
     lineHeight: 16,
   },
   value: {
     color: Colors.neutral.pureWhite,
-    fontSize: 16,
-    fontWeight: '400',
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.regular,
     lineHeight: 24,
     letterSpacing: -0.312,
   }

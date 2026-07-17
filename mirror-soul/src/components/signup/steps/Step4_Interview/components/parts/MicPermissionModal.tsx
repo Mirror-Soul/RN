@@ -1,4 +1,4 @@
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import React from 'react';
 import { Linking, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
@@ -89,9 +89,9 @@ const styles = StyleSheet.create({
     borderRadius: Radii.xl,
     borderWidth: 0.612,
     borderColor: Colors.glass.white10,
-    padding: 32,
+    padding: Spacing.xxxl,
     alignItems: 'center',
-    gap: 16,
+    gap: Spacing.lg,
   },
   iconCircle: {
     width: 64,
@@ -100,20 +100,20 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.glass.cyan10,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: Spacing.sm,
   },
   iconText: {
     fontSize: 28,
   },
   title: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: FontSize.xxl,
+    fontWeight: FontWeight.bold,
     lineHeight: 28,
     textAlign: 'center',
   },
   description: {
-    fontSize: 14,
-    fontWeight: '400',
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.regular,
     lineHeight: 22,
     textAlign: 'center',
     letterSpacing: -0.15,
@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
   buttonContainer: {
     width: '100%',
     gap: 10,
-    marginTop: 8,
+    marginTop: Spacing.sm,
   },
   primaryButton: {
     width: '100%',
@@ -133,8 +133,8 @@ const styles = StyleSheet.create({
   },
   primaryButtonText: {
     color: Colors.primary.soulBlack,
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.semibold,
   },
   secondaryButton: {
     width: '100%',
@@ -147,8 +147,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   secondaryButtonText: {
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.medium,
   },
   cancelButton: {
     width: '100%',
@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cancelButtonText: {
-    fontSize: 14,
-    fontWeight: '400',
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.regular,
   },
 });

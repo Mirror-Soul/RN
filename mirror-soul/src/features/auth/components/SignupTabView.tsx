@@ -4,7 +4,7 @@ import Animated, { FadeIn } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import MaskedView from '@react-native-masked-view/masked-view';
 import { useRouter } from 'expo-router';
-import { Colors, FontFamily } from '@/src/constants/theme';
+import {Colors, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import GradientButton from '@/src/components/common/GradientButton';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 
@@ -91,15 +91,15 @@ const styles = StyleSheet.create({
   container: {
     width: '100%',
     alignItems: 'center',
-    gap: 24, // 타이포그래피 중심이므로 여백을 늘려 숨쉴 공간 확보
-    paddingVertical: 16,
+    gap: Spacing.xxl, // 타이포그래피 중심이므로 여백을 늘려 숨쉴 공간 확보
+    paddingVertical: Spacing.lg,
   },
 
   // ── 헤드카피 ───────────────────────────────────────────────
   headlineWrapper: {
     position: 'relative',
     alignItems: 'center',
-    marginTop: 20, // 위쪽 여백 추가
+    marginTop: Spacing.xl, // 위쪽 여백 추가
   },
   maskedView: {
     ...StyleSheet.absoluteFillObject,
@@ -127,8 +127,8 @@ const styles = StyleSheet.create({
   // ── 서브카피 ───────────────────────────────────────────────
   subCapyText: {
     fontFamily: FontFamily.sans,
-    fontSize: 15,
-    fontWeight: '400',
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.regular,
     lineHeight: 24,
     letterSpacing: -0.2,
     textAlign: 'center',
@@ -136,22 +136,22 @@ const styles = StyleSheet.create({
 
   // ── CTA ───────────────────────────────────────────────────
   ctaButton: {
-    marginTop: 12,
+    marginTop: Spacing.md,
   },
 
   // ── 로그인 링크 ───────────────────────────────────────────
   loginLinkWrapper: {
-    paddingVertical: 4,
+    paddingVertical: Spacing.xs,
   },
   loginLinkText: {
     fontFamily: FontFamily.sans,
-    fontSize: 14,
-    fontWeight: '400',
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.regular,
     textAlign: 'center',
   },
   loginLinkAccent: {
     color: Colors.primary.electricCyan,
-    fontWeight: '500',
+    fontWeight: FontWeight.medium,
     textDecorationLine: 'underline',
   },
 });

@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import GreenCheckIcon from '@/assets/images/common/Green_check.svg';
-import {Colors, FontFamily} from '@/src/constants/theme';
+import {Colors, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 
 interface CompleteCheckProps {
   label: string;
@@ -39,13 +39,13 @@ const styles = StyleSheet.create({
     height: 20,
     flexDirection: 'row', // Horizontal alignment
     alignItems: 'center',
-    gap: 8,
+    gap: Spacing.sm,
   },
   text: {
     color: Colors.primary.successGreen,
     fontFamily: FontFamily.sans,
-    fontSize: 14,
-    fontWeight: '400',
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.regular,
     lineHeight: 20,
     letterSpacing: -0.15,
   },

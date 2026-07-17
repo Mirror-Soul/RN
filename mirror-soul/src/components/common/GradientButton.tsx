@@ -9,7 +9,7 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Colors, FontFamily, Radii } from '@/src/constants/theme';
+import {Colors, FontFamily, Radii, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import ContinueIcon from '@/assets/images/common/Continue_icon.svg';
 
 interface GradientButtonProps {
@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 8,
+    gap: Spacing.sm,
     borderRadius: Radii.lg,
     overflow: 'hidden',
     // iOS Shadow (활성 상태 공통 — 그라디언트와 함께 보임)
@@ -131,8 +131,8 @@ const styles = StyleSheet.create({
   },
   text: {
     fontFamily: FontFamily.sans,
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.medium,
     lineHeight: 24,
     letterSpacing: -0.312,
     textAlign: 'center',

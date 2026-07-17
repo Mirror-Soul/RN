@@ -16,7 +16,7 @@ import AuthTabToggle from '@/src/components/login/AuthTabToggle';
 import LoginHeader from '@/src/components/login/LoginHeader';
 import LoginTabView from '@/src/features/auth/components/LoginTabView';
 import SignupTabView from '@/src/features/auth/components/SignupTabView';
-import { Layout } from '@/src/constants/theme';
+import {Layout, Spacing} from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 /**
@@ -103,13 +103,13 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 40,
+    paddingVertical: Spacing.giant,
   },
   container: {
     width: '100%',
     maxWidth: Layout.MAX_CONTENT_WIDTH,
     alignItems: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: Spacing.lg,
     gap: 28,
     zIndex: 1,
   },

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, StyleSheet, Platform, Animated, Alert } from 'react-native';
-import { Colors, Layout } from '@/src/constants/theme';
+import {Colors, Layout, FontSize, FontWeight, Radii, Spacing} from '@/src/constants/theme';
 import { useRouter } from 'expo-router';
 import { useCameraDevice } from 'react-native-vision-camera';
 
@@ -209,7 +209,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: Platform.OS === 'ios' ? 16 : 8,
     paddingBottom: 50,
-    paddingHorizontal: 24,
+    paddingHorizontal: Spacing.xxl,
   },
   headerWrapper: {
     width: '100%',
@@ -218,12 +218,12 @@ const styles = StyleSheet.create({
   bodyWrapper: {
     width: '100%',
     maxWidth: Layout.MAX_CONTENT_WIDTH,
-    marginTop: 32,
+    marginTop: Spacing.xxxl,
   },
   buttonWrapper: {
     width: '100%',
     maxWidth: Layout.MAX_CONTENT_WIDTH,
-    marginTop: 40,
+    marginTop: Spacing.giant,
   },
   completionOverlay: {
     ...StyleSheet.absoluteFillObject,
@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
   checkmarkCircle: {
     width: 100,
     height: 100,
-    borderRadius: 50,
+    borderRadius: Radii.full,
     backgroundColor: Colors.primary.successGreen,
     justifyContent: 'center',
     alignItems: 'center',
@@ -254,7 +254,7 @@ const styles = StyleSheet.create({
   },
   checkmarkText: {
     color: Colors.primary.soulBlack,
-    fontSize: 48,
-    fontWeight: '700',
+    fontSize: FontSize.giant,
+    fontWeight: FontWeight.bold,
   },
 });

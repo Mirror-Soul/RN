@@ -2,7 +2,7 @@ import CallDetailAlert from '@/src/components/home/history/detail/CallDetailAler
 import CallDetailBody from '@/src/components/home/history/detail/CallDetailBody';
 import CallDetailFooter from '@/src/components/home/history/detail/CallDetailFooter';
 import CallDetailHeader from '@/src/components/home/history/detail/CallDetailHeader';
-import { Colors } from '@/src/constants/theme';
+import {Colors, FontSize, Spacing} from '@/src/constants/theme';
 import { MOCK_CALL_HISTORY } from '@/src/mocks/historyMocks';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React from 'react';
@@ -55,8 +55,8 @@ const styles = StyleSheet.create({
   errorText: {
     color: Colors.neutral.lightGray,
     textAlign: 'center',
-    marginTop: 40,
+    marginTop: Spacing.giant,
     fontFamily: 'Inter',
-    fontSize: 14,
+    fontSize: FontSize.base,
   },
 });

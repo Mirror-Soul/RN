@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native
 import StepSectionTitle from '../../common/StepSectionTitle';
 import StepSelectDropdown from '../../common/StepSelectDropdown';
 import CustomInput from '@/src/components/signup/common/CustomInput';
-import { Colors } from '@/src/constants/theme';
+import {Colors, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import ProfessionalIcon from '@/assets/images/common/Professional.svg';
 import Complete2Icon from '@/assets/images/common/Complete2.svg';
 import VerifySendIcon from '@/assets/images/common/Verify_send.svg';
@@ -76,7 +76,7 @@ export default function ProfessionalSection() {
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    marginBottom: 40,
+    marginBottom: Spacing.giant,
     ...(Platform.OS === 'ios' ? { zIndex: 1 } : { elevation: 1 }),
   },
   containerOpen: {
@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
   },
   formGroup: {
     width: '100%',
-    gap: 24,
+    gap: Spacing.xxl,
   },
   dropdownWrapper: {
     position: 'relative',
@@ -94,12 +94,12 @@ const styles = StyleSheet.create({
   },
   verifyCard: {
     width: '100%',
-    padding: 16,
+    padding: Spacing.lg,
     borderRadius: Radii.lg,
     borderWidth: 0.612,
     borderColor: Colors.glass.white10,
     backgroundColor: Colors.glass.white5,
-    gap: 12,
+    gap: Spacing.md,
   },
   verifyHeaderRow: {
     flexDirection: 'row',
@@ -110,31 +110,31 @@ const styles = StyleSheet.create({
   verifyHeaderLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: Spacing.sm,
   },
   verifyTitleGroup: {
     flexDirection: 'column',
   },
   verifyTitle: {
     color: Colors.neutral.pureWhite,
-    fontSize: 14,
-    fontWeight: '400',
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.regular,
     lineHeight: 20,
     letterSpacing: -0.15,
   },
   verifySubtitle: {
     color: Colors.neutral.darkGray,
-    fontSize: 12,
-    fontWeight: '400',
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.regular,
     lineHeight: 16,
   },
   verifyButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    gap: 8,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    gap: Spacing.sm,
     borderRadius: Radii.md2,
     borderWidth: 0.612,
     borderColor: Colors.glass.purple30,
@@ -142,15 +142,15 @@ const styles = StyleSheet.create({
   },
   verifyButtonText: {
     color: Colors.primary.vividPurple,
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.medium,
     lineHeight: 20,
     letterSpacing: -0.15,
   },
   verifyDescription: {
     color: Colors.neutral.darkGray,
-    fontSize: 12,
-    fontWeight: '400',
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.regular,
     lineHeight: 16,
   }
 });
