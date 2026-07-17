@@ -1,4 +1,4 @@
-import {Colors, Radii, FontFamily} from '@/src/constants/theme';
+import {Colors, Radii, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import React from 'react';
 import { StyleSheet, View, Text } from 'react-native';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
@@ -21,22 +21,22 @@ export default function EvolveFooter() {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
+    padding: Spacing.lg,
     borderRadius: Radii.md2,
     borderWidth: 0.612,
     alignSelf: 'stretch',
-    gap: 8,
+    gap: Spacing.sm,
   },
   title: {
     fontFamily: FontFamily.sans,
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.medium,
     lineHeight: 16,
   },
   subTitle: {
     fontFamily: FontFamily.sans,
-    fontSize: 12,
-    fontWeight: '400',
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.regular,
     lineHeight: 19.5,
   },
 });

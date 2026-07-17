@@ -9,7 +9,7 @@ import Animated, {
   withDelay,
   Easing
 } from 'react-native-reanimated';
-import { Colors } from '@/src/constants/theme';
+import {Colors, Spacing} from '@/src/constants/theme';
 
 interface InterviewVisualizerProps {
   isRecording?: boolean;
@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    gap: Spacing.sm,
   },
   bar: {
     width: 5,

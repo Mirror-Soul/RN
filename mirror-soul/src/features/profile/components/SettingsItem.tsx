@@ -1,5 +1,5 @@
 import React from 'react';
-import { FontFamily } from '@/src/constants/theme';
+import {FontFamily, FontSize, FontWeight, Radii, Spacing} from '@/src/constants/theme';
 
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -63,9 +63,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 14,
-    paddingHorizontal: 16,
+    paddingHorizontal: Spacing.lg,
     minHeight: 64,
-    gap: 12,
+    gap: Spacing.md,
   },
   borderBottom: {
     borderBottomWidth: 0.61,
@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
   iconContainer: {
     width: 32,
     height: 32,
-    borderRadius: 14,
+    borderRadius: Radii.md2,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -83,16 +83,16 @@ const styles = StyleSheet.create({
   },
   label: {
     fontFamily: FontFamily.sans,
-    fontWeight: '500',
-    fontSize: 14,
+    fontWeight: FontWeight.medium,
+    fontSize: FontSize.base,
     lineHeight: 20,
     letterSpacing: -0.15,
   },
   description: {
     fontFamily: FontFamily.sans,
-    fontWeight: '500',
-    fontSize: 12,
+    fontWeight: FontWeight.medium,
+    fontSize: FontSize.sm,
     lineHeight: 16,
-    marginTop: 2,
+    marginTop: Spacing.xxs,
   },
 });

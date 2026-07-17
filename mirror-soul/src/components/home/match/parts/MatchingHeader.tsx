@@ -1,63 +1,48 @@
-import SettingIcon from '@/assets/images/common/Setting.svg';
-import {Colors, Radii, FontFamily} from '@/src/constants/theme';
 import React from 'react';
-import { StyleSheet, TouchableOpacity, View, Text } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
+import {FontFamily, Radii, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
-/**
- * 매칭 화면 헤더 (뒤로가기 제거, 제목 중앙 정렬)
- */
+import { Ionicons, Feather } from '@expo/vector-icons';
+
 export default function MatchingHeader() {
   const { colors } = useThemeColors();
 
   return (
-    <View style={styles.header}>
-      {/* 타이틀 중앙 정렬을 위한 더미 뷰 (좌측) */}
-      <View style={styles.dummyView} />
+    <View style={styles.container}>
+      {/* 좌측 여백 (우측 아이콘과 대칭을 맞춰 타이틀을 중앙 정렬) */}
+      <View style={{ width: 44 }} />
 
-      <View style={styles.titleContainer}>
-        <Text style={[styles.title, { color: colors.text.primary }]}>매칭</Text>
-      </View>
+      {/* 타이틀 */}
+      <Text style={[styles.title, { color: colors.text.primary }]}>Matching</Text>
 
-      <TouchableOpacity 
-        activeOpacity={0.7} 
-      >
-        <View style={[styles.circleButton, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
-          <SettingIcon width={24} height={24} />
-        </View>
-      </TouchableOpacity>
+      {/* 오른쪽 아이콘 버튼 (ex. 필터 또는 설정) */}
+      <Pressable style={[styles.iconButton, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
+        <Ionicons name="options-outline" size={20} color={colors.text.secondary} />
+      </Pressable>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  header: {
-    height: 40,
+  container: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    alignSelf: 'stretch',
-  },
-  dummyView: {
-    width: 40,
-    height: 40,
-  },
-  circleButton: {
-    width: 40,
-    height: 40,
-    borderRadius: Radii.full,
-    borderWidth: 0.612,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  titleContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
+    height: 52,
+    marginTop: Spacing.sm,
   },
   title: {
     fontFamily: FontFamily.sans,
-    fontSize: 18,
-    fontWeight: '500',
-    lineHeight: 28,
-    letterSpacing: -0.439,
+    fontWeight: FontWeight.black,
+    fontSize: FontSize.xxxl,
+    letterSpacing: -1.1,
+  },
+  iconButton: {
+    width: 44,
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: Radii.lg,
   },
 });

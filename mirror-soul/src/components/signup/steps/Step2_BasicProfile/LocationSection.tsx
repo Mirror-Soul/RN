@@ -4,6 +4,8 @@ import StepSectionTitle from '../../common/StepSectionTitle';
 import StepSelectDropdown from '../../common/StepSelectDropdown';
 import LocationIcon from '@/assets/images/common/Location.svg';
 import LocationDropdown from './Location/LocationDropdown';
+import { Spacing } from '@/src/constants/theme';
+
 
 export default function LocationSection() {
   const [isOpen, setIsOpen] = useState(false);
@@ -38,7 +40,7 @@ export default function LocationSection() {
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    marginBottom: 40,
+    marginBottom: Spacing.giant,
     position: 'relative',
     // iOS/Android 모두에서 하위 컴포넌트(ProfessionalSection 등)를 덮을 수 있도록 zIndex 제어
     ...(Platform.OS === 'ios' ? { zIndex: 1 } : { elevation: 1 }),

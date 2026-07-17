@@ -7,7 +7,7 @@ import Animated, {
   withSpring,
   withSequence,
 } from 'react-native-reanimated';
-import {Colors, FontFamily} from '@/src/constants/theme';
+import {Colors, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import { DirectionConfig } from '../types/faceScan';
 import { SCAN_DIRECTIONS } from '../constants/faceScanConfig';
 
@@ -111,11 +111,11 @@ const styles = StyleSheet.create({
   guideMessage: {
     color: Colors.neutral.pureWhite,
     fontFamily: FontFamily.sans,
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.medium,
     lineHeight: 24,
     textAlign: 'center',
-    marginBottom: 24,
+    marginBottom: Spacing.xxl,
   },
   guideCircle: {
     width: 220,
@@ -138,8 +138,8 @@ const styles = StyleSheet.create({
   directionLabel: {
     color: Colors.glass.white30,
     fontFamily: FontFamily.sans,
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: FontSize.xl,
+    fontWeight: FontWeight.semibold,
     textAlign: 'center',
   },
   directionLabelMatching: {
@@ -147,8 +147,8 @@ const styles = StyleSheet.create({
   },
   dotsContainer: {
     flexDirection: 'row',
-    gap: 12,
-    marginTop: 32,
+    gap: Spacing.md,
+    marginTop: Spacing.xxxl,
   },
   dot: {
     width: 10,

@@ -1,7 +1,7 @@
 import OnboardingSteps from '@/src/components/signup/common/OnboardingSteps';
 import SignupBackground from '@/src/components/signup/steps/Step1_Account/SignupBackground';
 import { SIGNUP_STEP_MAP } from '@/src/constants/routes/signupRoutes';
-import { Colors } from '@/src/constants/theme';
+import {Colors, Spacing} from '@/src/constants/theme';
 import { Slot, usePathname } from 'expo-router';
 import React from 'react';
 import { Platform, SafeAreaView, StatusBar, StyleSheet, View } from 'react-native';
@@ -15,7 +15,7 @@ export default function SignupLayout() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" backgroundColor="#000" />
+      <StatusBar barStyle="light-content" backgroundColor={Colors.primary.soulBlack} />
       <SignupBackground />
 
       <View style={styles.container}>
@@ -43,9 +43,9 @@ const styles = StyleSheet.create({
   stepsWrapper: {
     width: '100%',
     alignItems: 'center', // 내부 OnboardingSteps를 위해 센터링 유지
-    paddingTop: 20,
-    paddingHorizontal: 24,
-    marginBottom: 8,
+    paddingTop: Spacing.xl,
+    paddingHorizontal: Spacing.xxl,
+    marginBottom: Spacing.sm,
     zIndex: 10,
   },
 });

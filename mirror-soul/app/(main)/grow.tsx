@@ -6,7 +6,7 @@ import EvolveFaceScanCard from '@/src/components/home/grow/parts/EvolveFaceScanC
 import EvolveInterviewCard from '@/src/components/home/grow/parts/EvolveInterviewCard';
 import EvolveMyselfCard from '@/src/components/home/grow/parts/EvolveMyselfCard';
 import EvolveVoiceCard from '@/src/components/home/grow/parts/EvolveVoiceCard';
-import { Colors, Layout } from '@/src/constants/theme';
+import {Colors, Layout, Spacing} from '@/src/constants/theme';
 import React from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -79,16 +79,16 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: Layout.MAX_CONTENT_WIDTH,
     alignSelf: 'center',
-    gap: 16,
-    paddingHorizontal: 4, // 양 끝 여유 공간
+    gap: Spacing.lg,
+    paddingHorizontal: Spacing.xs, // 양 끝 여유 공간
   },
   missionGrid: {
-    gap: 12,
+    gap: Spacing.md,
     alignSelf: 'stretch',
   },
   row: {
     flexDirection: 'row',
-    gap: 12,
+    gap: Spacing.md,
     alignSelf: 'stretch',
   },
 });

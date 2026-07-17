@@ -3,7 +3,7 @@ import HeartIcon from '@/assets/images/common/bottomNavbar/Heart.svg';
 import HistoryIcon from '@/assets/images/common/bottomNavbar/History_button.svg';
 import ProfileIcon from '@/assets/images/common/bottomNavbar/Profile.svg';
 import SimilarityMainIcon from '@/assets/images/common/main/Similarity.svg';
-import { Colors, FontFamily, Layout, Radii } from '@/src/constants/theme';
+import {Colors, FontFamily, Layout, Radii, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import React, { useCallback, useEffect } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, {
@@ -144,7 +144,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: '100%',
     maxWidth: Layout.MAX_CONTENT_WIDTH + 48,
-    paddingHorizontal: 24,
+    paddingHorizontal: Spacing.xxl,
     alignSelf: 'center',
     zIndex: 1000,
   },
@@ -152,8 +152,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.md,
     borderRadius: Radii.full,
     borderWidth: 1,
     shadowOffset: { width: 0, height: 10 },
@@ -164,13 +164,13 @@ const styles = StyleSheet.create({
   tabItem: {
     flex: 1,
     alignItems: 'center',
-    gap: 4,
+    gap: Spacing.xs,
     position: 'relative',
   },
   tabLabel: {
     fontFamily: FontFamily.sans,
-    fontSize: 10,
-    fontWeight: '500',
+    fontSize: FontSize.xs,
+    fontWeight: FontWeight.medium,
     lineHeight: 14,
     textAlign: 'center',
   },

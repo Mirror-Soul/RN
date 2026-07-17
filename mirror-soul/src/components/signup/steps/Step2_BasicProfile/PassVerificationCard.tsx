@@ -4,6 +4,8 @@ import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import UnverifiedCard from './PassVerification/UnverifiedCard';
 import VerifiedCard from './PassVerification/VerifiedCard';
+import { Spacing } from '@/src/constants/theme';
+
 
 export default function PassVerificationCard() {
   const [isVerified, setIsVerified] = useState(false);
@@ -27,7 +29,7 @@ export default function PassVerificationCard() {
 const styles = StyleSheet.create({
   wrapper: {
     width: '100%',
-    marginBottom: 40,
-    marginTop: 24,
+    marginBottom: Spacing.giant,
+    marginTop: Spacing.xxl,
   }
 });

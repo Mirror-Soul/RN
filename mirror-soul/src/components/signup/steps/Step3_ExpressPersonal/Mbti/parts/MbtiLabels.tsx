@@ -1,4 +1,4 @@
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, FontSize, Spacing} from '@/src/constants/theme';
 import React from 'react';
 import { Platform, StyleSheet, Text, View } from 'react-native';
 
@@ -51,7 +51,7 @@ const styles = StyleSheet.create({
   labelGroup: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: Spacing.sm,
   },
   charBox: {
     width: 32,
@@ -74,17 +74,17 @@ const styles = StyleSheet.create({
   charText: {
     color: Colors.neutral.pureWhite,
     fontFamily: monospaceFont,
-    fontSize: 14,
+    fontSize: FontSize.base,
   },
   labelText: {
     color: Colors.neutral.lightGray,
-    fontSize: 14,
+    fontSize: FontSize.base,
     letterSpacing: -0.15,
   },
   percentageText: {
     color: Colors.neutral.darkGray,
     textAlign: 'center',
-    fontSize: 12,
+    fontSize: FontSize.sm,
     flex: 1,
   },
 });

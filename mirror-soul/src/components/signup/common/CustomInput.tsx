@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TextInput, StyleSheet, TextInputProps, ViewStyle } from 'react-native';
-import { Colors } from '@/src/constants/theme';
+import {Colors, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 
 interface CustomInputProps extends TextInputProps {
   label: string;
@@ -28,27 +28,27 @@ const styles = StyleSheet.create({
     width: '100%',
     flexDirection: 'column',
     alignItems: 'flex-start',
-    gap: 8,
+    gap: Spacing.sm,
   },
   label: {
     color: Colors.neutral.lightGray,
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.medium,
     lineHeight: 20,
     letterSpacing: -0.15,
   },
   input: {
     width: '100%',
     height: 49,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
     borderRadius: Radii.lg,
     borderWidth: 0.6,
     borderColor: Colors.glass.white10,
     backgroundColor: Colors.glass.white5,
     color: Colors.neutral.pureWhite,
-    fontSize: 16,
-    fontWeight: '400',
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.regular,
     letterSpacing: -0.312,
   }
 });

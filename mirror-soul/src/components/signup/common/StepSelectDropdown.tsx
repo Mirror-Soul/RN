@@ -1,6 +1,6 @@
 import BottomNarrowIcon from '@/assets/images/common/Bottom_narrow.svg';
 import TopNarrowIcon from '@/assets/images/common/Top_narrow.svg';
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View, ViewStyle } from 'react-native';
 
@@ -47,15 +47,15 @@ const styles = StyleSheet.create({
   },
   label: {
     color: Colors.neutral.lightGray,
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.medium,
     lineHeight: 20,
     letterSpacing: -0.15,
   },
   button: {
     width: '100%',
     height: 49,
-    paddingHorizontal: 16,
+    paddingHorizontal: Spacing.lg,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -66,8 +66,8 @@ const styles = StyleSheet.create({
   },
   placeholder: {
     color: Colors.neutral.darkGray,
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.medium,
     lineHeight: 24,
     letterSpacing: -0.312,
   }

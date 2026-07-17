@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { Colors, FontFamily, Radii } from '@/src/constants/theme';
+import {Colors, FontFamily, Radii, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import EmailIcon from '@/assets/images/common/login/login_email.svg';
 import PasswordIcon from '@/assets/images/common/login/login_password.svg';
 import SeePasswordIcon from '@/assets/images/common/login/login_SeePassword.svg';
@@ -83,7 +83,7 @@ const AuthInput = forwardRef<TextInput, AuthInputProps>(
               backgroundColor: colors.background.glass,
               color: colors.text.primary 
             },
-            isPassword && { paddingRight: 48 },
+            isPassword && { paddingRight: Spacing.massive },
           ]}
           value={value}
           onChangeText={onChangeText}
@@ -108,7 +108,7 @@ const AuthInput = forwardRef<TextInput, AuthInputProps>(
             accessibilityRole="button"
             accessibilityLabel={isPasswordVisible ? '비밀번호 숨기기' : '비밀번호 보기'}
             accessibilityState={{ selected: isPasswordVisible }}
-            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            hitSlop={{ top: Spacing.md, bottom: Spacing.md, left: Spacing.md, right: Spacing.md }}
           >
             <SeePasswordIcon width={20} height={20} />
           </TouchableOpacity>
@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
   },
   iconContainer: {
     position: 'absolute',
-    left: 16,
+    left: Spacing.lg,
     zIndex: 1,
     width: 20,
     height: 20,
@@ -143,16 +143,16 @@ const styles = StyleSheet.create({
     height: '100%',
     borderRadius: Radii.lg,
     borderWidth: 1,
-    paddingLeft: 48,
-    paddingRight: 16,
+    paddingLeft: Spacing.massive,
+    paddingRight: Spacing.lg,
     fontFamily: FontFamily.sans,
-    fontSize: 16,
-    fontWeight: '400',
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.regular,
     letterSpacing: -0.312,
   },
   seePasswordContainer: {
     position: 'absolute',
-    right: 16,
+    right: Spacing.lg,
     width: 20,
     height: 20,
     justifyContent: 'center',

@@ -4,6 +4,8 @@ import React, { useState } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 import LocationDropdown from '../Location/LocationDropdown';
 import { SectionProps } from '../types/step2';
+import { Spacing } from '@/src/constants/theme';
+
 
 interface LocationSectionProps extends SectionProps {
   sigunguCache: React.RefObject<Map<string, string[]>>;
@@ -67,6 +69,6 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   dropdown: {
-    marginTop: 0,
+    marginTop: Spacing.none,
   }
 });

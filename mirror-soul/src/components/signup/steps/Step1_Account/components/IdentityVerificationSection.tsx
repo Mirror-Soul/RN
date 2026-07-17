@@ -1,6 +1,6 @@
 import GreenCheckIcon from '@/assets/images/common/Green_check.svg';
 import ProtectIcon from '@/assets/images/common/Verification_protect_icon.svg';
-import {Colors, Radii, FontFamily} from '@/src/constants/theme';
+import {Colors, Radii, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -73,8 +73,8 @@ const styles = StyleSheet.create({
   },
   headingTitle: {
     fontFamily: FontFamily.sans,
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.medium,
     lineHeight: 24,
     letterSpacing: -0.312,
   },
@@ -90,17 +90,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   buttonText: {
-    color: '#FFF',
+    color: Colors.neutral.pureWhite,
     textAlign: 'center',
     fontFamily: FontFamily.sans,
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.medium,
     lineHeight: 24,
     letterSpacing: -0.312,
   },
   successBox: {
     height: 73.215,
-    paddingLeft: 16,
+    paddingLeft: Spacing.lg,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
@@ -129,16 +129,16 @@ const styles = StyleSheet.create({
   successTitle: {
     color: Colors.primary.successGreen,
     fontFamily: FontFamily.sans,
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.medium,
     lineHeight: 20,
     letterSpacing: -0.15,
   },
   successSubtitle: {
     color: Colors.neutral.lightGray,
     fontFamily: FontFamily.sans,
-    fontSize: 12,
-    fontWeight: '400',
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.regular,
     lineHeight: 16,
   },
 });

@@ -1,6 +1,6 @@
 import LocationIcon from '@/assets/images/common/Location.svg';
 import RightNarrowIcon from '@/assets/images/common/Right_narrow.svg';
-import {Colors, Radii, FontFamily} from '@/src/constants/theme';
+import {Colors, Radii, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
@@ -50,18 +50,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     alignSelf: 'stretch',
     height: 46,
-    paddingHorizontal: 12,
+    paddingHorizontal: Spacing.md,
     borderRadius: Radii.md2,
     borderWidth: 0.612,
   },
   leftSection: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: Spacing.sm,
   },
   tagRow: {
     flexDirection: 'row',
-    gap: 4,
+    gap: Spacing.xs,
   },
   tag: {
     height: 20,
@@ -69,13 +69,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: Radii.full,
-    backgroundColor: 'rgba(0, 211, 243, 0.10)',
+    backgroundColor: Colors.glass.cyan10_d3,
   },
   tagText: {
     color: Colors.primary.electricCyan,
     fontFamily: FontFamily.sans,
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.medium,
     lineHeight: 16,
     textAlign: 'center',
   },

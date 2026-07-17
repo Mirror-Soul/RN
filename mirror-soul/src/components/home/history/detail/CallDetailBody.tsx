@@ -2,6 +2,8 @@ import { ChatMessage } from '@/src/components/home/history/parts/HistoryCallCard
 import React, { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import ChatBubble from './parts/ChatBubble';
+import { Spacing } from '@/src/constants/theme';
+
 
 interface CallDetailBodyProps {
   initialMessages: ChatMessage[];
@@ -64,8 +66,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    padding: 16,
-    gap: 16,
+    padding: Spacing.lg,
+    gap: Spacing.lg,
   },
   bubbleWrapper: {
     alignSelf: 'stretch',

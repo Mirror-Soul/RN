@@ -10,7 +10,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Feather } from '@expo/vector-icons';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
-import {Colors, FontFamily} from '@/src/constants/theme';
+import {Colors, FontFamily, FontSize, FontWeight, Radii, Spacing} from '@/src/constants/theme';
 
 interface DeleteConsentSectionProps {
   isAgreed: boolean;
@@ -121,31 +121,31 @@ export const DeleteConsentSection = ({ isAgreed, onToggleAgree, onSubmit }: Dele
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 24,
+    paddingHorizontal: Spacing.xxl,
     flex: 1,
     justifyContent: 'flex-start',
   },
   checkboxRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 12,
+    gap: Spacing.md,
   },
   checkboxWrapper: {
-    paddingTop: 2,
+    paddingTop: Spacing.xxs,
   },
   checkbox: {
     width: 20,
     height: 20,
     borderWidth: 0.61,
-    borderRadius: 8,
+    borderRadius: Radii.sm,
     justifyContent: 'center',
     alignItems: 'center',
   },
   consentText: {
     flex: 1,
     fontFamily: FontFamily.sans,
-    fontWeight: '500',
-    fontSize: 14,
+    fontWeight: FontWeight.medium,
+    fontSize: FontSize.base,
     lineHeight: 23,
     letterSpacing: -0.15,
   },
@@ -155,15 +155,15 @@ const styles = StyleSheet.create({
   submitButton: {
     height: 53.22,
     borderWidth: 0.61,
-    borderRadius: 16,
+    borderRadius: Radii.lg,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: Spacing.giant,
   },
   submitButtonText: {
     fontFamily: FontFamily.sans,
-    fontWeight: '500',
-    fontSize: 14,
+    fontWeight: FontWeight.medium,
+    fontSize: FontSize.base,
     letterSpacing: -0.15,
   },
 });

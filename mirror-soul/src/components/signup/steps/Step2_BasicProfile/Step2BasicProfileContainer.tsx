@@ -1,7 +1,7 @@
 import SecurityFooter from '@/src/components/home/SecurityFooter';
 import GradientButton from '@/src/components/common/GradientButton';
 import { SIGNUP_ROUTES } from '@/src/constants/routes/signupRoutes';
-import { Colors, Layout } from '@/src/constants/theme';
+import {Colors, Layout, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View, Alert, ActivityIndicator, Text } from 'react-native';
@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     alignItems: 'center',
-    paddingBottom: 40,
+    paddingBottom: Spacing.giant,
   },
   container: {
     width: '100%',
@@ -176,18 +176,18 @@ const styles = StyleSheet.create({
     marginTop: 25,
   },
   headerWrapper: {
-    marginBottom: 40,
+    marginBottom: Spacing.giant,
   },
   formContainer: {
     width: '100%',
-    gap: 20, // Adjusted for spacing
+    gap: Spacing.xl, // Adjusted for spacing
   },
   buttonWrapper: {
-    marginTop: 20,
+    marginTop: Spacing.xl,
     width: '100%',
   },
   footerContainer: {
-    marginTop: 40,
+    marginTop: Spacing.giant,
     width: '100%',
     alignItems: 'center',
   },
@@ -199,10 +199,10 @@ const styles = StyleSheet.create({
   },
   loadingContent: {
     alignItems: 'center',
-    gap: 16,
+    gap: Spacing.lg,
   },
   loadingText: {
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.medium,
   },
 });

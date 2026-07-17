@@ -22,7 +22,8 @@ export const Colors = {
     cardHeader: ['rgba(255, 137, 4, 0.10)', 'rgba(255, 100, 103, 0.10)'] as [string, string], // 매칭 카드 헤더
     matchingStart: ['#FB64B6', '#C27AFF'] as [string, string], // 시작 버튼 전용
     twinCardHeader: ['rgba(0, 211, 243, 0.10)', 'rgba(81, 162, 255, 0.10)'] as [string, string], // Twin 카드 헤더 (시안)
-    twinCallButton: ['#C27AFF', '#FB64B6'] as [string, string], // 상대 Twin과 통화 버튼
+    twinCallButton: ['#00D3F3', '#155DFC'] as [string, string], // 상대 Twin과 통화 버튼
+    avatarPlaceholder: ['rgba(0, 211, 243, 0.2)', 'rgba(21, 93, 252, 0.2)'] as [string, string], // 매칭 카드 아바타 배경
     twinProgress: ['#00D3F3', '#51A2FF'] as [string, string], // Twin 만족도 바 그라디언트
     limeGradient: ['#65F56D', '#2BEE34'] as [string, string], // Lime Green 시작 버튼용
     subtleLimeGradient: ['rgba(43, 238, 52, 0.6)', 'rgba(43, 238, 52, 0.3)'] as [string, string], // 은은한 Lime Green (토글용)
@@ -134,6 +135,51 @@ export const Layout = {
 } as const;
 
 /**
+ * 여백 및 간격 상수 시스템 (Spacing)
+ */
+export const Spacing = {
+  none: 0,
+  xxs: 2,
+  xs: 4,
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 20,
+  xxl: 24,
+  xxxl: 32,
+  giant: 40,
+  massive: 48,
+} as const;
+
+
+/**
+ * 폰트 크기 상수 시스템 (Typography)
+ */
+export const FontSize = {
+  xs: 10,
+  sm: 12,
+  base: 14,
+  md: 15,
+  lg: 16,
+  xl: 18,
+  xxl: 20,
+  xxxl: 24,
+  giant: 48,
+} as const;
+
+/**
+ * 폰트 두께 상수 시스템 (Typography)
+ */
+export const FontWeight = {
+  regular: '400',
+  medium: '500',
+  semibold: '600',
+  bold: '700',
+  extrabold: '800',
+  black: '900',
+} as const;
+
+/**
  * 동적 테마 (Light/Dark Mode) 시스템
  */
 export interface ThemeColors {
@@ -160,6 +206,11 @@ export interface ThemeColors {
   state: {
     danger: string;    // 에러, 탈퇴 등
     success: string;   // 완료, 확인
+  };
+  glow: {
+    cyan: string;      // 매칭 배경 좌측
+    purple: string;    // 매칭 배경 우측
+    cyanInner: string; // 프로필 카드 내부
   };
 }
 
@@ -188,6 +239,11 @@ export const lightTheme: ThemeColors = {
     danger: '#DC2626',
     success: '#059669',
   },
+  glow: {
+    cyan: 'rgba(0, 211, 243, 0.02)',
+    purple: 'rgba(194, 122, 255, 0.02)',
+    cyanInner: 'rgba(0, 211, 243, 0.02)',
+  },
 };
 
 export const darkTheme: ThemeColors = {
@@ -214,6 +270,11 @@ export const darkTheme: ThemeColors = {
   state: {
     danger: '#FF4C4C',
     success: '#05DF72',
+  },
+  glow: {
+    cyan: 'rgba(82, 192, 240, 0.05)',
+    purple: 'rgba(150, 123, 245, 0.05)',
+    cyanInner: 'rgba(0, 211, 243, 0.05)',
   },
 };
 

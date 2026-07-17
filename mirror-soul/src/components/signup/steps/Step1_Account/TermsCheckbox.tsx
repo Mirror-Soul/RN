@@ -1,4 +1,4 @@
-import { Colors } from '@/src/constants/theme';
+import {Colors, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
@@ -45,7 +45,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.glass.white5,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 16,
+    gap: Spacing.lg,
   },
   checkbox: {
     width: 20,
@@ -73,20 +73,20 @@ const styles = StyleSheet.create({
   },
   baseText: {
     color: Colors.neutral.lightGrayText,
-    fontSize: 14,
-    fontWeight: '400',
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.regular,
     lineHeight: 19.5,
   },
   link1: {
     color: Colors.primary.electricCyan,
-    fontSize: 15,
-    fontWeight: '500',
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.medium,
     textDecorationLine: 'underline',
   },
   link2: {
     color: Colors.primary.vividPurple,
-    fontSize: 15,
-    fontWeight: '500',
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.medium,
     textDecorationLine: 'underline',
   }
 });

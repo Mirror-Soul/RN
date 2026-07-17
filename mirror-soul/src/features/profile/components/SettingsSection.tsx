@@ -1,7 +1,7 @@
 import React from 'react';
 import { useRouter } from 'expo-router';
 import { SectionHeading } from '@/src/components/common/SectionHeading';
-import { FontFamily } from '@/src/constants/theme';
+import {FontFamily, Radii, Spacing} from '@/src/constants/theme';
 
 import { View, Text, StyleSheet } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -40,15 +40,15 @@ export const SettingsSection = ({ section, delay = 200 }: SettingsSectionProps) 
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    marginBottom: 24,
+    marginBottom: Spacing.xxl,
   },
   sectionLabelSpacing: {
-    marginBottom: 8,
-    paddingHorizontal: 8,
+    marginBottom: Spacing.sm,
+    paddingHorizontal: Spacing.sm,
   },
   cardContainer: {
     borderWidth: 0.61,
-    borderRadius: 16,
+    borderRadius: Radii.lg,
     overflow: 'hidden',
   },
 });

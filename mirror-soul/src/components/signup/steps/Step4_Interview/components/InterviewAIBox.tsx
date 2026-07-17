@@ -1,4 +1,4 @@
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, FontWeight, Spacing} from '@/src/constants/theme';
 import { BlurView } from 'expo-blur';
 import React from 'react';
 import { StyleSheet, Text, View, Platform } from 'react-native';
@@ -45,9 +45,9 @@ const styles = StyleSheet.create({
   },
   container: {
     width: '100%',
-    paddingTop: 24,
-    paddingHorizontal: 24,
-    paddingBottom: 4,
+    paddingTop: Spacing.xxl,
+    paddingHorizontal: Spacing.xxl,
+    paddingBottom: Spacing.xs,
   },
   topRow: {
     flexDirection: 'row',
@@ -58,22 +58,22 @@ const styles = StyleSheet.create({
   aiLabelWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: Spacing.sm,
   },
   aiDot: {
     width: 8,
     height: 8,
-    borderRadius: 4,
+    borderRadius: Radii.xs,
     backgroundColor: Colors.primary.electricCyan,
   },
   aiLabelText: {
     color: Colors.primary.electricCyan,
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: FontWeight.semibold,
     letterSpacing: -0.1,
   },
   badgeWrapper: {
-    paddingVertical: 4,
+    paddingVertical: Spacing.xs,
     paddingHorizontal: 10,
     borderRadius: Radii.lg2,
     backgroundColor: 'rgba(163, 114, 255, 0.15)',
@@ -83,15 +83,15 @@ const styles = StyleSheet.create({
   badgeText: {
     color: Colors.primary.vividPurple,
     fontSize: 11,
-    fontWeight: '500',
+    fontWeight: FontWeight.medium,
   },
   paragraphWrapper: {
-    marginTop: 12,
-    marginBottom: 20,
+    marginTop: Spacing.md,
+    marginBottom: Spacing.xl,
   },
   paragraphText: {
     fontSize: 17,
-    fontWeight: '400',
+    fontWeight: FontWeight.regular,
     lineHeight: 26,
     letterSpacing: -0.4,
   },

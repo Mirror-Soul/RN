@@ -1,5 +1,5 @@
 import MyselfIcon from '@/assets/images/common/evlove/evlove_myself.svg';
-import {Colors, Radii, FontFamily} from '@/src/constants/theme';
+import {Colors, Radii, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -19,7 +19,7 @@ export default function EvolveMyselfCard() {
       accessibilityHint="현재 학습된 트윈의 답변을 확인하기 위한 대화 화면으로 이동"
     >
       <LinearGradient
-        colors={['rgba(0, 211, 243, 0.10)', 'rgba(194, 122, 255, 0.10)', 'rgba(251, 100, 182, 0.10)']}
+        colors={[Colors.glass.cyan10_d3, Colors.glass.purple10, 'rgba(251, 100, 182, 0.10)']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={styles.container}
@@ -51,8 +51,8 @@ export default function EvolveMyselfCard() {
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 12,
-    paddingVertical: 12,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.md,
     borderRadius: Radii.md2,
     borderWidth: 0.612,
     borderColor: Colors.glass.white20,
@@ -72,26 +72,26 @@ const styles = StyleSheet.create({
   },
   textContainer: {
     flex: 1,
-    gap: 2,
+    gap: Spacing.xxs,
   },
   title: {
     fontFamily: FontFamily.sans,
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.medium,
     lineHeight: 20,
     letterSpacing: -0.15,
   },
   subTitle: {
     fontFamily: FontFamily.sans,
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.medium,
     lineHeight: 16,
   },
   arrow: {
     color: Colors.primary.electricCyan,
     fontFamily: FontFamily.sans,
-    fontSize: 18,
-    fontWeight: '500',
+    fontSize: FontSize.xl,
+    fontWeight: FontWeight.medium,
     lineHeight: 28,
     letterSpacing: -0.439,
   },

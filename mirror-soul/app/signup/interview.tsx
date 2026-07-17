@@ -1,4 +1,4 @@
-import { Colors, Layout } from '@/src/constants/theme';
+import {Colors, Layout, Spacing} from '@/src/constants/theme';
 import { useRouter } from 'expo-router';
 import React, { useEffect } from 'react';
 import { Alert, KeyboardAvoidingView, Linking, Platform, ScrollView, StyleSheet, View, useWindowDimensions, ActivityIndicator } from 'react-native';
@@ -220,17 +220,17 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: Layout.MAX_CONTENT_WIDTH,
     alignItems: 'center',
-    marginTop: 20,
+    marginTop: Spacing.xl,
   },
   headerWrapper: {
-    marginBottom: 20,
+    marginBottom: Spacing.xl,
   },
   visualizerWrapper: {
     width: '100%',
     height: 180,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: Spacing.xl,
   },
   body: {
     width: '100%',
@@ -238,15 +238,15 @@ const styles = StyleSheet.create({
   },
   answerWrapper: {
     width: '100%',
-    marginTop: 16,
+    marginTop: Spacing.lg,
   },
   controlsWrapper: {
     width: '100%',
-    marginTop: 20,
+    marginTop: Spacing.xl,
   },
   footerWrapper: {
     width: '100%',
-    marginTop: 32,
+    marginTop: Spacing.xxxl,
   },
   loadingContainer: {
     justifyContent: 'center',

@@ -8,6 +8,8 @@ import { TimeRefillBottomSheet } from '../profile/components/TimeRefillBottomShe
 import { Header } from '@/src/components/common/Header';
 import { ScreenLayout } from '@/src/components/common/ScreenLayout';
 import { useProfileSections } from '../profile/constants/profileMenu';
+import { Spacing } from '@/src/constants/theme';
+
 
 export const ProfileSettingsScreen = () => {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
@@ -47,7 +49,7 @@ export const ProfileSettingsScreen = () => {
 
 const styles = StyleSheet.create({
   content: {
-    paddingHorizontal: 24,
-    paddingTop: 8,
+    paddingHorizontal: Spacing.xxl,
+    paddingTop: Spacing.sm,
   },
 });

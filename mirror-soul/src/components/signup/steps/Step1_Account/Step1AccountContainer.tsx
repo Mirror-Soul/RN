@@ -1,7 +1,7 @@
 import SecurityFooter from '@/src/components/home/SecurityFooter';
 import GradientButton from '@/src/components/common/GradientButton';
 import { SIGNUP_ROUTES } from '@/src/constants/routes/signupRoutes';
-import {Colors, Layout, FontFamily} from '@/src/constants/theme';
+import {Colors, Layout, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import { createBasicProfile } from '@/src/services/authService';
 
 import { useAuthStore } from '@/src/store/useAuthStore';
@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
     maxWidth: Layout.MAX_CONTENT_WIDTH,
     alignSelf: 'center',
     alignItems: 'center',
-    paddingBottom: 40,
+    paddingBottom: Spacing.giant,
   },
   container: {
     width: '100%',
@@ -189,19 +189,19 @@ const styles = StyleSheet.create({
     marginTop: 25,
   },
   headerWrapper: {
-    // marginTop: 40,
-    marginBottom: 40,
+    // marginTop: Spacing.giant,
+    marginBottom: Spacing.giant,
   },
   formContainer: {
     width: '100%',
-    gap: 40,
+    gap: Spacing.giant,
   },
   buttonWrapper: {
-    marginTop: 8,
+    marginTop: Spacing.sm,
     width: '100%',
   },
   footerContainer: {
-    marginTop: 40,
+    marginTop: Spacing.giant,
     width: '100%',
     alignItems: 'center',
   },
@@ -213,12 +213,12 @@ const styles = StyleSheet.create({
   },
   loadingContent: {
     alignItems: 'center',
-    gap: 16,
+    gap: Spacing.lg,
   },
   loadingText: {
     fontFamily: FontFamily.sans,
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.medium,
     letterSpacing: -0.312,
   },
 });

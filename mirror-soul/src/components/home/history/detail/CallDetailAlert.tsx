@@ -1,6 +1,6 @@
 import EditPencilIcon from '@/assets/images/common/history/call_history/call_edit_pencil.svg';
 import PurpleInfoIcon from '@/assets/images/common/history/call_history/puple_info.svg';
-import {Colors, FontFamily} from '@/src/constants/theme';
+import {Colors, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -25,9 +25,9 @@ export default function CallDetailAlert() {
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 12,
-    paddingTop: 12,
-    paddingBottom: 12,
+    paddingHorizontal: Spacing.md,
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.md,
     borderBottomWidth: 0.612,
     borderBottomColor: Colors.glass.purple20,
     backgroundColor: Colors.glass.purple10,
@@ -35,7 +35,7 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: Spacing.sm,
     alignSelf: 'stretch',
   },
   paragraph: {
@@ -47,8 +47,8 @@ const styles = StyleSheet.create({
   text: {
     color: Colors.neutral.lavender,
     fontFamily: FontFamily.sans,
-    fontSize: 12,
-    fontWeight: '400',
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.regular,
     lineHeight: 16,
   },
 });

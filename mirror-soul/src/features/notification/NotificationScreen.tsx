@@ -7,6 +7,8 @@ import { useNotificationSettings } from './hooks/useNotificationSettings';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { Header } from '@/src/components/common/Header';
 import { ScreenLayout } from '@/src/components/common/ScreenLayout';
+import {Radii, Spacing} from '@/src/constants/theme';
+
 
 export const NotificationScreen = () => {
   const { timeLimitAlert, eventAlert, handleToggleTimeLimit, handleToggleEvent } = useNotificationSettings();
@@ -43,11 +45,11 @@ export const NotificationScreen = () => {
 
 const styles = StyleSheet.create({
   contentPadding: {
-    paddingHorizontal: 24,
+    paddingHorizontal: Spacing.xxl,
   },
   card: {
     borderWidth: 0.61,
-    borderRadius: 16,
+    borderRadius: Radii.lg,
     overflow: 'hidden',
     width: '100%',
   },

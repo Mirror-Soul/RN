@@ -31,7 +31,7 @@ export const useProfileSections = (): ProfileSection[] => {
         label: '알림 설정',
         description: '푸시 알림 수신 설정',
         iconName: 'bell',
-        iconColor: '#C27AFF',
+        iconColor: Colors.primary.vividPurple,
         iconBgColor: 'rgba(194, 122, 255, 0.1)',
       },
     ],

@@ -3,7 +3,7 @@ import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-nativ
 import Animated, { FadeIn } from 'react-native-reanimated';
 import GradientButton from '@/src/components/common/GradientButton';
 import AuthInput from '@/src/components/login/parts/AuthInput';
-import { Colors, FontFamily } from '@/src/constants/theme';
+import {Colors, FontFamily, FontSize, FontWeight, Radii, Spacing} from '@/src/constants/theme';
 import { useLoginForm } from '@/src/features/auth/hooks/useLoginForm';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 
@@ -95,7 +95,7 @@ export default function LoginTabView() {
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    gap: 12,
+    gap: Spacing.md,
   },
   fieldGroup: {
     width: '100%',
@@ -103,16 +103,16 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontFamily: FontFamily.sans,
-    fontSize: 12,
-    fontWeight: '400',
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.regular,
     color: Colors.primary.activeRedText,
-    paddingLeft: 4,
+    paddingLeft: Spacing.xs,
   },
   generalErrorBox: {
     width: '100%',
     paddingVertical: 10,
     paddingHorizontal: 14,
-    borderRadius: 10,
+    borderRadius: Radii.smmd,
     backgroundColor: 'rgba(251, 44, 54, 0.08)',
     borderWidth: 1,
     borderColor: 'rgba(251, 44, 54, 0.20)',
@@ -120,23 +120,23 @@ const styles = StyleSheet.create({
   generalErrorText: {
     fontFamily: FontFamily.sans,
     fontSize: 13,
-    fontWeight: '400',
+    fontWeight: FontWeight.regular,
     color: Colors.primary.activeRedText,
     textAlign: 'center',
     lineHeight: 18,
   },
   loginButton: {
-    marginTop: 4,
+    marginTop: Spacing.xs,
   },
   forgotButton: {
-    marginTop: 8,
+    marginTop: Spacing.sm,
     alignSelf: 'center',
-    paddingVertical: 4,
+    paddingVertical: Spacing.xs,
   },
   forgotText: {
     fontFamily: FontFamily.sans,
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.medium,
     lineHeight: 20,
     letterSpacing: -0.15,
     textAlign: 'center',

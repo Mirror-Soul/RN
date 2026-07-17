@@ -2,7 +2,7 @@ import HistoryFilterRow, { HistoryFilterType } from '@/src/components/home/histo
 import HistoryHeader from '@/src/components/home/history/HistoryHeader';
 import HistoryList from '@/src/components/home/history/HistoryList';
 import HistoryStatsRow from '@/src/components/home/history/HistoryStatsRow';
-import { Colors, Layout } from '@/src/constants/theme';
+import {Colors, Layout, Spacing} from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import React, { useState } from 'react';
 import { StyleSheet, View, ScrollView } from 'react-native';
@@ -60,6 +60,6 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: Layout.MAX_CONTENT_WIDTH,
     alignSelf: 'center',
-    gap: 12, // 각 행 사이의 간격 조정 (스펙 11.992px에 근사)
+    gap: Spacing.md, // 각 행 사이의 간격 조정 (스펙 11.992px에 근사)
   },
 });

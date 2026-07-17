@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { Colors, FontFamily } from '@/src/constants/theme';
+import {Colors, FontFamily, FontSize, FontWeight, Radii, Spacing} from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface ProfileRecordSectionProps {
@@ -46,20 +46,20 @@ export const ProfileRecordSection = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 24,
+    marginBottom: Spacing.xxl,
   },
 
   // 헤딩 + 구분선
   headingRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 16,
-    marginBottom: 16,
+    gap: Spacing.lg,
+    marginBottom: Spacing.lg,
   },
   headingText: {
     fontFamily: FontFamily.sans,
-    fontWeight: '900',
-    fontSize: 10,
+    fontWeight: FontWeight.black,
+    fontSize: FontSize.xs,
     lineHeight: 15,
     letterSpacing: 2.12,
     textTransform: 'uppercase',
@@ -71,14 +71,14 @@ const styles = StyleSheet.create({
 
   // 자기소개 카드
   card: {
-    padding: 24,
+    padding: Spacing.xxl,
     borderWidth: 1,
-    borderRadius: 32,
+    borderRadius: Radii.xxl,
   },
   bioText: {
     fontFamily: FontFamily.sans,
-    fontWeight: '500',
-    fontSize: 18,
+    fontWeight: FontWeight.medium,
+    fontSize: FontSize.xl,
     lineHeight: 25,
     letterSpacing: -0.44,
   },

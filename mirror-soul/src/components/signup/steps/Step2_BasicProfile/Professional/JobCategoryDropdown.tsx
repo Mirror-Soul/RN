@@ -1,4 +1,4 @@
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import React from 'react';
 import { Dimensions, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { jobCategories } from './jobData';
@@ -69,20 +69,20 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    gap: 4,
+    gap: Spacing.xs,
   },
   listItem: {
     width: '100%',
     height: 48,
     paddingVertical: 11.4,
-    paddingHorizontal: 16,
+    paddingHorizontal: Spacing.lg,
     borderRadius: Radii.md2,
     justifyContent: 'center',
   },
   listItemText: {
     color: Colors.neutral.pureWhite,
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.medium,
     lineHeight: 24,
     letterSpacing: -0.312,
   }

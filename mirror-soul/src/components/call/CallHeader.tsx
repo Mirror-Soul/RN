@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import {Colors, FontFamily} from '@/src/constants/theme';
+import {Colors, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import type { CallStatus } from '@/src/hooks/useAICallFlow';
 
 interface CallHeaderProps {
@@ -33,13 +33,13 @@ export default function CallHeader({ callStatus }: CallHeaderProps) {
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
-    paddingTop: 16,
+    paddingTop: Spacing.lg,
   },
   statusText: {
     color: Colors.neutral.lightGray,
     fontFamily: FontFamily.sans,
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.medium,
   },
   connectedText: {
     color: Colors.primary.electricCyan,

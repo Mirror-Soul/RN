@@ -3,7 +3,8 @@ import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Animated, { useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { useThemeStore } from '@/src/store/useThemeStore';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
-import { FontFamily } from '@/src/constants/theme';
+import {FontFamily, FontSize, FontWeight, Radii, Spacing} from '@/src/constants/theme';
+import { useSwitchToggle } from '@/src/animations/patterns/useSwitchToggle';
 
 export const ThemeToggle = () => {
   const { themeMode, setThemeMode } = useThemeStore();
@@ -17,14 +18,9 @@ export const ThemeToggle = () => {
 
   const selectedIndex = options.findIndex((opt) => opt.id === themeMode);
 
-  const indicatorStyle = useAnimatedStyle(() => {
-    return {
-      left: withSpring(`${(selectedIndex * 33.333)}%`, {
-        stiffness: 350,
-        damping: 28,
-        mass: 0.8,
-      })
-    };
+  const { indicatorStyle } = useSwitchToggle({
+    selectedIndex,
+    totalSegments: options.length,
   });
 
   return (
@@ -68,7 +64,7 @@ const styles = StyleSheet.create({
     height: 44,
     borderRadius: 22,
     borderWidth: 0.61,
-    padding: 2,
+    padding: Spacing.xxs,
     alignItems: 'center',
     width: '100%',
     position: 'relative',
@@ -77,7 +73,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     height: '100%',
     width: '33.333%',
-    borderRadius: 20,
+    borderRadius: Radii.lg2,
     borderWidth: 0.61,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
@@ -93,10 +89,10 @@ const styles = StyleSheet.create({
   },
   optionLabel: {
     fontFamily: FontFamily.sans,
-    fontSize: 14,
-    fontWeight: '400',
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.regular,
   },
   optionLabelSelected: {
-    fontWeight: '600',
+    fontWeight: FontWeight.semibold,
   }
 });

@@ -1,5 +1,5 @@
 import React from 'react';
-import { FontFamily } from '@/src/constants/theme';
+import {FontFamily, FontSize, FontWeight, Colors, Spacing} from '@/src/constants/theme';
 
 import { View, Text, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -49,12 +49,12 @@ const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
     paddingTop: 56,
-    paddingHorizontal: 24,
-    paddingBottom: 32,
+    paddingHorizontal: Spacing.xxl,
+    paddingBottom: Spacing.xxxl,
     width: '100%',
   },
   avatarMargin: {
-    paddingBottom: 20,
+    paddingBottom: Spacing.xl,
   },
   avatarGradient: {
     width: 96,
@@ -62,7 +62,7 @@ const styles = StyleSheet.create({
     borderRadius: 48,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
+    shadowColor: Colors.primary.soulBlack,
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.1,
     shadowRadius: 15,
@@ -81,8 +81,8 @@ const styles = StyleSheet.create({
   },
   nameText: {
     fontFamily: FontFamily.sans,
-    fontWeight: '500',
-    fontSize: 24,
+    fontWeight: FontWeight.medium,
+    fontSize: FontSize.xxxl,
     lineHeight: 32,
     letterSpacing: 0.07,
     marginBottom: 6,
@@ -90,12 +90,12 @@ const styles = StyleSheet.create({
   emailContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: Spacing.sm,
   },
   emailText: {
     fontFamily: FontFamily.sans,
-    fontWeight: '400',
-    fontSize: 14,
+    fontWeight: FontWeight.regular,
+    fontSize: FontSize.base,
     lineHeight: 20,
     letterSpacing: -0.15,
   },

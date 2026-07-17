@@ -2,7 +2,7 @@ import VerificationSuccessIcon from '@/assets/images/common/Verification_sucess.
 import VerifySendIcon from '@/assets/images/common/Verify_send.svg';
 import FormLabel from '@/src/components/signup/common/FormLabel';
 import StepSelectDropdown from '@/src/components/signup/common/StepSelectDropdown';
-import {Colors, Radii, FontFamily} from '@/src/constants/theme';
+import {Colors, Radii, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import React, { useState } from 'react';
 import { Platform, StyleSheet, Text, TextInput, TouchableOpacity, View, ActivityIndicator, Alert } from 'react-native';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
@@ -138,7 +138,7 @@ export default function JobVerificationSection({ state, onChange, onVerify }: Jo
               disabled={state.isJobVerifying}
             >
               {state.isJobVerifying ? (
-                <ActivityIndicator size="small" color="#C27AFF" />
+                <ActivityIndicator size="small" color={Colors.primary.vividPurple} />
               ) : (
                 <>
                   <VerifySendIcon width={16} height={16} />
@@ -175,27 +175,27 @@ const styles = StyleSheet.create({
   jobTitleInput: {
     width: '100%',
     height: 49.202,
-    marginTop: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    marginTop: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
     borderRadius: Radii.lg,
     borderWidth: 0.612,
     borderColor: Colors.glass.white10,
     backgroundColor: Colors.glass.white5,
     fontFamily: FontFamily.sans,
-    fontSize: 16,
-    fontWeight: '400',
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.regular,
     letterSpacing: -0.312,
   },
   verifyCard: {
     width: '100%',
     marginTop: 10,
-    padding: 16,
+    padding: Spacing.lg,
     borderRadius: Radii.lg,
     borderWidth: 0.612,
     borderColor: Colors.glass.white10,
     backgroundColor: Colors.glass.white5,
-    gap: 12,
+    gap: Spacing.md,
   },
   verifyHeaderRow: {
     flexDirection: 'row',
@@ -206,7 +206,7 @@ const styles = StyleSheet.create({
   verifyHeaderLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: Spacing.md,
   },
   iconCircle: {
     width: 40,
@@ -221,22 +221,22 @@ const styles = StyleSheet.create({
   },
   verifyTitle: {
     fontFamily: FontFamily.sans,
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.medium,
     lineHeight: 20,
     letterSpacing: -0.15,
   },
   verifySubtitle: {
     fontFamily: FontFamily.sans,
-    fontSize: 12,
-    fontWeight: '400',
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.regular,
     lineHeight: 16,
   },
   verifyButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 12,
+    paddingHorizontal: Spacing.md,
     paddingVertical: 6,
     gap: 6,
     borderRadius: Radii.md,
@@ -245,17 +245,17 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(194, 122, 255, 0.1)',
   },
   verifyButtonText: {
-    color: '#C27AFF',
+    color: Colors.primary.vividPurple,
     fontFamily: FontFamily.sans,
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.medium,
     lineHeight: 20,
     letterSpacing: -0.15,
   },
   verifyDescription: {
     fontFamily: FontFamily.sans,
-    fontSize: 12,
-    fontWeight: '400',
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.regular,
     lineHeight: 18,
   }
 });

@@ -1,4 +1,4 @@
-import {Colors, Radii, FontFamily} from '@/src/constants/theme';
+import {Colors, Radii, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
@@ -25,7 +25,7 @@ export default function UserProfileCard({
       <View style={styles.inner}>
         {/* Avatar (빈 상태 — 추후 API 연동) */}
         <LinearGradient
-          colors={['rgba(0,211,243,0.20)', 'rgba(194,122,255,0.20)']}
+          colors={[Colors.glass.cyan20, Colors.glass.purple20]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={[styles.avatar, { borderColor: colors.border.primary }]}
@@ -49,14 +49,14 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
     borderRadius: Radii.md2,
     borderWidth: 0.612,
-    paddingHorizontal: 12,
+    paddingHorizontal: Spacing.md,
     height: 70,
     justifyContent: 'center',
   },
   inner: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: Spacing.md,
   },
   avatar: {
     width: 40,
@@ -66,33 +66,33 @@ const styles = StyleSheet.create({
   },
   info: {
     flexDirection: 'column',
-    gap: 0,
+    gap: Spacing.none,
   },
   titleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: Spacing.sm,
     height: 28,
   },
   labelText: {
     fontFamily: FontFamily.sans,
-    fontSize: 14,
-    fontWeight: '400',
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.regular,
     lineHeight: 20,
     letterSpacing: -0.15,
   },
   percentText: {
     color: Colors.primary.electricCyan,
     fontFamily: FontFamily.sans,
-    fontSize: 18,
-    fontWeight: '500',
+    fontSize: FontSize.xl,
+    fontWeight: FontWeight.medium,
     lineHeight: 28,
     letterSpacing: -0.439,
   },
   growthText: {
     fontFamily: FontFamily.sans,
-    fontSize: 12,
-    fontWeight: '400',
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.regular,
     lineHeight: 16,
   },
 });

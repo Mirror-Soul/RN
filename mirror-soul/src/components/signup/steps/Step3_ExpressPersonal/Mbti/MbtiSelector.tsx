@@ -1,4 +1,4 @@
-import { Colors } from '@/src/constants/theme';
+import {Colors, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import MbtiBadge from './MbtiBadge';
@@ -89,23 +89,23 @@ export default function MbtiSelector({ onMbtiChange, onScoresChange, onDragStart
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    gap: 16,
+    gap: Spacing.lg,
   },
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: Spacing.sm,
   },
   sectionTitle: {
     color: Colors.neutral.pureWhite,
-    fontSize: 18,
-    fontWeight: '500',
+    fontSize: FontSize.xl,
+    fontWeight: FontWeight.medium,
     lineHeight: 28,
     letterSpacing: -0.439,
   },
   slidersContainer: {
     width: '100%',
-    gap: 24,
+    gap: Spacing.xxl,
   }
 });

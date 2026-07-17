@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 
 interface Props {
   onVerify: () => void;
@@ -12,7 +12,7 @@ export default function UnverifiedCard({ onVerify }: Props) {
     <View style={styles.cardContainer}>
       {/* Background Gradient */}
       <LinearGradient
-        colors={['rgba(0, 211, 243, 0.10)', 'rgba(194, 122, 255, 0.10)']}
+        colors={[Colors.glass.cyan10_d3, Colors.glass.purple10]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={[StyleSheet.absoluteFill, { borderRadius: Radii.lg }]}
@@ -49,34 +49,34 @@ const styles = StyleSheet.create({
     borderRadius: Radii.lg,
     borderWidth: 0.612,
     borderColor: Colors.glass.cyan20,
-    padding: 24,
+    padding: Spacing.xxl,
     alignItems: 'center',
   },
   infoContainer: {
     width: '100%',
     alignItems: 'flex-start',
-    gap: 8,
-    marginBottom: 24,
+    gap: Spacing.sm,
+    marginBottom: Spacing.xxl,
   },
   title: {
     color: Colors.neutral.pureWhite,
-    fontSize: 18,
-    fontWeight: '500',
+    fontSize: FontSize.xl,
+    fontWeight: FontWeight.medium,
     lineHeight: 27,
     letterSpacing: -0.439,
   },
   description: {
     color: Colors.neutral.lightGray,
-    fontSize: 14,
-    fontWeight: '400',
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.regular,
     lineHeight: 20,
     letterSpacing: -0.15,
   },
   bulletRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginTop: 8,
+    gap: Spacing.sm,
+    marginTop: Spacing.sm,
   },
   bullet: {
     width: 4,
@@ -86,8 +86,8 @@ const styles = StyleSheet.create({
   },
   bulletText: {
     color: Colors.neutral.darkGray,
-    fontSize: 12,
-    fontWeight: '400',
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.regular,
     lineHeight: 16,
   },
   buttonWrapper: {
@@ -96,20 +96,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: Radii.md2,
-    marginBottom: 8,
+    marginBottom: Spacing.sm,
     overflow: 'hidden', 
   },
   buttonText: {
     color: Colors.primary.soulBlack,
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.medium,
     lineHeight: 24,
     letterSpacing: -0.312,
   },
   subText: {
     color: Colors.neutral.darkGray,
-    fontSize: 12,
-    fontWeight: '400',
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.regular,
     lineHeight: 16,
   }
 });

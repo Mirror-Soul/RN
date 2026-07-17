@@ -1,5 +1,5 @@
 import VerifyEmailIcon from '@/assets/images/common/veritfy_email_icon.svg';
-import {Colors, Radii, FontFamily} from '@/src/constants/theme';
+import {Colors, Radii, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useState } from 'react';
 import { getErrorMessage } from '@/src/utils/errorUtils';
@@ -89,7 +89,7 @@ export default function EmailVerificationModal({
             <View style={styles.headerRow}>
               <View style={styles.iconCircle}>
                 <LinearGradient
-                  colors={['rgba(0, 211, 243, 0.20)', 'rgba(194, 122, 255, 0.20)']}
+                  colors={[Colors.glass.cyan20, Colors.glass.purple20]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={StyleSheet.absoluteFill}
@@ -209,44 +209,44 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: FontFamily.sans,
-    fontSize: 20,
-    fontWeight: '500',
+    fontSize: FontSize.xxl,
+    fontWeight: FontWeight.medium,
     lineHeight: 28,
     letterSpacing: -0.449,
   },
   subtitle: {
     color: Colors.neutral.lightGray,
     fontFamily: FontFamily.sans,
-    fontSize: 14,
-    fontWeight: '400',
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.regular,
     lineHeight: 20,
     letterSpacing: -0.15,
   },
   body: {
     padding: 23.994,
-    gap: 24,
+    gap: Spacing.xxl,
   },
   infoBox: {
     padding: 16.611,
     borderRadius: Radii.lg,
     borderWidth: 0.612,
-    borderColor: 'rgba(0, 211, 243, 0.20)',
-    backgroundColor: 'rgba(0, 211, 243, 0.10)',
-    gap: 2,
+    borderColor: Colors.glass.cyan20,
+    backgroundColor: Colors.glass.cyan10_d3,
+    gap: Spacing.xxs,
   },
   infoEmail: {
-    color: '#00D3F3',
+    color: Colors.primary.electricCyan,
     fontFamily: FontFamily.sans,
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.medium,
     lineHeight: 22.75,
     letterSpacing: -0.15,
   },
   infoText: {
     color: Colors.neutral.lightGrayText,
     fontFamily: FontFamily.sans,
-    fontSize: 14,
-    fontWeight: '400',
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.regular,
     lineHeight: 22.75,
     letterSpacing: -0.15,
   },
@@ -262,8 +262,8 @@ const styles = StyleSheet.create({
   label: {
     color: Colors.neutral.lightGray,
     fontFamily: FontFamily.sans,
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.medium,
     lineHeight: 20,
   },
   codeTextInput: {
@@ -272,10 +272,10 @@ const styles = StyleSheet.create({
     borderRadius: Radii.lg,
     borderWidth: 0.612,
     borderColor: Colors.glass.white10,
-    paddingHorizontal: 16,
+    paddingHorizontal: Spacing.lg,
     textAlign: 'center',
     fontFamily: 'Menlo', // 고정 폭 폰트
-    fontSize: 24,
+    fontSize: FontSize.xxxl,
     letterSpacing: 2.4, // Spec: 2.4px
   },
   buttonRow: {
@@ -292,8 +292,8 @@ const styles = StyleSheet.create({
   },
   cancelText: {
     fontFamily: FontFamily.sans,
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.medium,
   },
   confirmButton: {
     flex: 1,
@@ -308,8 +308,8 @@ const styles = StyleSheet.create({
   },
   confirmText: {
     fontFamily: FontFamily.sans,
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.medium,
   },
   codeTextInputError: {
     borderColor: Colors.primary.activeRedText,
@@ -318,17 +318,17 @@ const styles = StyleSheet.create({
   errorText: {
     color: Colors.primary.activeRedText,
     fontFamily: FontFamily.sans,
-    fontSize: 12,
-    fontWeight: '400',
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.regular,
     lineHeight: 16,
     textAlign: 'center',
-    marginTop: 4,
+    marginTop: Spacing.xs,
   },
   timerText: {
     color: Colors.primary.electricCyan,
     fontFamily: FontFamily.sans,
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.medium,
   },
   timerTextExpired: {
     color: Colors.primary.activeRedText,
@@ -346,7 +346,7 @@ const styles = StyleSheet.create({
   resendText: {
     color: Colors.primary.electricCyan,
     fontFamily: FontFamily.sans,
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.medium,
   },
 });

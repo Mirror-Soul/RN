@@ -1,4 +1,4 @@
-import {Colors, FontFamily} from '@/src/constants/theme';
+import {Colors, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import React from 'react';
 import { Text, StyleSheet, View } from 'react-native';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
@@ -21,21 +21,21 @@ export default function EvolveBodyTitle() {
 
 const styles = StyleSheet.create({
   container: {
-    paddingVertical: 12,
+    paddingVertical: Spacing.md,
     alignSelf: 'stretch',
-    gap: 2,
+    gap: Spacing.xxs,
   },
   heading: {
     fontFamily: FontFamily.sans,
-    fontSize: 20,
-    fontWeight: '500',
+    fontSize: FontSize.xxl,
+    fontWeight: FontWeight.medium,
     lineHeight: 30,
     letterSpacing: -0.449,
   },
   paragraph: {
     fontFamily: FontFamily.sans,
-    fontSize: 12,
-    fontWeight: '400',
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.regular,
     lineHeight: 16,
   },
 });

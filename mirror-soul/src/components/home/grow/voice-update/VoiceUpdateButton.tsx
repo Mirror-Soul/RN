@@ -1,7 +1,7 @@
 import CompleteIcon from '@/assets/images/common/evlove/voice-update/voice_update_complete.svg';
 import StopIcon from '@/assets/images/common/evlove/voice-update/voice_update_stop.svg';
 import VoiceIcon from '@/assets/images/common/Voice_icon_white.svg';
-import {Colors, Radii, FontFamily} from '@/src/constants/theme';
+import {Colors, Radii, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React from 'react';
@@ -119,7 +119,7 @@ export default function VoiceUpdateButton({
 
         {isAnalyzing && (
           <View style={styles.doneInfo}>
-            <Text style={[styles.statusText, { color: Colors.primary.successGreen, fontWeight: '600' }]}>
+            <Text style={[styles.statusText, { color: Colors.primary.successGreen, fontWeight: FontWeight.semibold }]}>
               목소리 분석 중...
             </Text>
             <Text style={[styles.footerText, { color: colors.text.secondary }]}>인공지능이 당신의 말투를 학습하고 있습니다</Text>
@@ -156,7 +156,7 @@ export default function VoiceUpdateButton({
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
-    gap: 24,
+    gap: Spacing.xxl,
     alignSelf: 'stretch',
     minHeight: 180,
   },
@@ -176,16 +176,16 @@ const styles = StyleSheet.create({
   },
   idleInfo: {
     alignItems: 'center',
-    gap: 16,
+    gap: Spacing.lg,
   },
   recordingInfo: {
     alignItems: 'center',
-    gap: 8,
+    gap: Spacing.sm,
   },
   recordingStatusRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: Spacing.sm,
   },
   recordingDot: {
     width: 8,
@@ -196,29 +196,29 @@ const styles = StyleSheet.create({
   },
   doneInfo: {
     alignItems: 'center',
-    gap: 8,
+    gap: Spacing.sm,
   },
   statusText: {
     textAlign: 'center',
     fontFamily: FontFamily.sans,
-    fontSize: 16,
-    fontWeight: '400',
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.regular,
     lineHeight: 24,
     letterSpacing: -0.312,
   },
   elapsedText: {
     textAlign: 'center',
     fontFamily: FontFamily.sans,
-    fontSize: 14,
-    fontWeight: '400',
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.regular,
     lineHeight: 20,
     letterSpacing: -0.15,
   },
   footerText: {
     textAlign: 'center',
     fontFamily: FontFamily.sans,
-    fontSize: 12,
-    fontWeight: '400',
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.regular,
     lineHeight: 16,
   },
   finalActionArea: {
@@ -229,20 +229,20 @@ const styles = StyleSheet.create({
   },
   actionRow: {
     flexDirection: 'row',
-    gap: 12,
+    gap: Spacing.md,
     alignItems: 'center',
   },
   actionChip: {
-    paddingVertical: 12,
-    paddingHorizontal: 24,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.xxl,
     borderRadius: Radii.full,
     backgroundColor: Colors.glass.white10,
     borderWidth: 0.6,
     borderColor: Colors.glass.white20,
   },
   actionChipText: {
-    fontSize: 15,
-    fontWeight: '500',
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.medium,
     letterSpacing: -0.3,
   },
   primaryChip: {
@@ -251,7 +251,7 @@ const styles = StyleSheet.create({
   },
   primaryChipText: {
     color: Colors.primary.electricCyan,
-    fontWeight: '600',
+    fontWeight: FontWeight.semibold,
   },
 });
 

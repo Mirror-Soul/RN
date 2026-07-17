@@ -1,4 +1,4 @@
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, Spacing} from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { Animated, Platform, StyleSheet, View } from 'react-native';
@@ -86,14 +86,14 @@ const styles = StyleSheet.create({
   },
   gradientLeft: {
     position: 'absolute',
-    left: 0,
+    left: Spacing.none,
     width: '50%',
     height: '100%',
     borderRadius: Radii.xs,
   },
   gradientRight: {
     position: 'absolute',
-    right: 0,
+    right: Spacing.none,
     width: '50%',
     height: '100%',
     borderRadius: Radii.xs,

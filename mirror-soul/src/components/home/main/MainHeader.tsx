@@ -1,6 +1,6 @@
 import SettingIcon from '@/assets/images/common/Setting.svg';
 import TimerIcon from '@/assets/images/common/main/Timer.svg';
-import {Colors, Radii, FontFamily} from '@/src/constants/theme';
+import {Colors, Radii, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
@@ -58,21 +58,21 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: FontFamily.sans,
-    fontSize: 24,
-    fontWeight: '500',
+    fontSize: FontSize.xxxl,
+    fontWeight: FontWeight.medium,
     lineHeight: 32,
     letterSpacing: 0.07,
   },
   rightSection: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: Spacing.md,
   },
   timerBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 12,
+    gap: Spacing.sm,
+    paddingHorizontal: Spacing.md,
     height: 30,
     borderRadius: Radii.full,
     borderWidth: 0.612,
@@ -80,8 +80,8 @@ const styles = StyleSheet.create({
   timerText: {
     color: Colors.primary.electricCyan,
     fontFamily: 'Menlo',
-    fontSize: 12,
-    fontWeight: '400',
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.regular,
     lineHeight: 16,
     letterSpacing: 0.6,
     textAlign: 'center',

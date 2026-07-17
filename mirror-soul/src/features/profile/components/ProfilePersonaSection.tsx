@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { Colors, FontFamily } from '@/src/constants/theme';
+import {Colors, FontFamily, FontSize, FontWeight, Radii, Spacing} from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface ProfilePersonaSectionProps {
@@ -59,7 +59,7 @@ export const ProfilePersonaSection = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 24,
+    marginBottom: Spacing.xxl,
   },
 
   // 헤딩
@@ -67,12 +67,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: Spacing.lg,
   },
   headingText: {
     fontFamily: FontFamily.sans,
-    fontWeight: '900',
-    fontSize: 10,
+    fontWeight: FontWeight.black,
+    fontSize: FontSize.xs,
     lineHeight: 15,
     letterSpacing: 2.12,
     textTransform: 'uppercase',
@@ -81,13 +81,13 @@ const styles = StyleSheet.create({
   // 태그
   tagScrollContent: {
     flexDirection: 'row',
-    gap: 8,
-    paddingRight: 4, // 마지막 태그가 잘리지 않도록
+    gap: Spacing.sm,
+    paddingRight: Spacing.xs, // 마지막 태그가 잘리지 않도록
   },
   tagBadge: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 16,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    borderRadius: Radii.lg,
     borderWidth: 1,
     // shadow glow
     shadowColor: 'rgba(34, 211, 238, 0.1)',
@@ -98,8 +98,8 @@ const styles = StyleSheet.create({
   },
   tagText: {
     fontFamily: FontFamily.sans,
-    fontWeight: '700',
-    fontSize: 12,
+    fontWeight: FontWeight.bold,
+    fontSize: FontSize.sm,
     lineHeight: 16,
   },
 });

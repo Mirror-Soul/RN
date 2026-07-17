@@ -1,5 +1,5 @@
 import VoiceUpdateIcon from '@/assets/images/common/evlove/voice-update/voice_update_icon.svg';
-import {Colors, Radii, FontFamily} from '@/src/constants/theme';
+import {Colors, Radii, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
@@ -40,31 +40,31 @@ export default function VoiceUpdatePrompt({ sentence }: VoiceUpdatePromptProps) 
 const styles = StyleSheet.create({
   container: {
     alignSelf: 'stretch',
-    gap: 32,
+    gap: Spacing.xxxl,
   },
   head: {
     alignItems: 'center',
-    gap: 8,
+    gap: Spacing.sm,
   },
   title: {
     textAlign: 'center',
     fontFamily: FontFamily.sans,
-    fontSize: 18,
-    fontWeight: '500',
+    fontSize: FontSize.xl,
+    fontWeight: FontWeight.medium,
     lineHeight: 28,
     letterSpacing: -0.439,
   },
   subTitle: {
     textAlign: 'center',
     fontFamily: FontFamily.sans,
-    fontSize: 14,
-    fontWeight: '400',
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.regular,
     lineHeight: 20,
     letterSpacing: -0.15,
   },
   body: {
     height: 172,
-    borderRadius: 24,
+    borderRadius: Radii.xl,
     borderWidth: 0.612,
     borderColor: Colors.glass.pink30,
     justifyContent: 'center',
@@ -73,13 +73,13 @@ const styles = StyleSheet.create({
   bodyContainer: {
     width: 280,
     alignItems: 'center',
-    gap: 16,
+    gap: Spacing.lg,
   },
   sentenceText: {
     textAlign: 'center',
     fontFamily: FontFamily.sans,
-    fontSize: 18,
-    fontWeight: '400',
+    fontSize: FontSize.xl,
+    fontWeight: FontWeight.regular,
     lineHeight: 29.25,
     letterSpacing: -0.439,
   },
