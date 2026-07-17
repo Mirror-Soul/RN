@@ -1,4 +1,6 @@
 import React from 'react';
+import { FontFamily } from '@/src/constants/theme';
+
 import { View, Text, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
@@ -79,7 +81,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   nameText: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontWeight: '500',
     fontSize: 24,
     lineHeight: 32,
@@ -92,7 +94,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   emailText: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontWeight: '400',
     fontSize: 14,
     lineHeight: 20,

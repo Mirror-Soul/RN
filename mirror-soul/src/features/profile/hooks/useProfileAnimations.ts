@@ -20,8 +20,6 @@ export const usePressAnimation = () => {
       damping: 15,
       stiffness: 150,
       overshootClamping: false,
-      restDisplacementThreshold: 0.01,
-      restSpeedThreshold: 2,
     });
   }, [scale]);
 

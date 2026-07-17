@@ -1,4 +1,8 @@
 import React from 'react';
+import { useRouter } from 'expo-router';
+import { SectionHeading } from '@/src/components/common/SectionHeading';
+import { FontFamily } from '@/src/constants/theme';
+
 import { View, Text, StyleSheet } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { ProfileSection } from '../types';
@@ -18,7 +22,7 @@ export const SettingsSection = ({ section, delay = 200 }: SettingsSectionProps) 
       entering={FadeInDown.delay(delay).duration(600).springify()}
       style={styles.container}
     >
-      <Text style={[styles.titleText, { color: colors.text.muted }]}>{section.title}</Text>
+      <SectionHeading title={section.title} style={styles.sectionLabelSpacing} />
       
       <View style={[styles.cardContainer, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
         {section.items.map((item, index) => (
@@ -35,19 +39,12 @@ export const SettingsSection = ({ section, delay = 200 }: SettingsSectionProps) 
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 24,
     width: '100%',
     marginBottom: 24,
   },
-  titleText: {
-    fontFamily: 'Inter',
-    fontWeight: '400',
-    fontSize: 12,
-    lineHeight: 16,
-    letterSpacing: 0.6,
-    textTransform: 'uppercase',
-    marginLeft: 4,
-    marginBottom: 12,
+  sectionLabelSpacing: {
+    marginBottom: 8,
+    paddingHorizontal: 8,
   },
   cardContainer: {
     borderWidth: 0.61,

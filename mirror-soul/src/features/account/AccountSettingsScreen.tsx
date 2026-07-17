@@ -8,20 +8,21 @@ import Constants from 'expo-constants';
 import { NicknameEditModal } from './components/NicknameEditModal';
 import { LogoutBottomSheet } from './components/LogoutBottomSheet';
 import { useAccountStore } from '@/src/store/useAccountStore';
-import { useThemeStore } from '@/src/store/useThemeStore';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { Header } from '@/src/components/common/Header';
 import { ScreenLayout } from '@/src/components/common/ScreenLayout';
+import { ThemeToggle } from '@/src/components/common/ThemeToggle';
+import { SectionHeading } from '@/src/components/common/SectionHeading';
+import { FontFamily } from '@/src/constants/theme';
 
 export const AccountSettingsScreen = () => {
   const router = useRouter();
   const { nickname } = useAccountStore();
-  const { themeMode, setThemeMode } = useThemeStore();
   const { colors } = useThemeColors();
+  const appVersion = Constants.expoConfig?.version || '1.0.0';
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLogoutSheetOpen, setIsLogoutSheetOpen] = useState(false);
-  const appVersion = Constants.expoConfig?.version || '1.0.0';
 
   const handleOpenModal = () => setIsModalOpen(true);
   const handleCloseModal = () => setIsModalOpen(false);
@@ -53,9 +54,9 @@ export const AccountSettingsScreen = () => {
 
       <Animated.View 
         entering={FadeInDown.delay(120).duration(550).springify()}
-        style={styles.sectionContainer}
+        style={styles.section}
       >
-        <Text style={[styles.sectionLabel, { color: colors.text.secondary }]}>닉네임</Text>
+        <SectionHeading title="닉네임" style={styles.sectionLabelSpacing} />
         
         <View style={[styles.cardContainer, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
           <Text style={[styles.nicknameText, { color: colors.text.primary }]}>{nickname}</Text>
@@ -69,28 +70,22 @@ export const AccountSettingsScreen = () => {
 
       <Animated.View 
         entering={FadeInDown.delay(180).duration(550).springify()}
-        style={[styles.sectionContainer, { marginTop: 32 }]}
+        style={[styles.section, { marginTop: 32 }]}
       >
-        <Text style={[styles.sectionLabel, { color: colors.text.secondary }]}>디스플레이</Text>
+        <SectionHeading title="디스플레이" style={styles.sectionLabelSpacing} />
         
         <View style={[styles.controlCardContainer, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
           <View style={styles.themeToggleRow}>
-            <Text style={[styles.controlText, { color: colors.text.primary }]}>다크 모드</Text>
-            <Pressable 
-              style={[styles.toggleButton, themeMode === 'dark' && { backgroundColor: colors.brand.accent }]}
-              onPress={() => setThemeMode(themeMode === 'dark' ? 'light' : 'dark')}
-            >
-              <View style={[styles.toggleThumb, themeMode === 'dark' ? styles.toggleThumbActive : styles.toggleThumbInactive]} />
-            </Pressable>
+            <ThemeToggle showLabel={true} />
           </View>
         </View>
       </Animated.View>
 
       <Animated.View 
         entering={FadeInDown.delay(240).duration(550).springify()}
-        style={[styles.sectionContainer, { marginTop: 32 }]}
+        style={[styles.section, { marginTop: 32 }]}
       >
-        <Text style={[styles.sectionLabel, { color: colors.text.secondary }]}>계정 제어</Text>
+        <SectionHeading title="계정 제어" style={styles.sectionLabelSpacing} />
         
         <View style={[styles.controlCardContainer, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
           <Pressable 
@@ -106,7 +101,7 @@ export const AccountSettingsScreen = () => {
             style={({ pressed }) => [styles.controlRow, pressed && styles.controlRowPressed]}
             onPress={handleWithdraw}
           >
-            <Text style={[styles.controlText, styles.destructiveText]}>회원 탈퇴</Text>
+            <Text style={[styles.controlText, { color: colors.state.danger }]}>회원 탈퇴</Text>
           </Pressable>
         </View>
       </Animated.View>
@@ -147,18 +142,12 @@ const styles = StyleSheet.create({
     bottom: -100,
     right: -200,
   },
-  sectionContainer: {
+  section: {
     paddingHorizontal: 24,
   },
-  sectionLabel: {
-    fontFamily: 'Inter',
-    fontWeight: '400',
-    fontSize: 12,
-    lineHeight: 16,
-    letterSpacing: 0.6,
-    textTransform: 'uppercase',
-    marginBottom: 12,
-    paddingHorizontal: 4,
+  sectionLabelSpacing: {
+    marginBottom: 8,
+    paddingHorizontal: 8,
   },
   cardContainer: {
     flexDirection: 'row',
@@ -170,7 +159,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
   },
   nicknameText: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontWeight: '400',
     fontSize: 14,
     lineHeight: 20,
@@ -182,7 +171,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   editButtonText: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontWeight: '500',
     fontSize: 12,
     lineHeight: 16,
@@ -200,7 +189,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.08)',
   },
   controlText: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontWeight: '500',
     fontSize: 15,
   },
@@ -217,35 +206,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   versionText: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontWeight: '400',
     fontSize: 12,
   },
   themeToggleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     paddingVertical: 18,
     paddingHorizontal: 20,
-  },
-  toggleButton: {
-    width: 44,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: 'rgba(100, 100, 100, 0.3)',
-    justifyContent: 'center',
-    paddingHorizontal: 2,
-  },
-  toggleThumb: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: '#FFFFFF',
-  },
-  toggleThumbActive: {
-    alignSelf: 'flex-end',
-  },
-  toggleThumbInactive: {
-    alignSelf: 'flex-start',
   },
 });

@@ -3,7 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
-import { Colors } from '@/src/constants/theme';
+import {Colors, FontFamily} from '@/src/constants/theme';
 
 export const DeleteWarningSection = () => {
   const { colors } = useThemeColors();
@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontWeight: '500',
     fontSize: 20,
     letterSpacing: -0.45,
@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
   },
   warningText: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontWeight: '400',
     fontSize: 14,
     lineHeight: 23,

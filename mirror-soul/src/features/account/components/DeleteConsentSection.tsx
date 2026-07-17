@@ -10,7 +10,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Feather } from '@expo/vector-icons';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
-import { Colors } from '@/src/constants/theme';
+import {Colors, FontFamily} from '@/src/constants/theme';
 
 interface DeleteConsentSectionProps {
   isAgreed: boolean;
@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
   },
   consentText: {
     flex: 1,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontWeight: '500',
     fontSize: 14,
     lineHeight: 23,
@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   submitButtonText: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontWeight: '500',
     fontSize: 14,
     letterSpacing: -0.15,

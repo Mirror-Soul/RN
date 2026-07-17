@@ -1,4 +1,6 @@
 import React, { useEffect } from 'react';
+import {FontFamily, Colors} from '@/src/constants/theme';
+
 import { 
   View, 
   Text, 
@@ -154,12 +156,12 @@ const styles = StyleSheet.create({
     maxWidth: 384,
     backgroundColor: 'rgba(0, 0, 0, 0.95)',
     borderWidth: 0.61,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: Colors.glass.white10,
     borderRadius: 24,
     padding: 24,
   },
   title: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontWeight: '500',
     fontSize: 18,
     lineHeight: 27,
@@ -168,7 +170,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   subtitle: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontWeight: '400',
     fontSize: 12,
     lineHeight: 16,
@@ -180,13 +182,13 @@ const styles = StyleSheet.create({
   },
   input: {
     height: 45,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: Colors.glass.white5,
     borderWidth: 0.61,
     borderColor: 'rgba(139, 230, 248, 0.19)',
     borderRadius: 14,
     paddingHorizontal: 16,
     color: '#FFFFFF',
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
   },
   inputError: {
@@ -194,7 +196,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 76, 76, 0.05)',
   },
   errorText: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontWeight: '400',
     fontSize: 12,
     color: '#FF4C4C',
@@ -212,13 +214,13 @@ const styles = StyleSheet.create({
     height: 45,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: Colors.glass.white5,
     borderWidth: 0.61,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: Colors.glass.white10,
     borderRadius: 16,
   },
   cancelButtonText: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontWeight: '500',
     fontSize: 14,
     color: '#D1D5DC',
@@ -238,7 +240,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   saveButtonText: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontWeight: '500',
     fontSize: 14,
     color: 'rgba(0, 255, 255, 0.9)',

@@ -1,0 +1,156 @@
+import React from 'react';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { Feather } from '@expo/vector-icons';
+import Animated, { FadeInUp } from 'react-native-reanimated';
+import { Badge } from '@/src/components/common/Badge';
+import { Colors, FontFamily } from '@/src/constants/theme';
+import { ProfileViewData } from '../types';
+
+interface ProfileInfoOverlayProps
+  extends Pick<
+    ProfileViewData,
+    | 'name'
+    | 'age'
+    | 'mbti'
+    | 'twinSimilarity'
+    | 'location'
+    | 'job'
+    | 'isPremium'
+    | 'isOwnProfile'
+  > {
+  onEditPress?: () => void;
+}
+
+export const ProfileInfoOverlay = ({
+  name,
+  age,
+  mbti,
+  twinSimilarity,
+  location,
+  job,
+  isPremium,
+  isOwnProfile,
+  onEditPress,
+}: ProfileInfoOverlayProps) => {
+  return (
+    <Animated.View
+      entering={FadeInUp.delay(80).duration(550).springify()}
+      style={styles.container}
+    >
+      {/* 상단 뱃지 Row */}
+      <View style={styles.badgeRow}>
+        <Badge 
+          label={`MY TWIN SIMILARITY ${twinSimilarity}%`}
+          colorScheme="cyan" 
+          variant="solid" 
+          size="sm"
+        />
+        
+        <Badge 
+          label={mbti} 
+          colorScheme="gray" 
+          variant="outline" 
+          size="sm"
+        />
+      </View>
+
+      {/* 이름 + 나이 Row */}
+      <View style={styles.nameRow}>
+        <Text style={styles.nameText}>{name}</Text>
+        <Text style={styles.ageText}> {age}</Text>
+
+        {/* 편집 아이콘 (내 프로필만) */}
+        {isOwnProfile && (
+          <Pressable onPress={onEditPress} style={styles.editButton} hitSlop={8}>
+            <Feather name="edit-2" size={14} color={Colors.neutral.darkGray} />
+          </Pressable>
+        )}
+      </View>
+
+      {/* 지역 + 직업 + 프리미엄 메타 Row */}
+      <View style={styles.metaRow}>
+        {/* 지역 */}
+        <View style={styles.metaItem}>
+          <Feather name="map-pin" size={14} color={Colors.neutral.lightGray} />
+          <Text style={styles.metaText}>{location}</Text>
+        </View>
+
+        {/* 직업 */}
+        <View style={styles.metaItem}>
+          <Feather name="briefcase" size={14} color={Colors.neutral.lightGray} />
+          <Text style={styles.metaText}>{job}</Text>
+        </View>
+
+        {/* 프리미엄 아이콘 */}
+        {isPremium && (
+          <Feather name="zap" size={14} color={Colors.primary.electricCyan} />
+        )}
+      </View>
+    </Animated.View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    paddingHorizontal: 24,
+    paddingBottom: 24,
+    gap: 0,
+  },
+
+  // 뱃지 Row
+  badgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 16,
+  },
+
+  // 이름 Row
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    marginBottom: 8,
+  },
+  nameText: {
+    fontFamily: FontFamily.sans,
+    fontWeight: '900',
+    fontSize: 48,
+    lineHeight: 48,
+    letterSpacing: -2.05,
+    color: '#FFFFFF',
+  },
+  ageText: {
+    fontFamily: FontFamily.sans,
+    fontWeight: '300',
+    fontSize: 48,
+    lineHeight: 48,
+    letterSpacing: -2.05,
+    color: Colors.neutral.disabledText,
+  },
+  editButton: {
+    paddingTop: 8,
+    paddingLeft: 8,
+    alignSelf: 'flex-end',
+    paddingBottom: 4,
+  },
+
+  // 메타 Row
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  metaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  metaText: {
+    fontFamily: FontFamily.sans,
+    fontWeight: '400',
+    fontSize: 14,
+    lineHeight: 20,
+    letterSpacing: -0.15,
+    color: Colors.neutral.lightGray,
+  },
+});

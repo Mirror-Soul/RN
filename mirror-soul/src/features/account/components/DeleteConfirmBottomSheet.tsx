@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { BottomSheet } from '@/src/components/common/BottomSheet/BottomSheet';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
-import { Colors } from '@/src/constants/theme';
+import {Colors, FontFamily} from '@/src/constants/theme';
 import { Feather } from '@expo/vector-icons';
 
 interface DeleteConfirmBottomSheetProps {
@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   title: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontWeight: '600',
     fontSize: 18,
     lineHeight: 27,
@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   subtitle: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontWeight: '400',
     fontSize: 13,
     lineHeight: 20,
@@ -112,7 +112,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(251, 44, 54, 0.3)',
   },
   buttonText: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontWeight: '500',
     fontSize: 14,
     letterSpacing: -0.15,

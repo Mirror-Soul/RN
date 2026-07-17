@@ -1,4 +1,6 @@
 import React from 'react';
+import { FontFamily } from '@/src/constants/theme';
+
 import { View, Text, StyleSheet } from 'react-native';
 import { BottomSheet } from '../../../components/common/BottomSheet/BottomSheet';
 import { TIME_REFILL_OPTIONS } from '../constants/timeRefillOptions';
@@ -63,7 +65,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   title: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontWeight: '500',
     fontSize: 18,
     lineHeight: 28,
@@ -71,7 +73,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   subtitle: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontWeight: '400',
     fontSize: 12,
     lineHeight: 16,
@@ -86,7 +88,7 @@ const styles = StyleSheet.create({
     paddingBottom: 32, // extra padding for safe area
   },
   footerText: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontWeight: '400',
     fontSize: 12,
     lineHeight: 20,
@@ -94,7 +96,7 @@ const styles = StyleSheet.create({
     color: '#4A5565',
   },
   linkText: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontWeight: '500',
     fontSize: 12, // match text size but underlined
     lineHeight: 24,

@@ -1,4 +1,6 @@
 import React from 'react';
+import {FontFamily, Colors} from '@/src/constants/theme';
+
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { TimeRefillOptionData } from '../constants/timeRefillOptions';
@@ -75,7 +77,7 @@ const styles = StyleSheet.create({
   },
   cardDefault: {
     backgroundColor: 'rgba(255, 255, 255, 0.04)',
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: Colors.glass.white10,
   },
   cardHighlighted: {
     backgroundColor: 'rgba(0, 255, 255, 0.06)',
@@ -87,7 +89,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   addedTime: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontWeight: '500',
     fontSize: 18,
     lineHeight: 28,
@@ -109,10 +111,10 @@ const styles = StyleSheet.create({
   },
   badgeBest: {
     backgroundColor: 'rgba(255, 255, 255, 0.06)',
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: Colors.glass.white10,
   },
   badgeText: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontWeight: '500',
     fontSize: 12,
     lineHeight: 16,
@@ -124,7 +126,7 @@ const styles = StyleSheet.create({
     color: 'rgba(255, 255, 255, 0.4)',
   },
   durationLabel: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontWeight: '500',
     fontSize: 12,
     lineHeight: 16,
@@ -132,7 +134,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   price: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontWeight: '500',
     fontSize: 16,
     lineHeight: 24,

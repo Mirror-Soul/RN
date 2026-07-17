@@ -1,4 +1,6 @@
 import { ProfileSection } from '../types';
+import { Colors } from '@/src/constants/theme';
+
 
 export const PROFILE_SECTIONS: ProfileSection[] = [
   {
@@ -11,7 +13,7 @@ export const PROFILE_SECTIONS: ProfileSection[] = [
         description: '닉네임, 로그아웃 등',
         iconName: 'user',
         iconColor: '#FFFFFF',
-        iconBgColor: 'rgba(255, 255, 255, 0.1)',
+        iconBgColor: Colors.glass.white10,
       },
       {
         id: 'voice_audio',

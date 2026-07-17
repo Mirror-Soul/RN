@@ -1,4 +1,6 @@
 import React from 'react';
+import { FontFamily } from '@/src/constants/theme';
+
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
@@ -80,14 +82,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   label: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontWeight: '500',
     fontSize: 14,
     lineHeight: 20,
     letterSpacing: -0.15,
   },
   description: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontWeight: '500',
     fontSize: 12,
     lineHeight: 16,

@@ -1,4 +1,6 @@
 import React, { useEffect } from 'react';
+import {FontFamily, Colors} from '@/src/constants/theme';
+
 import { View, Text, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import MaskedView from '@react-native-masked-view/masked-view';
@@ -80,16 +82,15 @@ export const AvailableTimeCard = ({ timeString, delay = 100, onPressRefill }: Av
 
 const styles = StyleSheet.create({
   containerMargin: {
-    paddingHorizontal: 24,
     width: '100%',
     marginBottom: 32,
   },
   cardContainer: {
     width: '100%',
     height: 198,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: Colors.glass.white5,
     borderWidth: 0.61,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: Colors.glass.white10,
     borderRadius: 24,
     overflow: 'hidden',
     position: 'relative',
@@ -101,7 +102,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 24,
     left: 24,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontWeight: '400',
     fontSize: 12,
     lineHeight: 16,
@@ -152,7 +153,7 @@ const styles = StyleSheet.create({
     marginRight: 4,
   },
   buttonText: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontWeight: '500',
     fontSize: 14,
     lineHeight: 20,
