@@ -1,4 +1,6 @@
 import React from 'react';
+import { FontFamily } from '@/src/constants/theme';
+
 import { View, Text, StyleSheet } from 'react-native';
 
 /**
@@ -35,7 +37,7 @@ const styles = StyleSheet.create({
   title: {
     color: '#FFF',
     textAlign: 'center',
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 30,
     fontWeight: '500',
     lineHeight: 36,
@@ -50,7 +52,7 @@ const styles = StyleSheet.create({
   subtitle: {
     color: '#99A1AF',
     textAlign: 'center',
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '400',
     lineHeight: 20,

@@ -1,5 +1,5 @@
 import VoiceUpdateIcon from '@/assets/images/common/evlove/voice-update/voice_update_icon.svg';
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, FontFamily} from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
@@ -48,7 +48,7 @@ const styles = StyleSheet.create({
   },
   title: {
     textAlign: 'center',
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 18,
     fontWeight: '500',
     lineHeight: 28,
@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
   },
   subTitle: {
     textAlign: 'center',
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '400',
     lineHeight: 20,
@@ -77,7 +77,7 @@ const styles = StyleSheet.create({
   },
   sentenceText: {
     textAlign: 'center',
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 18,
     fontWeight: '400',
     lineHeight: 29.25,

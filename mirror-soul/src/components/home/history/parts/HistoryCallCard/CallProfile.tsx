@@ -1,4 +1,4 @@
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, FontFamily} from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
@@ -90,7 +90,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   nameAgeText: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 18,
     fontWeight: '500',
     lineHeight: 27, // 150%
@@ -110,13 +110,13 @@ const styles = StyleSheet.create({
   },
   consistencyText: {
     color: Colors.primary.electricCyan,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 12,
     fontWeight: '400',
     lineHeight: 16, // 133.333%
   },
   typeDescText: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 12,
     fontWeight: '400',
     lineHeight: 16,
@@ -127,14 +127,14 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   dateText: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 12,
     fontWeight: '400',
     lineHeight: 16,
     textAlign: 'right',
   },
   timeText: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 12,
     fontWeight: '400',
     lineHeight: 16,

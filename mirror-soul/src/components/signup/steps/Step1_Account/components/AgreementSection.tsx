@@ -1,5 +1,5 @@
 import CompleteIcon from '@/assets/images/common/Complete.svg';
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, FontFamily} from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -77,10 +77,10 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: Radii.xs,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: Colors.glass.white10,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: Colors.glass.white5,
   },
   gradientCheck: {
     width: 20,
@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
   },
   baseText: {
     color: Colors.neutral.lightGray,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '400',
     lineHeight: 20,

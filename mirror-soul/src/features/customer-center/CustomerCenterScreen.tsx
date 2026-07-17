@@ -1,4 +1,6 @@
 import React from 'react';
+import { FontFamily } from '@/src/constants/theme';
+
 import { StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
@@ -51,14 +53,14 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   subtitleMain: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontWeight: '400',
     fontSize: 20,
     lineHeight: 28,
     letterSpacing: -0.45,
   },
   subtitleSub: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontWeight: '400',
     fontSize: 14,
     lineHeight: 20,

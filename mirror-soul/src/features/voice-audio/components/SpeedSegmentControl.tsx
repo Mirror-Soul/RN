@@ -1,4 +1,6 @@
 import React, { useEffect } from 'react';
+import {FontFamily, Colors} from '@/src/constants/theme';
+
 import { View, Text, StyleSheet, Pressable, LayoutChangeEvent } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -122,7 +124,7 @@ const SegmentButton = ({ label, index, selectedIndex, onPress }: SegmentButtonPr
 const styles = StyleSheet.create({
   container: {
     height: SEGMENT_CONFIG.containerHeight,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: Colors.glass.white5,
     borderWidth: 0.61,
     borderColor: 'rgba(255, 255, 255, 0.08)',
     borderRadius: SEGMENT_CONFIG.containerBorderRadius,
@@ -149,7 +151,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   buttonText: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontWeight: '500',
     fontSize: 12,
     lineHeight: 16,

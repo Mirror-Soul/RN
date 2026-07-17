@@ -2,7 +2,7 @@ import VerificationSuccessIcon from '@/assets/images/common/Verification_sucess.
 import VerifySendIcon from '@/assets/images/common/Verify_send.svg';
 import FormLabel from '@/src/components/signup/common/FormLabel';
 import StepSelectDropdown from '@/src/components/signup/common/StepSelectDropdown';
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, FontFamily} from '@/src/constants/theme';
 import React, { useState } from 'react';
 import { Platform, StyleSheet, Text, TextInput, TouchableOpacity, View, ActivityIndicator, Alert } from 'react-native';
 import JobCategoryDropdown from '../Professional/JobCategoryDropdown';
@@ -178,10 +178,10 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: Radii.lg,
     borderWidth: 0.612,
-    borderColor: 'rgba(255, 255, 255, 0.10)',
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderColor: Colors.glass.white10,
+    backgroundColor: Colors.glass.white5,
     color: '#FFF',
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 16,
     fontWeight: '400',
     letterSpacing: -0.312,
@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
   },
   verifyTitle: {
     color: Colors.neutral.pureWhite,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '500',
     lineHeight: 20,
@@ -228,7 +228,7 @@ const styles = StyleSheet.create({
   },
   verifySubtitle: {
     color: '#99A1AF',
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 12,
     fontWeight: '400',
     lineHeight: 16,
@@ -247,7 +247,7 @@ const styles = StyleSheet.create({
   },
   verifyButtonText: {
     color: '#C27AFF',
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '500',
     lineHeight: 20,
@@ -255,7 +255,7 @@ const styles = StyleSheet.create({
   },
   verifyDescription: {
     color: '#99A1AF',
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 12,
     fontWeight: '400',
     lineHeight: 18,

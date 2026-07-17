@@ -51,8 +51,8 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: Radii.lg,
     borderWidth: 0.612,
-    borderColor: 'rgba(255, 255, 255, 0.10)',
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderColor: Colors.glass.white10,
+    backgroundColor: Colors.glass.white5,
   },
   input: {
     flex: 1,

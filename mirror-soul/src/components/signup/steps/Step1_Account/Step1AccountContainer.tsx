@@ -1,7 +1,7 @@
 import SecurityFooter from '@/src/components/home/SecurityFooter';
 import GradientButton from '@/src/components/common/GradientButton';
 import { SIGNUP_ROUTES } from '@/src/constants/routes/signupRoutes';
-import { Colors, Layout } from '@/src/constants/theme';
+import {Colors, Layout, FontFamily} from '@/src/constants/theme';
 import { createBasicProfile } from '@/src/services/authService';
 
 import { useAuthStore } from '@/src/store/useAuthStore';
@@ -216,7 +216,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     color: '#FFF',
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 16,
     fontWeight: '500',
     letterSpacing: -0.312,

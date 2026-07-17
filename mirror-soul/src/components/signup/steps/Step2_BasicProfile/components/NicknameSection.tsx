@@ -1,6 +1,6 @@
 import VerificationSuccessIcon from '@/assets/images/common/Verification_sucess.svg';
 import FormLabel from '@/src/components/signup/common/FormLabel';
-import { Radii } from '@/src/constants/theme';
+import {Radii, FontFamily, Colors} from '@/src/constants/theme';
 import React from 'react';
 import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SectionProps } from '../types/step2';
@@ -79,10 +79,10 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: Radii.lg,
     borderWidth: 0.612,
-    borderColor: 'rgba(255, 255, 255, 0.10)',
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderColor: Colors.glass.white10,
+    backgroundColor: Colors.glass.white5,
     color: '#FFF',
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 16,
     fontWeight: '400',
     letterSpacing: -0.312,
@@ -95,12 +95,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: Radii.lg,
-    backgroundColor: 'rgba(255, 255, 255, 0.10)',
+    backgroundColor: Colors.glass.white10,
   },
   checkButtonText: {
     color: '#FFF',
     textAlign: 'center',
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '500',
     lineHeight: 20,
@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
   },
   successText: {
     color: '#05DF72',
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '400',
     lineHeight: 20,

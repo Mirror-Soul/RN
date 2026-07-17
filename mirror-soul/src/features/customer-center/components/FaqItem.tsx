@@ -1,4 +1,6 @@
 import React from 'react';
+import { FontFamily } from '@/src/constants/theme';
+
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import Animated, {
@@ -90,7 +92,7 @@ const styles = StyleSheet.create({
   },
   questionText: {
     flex: 1,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontWeight: '500',
     fontSize: 14,
     lineHeight: 19,
@@ -102,7 +104,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   answerText: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontWeight: '400',
     fontSize: 14,
     lineHeight: 23,

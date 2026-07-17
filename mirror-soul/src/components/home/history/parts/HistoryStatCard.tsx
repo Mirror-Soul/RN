@@ -1,4 +1,4 @@
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, FontFamily} from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import React from 'react';
 import { StyleSheet, View, Text } from 'react-native';
@@ -50,7 +50,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   countText: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 24,
     fontWeight: '400',
     lineHeight: 32, // 133.333%
@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   labelText: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 12,
     fontWeight: '400',
     lineHeight: 16, // 133.333%

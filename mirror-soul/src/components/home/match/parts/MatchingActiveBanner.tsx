@@ -1,4 +1,4 @@
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, FontFamily} from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useRef, useState } from 'react';
 import { Animated as RNAnimated, StyleSheet, TouchableOpacity, useWindowDimensions, View, Text } from 'react-native';
@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
     borderRadius: Radii.full,
   },
   statusText: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '400',
     lineHeight: 20,
@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
   },
   stopButtonText: {
     textAlign: 'center',
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '500',
     lineHeight: 20,
@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
   startButtonText: {
     color: Colors.primary.soulBlack,
     textAlign: 'center',
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '500',
     lineHeight: 20,

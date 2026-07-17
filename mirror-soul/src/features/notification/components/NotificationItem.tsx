@@ -1,4 +1,6 @@
 import React from 'react';
+import { FontFamily } from '@/src/constants/theme';
+
 import { View, StyleSheet } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { AnimatedSwitch } from './AnimatedSwitch';
@@ -49,14 +51,14 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   title: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontWeight: '400',
     fontSize: 14,
     lineHeight: 20,
     letterSpacing: -0.15,
   },
   description: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontWeight: '400',
     fontSize: 12,
     lineHeight: 20,

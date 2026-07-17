@@ -1,4 +1,6 @@
 import React from 'react';
+import { FontFamily } from '@/src/constants/theme';
+
 import { View, Text, StyleSheet, Pressable, Linking } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import Animated from 'react-native-reanimated';
@@ -71,7 +73,7 @@ const styles = StyleSheet.create({
   },
   title: {
     flex: 1,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontWeight: '500',
     fontSize: 14,
     lineHeight: 20,

@@ -3,7 +3,7 @@ import LocationIcon from '@/assets/images/common/Location.svg';
 import HeartIcon from '@/assets/images/common/main/Heart.svg';
 import InfoIcon from '@/assets/images/common/main/Info.svg';
 import SimilarityIcon from '@/assets/images/common/main/Similarity.svg';
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, FontFamily} from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
     borderWidth: 0.612,
   },
   similarityText: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '500',
     lineHeight: 20,
@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   nameText: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 24,
     fontWeight: '500',
     lineHeight: 32,
@@ -170,14 +170,14 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   locationText: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '400',
     lineHeight: 20,
     letterSpacing: -0.15,
   },
   descriptionText: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '400',
     lineHeight: 20,
@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
     borderWidth: 0.612,
   },
   passText: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '500',
     lineHeight: 20,
@@ -224,7 +224,7 @@ const styles = StyleSheet.create({
   },
   likeText: {
     color: Colors.primary.electricCyan,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '500',
     lineHeight: 20,

@@ -1,5 +1,5 @@
 import VerifyEmailIcon from '@/assets/images/common/veritfy_email_icon.svg';
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, FontFamily} from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useState } from 'react';
 import { getErrorMessage } from '@/src/utils/errorUtils';
@@ -183,14 +183,14 @@ const styles = StyleSheet.create({
     height: 'auto',
     borderRadius: Radii.xl,
     borderWidth: 0.612,
-    borderColor: 'rgba(255, 255, 255, 0.10)',
+    borderColor: Colors.glass.white10,
     backgroundColor: 'rgba(16, 24, 40, 0.95)',
     overflow: 'hidden',
   },
   header: {
     padding: 23.994,
     borderBottomWidth: 0.612,
-    borderBottomColor: 'rgba(255, 255, 255, 0.10)',
+    borderBottomColor: Colors.glass.white10,
   },
   headerRow: {
     flexDirection: 'row',
@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
   },
   title: {
     color: '#FFF',
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 20,
     fontWeight: '500',
     lineHeight: 28,
@@ -218,7 +218,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     color: Colors.neutral.lightGray,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '400',
     lineHeight: 20,
@@ -238,7 +238,7 @@ const styles = StyleSheet.create({
   },
   infoEmail: {
     color: '#00D3F3',
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '500',
     lineHeight: 22.75,
@@ -246,7 +246,7 @@ const styles = StyleSheet.create({
   },
   infoText: {
     color: Colors.neutral.lightGrayText,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '400',
     lineHeight: 22.75,
@@ -263,17 +263,17 @@ const styles = StyleSheet.create({
   },
   label: {
     color: Colors.neutral.lightGray,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '500',
     lineHeight: 20,
   },
   codeTextInput: {
     height: 57.197,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: Colors.glass.white5,
     borderRadius: Radii.lg,
     borderWidth: 0.612,
-    borderColor: 'rgba(255, 255, 255, 0.10)',
+    borderColor: Colors.glass.white10,
     paddingHorizontal: 16,
     color: '#FFF',
     textAlign: 'center',
@@ -289,13 +289,13 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 48,
     borderRadius: Radii.md2,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: Colors.glass.white5,
     justifyContent: 'center',
     alignItems: 'center',
   },
   cancelText: {
     color: '#FFF',
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 16,
     fontWeight: '500',
   },
@@ -303,16 +303,16 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 48,
     borderRadius: Radii.md2,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: Colors.glass.white5,
     justifyContent: 'center',
     alignItems: 'center',
   },
   confirmButtonActive: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)', // 살짝 밝게
+    backgroundColor: Colors.glass.white10, // 살짝 밝게
   },
   confirmText: {
     color: '#4A5565', // 비활성 컬러
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 16,
     fontWeight: '500',
   },
@@ -322,7 +322,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     color: Colors.primary.activeRedText,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 12,
     fontWeight: '400',
     lineHeight: 16,
@@ -331,7 +331,7 @@ const styles = StyleSheet.create({
   },
   timerText: {
     color: Colors.primary.electricCyan,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '500',
   },
@@ -350,7 +350,7 @@ const styles = StyleSheet.create({
   },
   resendText: {
     color: Colors.primary.electricCyan,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 16,
     fontWeight: '500',
   },

@@ -6,7 +6,7 @@ import SummaryIcon from '@/assets/images/common/matching/MeetSummaryIcon.svg';
 import CancelIcon from '@/assets/images/common/Cancel.svg';
 import SendCallIcon from '@/assets/images/common/matching/SendCall.svg';
 import SendMessageIcon from '@/assets/images/common/matching/SendMessage.svg';
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, FontFamily} from '@/src/constants/theme';
 import { useLayout } from '@/src/hooks/useLayout';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useRef } from 'react';
@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   nameText: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 20,
     fontWeight: '500',
     lineHeight: 28,
@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   timerText: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 12,
     fontWeight: '400',
     lineHeight: 16,
@@ -208,14 +208,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   satisfactionLabel: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 12,
     fontWeight: '400',
     lineHeight: 16,
   },
   satisfactionValue: {
     color: Colors.primary.mirrorOrange,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '500',
     lineHeight: 20,
@@ -240,7 +240,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   sectionTitle: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '500',
     lineHeight: 20,
@@ -255,7 +255,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   messageText: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '400',
     lineHeight: 22.75,
@@ -270,7 +270,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   summaryText: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '400',
     lineHeight: 20,
@@ -292,7 +292,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   actionText: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 12,
     fontWeight: '500',
     lineHeight: 16,

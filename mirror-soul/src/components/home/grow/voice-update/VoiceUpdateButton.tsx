@@ -1,7 +1,7 @@
 import CompleteIcon from '@/assets/images/common/evlove/voice-update/voice_update_complete.svg';
 import StopIcon from '@/assets/images/common/evlove/voice-update/voice_update_stop.svg';
 import VoiceIcon from '@/assets/images/common/Voice_icon_white.svg';
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, FontFamily} from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React from 'react';
@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     textAlign: 'center',
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 16,
     fontWeight: '400',
     lineHeight: 24,
@@ -208,7 +208,7 @@ const styles = StyleSheet.create({
   },
   elapsedText: {
     textAlign: 'center',
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '400',
     lineHeight: 20,
@@ -216,7 +216,7 @@ const styles = StyleSheet.create({
   },
   footerText: {
     textAlign: 'center',
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 12,
     fontWeight: '400',
     lineHeight: 16,

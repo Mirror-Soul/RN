@@ -1,4 +1,4 @@
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, FontFamily} from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
@@ -34,7 +34,7 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
   },
   titleText: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 12,
     fontWeight: '400',
     lineHeight: 16, // 133.333%
@@ -58,7 +58,7 @@ const styles = StyleSheet.create({
   },
   tagText: {
     color: Colors.primary.vividPurple, // #C27AFF
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 12,
     fontWeight: '400',
     lineHeight: 16, // 133.333%

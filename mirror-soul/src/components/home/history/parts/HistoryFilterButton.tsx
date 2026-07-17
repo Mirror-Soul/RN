@@ -1,4 +1,4 @@
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, FontFamily} from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import React from 'react';
 import { StyleSheet, TouchableOpacity, Text } from 'react-native';
@@ -49,7 +49,7 @@ const styles = StyleSheet.create({
     borderWidth: 0.612,
   },
   label: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '500',
     lineHeight: 20, // 142.857%

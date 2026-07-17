@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, TouchableOpacity, View, Text } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, FontFamily} from '@/src/constants/theme';
 // 아이콘 에셋
 import SummaryIcon from '@/assets/images/common/matching/RemmendSummary.svg';
 import CallStyleIcon from '@/assets/images/common/matching/Call_Style.svg';
@@ -153,14 +153,14 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   nameText: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 20,
     fontWeight: '500',
     lineHeight: 28,
     letterSpacing: -0.45,
   },
   bioText: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '400',
     lineHeight: 22.75,
@@ -177,7 +177,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   sectionTitle: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '500',
     lineHeight: 20,
@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary.vividPurple,
   },
   reasonText: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '400',
     lineHeight: 20,
@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   avgTimeText: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '400',
     lineHeight: 20,
@@ -240,7 +240,7 @@ const styles = StyleSheet.create({
   },
   tagText: {
     color: Colors.neutral.lavender,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 12,
     fontWeight: '400',
     lineHeight: 16,
@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
     borderWidth: 0.612,
   },
   cancelButtonText: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 16,
     fontWeight: '500',
     lineHeight: 24,
@@ -280,7 +280,7 @@ const styles = StyleSheet.create({
   },
   callButtonText: {
     color: '#000', // 검정색 텍스트
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 16,
     fontWeight: '500',
     lineHeight: 24,

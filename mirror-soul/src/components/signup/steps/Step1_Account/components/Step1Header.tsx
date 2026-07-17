@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Colors } from '@/src/constants/theme';
+import {Colors, FontFamily} from '@/src/constants/theme';
 
 /**
  * Step1Header 컴포넌트
@@ -36,7 +36,7 @@ const styles = StyleSheet.create({
     flex: 1,
     color: '#FFF',
     textAlign: 'center',
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 30,
     fontWeight: '500',
     lineHeight: 36,
@@ -51,7 +51,7 @@ const styles = StyleSheet.create({
   subtitle: {
     color: Colors.neutral.lightGray,
     textAlign: 'center',
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '400',
     lineHeight: 20,

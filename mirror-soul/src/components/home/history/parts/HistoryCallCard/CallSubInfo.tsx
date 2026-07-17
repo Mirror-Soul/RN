@@ -1,6 +1,6 @@
 import HistoryIcon from '@/assets/images/common/bottomNavbar/History_button.svg';
 import PurpleHeartIcon from '@/assets/images/common/history/purpleHeart.svg';
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, FontFamily} from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import React from 'react';
 import { StyleSheet, View, Text } from 'react-native';
@@ -50,7 +50,7 @@ const styles = StyleSheet.create({
     borderRadius: Radii.smmd, // 10px (스펙에서 새로 추가함)
   },
   chipText: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 12,
     fontWeight: '400',
     lineHeight: 16, // 133.333%

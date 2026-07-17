@@ -1,4 +1,4 @@
-import { Colors } from '@/src/constants/theme';
+import {Colors, FontFamily} from '@/src/constants/theme';
 import React from 'react';
 import { Text, StyleSheet, View } from 'react-native';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
@@ -26,14 +26,14 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   heading: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 20,
     fontWeight: '500',
     lineHeight: 30,
     letterSpacing: -0.449,
   },
   paragraph: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 12,
     fontWeight: '400',
     lineHeight: 16,

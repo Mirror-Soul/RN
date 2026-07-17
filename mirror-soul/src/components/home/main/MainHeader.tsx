@@ -1,6 +1,6 @@
 import SettingIcon from '@/assets/images/common/Setting.svg';
 import TimerIcon from '@/assets/images/common/main/Timer.svg';
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, FontFamily} from '@/src/constants/theme';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
   },
   title: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 24,
     fontWeight: '500',
     lineHeight: 32,

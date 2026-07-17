@@ -1,6 +1,6 @@
 import LocationIcon from '@/assets/images/common/Location.svg';
 import RightNarrowIcon from '@/assets/images/common/Right_narrow.svg';
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, FontFamily} from '@/src/constants/theme';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
   },
   tagText: {
     color: Colors.primary.electricCyan,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 12,
     fontWeight: '500',
     lineHeight: 16,

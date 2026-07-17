@@ -1,6 +1,6 @@
 import GreenCheckIcon from '@/assets/images/common/Green_check.svg';
 import ProtectIcon from '@/assets/images/common/Verification_protect_icon.svg';
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, FontFamily} from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
   },
   headingTitle: {
     color: '#FFF',
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 16,
     fontWeight: '500',
     lineHeight: 24,
@@ -91,7 +91,7 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#FFF',
     textAlign: 'center',
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 16,
     fontWeight: '500',
     lineHeight: 24,
@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
   },
   successTitle: {
     color: Colors.primary.successGreen,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '500',
     lineHeight: 20,
@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
   },
   successSubtitle: {
     color: Colors.neutral.lightGray,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 12,
     fontWeight: '400',
     lineHeight: 16,

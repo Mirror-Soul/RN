@@ -1,5 +1,5 @@
 import EvolveHighIcon from '@/assets/images/common/evlove/EvolveHigh.svg';
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, FontFamily} from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
@@ -90,13 +90,13 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   label: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 12,
     fontWeight: '400',
     lineHeight: 16,
   },
   percentText: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 24,
     fontWeight: '400',
     lineHeight: 32,
@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
   },
   bottomText: {
     fontSize: 12,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     lineHeight: 16,
   },
   highlightText: {

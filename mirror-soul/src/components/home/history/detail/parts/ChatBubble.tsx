@@ -1,5 +1,5 @@
 import EditPencilIcon from '@/assets/images/common/history/call_history/call_edit_pencil.svg';
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, FontFamily} from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View, TextInput } from 'react-native';
@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
   },
   messageText: {
     color: Colors.neutral.pureWhite,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '400',
     lineHeight: 22,
@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
   },
   textInput: {
     color: Colors.neutral.pureWhite,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     lineHeight: 22,
     letterSpacing: -0.15,
@@ -187,14 +187,14 @@ const styles = StyleSheet.create({
   },
   timestamp: {
     color: Colors.neutral.darkGray,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 11,
     fontWeight: '400',
     lineHeight: 14,
   },
   editedLabel: {
     color: Colors.neutral.darkGray,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 11,
     fontWeight: '400',
     lineHeight: 14,

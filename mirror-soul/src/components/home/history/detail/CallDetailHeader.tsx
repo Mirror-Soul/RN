@@ -1,5 +1,5 @@
 import RightNarrowIcon from '@/assets/images/common/Right_narrow.svg';
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, FontFamily} from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import {
@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
   },
   title: {
     color: Colors.neutral.pureWhite,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 24,
     fontWeight: '500',
     lineHeight: 36,
@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     color: Colors.neutral.lightGray,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 12,
     fontWeight: '400',
     lineHeight: 16,
@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     color: Colors.primary.electricCyan,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 12,
     fontWeight: '400',
     lineHeight: 16,

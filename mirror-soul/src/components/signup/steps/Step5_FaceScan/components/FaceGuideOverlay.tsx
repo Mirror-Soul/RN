@@ -7,7 +7,7 @@ import Animated, {
   withSpring,
   withSequence,
 } from 'react-native-reanimated';
-import { Colors } from '@/src/constants/theme';
+import {Colors, FontFamily} from '@/src/constants/theme';
 import { DirectionConfig } from '../types/faceScan';
 import { SCAN_DIRECTIONS } from '../constants/faceScanConfig';
 
@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
   },
   guideMessage: {
     color: Colors.neutral.pureWhite,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 16,
     fontWeight: '500',
     lineHeight: 24,
@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
   },
   directionLabel: {
     color: Colors.glass.white30,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 18,
     fontWeight: '600',
     textAlign: 'center',

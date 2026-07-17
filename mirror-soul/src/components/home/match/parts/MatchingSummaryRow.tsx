@@ -1,7 +1,7 @@
 import NoMeetingIcon from '@/assets/images/common/matching/NoMeeting.svg';
 import TwinCallIcon from '@/assets/images/common/matching/Twin_Call.svg';
 import OnRecommendIcon from '@/assets/images/common/matching/OnRecommend.svg';
-import { Colors, Radii } from '@/src/constants/theme';
+import {Colors, Radii, FontFamily} from '@/src/constants/theme';
 import React from 'react';
 import { StyleSheet, TouchableOpacity, View, Text } from 'react-native';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   buttonText: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '500',
     lineHeight: 20,
@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   badgeText: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 12,
     fontWeight: '500',
     lineHeight: 16,

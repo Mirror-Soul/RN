@@ -1,4 +1,4 @@
-import { Colors } from '@/src/constants/theme';
+import {Colors, FontFamily} from '@/src/constants/theme';
 import { useLayout } from '@/src/hooks/useLayout';
 import React, { useRef, useState } from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View, ViewToken } from 'react-native';
@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
     height: 30,
   },
   heading: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 20,
     fontWeight: '500',
     lineHeight: 30,
@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
   },
   viewAllText: {
     color: Colors.primary.electricCyan,
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '500',
     lineHeight: 20,
