@@ -1,4 +1,6 @@
 import React from 'react';
+import { FontFamily } from '@/src/constants/theme';
+
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
@@ -38,7 +40,7 @@ export const Header = ({
   return (
     <Animated.View 
       entering={FadeInDown.delay(delay).duration(500).springify()}
-      style={[styles.header, { paddingTop: insets.top + 24 }]}
+      style={[styles.header, { paddingTop: insets.top + 16 }]}
     >
       {showBackButton ? (
         <Pressable onPress={handleBack}>
@@ -66,7 +68,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 24,
-    paddingBottom: 40,
+    paddingVertical: 16,
     justifyContent: 'space-between',
     width: '100%',
   },
@@ -79,7 +81,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerTitle: {
-    fontFamily: 'Inter',
+    fontFamily: FontFamily.sans,
     fontWeight: '500',
     fontSize: 18,
     letterSpacing: -0.44,

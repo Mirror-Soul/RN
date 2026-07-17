@@ -17,7 +17,7 @@ export default function MainLayout() {
     <View style={[styles.container, { backgroundColor: colors.background.primary }]}>
       <Tabs
         initialRouteName="index"
-        backBehavior="history"
+        backBehavior="none"
         screenOptions={{
           headerShown: false,
         }}
