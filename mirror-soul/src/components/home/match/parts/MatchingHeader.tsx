@@ -9,6 +9,9 @@ export default function MatchingHeader() {
 
   return (
     <View style={styles.container}>
+      {/* 좌측 여백 (우측 아이콘과 대칭을 맞춰 타이틀을 중앙 정렬) */}
+      <View style={{ width: 44 }} />
+
       {/* 타이틀 */}
       <Text style={[styles.title, { color: colors.text.primary }]}>Matching</Text>
 
