@@ -1,3 +1,5 @@
+import { TextStyle, ViewStyle } from 'react-native';
+
 export const Colors = {
   primary: {
     electricCyan: '#00D3F3', // Brand Cyan
@@ -136,58 +138,79 @@ export const Layout = {
  */
 export interface ThemeColors {
   background: {
-    primary: string; // 최상단 배경
-    card: string;    // 카드, 모달 등 박스 배경
-    glass: string;   // 반투명 영역
+    primary: string;   // 화면 최상단
+    card: string;      // 카드, 모달 박스
+    elevated: string;  // 바텀시트, 팝오버
+    glass: string;     // 반투명 글래스
   };
   text: {
-    primary: string; // 기본 텍스트
+    primary: string;   // 주 텍스트
     secondary: string; // 서브 텍스트
-    muted: string;     // 비활성화 텍스트
+    muted: string;     // 비활성, 플레이스홀더
+    danger: string;    // 탈퇴, 에러 등 destructive 액션
   };
   brand: {
-    accent: string; // 주요 액센트 컬러
+    accent: string;    // 주 액센트 (dark: limeGreen, light: cobaltBlue)
   };
   border: {
-    primary: string;
+    primary: string;   // 카드, 구분선
+    strong: string;    // 포커스, 강조 테두리
+  };
+  state: {
+    danger: string;    // 에러, 탈퇴 등
+    success: string;   // 완료, 확인
   };
 }
 
 export const lightTheme: ThemeColors = {
   background: {
-    primary: '#F8F7F4', // Off White (명세 - 너무 밝은 흰색 방지)
+    primary: '#F8F7F4',               // Off White
     card: '#FFFFFF',
+    elevated: '#FFFFFF',              // 바텀시트, 팝오버
     glass: 'rgba(0, 0, 0, 0.05)',
   },
   text: {
     primary: '#141414',
     secondary: '#4B5563',
     muted: '#9CA3AF',
+    danger: '#DC2626',                // 라이트 모드 destructive
   },
   brand: {
-    accent: '#0047FF', // Electric Cobalt (명세)
+    accent: '#0047FF',                // Electric Cobalt
   },
   border: {
-    primary: 'rgba(0, 0, 0, 0.15)', // 테두리를 너무 강하지 않게 살짝만 색상을 넣음
+    primary: 'rgba(0, 0, 0, 0.12)',
+    strong: 'rgba(0, 0, 0, 0.30)',
+  },
+  state: {
+    danger: '#DC2626',
+    success: '#059669',
   },
 };
 
 export const darkTheme: ThemeColors = {
   background: {
-    primary: '#141414', // Pitch Black (명세)
+    primary: '#141414',               // Pitch Black
     card: '#2A2A2A',
-    glass: 'rgba(255, 255, 255, 0.05)',
+    elevated: '#323232',              // 바텀시트, 팝오버
+    glass: Colors.glass.white5,
   },
   text: {
     primary: '#FFFFFF',
     secondary: '#D1D5DC',
     muted: '#6A7282',
+    danger: '#FF4C4C',                // 다크 모드 destructive
   },
   brand: {
-    accent: '#2BEE34', // Lime Green (명세)
+    accent: '#2BEE34',                // Lime Green
   },
   border: {
-    primary: 'rgba(255, 255, 255, 0.1)',
+    primary: Colors.glass.white10,
+    strong: 'rgba(255, 255, 255, 0.30)',
+  },
+  state: {
+    danger: '#FF4C4C',
+    success: '#05DF72',
   },
 };
 
