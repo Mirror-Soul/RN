@@ -8,15 +8,25 @@ type BadgeVariant = 'solid' | 'glass' | 'outline' | 'gradient';
 type BadgeColor = 'cyan' | 'purple' | 'gray' | 'gold';
 type BadgeSize = 'sm' | 'md';
 
-interface BadgeProps {
+type BaseBadgeProps = {
   label: string;
-  variant?: BadgeVariant;
-  colorScheme?: BadgeColor;
   size?: BadgeSize;
   icon?: React.ReactNode;
   style?: StyleProp<ViewStyle>;
   textStyle?: StyleProp<TextStyle>;
-}
+};
+
+type NonGradientBadgeProps = BaseBadgeProps & {
+  variant?: 'solid' | 'glass' | 'outline';
+  colorScheme?: BadgeColor;
+};
+
+type GradientBadgeProps = BaseBadgeProps & {
+  variant: 'gradient';
+  colorScheme?: 'cyan' | 'purple'; // gradient는 cyan, purple만 허용
+};
+
+export type BadgeProps = NonGradientBadgeProps | GradientBadgeProps;
 
 /**
  * 전역 디자인 시스템 - Badge
@@ -101,10 +111,16 @@ export const Badge = ({
   }
 
   // 렌더링 로직 (Gradient 분기)
-  if (variant === 'gradient' && (colorScheme === 'cyan' || colorScheme === 'purple')) {
+  if (variant === 'gradient') {
+    // 타입으로 차단되지만 런타임에서 지원하지 않는 컬러를 넘길 경우를 대비한 Fallback
+    const gradientColors = 
+      colorScheme === 'cyan' ? Colors.gradient.twinProgress :
+      colorScheme === 'purple' ? Colors.gradient.voiceStart :
+      ['#99A1AF', '#6A7282'] as const;
+
     return (
       <LinearGradient
-        colors={colorScheme === 'cyan' ? Colors.gradient.twinProgress : Colors.gradient.voiceStart}
+        colors={gradientColors}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={[containerStyle, style]}
