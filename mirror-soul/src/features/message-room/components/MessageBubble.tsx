@@ -10,7 +10,7 @@ interface MessageBubbleProps {
   /** 상대방 아바타 이니셜 (수신 메시지에만 표시) */
   avatarLetter: string;
   /** 상대방 아바타 그라디언트 */
-  avatarGradient: [string, string];
+  avatarGradient: readonly [string, string, ...string[]];
   /** 애니메이션 진입 딜레이(ms) — stagger 효과용 */
   enterDelay?: number;
   /** 연속된 수신 메시지에서 아바타를 숨길지 여부 */

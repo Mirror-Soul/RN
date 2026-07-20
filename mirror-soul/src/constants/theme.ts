@@ -180,6 +180,13 @@ export const FontWeight = {
 } as const;
 
 /**
+ * 애니메이션 관련 상수 시스템
+ */
+export const Animation = {
+  staggerDelay: 60, // 리스트 아이템 순차 등장(Stagger) 딜레이 (ms)
+} as const;
+
+/**
  * 동적 테마 (Light/Dark Mode) 시스템
  */
 export interface ThemeColors {

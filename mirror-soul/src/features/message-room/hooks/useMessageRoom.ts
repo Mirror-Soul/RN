@@ -1,9 +1,9 @@
 import { useState, useRef, useCallback } from 'react';
-import { ScrollView } from 'react-native';
-import { MessageItem, MessageDateGroup } from '../types';
+import { FlashList } from '@shopify/flash-list';
+import { MessageItem, MessageDateGroup, FlattenedListItem } from '../types';
 
 export function useMessageRoom(initialDateGroups: MessageDateGroup[]) {
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<FlashList<FlattenedListItem>>(null);
   const [dateGroups, setDateGroups] = useState<MessageDateGroup[]>(initialDateGroups);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
 

@@ -19,17 +19,18 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { FlashList, ListRenderItemInfo } from '@shopify/flash-list';
 
 import { Header } from '@/src/components/common/Header';
-import MessageBubble from './components/MessageBubble';
-import MessageDateDivider from './components/MessageDateDivider';
 import MessageInput from './components/MessageInput';
 import MessageRoomOptionsPanel from './components/MessageRoomOptionsPanel';
-import { ChatRoom } from './types';
+import { ChatRoom, FlattenedListItem } from './types';
 import { useMessageRoom } from './hooks/useMessageRoom';
 import { useMessageRoomAnimations } from './hooks/useMessageRoomAnimations';
+import { useMessageListFormatter } from './hooks/useMessageListFormatter';
 import { MessageRoomHeaderLeft } from './components/MessageRoomHeaderLeft';
 import { MessageRoomHeaderRight } from './components/MessageRoomHeaderRight';
+import { MessageListItemRenderer } from './components/MessageListItemRenderer';
 import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
 
 interface MessageRoomScreenProps {
@@ -56,7 +57,22 @@ export default function MessageRoomScreen({ room }: MessageRoomScreenProps) {
     setIsPanelOpen,
   } = useMessageRoom(room.dateGroups);
 
+  const flattenedData = useMessageListFormatter(dateGroups);
   const { glowLeftStyle, glowRightStyle } = useMessageRoomAnimations();
+
+  // FlashList 렌더링 콜백 함수
+  const renderItem = useCallback(
+    ({ item }: ListRenderItemInfo<FlattenedListItem>) => {
+      return (
+        <MessageListItemRenderer
+          item={item}
+          avatarLetter={room.avatarLetter}
+          avatarGradient={room.avatarGradient}
+        />
+      );
+    },
+    [room.avatarLetter, room.avatarGradient]
+  );
 
   return (
     <View style={styles.root}>
@@ -82,44 +98,20 @@ export default function MessageRoomScreen({ room }: MessageRoomScreenProps) {
         />
 
         {/* ── 메시지 목록 ── */}
-        <ScrollView
-          ref={scrollRef}
-          style={styles.messageList}
-          contentContainerStyle={styles.messageListContent}
-          showsVerticalScrollIndicator={false}
-          onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: true })}
-        >
-          {dateGroups.map((group, groupIdx) => {
-            let msgOffset = 0;
-            dateGroups.slice(0, groupIdx).forEach((g) => {
-              msgOffset += g.messages.length;
-            });
-
-            return (
-              <Animated.View key={group.date} entering={FadeIn.duration(300)}>
-                <MessageDateDivider label={group.date} />
-                {group.messages.map((msg, msgIdx) => {
-                  const globalIdx = msgOffset + msgIdx;
-                  const isReceived = msg.direction === 'RECEIVED';
-                  const prevMsg = group.messages[msgIdx - 1];
-                  const hideAvatar =
-                    isReceived && !!prevMsg && prevMsg.direction === 'RECEIVED';
-
-                  return (
-                    <MessageBubble
-                      key={msg.id}
-                      message={msg}
-                      avatarLetter={room.avatarLetter}
-                      avatarGradient={room.avatarGradient}
-                      enterDelay={globalIdx * 60}
-                      hideAvatar={hideAvatar}
-                    />
-                  );
-                })}
-              </Animated.View>
-            );
-          })}
-        </ScrollView>
+        <View style={styles.messageList}>
+          {/* @ts-ignore: estimatedItemSize is valid but types might be outdated */}
+          <FlashList
+            ref={scrollRef}
+            data={flattenedData}
+            renderItem={renderItem}
+            contentContainerStyle={styles.messageListContent}
+            showsVerticalScrollIndicator={false}
+            estimatedItemSize={70}
+            getItemType={(item) => item.type}
+            inverted={true} // 최신 메시지가 화면 최하단(배열 맨앞)에 렌더링되도록 역순 정렬
+            keyExtractor={(item) => item.id}
+          />
+        </View>
 
         {/* ── 입력 푸터 ── */}
         <MessageInput onSend={handleSend} />
