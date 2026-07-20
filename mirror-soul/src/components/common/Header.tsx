@@ -9,19 +9,28 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface HeaderProps {
-  title: string;
+  title?: string;
   showBackButton?: boolean;
   onBackPress?: () => void;
+  /** 뒤로가기 버튼 우측에 들어갈 커스텀 콘텐츠 (아바타+이름 등). 지정 시 title은 숨겨집니다. */
+  leftContent?: React.ReactNode;
   rightElement?: React.ReactNode;
   delay?: number;
+  /** 외부에서 배경색을 지정할 때 사용합니다 */
+  backgroundColor?: string;
+  /** 하단 보더 색상 (기본: 없음) */
+  borderBottomColor?: string;
 }
 
 export const Header = ({ 
   title, 
   showBackButton = true, 
   onBackPress, 
+  leftContent,
   rightElement,
-  delay = 0 
+  delay = 0,
+  backgroundColor,
+  borderBottomColor,
 }: HeaderProps) => {
   const router = useRouter();
   const { colors } = useThemeColors();
@@ -40,8 +49,14 @@ export const Header = ({
   return (
     <Animated.View 
       entering={FadeInDown.delay(delay).duration(500).springify()}
-      style={[styles.header, { paddingTop: insets.top + 16 }]}
+      style={[
+        styles.header,
+        { paddingTop: insets.top + 16 },
+        backgroundColor ? { backgroundColor } : undefined,
+        borderBottomColor ? { borderBottomWidth: 1, borderBottomColor } : undefined,
+      ]}
     >
+      {/* 좌측: 뒤로가기 버튼 */}
       {showBackButton ? (
         <Pressable 
           onPress={handleBack}
@@ -57,11 +72,19 @@ export const Header = ({
         <View style={styles.emptySlot} />
       )}
 
-      <Text style={[styles.headerTitle, { color: colors.text.primary }]}>
-        {title}
-      </Text>
+      {/* 중앙: leftContent가 있으면 커스텀 콘텐츠, 없으면 title 텍스트 */}
+      {leftContent ? (
+        <View style={styles.leftContentArea}>
+          {leftContent}
+        </View>
+      ) : (
+        <Text style={[styles.headerTitle, { color: colors.text.primary }]}>
+          {title}
+        </Text>
+      )}
 
-      <View style={styles.emptySlot}>
+      {/* 우측: rightElement 슬롯 */}
+      <View style={styles.rightSlot}>
         {rightElement}
       </View>
     </Animated.View>
@@ -86,13 +109,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerTitle: {
+    flex: 1,
     fontFamily: FontFamily.sans,
     fontWeight: FontWeight.medium,
     fontSize: FontSize.xl,
     letterSpacing: -0.44,
+    textAlign: 'center',
+  },
+  /** leftContent 사용 시 flex:1 으로 빈 공간을 모두 채움 */
+  leftContentArea: {
+    flex: 1,
+    paddingLeft: Spacing.md,
   },
   emptySlot: {
     width: 40,
     alignItems: 'flex-end',
+  },
+  /** rightElement 슬롯 — 너비를 콘텐츠에 맞게 자동 조절 */
+  rightSlot: {
+    alignItems: 'flex-end',
+    flexShrink: 0,
   },
 });

@@ -4,37 +4,34 @@ import {FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import MatchingChatItem, { MatchingChatData } from './MatchingChatItem';
 import { Colors } from '@/src/constants/theme';
+import { MOCK_CHAT_ROOMS } from '@/src/mocks/messageMocks';
 
-const MOCK_CHATS: MatchingChatData[] = [
-  {
-    id: 'c1',
-    name: 'Jessica',
-    timeAgo: '어제',
-    message: 'Twin이 전해준 제 이야기는 어떠셨나요?',
-    age: 29,
-    resonance: 92,
-    isOnline: true,
-    avatarLetter: 'J',
-    gradientColors: ['rgba(194, 122, 255, 0.2)', 'rgba(230, 0, 118, 0.2)'],
-  },
-  {
-    id: 'c2',
-    name: 'Mia',
-    timeAgo: '2일 전',
-    message: '반가워요! 우리 Twin들이 먼저 친해졌네요.',
-    age: 27,
-    resonance: 87,
-    isOnline: false,
-    avatarLetter: 'M',
-    gradientColors: ['rgba(194, 122, 255, 0.2)', 'rgba(230, 0, 118, 0.2)'],
-  },
-];
+/**
+ * MOCK_CHAT_ROOMS → MatchingChatData 변환 (단일 출처 유지)
+ * API 연동 시 이 매핑 로직을 useQuery 결과 변환으로 교체합니다.
+ */
+const MOCK_CHATS: MatchingChatData[] = MOCK_CHAT_ROOMS.map((room) => {
+  const lastGroup = room.dateGroups[room.dateGroups.length - 1];
+  const lastMsg = lastGroup?.messages[lastGroup.messages.length - 1];
+  return {
+    id: room.id,
+    name: room.name,
+    timeAgo: lastGroup?.date ?? '',
+    message: lastMsg?.text ?? '',
+    age: 0, // API 연동 시 실제 나이 데이터로 교체
+    resonance: room.resonance,
+    isOnline: room.isOnline,
+    avatarLetter: room.avatarLetter,
+    gradientColors: room.avatarGradient,
+  };
+});
 
 export default function MatchingChatList() {
   const { colors } = useThemeColors();
 
   return (
     <View style={styles.container}>
+
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Active Conversations</Text>

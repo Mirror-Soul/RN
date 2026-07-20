@@ -4,6 +4,7 @@ import {Colors, FontFamily, Radii, FontSize, FontWeight, Spacing} from '@/src/co
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 
 export interface MatchingChatData {
   id: string;
@@ -24,11 +25,20 @@ interface MatchingChatItemProps {
 
 export default function MatchingChatItem({ data, onPress }: MatchingChatItemProps) {
   const { colors } = useThemeColors();
+  const router = useRouter();
+
+  const handlePress = () => {
+    if (onPress) {
+      onPress();
+    } else {
+      router.push(`/message-room/${data.id}`);
+    }
+  };
 
   return (
     <Pressable 
       style={[styles.container, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
-      onPress={onPress}
+      onPress={handlePress}
     >
       {/* 아바타 영역 */}
       <View style={styles.avatarContainer}>
