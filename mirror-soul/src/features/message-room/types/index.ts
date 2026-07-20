@@ -17,9 +17,11 @@ export interface ChatRoom {
   name: string;
   avatarLetter: string;
   /** 상대 아바타 그라디언트 컬러 (LinearGradient colors) */
-  avatarGradient: [string, string];
+  avatarGradient: readonly [string, string, ...string[]];
   resonance: number; // 유사도 %
   isOnline: boolean;
   isRead: boolean; // 상대방이 읽음 여부
   dateGroups: MessageDateGroup[];
 }
+
+export * from './list';
