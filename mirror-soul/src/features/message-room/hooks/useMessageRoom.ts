@@ -1,9 +1,9 @@
 import { useState, useRef, useCallback } from 'react';
 import { FlashList } from '@shopify/flash-list';
-import { MessageItem, MessageDateGroup } from '../types';
+import { MessageItem, MessageDateGroup, FlattenedListItem } from '../types';
 
 export function useMessageRoom(initialDateGroups: MessageDateGroup[]) {
-  const scrollRef = useRef<any>(null);
+  const scrollRef = useRef<FlashList<FlattenedListItem>>(null);
   const [dateGroups, setDateGroups] = useState<MessageDateGroup[]>(initialDateGroups);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
 

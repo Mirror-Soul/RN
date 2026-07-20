@@ -34,5 +34,15 @@ function MessageListItemRendererComponent({ item, avatarLetter, avatarGradient }
   }
 }
 
-// 불필요한 리렌더링을 방지하기 위해 React.memo로 감쌉니다.
-export const MessageListItemRenderer = memo(MessageListItemRendererComponent);
+function arePropsEqual(prevProps: MessageListItemRendererProps, nextProps: MessageListItemRendererProps) {
+  // item의 고유 식별자(id)와 변경될 여지가 있는 원시값들을 기준으로 얕은 비교 한계를 극복합니다.
+  return (
+    prevProps.item.id === nextProps.item.id &&
+    prevProps.avatarLetter === nextProps.avatarLetter &&
+    prevProps.avatarGradient[0] === nextProps.avatarGradient[0] &&
+    prevProps.avatarGradient[1] === nextProps.avatarGradient[1]
+  );
+}
+
+// 불필요한 리렌더링을 방지하기 위해 React.memo에 커스텀 비교 함수를 적용합니다.
+export const MessageListItemRenderer = memo(MessageListItemRendererComponent, arePropsEqual);

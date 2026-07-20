@@ -24,7 +24,6 @@ export function useMessageListFormatter(dateGroups: MessageDateGroup[]): Flatten
 
       // 2. 메시지 아이템들 삽입
       group.messages.forEach((msg, msgIdx) => {
-        const globalIdx = msgOffset + msgIdx;
         const isReceived = msg.direction === 'RECEIVED';
         const prevMsg = group.messages[msgIdx - 1];
         const hideAvatar = isReceived && !!prevMsg && prevMsg.direction === 'RECEIVED';
@@ -34,15 +33,24 @@ export function useMessageListFormatter(dateGroups: MessageDateGroup[]): Flatten
           id: msg.id,
           message: msg,
           hideAvatar,
-          enterDelay: globalIdx * 60, // 등장 애니메이션을 위한 딜레이 계산
+          enterDelay: 0, // 임시 할당 (역순 처리 후 재계산)
         });
       });
-
-      msgOffset += group.messages.length;
     });
 
     // inverted={true} 인 FlashList 에서는 데이터가 역순으로 들어와야
     // 가장 최신 데이터가 화면 하단(리스트의 시작점)에 렌더링됩니다.
-    return flatList.reverse();
+    const reversedList = flatList.reverse();
+
+    // 역순 정렬된 리스트를 기준으로 최신 메시지(index 0)부터 딜레이를 부여합니다.
+    let messageIndex = 0;
+    return reversedList.map((item) => {
+      if (item.type === 'message') {
+        const delay = messageIndex * 60;
+        messageIndex++;
+        return { ...item, enterDelay: delay };
+      }
+      return item;
+    });
   }, [dateGroups]);
 }
