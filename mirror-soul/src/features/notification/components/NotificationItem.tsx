@@ -3,7 +3,7 @@ import {FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 
 import { View, StyleSheet } from 'react-native';
 import Animated from 'react-native-reanimated';
-import { AnimatedSwitch } from './AnimatedSwitch';
+import { AnimatedSwitch } from '@/src/components/common/AnimatedSwitch';
 import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
 
 interface NotificationItemProps {
