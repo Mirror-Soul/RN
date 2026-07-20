@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { MessageDateGroup, FlattenedListItem } from '../types';
+import { Animation } from '@/src/constants/theme';
 
 /**
  * 중첩된 MessageDateGroup[] 을 FlashList 가 렌더링하기 편한 1차원 FlattenedListItem[] 으로 변환합니다.
@@ -46,7 +47,7 @@ export function useMessageListFormatter(dateGroups: MessageDateGroup[]): Flatten
     let messageIndex = 0;
     return reversedList.map((item) => {
       if (item.type === 'message') {
-        const delay = messageIndex * 60;
+        const delay = messageIndex * Animation.staggerDelay;
         messageIndex++;
         return { ...item, enterDelay: delay };
       }
