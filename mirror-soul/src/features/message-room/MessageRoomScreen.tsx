@@ -87,7 +87,7 @@ export default function MessageRoomScreen({ room }: MessageRoomScreenProps) {
           style={styles.messageList}
           contentContainerStyle={styles.messageListContent}
           showsVerticalScrollIndicator={false}
-          onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: false })}
+          onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: true })}
         >
           {dateGroups.map((group, groupIdx) => {
             let msgOffset = 0;

@@ -29,11 +29,6 @@ export function useMessageRoom(initialDateGroups: MessageDateGroup[]) {
       }
       return [...groups, { date: '오늘', messages: [newMsg] }];
     });
-
-    // 전송 후 스크롤 하단으로
-    setTimeout(() => {
-      scrollRef.current?.scrollToEnd({ animated: true });
-    }, 100);
   }, []);
 
   return {

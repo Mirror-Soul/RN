@@ -82,14 +82,11 @@ export default function MessageRoomOptionsPanel({
 
   const overlayStyle = useAnimatedStyle(() => ({
     opacity: overlayOpacity.value,
-    pointerEvents: overlayOpacity.value > 0 ? 'auto' : 'none',
   }));
 
   const panelStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: translateX.value }],
   }));
-
-  if (!isOpen && translateX.value === PANEL_WIDTH) return null;
 
   return (
     <View style={[styles.root, { height: screenHeight }]} pointerEvents={isOpen ? 'auto' : 'none'}>
