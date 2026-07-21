@@ -1,142 +1,82 @@
-import {Colors, Radii, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
-import { useThemeColors } from '@/src/hooks/useThemeColors';
-import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
+import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
+import { Feather } from '@expo/vector-icons';
 
-export interface CallProfileProps {
+interface CallAvatarProps {
   name: string;
-  age: number;
-  consistencyPercent: number;
-  dateStr: string; // ex) "오늘", "어제", "10.24"
-  timeStr: string; // ex) "14:30"
   profileImageUrl?: string;
-  callTypeDesc: string; // ex) "내가 시작한 통화", "상대방이 시작한 통화"
+  direction: 'SENT' | 'RECEIVED';
 }
 
-export default function CallProfile({
-  name,
-  age,
-  consistencyPercent,
-  dateStr,
-  timeStr,
-  profileImageUrl,
-  callTypeDesc,
-}: CallProfileProps) {
-  const { colors } = useThemeColors();
+/**
+ * 통화 카드 아바타 컴포넌트 (SRP)
+ * 프로필 이미지(또는 이니셜) + 우하단 방향 배지를 렌더링합니다.
+ * - RECEIVED(받음): electricCyan 배경 + arrow-down-left
+ * - SENT(보냄): vividPurple 배경 + arrow-up-right
+ */
+export default function CallAvatar({ name, profileImageUrl, direction }: CallAvatarProps) {
+  const isReceived = direction === 'RECEIVED';
+  const badgeColor = isReceived ? Colors.primary.electricCyan : Colors.primary.vividPurple;
+  const arrowIcon = isReceived ? 'arrow-down-left' : 'arrow-up-right';
 
   return (
-    <View style={styles.container}>
-      {/* Profile Image */}
-      <View style={styles.profileImageWrapper}>
-        {profileImageUrl ? (
-          <Image source={{ uri: profileImageUrl }} style={[styles.profileImage, { borderColor: colors.border.primary, borderWidth: 1 }]} />
-        ) : (
-          <View style={[styles.profileImage, { backgroundColor: colors.background.glass, borderColor: colors.border.primary, borderWidth: 1 }]} />
-        )}
-      </View>
-
-      {/* Info Section */}
-      <View style={styles.infoWrapper}>
-        <View style={styles.nameAgeRow}>
-          <Text style={[styles.nameAgeText, { color: colors.text.primary }]}>{name}, {age}</Text>
-          <View style={styles.consistencyBadgeWrapper}>
-            <LinearGradient
-              colors={[Colors.glass.cyan20, Colors.glass.purple20]}
-              start={{ x: 0, y: 0.5 }}
-              end={{ x: 1, y: 0.5 }}
-              style={styles.consistencyBadge}
-            >
-              <Text style={[styles.consistencyText, { color: colors.text.primary }]}>{consistencyPercent}%</Text>
-            </LinearGradient>
-          </View>
+    <View style={styles.wrapper}>
+      {/* 프로필 이미지 또는 이니셜 */}
+      {profileImageUrl ? (
+        <Image source={{ uri: profileImageUrl }} style={styles.avatar} />
+      ) : (
+        <View style={styles.avatarPlaceholder}>
+          <Text style={styles.initialText}>{name[0]}</Text>
         </View>
-        <Text style={[styles.typeDescText, { color: colors.text.secondary }]}>{callTypeDesc}</Text>
-      </View>
+      )}
 
-      {/* Date / Time */}
-      <View style={styles.dateWrapper}>
-        <Text style={[styles.dateText, { color: colors.text.secondary }]}>{dateStr}</Text>
-        <Text style={[styles.timeText, { color: colors.text.muted }]}>{timeStr}</Text>
+      {/* 방향 배지 */}
+      <View style={[styles.badge, { backgroundColor: badgeColor }]}>
+        <Feather name={arrowIcon} size={10} color={Colors.primary.soulBlack} />
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-    alignSelf: 'stretch',
-  },
-  profileImageWrapper: {
+  wrapper: {
     width: 48,
     height: 48,
+    position: 'relative',
+    flexShrink: 0,
   },
-  profileImage: {
+  avatar: {
     width: 48,
     height: 48,
     borderRadius: Radii.full,
   },
-  infoWrapper: {
-    flex: 1,
-    flexDirection: 'column',
-    gap: Spacing.xs,
-  },
-  nameAgeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  nameAgeText: {
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.xl,
-    fontWeight: FontWeight.medium,
-    lineHeight: 27, // 150%
-    letterSpacing: -0.439,
-  },
-  consistencyBadgeWrapper: {
+  avatarPlaceholder: {
+    width: 48,
+    height: 48,
     borderRadius: Radii.full,
+    backgroundColor: Colors.glass.white10,
     borderWidth: 0.612,
-    borderColor: Colors.glass.cyan30_d3,
-    overflow: 'hidden',
-  },
-  consistencyBadge: {
-    paddingHorizontal: 8.6,
-    paddingVertical: 3.5, // 근사치 4.4 - 0.6 = 3.8
+    borderColor: Colors.glass.white15,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  consistencyText: {
+  initialText: {
+    color: Colors.neutral.lightGrayText,
     fontFamily: FontFamily.sans,
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.regular,
-    lineHeight: 16, // 133.333%
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.bold,
   },
-  typeDescText: {
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.regular,
-    lineHeight: 16,
-  },
-  dateWrapper: {
-    flexDirection: 'column',
-    alignItems: 'flex-end',
-    gap: Spacing.xs,
-  },
-  dateText: {
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.regular,
-    lineHeight: 16,
-    textAlign: 'right',
-  },
-  timeText: {
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.regular,
-    lineHeight: 16,
-    textAlign: 'right',
+  badge: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    width: 20,
+    height: 20,
+    borderRadius: Radii.sm,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: Colors.primary.soulBlack,
   },
 });

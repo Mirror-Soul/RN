@@ -1,58 +1,135 @@
-import HistoryIcon from '@/assets/images/common/bottomNavbar/History_button.svg';
-import PurpleHeartIcon from '@/assets/images/common/history/purpleHeart.svg';
-import {Colors, Radii, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
-import { useThemeColors } from '@/src/hooks/useThemeColors';
 import React from 'react';
-import { StyleSheet, View, Text } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import { Feather } from '@expo/vector-icons';
+import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
-export interface CallSubInfoProps {
-  durationLabel: string; // ex) "8분 23초"
-  twinMatchLabel: string; // ex) "상대 Twin 92%"
+interface CallMetaProps {
+  name: string;
+  age: number;
+  consistencyPercent: number;
+  timeStr: string;
+  durationLabel: string;
+  tags: string[];
 }
 
-export default function CallSubInfo({
+/** 태그 chip 최대 표시 개수 */
+const MAX_TAGS = 3;
+
+/**
+ * 통화 카드 메타 정보 컴포넌트 (SRP)
+ * 이름/나이, 시간, 일치도%, 통화시간, 주제 태그를 렌더링합니다.
+ * CallSubInfo + CallTagRow를 하나의 관심사로 통합합니다.
+ */
+export default function CallMeta({
+  name,
+  age,
+  consistencyPercent,
+  timeStr,
   durationLabel,
-  twinMatchLabel,
-}: CallSubInfoProps) {
+  tags,
+}: CallMetaProps) {
   const { colors } = useThemeColors();
 
   return (
     <View style={styles.container}>
-      {/* Time */}
-      <View style={[styles.chip, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
-        <HistoryIcon width={16} height={16} color={colors.text.muted} />
-        <Text style={[styles.chipText, { color: colors.text.muted }]}>{durationLabel}</Text>
+      {/* Row 1: 이름·나이 (좌) / 시간 (우) */}
+      <View style={styles.row}>
+        <Text style={[styles.nameText, { color: colors.text.primary }]} numberOfLines={1}>
+          {name},{' '}
+          <Text style={[styles.ageText, { color: colors.text.muted }]}>{age}</Text>
+        </Text>
+        <Text style={[styles.timeText, { color: colors.text.muted }]}>{timeStr}</Text>
       </View>
 
-      {/* Twin Match */}
-      <View style={[styles.chip, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
-        <PurpleHeartIcon width={16} height={16} />
-        <Text style={[styles.chipText, { color: colors.text.muted }]}>{twinMatchLabel}</Text>
+      {/* Row 2: 일치도% + 통화시간 */}
+      <View style={styles.row}>
+        <View style={styles.metaItem}>
+          <Feather name="zap" size={10} color={Colors.primary.electricCyan} />
+          <Text style={styles.consistencyText}>{consistencyPercent}%</Text>
+        </View>
+        <View style={styles.metaItem}>
+          <Feather name="clock" size={10} color={colors.text.muted} />
+          <Text style={[styles.durationText, { color: colors.text.muted }]}>{durationLabel}</Text>
+        </View>
       </View>
+
+      {/* Row 3: 주제 태그 chips (최대 MAX_TAGS개) */}
+      {tags.length > 0 && (
+        <View style={styles.tagsRow}>
+          {tags.slice(0, MAX_TAGS).map((tag, index) => (
+            <View key={index} style={styles.tagChip}>
+              <Text style={styles.tagText}>{tag}</Text>
+            </View>
+          ))}
+        </View>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md, // 11.992px
-    alignSelf: 'stretch',
+    flex: 1,
+    flexDirection: 'column',
+    gap: Spacing.xxs,
+    minWidth: 0, // 텍스트 truncation을 위한 flex 레이아웃 보정
   },
-  chip: {
-    flex: 1, // 균등 분할
+  row: {
     flexDirection: 'row',
-    height: 32, // 31.988px
-    paddingHorizontal: Spacing.sm,
     alignItems: 'center',
+    justifyContent: 'space-between',
     gap: Spacing.sm,
-    borderRadius: Radii.smmd, // 10px (스펙에서 새로 추가함)
   },
-  chipText: {
+  nameText: {
     fontFamily: FontFamily.sans,
-    fontSize: FontSize.sm,
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.semibold,
+    letterSpacing: -0.15,
+    flex: 1,
+  },
+  ageText: {
     fontWeight: FontWeight.regular,
-    lineHeight: 16, // 133.333%
+  },
+  timeText: {
+    fontFamily: FontFamily.mono,
+    fontSize: FontSize.xs,
+    flexShrink: 0,
+  },
+  metaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xxs,
+  },
+  consistencyText: {
+    fontFamily: FontFamily.sans,
+    fontSize: FontSize.xs,
+    fontWeight: FontWeight.bold,
+    color: Colors.primary.electricCyan,
+  },
+  durationText: {
+    fontFamily: FontFamily.sans,
+    fontSize: FontSize.xs,
+    fontWeight: FontWeight.bold,
+  },
+  tagsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.xs,
+    marginTop: Spacing.xxs,
+  },
+  tagChip: {
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xxs,
+    borderRadius: Radii.sm,
+    borderWidth: 0.612,
+    borderColor: Colors.glass.purple20,
+    backgroundColor: Colors.glass.purple10,
+  },
+  tagText: {
+    color: Colors.primary.vividPurple,
+    fontFamily: FontFamily.sans,
+    fontSize: FontSize.xs,
+    fontWeight: FontWeight.regular,
   },
 });
