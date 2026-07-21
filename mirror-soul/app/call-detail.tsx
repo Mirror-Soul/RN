@@ -2,7 +2,7 @@ import CallDetailAlert from '@/src/components/home/history/detail/CallDetailAler
 import CallDetailBody from '@/src/components/home/history/detail/CallDetailBody';
 import CallDetailFooter from '@/src/components/home/history/detail/CallDetailFooter';
 import CallDetailHeader from '@/src/components/home/history/detail/CallDetailHeader';
-import {Colors, FontSize, Spacing} from '@/src/constants/theme';
+import { Colors, FontSize, Spacing } from '@/src/constants/theme';
 import { MOCK_CALL_HISTORY } from '@/src/mocks/historyMocks';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React from 'react';
@@ -12,6 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 /**
  * 통화 기록 상세 화면 (루트 스택 레벨)
  * HistoryCallCard 탭 시 진입하며, BottomNavbar 없이 풀스크린으로 표시됩니다.
+ * 읽기 전용 통화 기록 + Twin 답변 수정 화면입니다. (실시간 채팅 없음)
  */
 export default function CallDetailScreen() {
   const router = useRouter();
@@ -34,9 +35,11 @@ export default function CallDetailScreen() {
       <CallDetailHeader
         name={callItem.name}
         age={callItem.age}
-        callSequenceNumber={callItem.callSequenceNumber}
         consistencyPercent={callItem.consistencyPercent}
+        isOnline={false} // API 연동 시 실제 온라인 상태로 교체
         onBack={() => router.back()}
+        onCallPress={() => {/* 향후 통화 기능 연동 */}}
+        onMorePress={() => {/* 향후 더보기 메뉴 연동 */}}
       />
       <CallDetailAlert />
       <CallDetailBody key={callItem.id} initialMessages={callItem.messages} />
@@ -53,7 +56,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary.soulBlack,
   },
   errorText: {
-    color: Colors.neutral.lightGray,
+    color: '#99A1AF',
     textAlign: 'center',
     marginTop: Spacing.giant,
     fontFamily: 'Inter',
