@@ -1,7 +1,7 @@
-import {Colors, Radii, FontFamily, FontSize, FontWeight} from '@/src/constants/theme';
-import { useThemeColors } from '@/src/hooks/useThemeColors';
 import React from 'react';
 import { StyleSheet, TouchableOpacity, Text } from 'react-native';
+import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 export interface HistoryFilterButtonProps {
   label: string;
@@ -11,6 +11,7 @@ export interface HistoryFilterButtonProps {
 
 /**
  * 리스트 필터용 개별 버튼 (SRP)
+ * 컴팩트 pill 버튼 스타일 — 콘텐츠 너비에 맞게 자동 조절됩니다.
  */
 export default function HistoryFilterButton({
   label,
@@ -23,16 +24,21 @@ export default function HistoryFilterButton({
     <TouchableOpacity
       style={[
         styles.container,
-        isActive 
-          ? { backgroundColor: colors.background.card, borderColor: colors.border.primary } 
-          : { backgroundColor: colors.background.glass, borderColor: colors.border.primary },
+        isActive
+          ? { backgroundColor: colors.background.card, borderColor: colors.border.primary }
+          : { backgroundColor: 'transparent', borderColor: 'transparent' },
       ]}
       onPress={onPress}
       activeOpacity={0.7}
       accessibilityRole="button"
       accessibilityState={{ selected: isActive }}
     >
-      <Text style={[styles.label, isActive ? { color: colors.text.primary } : { color: colors.text.muted }]}>
+      <Text
+        style={[
+          styles.label,
+          isActive ? { color: colors.text.primary } : { color: colors.text.muted },
+        ]}
+      >
         {label}
       </Text>
     </TouchableOpacity>
@@ -41,19 +47,19 @@ export default function HistoryFilterButton({
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1, // 버튼들이 동일한 비율로 너비를 가짐
-    paddingVertical: 10,
+    paddingHorizontal: Spacing.md,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: Radii.md2, // 14px
+    borderRadius: Radii.md,
     borderWidth: 0.612,
+    height: '100%',
   },
   label: {
     fontFamily: FontFamily.sans,
-    fontSize: FontSize.base,
-    fontWeight: FontWeight.medium,
-    lineHeight: 20, // 142.857%
-    letterSpacing: -0.15,
+    fontSize: FontSize.xs,
+    fontWeight: FontWeight.black as any,
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
     textAlign: 'center',
   },
 });
