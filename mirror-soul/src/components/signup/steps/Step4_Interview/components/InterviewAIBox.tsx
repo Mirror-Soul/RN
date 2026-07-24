@@ -1,5 +1,4 @@
 import {Colors, Radii, FontWeight, Spacing} from '@/src/constants/theme';
-import { BlurView } from 'expo-blur';
 import React from 'react';
 import { StyleSheet, Text, View, Platform } from 'react-native';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
