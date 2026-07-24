@@ -76,6 +76,24 @@ export default function MainHomeScreen() {
     setSelectedMatch(null);
   }, []);
 
+  const handleConnectPress = useCallback((id: string) => {
+    // TODO: 실제 통화/채팅 연결 라우트가 정해지면 router.push로 교체
+    logger.debug('Soul Connect pressed', { id });
+    Alert.alert('안내', 'Soul Connect 기능은 곧 제공될 예정입니다.');
+  }, []);
+
+  const handleSearchPress = useCallback(() => {
+    // TODO: 검색 기능이 정해지면 실제 검색 화면/모달로 교체
+    logger.debug('Location search pressed');
+    Alert.alert('안내', '검색 기능은 곧 제공될 예정입니다.');
+  }, []);
+
+  const handleSelectPackage = useCallback((pkgId: string) => {
+    // TODO: 결제 연동이 정해지면 실제 결제 플로우로 교체
+    logger.debug('Time package selected', { pkgId });
+    Alert.alert('안내', '결제 기능은 곧 제공될 예정입니다.');
+  }, []);
+
   return (
     <ScrollView
       style={[styles.scrollView, { backgroundColor: colors.background.primary }]}
@@ -93,12 +111,13 @@ export default function MainHomeScreen() {
         <LocationFilterBar
           selectedLocations={selectedLocations}
           onPress={() => setShowLocationModal(true)}
+          onSearchPress={handleSearchPress}
         />
 
         <AiStatusTicker />
 
         <DiscoveryMatchSection
-          onConnect={(id) => logger.debug('Soul Connect pressed', { id })}
+          onConnect={handleConnectPress}
           onOpenDetail={setSelectedMatch}
         />
 
@@ -112,7 +131,11 @@ export default function MainHomeScreen() {
         onConfirm={setSelectedLocations}
       />
 
-      <RefillModal visible={showRefillModal} onClose={() => setShowRefillModal(false)} />
+      <RefillModal
+        visible={showRefillModal}
+        onClose={() => setShowRefillModal(false)}
+        onSelectPackage={handleSelectPackage}
+      />
 
       <PartnerProfileModal
         match={selectedMatch}
