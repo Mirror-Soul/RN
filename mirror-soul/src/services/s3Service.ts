@@ -1,44 +1,27 @@
+import * as FileSystem from 'expo-file-system/legacy';
+
 /**
  * S3Service
  * Presigned URL을 사용하여 S3에 직접 파일을 업로드합니다. (SoC)
+ *
+ * fetch(fileUri) + blob() 방식은 Android에서 큰 비디오 파일을 메모리에
+ * 통째로 올리다 실패하며 "Network request failed"로 나타나는 경우가 있어,
+ * 파일을 스트리밍으로 직접 PUT하는 FileSystem.uploadAsync를 사용합니다.
  */
 export const uploadFileToS3 = async (
   presignedUrl: string,
   fileUri: string,
   contentType: string
 ): Promise<void> => {
-  try {
-    // 1. React Native에서 파일을 읽어 blob으로 변환
-    const response = await fetch(fileUri);
-    if (!response.ok) {
-      throw new Error(`파일 읽기 실패: ${response.status}`);
-    }
-    const blob = await response.blob();
+  const result = await FileSystem.uploadAsync(presignedUrl, fileUri, {
+    httpMethod: 'PUT',
+    uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
+    headers: {
+      'Content-Type': contentType,
+    },
+  });
 
-    // 2. S3에 PUT 요청 (타임아웃 30초 설정)
-    const controller = new AbortController();
-    // 추후 업로드 시간이 부족할 경우 아래 밀리초(ms) 값을 수정하세요.
-    const timeoutId = setTimeout(() => controller.abort(), 30000); 
-
-    const uploadResponse = await fetch(presignedUrl, {
-      method: 'PUT',
-      body: blob,
-      headers: {
-        'Content-Type': contentType,
-      },
-      signal: controller.signal,
-    });
-
-    clearTimeout(timeoutId);
-
-    if (!uploadResponse.ok) {
-      const errorText = await uploadResponse.text();
-      throw new Error(`S3 업로드 실패: ${uploadResponse.status} ${errorText}`);
-    }
-  } catch (error: any) {
-    if (error.name === 'AbortError') {
-      throw new Error('업로드 시간이 초과되었습니다. 네트워크 상태를 확인해주세요.');
-    }
-    throw error;
+  if (result.status < 200 || result.status >= 300) {
+    throw new Error(`S3 업로드 실패: ${result.status} ${result.body}`);
   }
 };
