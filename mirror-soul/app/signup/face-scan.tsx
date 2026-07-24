@@ -130,6 +130,7 @@ export default function FaceScanScreen() {
         contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}
         bounces={false}
+        overScrollMode="never"
       >
         {/* 헤더 섹션 */}
         <View style={styles.headerWrapper}>
