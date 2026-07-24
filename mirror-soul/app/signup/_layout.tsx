@@ -2,6 +2,7 @@ import OnboardingSteps from '@/src/components/signup/common/OnboardingSteps';
 import SignupBackground from '@/src/components/signup/steps/Step1_Account/SignupBackground';
 import { SIGNUP_STEP_MAP } from '@/src/constants/routes/signupRoutes';
 import {Colors, Spacing} from '@/src/constants/theme';
+import { ForceDarkThemeContext } from '@/src/hooks/useThemeColors';
 import { Slot, usePathname } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React from 'react';
@@ -16,19 +17,21 @@ export default function SignupLayout() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar style="light" backgroundColor={Colors.primary.soulBlack} />
-      <SignupBackground />
+    <ForceDarkThemeContext.Provider value={true}>
+      <SafeAreaView style={styles.safeArea}>
+        <StatusBar style="light" backgroundColor={Colors.primary.soulBlack} />
+        <SignupBackground />
 
-      <View style={styles.container}>
-        <View style={styles.stepsWrapper}>
-          <OnboardingSteps currentStep={getCurrentStep()} />
+        <View style={styles.container}>
+          <View style={styles.stepsWrapper}>
+            <OnboardingSteps currentStep={getCurrentStep()} />
+          </View>
+
+          {/* 하위 페이지(index, profile 등)가 렌더링될 영역 */}
+          <Slot />
         </View>
-
-        {/* 하위 페이지(index, profile 등)가 렌더링될 영역 */}
-        <Slot />
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </ForceDarkThemeContext.Provider>
   );
 }
 
