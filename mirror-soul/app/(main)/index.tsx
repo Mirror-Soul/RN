@@ -1,41 +1,42 @@
+import AiStatusTicker from '@/src/components/home/main/AiStatusTicker';
+import AvailableTimeCard from '@/src/components/home/main/AvailableTimeCard';
+import DiscoveryMatchSection from '@/src/components/home/main/Discovery/DiscoveryMatchSection';
+import PartnerProfileModal from '@/src/components/home/main/Discovery/PartnerProfileModal';
+import { SoulMatch } from '@/src/components/home/main/Discovery/DiscoveryMatchCard';
+import LocationFilterBar from '@/src/components/home/main/LocationFilterBar';
+import LocationSelectModal from '@/src/components/home/main/LocationSelectModal';
 import MainHeader from '@/src/components/home/main/MainHeader';
-import RecommendSection from '@/src/components/home/main/Recommend/RecommendSection';
-import SearchLocationBar from '@/src/components/home/main/SearchLocationBar';
-import UserProfileCard from '@/src/components/home/main/UserProfileCard';
-import UserProfileCardSkeleton from '@/src/components/home/main/UserProfileCardSkeleton';
-import { Colors, Layout } from '@/src/constants/theme';
+import RefillModal from '@/src/components/home/main/RefillModal';
+import SoulConnectTip from '@/src/components/home/main/SoulConnectTip';
+import { Layout } from '@/src/constants/theme';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { logout } from '@/src/services/authService';
 import { useAuthStore } from '@/src/store/useAuthStore';
 import { logger } from '@/src/utils/logger';
 import React, { useCallback, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { router } from 'expo-router';
-import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 /**
  * 메인 홈 화면 (발견 탭)
  * 로그인 완료 후 진입하는 메인 대시보드입니다.
  * BottomNavbar는 (main)/_layout.tsx에서 공유로 제공됩니다.
  *
- * UX 개선:
- * - FadeInDown 진입 애니메이션: 대시보드가 아래서 위로 부드럽게 진입
- * - UserProfileCardSkeleton: 프로필 데이터 로딩 중 shimmer UI
+ * 모달 상태(지역 설정 / 시간 충전 / 상대 프로필 상세)는 이 화면이 소유하고,
+ * 하위 섹션 컴포넌트들은 콜백을 통해서만 상태 변경을 요청합니다 (SRP).
  */
 export default function MainHomeScreen() {
   const insets = useSafeAreaInsets();
   const { colors } = useThemeColors();
-  const [isProfileLoading, setIsProfileLoading] = useState(true);
 
-  // 스켈레톤 → 실제 카드 전환 시뮬레이션 (추후 API 연동으로 대체)
-  // TODO: useQuery 연동 시 isLoading 상태로 교체
-  React.useEffect(() => {
-    const timer = setTimeout(() => setIsProfileLoading(false), 1200);
-    return () => clearTimeout(timer);
-  }, []);
+  const [showLocationModal, setShowLocationModal] = useState(false);
+  const [showRefillModal, setShowRefillModal] = useState(false);
+  const [selectedLocations, setSelectedLocations] = useState<string[]>(['강남구']);
+  const [selectedMatch, setSelectedMatch] = useState<SoulMatch | null>(null);
 
-  const handleLogout = useCallback(() => {
+  const handleSettingPress = useCallback(() => {
     Alert.alert(
       '로그아웃',
       '현재 기기에서 로그아웃 하시겠습니까?\n(테스트용 임시 버튼입니다)',
@@ -68,33 +69,56 @@ export default function MainHomeScreen() {
     );
   }, []);
 
+  const handleConnectNow = useCallback((match: SoulMatch) => {
+    // TODO: 실제 통화/채팅 연결 라우트가 정해지면 router.push로 교체
+    logger.debug('Connect Now pressed', { matchId: match.id });
+    Alert.alert('안내', 'Soul Connect 기능은 곧 제공될 예정입니다.');
+    setSelectedMatch(null);
+  }, []);
+
   return (
     <ScrollView
       style={[styles.scrollView, { backgroundColor: colors.background.primary }]}
       contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
     >
-      {/* 화면 진입 시 FadeInDown 애니메이션 */}
       <Animated.View
         entering={FadeInDown.duration(400).springify().damping(18)}
         style={[styles.dashboard, { paddingTop: Math.max(insets.top + 12, Layout.SCREEN_PADDING) }]}
       >
-        {/* 헤더 */}
-        <MainHeader onSettingPress={handleLogout} />
+        <MainHeader onSettingPress={handleSettingPress} />
 
-        {/* 유저 프로필 카드 (스켈레톤 → 실제 카드 전환) */}
-        {isProfileLoading ? (
-          <UserProfileCardSkeleton />
-        ) : (
-          <UserProfileCard />
-        )}
+        <AvailableTimeCard onRefillPress={() => setShowRefillModal(true)} />
 
-        {/* 지역 검색 바 */}
-        <SearchLocationBar />
+        <LocationFilterBar
+          selectedLocations={selectedLocations}
+          onPress={() => setShowLocationModal(true)}
+        />
 
-        {/* 추천 섹션 (좌우 스와이프 카드) */}
-        <RecommendSection />
+        <AiStatusTicker />
+
+        <DiscoveryMatchSection
+          onConnect={(id) => logger.debug('Soul Connect pressed', { id })}
+          onOpenDetail={setSelectedMatch}
+        />
+
+        <SoulConnectTip />
       </Animated.View>
+
+      <LocationSelectModal
+        visible={showLocationModal}
+        initialSelected={selectedLocations}
+        onClose={() => setShowLocationModal(false)}
+        onConfirm={setSelectedLocations}
+      />
+
+      <RefillModal visible={showRefillModal} onClose={() => setShowRefillModal(false)} />
+
+      <PartnerProfileModal
+        match={selectedMatch}
+        onClose={() => setSelectedMatch(null)}
+        onConnectNow={handleConnectNow}
+      />
     </ScrollView>
   );
 }

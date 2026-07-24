@@ -1,49 +1,52 @@
 import SettingIcon from '@/assets/images/common/Setting.svg';
-import TimerIcon from '@/assets/images/common/main/Timer.svg';
-import {Colors, Radii, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
+import ProfileIcon from '@/assets/images/common/bottomNavbar/Profile.svg';
+import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
+import { MAIN_ROUTES } from '@/src/constants/routes/mainRoutes';
+import { router } from 'expo-router';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface MainHeaderProps {
-  timerDisplay?: string;
   onSettingPress?: () => void;
 }
 
 /**
  * MainHeader 컴포넌트 (SRP)
- * "Mirror Soul" 타이틀, 타이머 배지, 설정 버튼을 렌더링합니다.
+ * 좌측 프로필 이동 버튼, "Discovery" 타이틀 + Live Sync 배지, 우측 설정 버튼을 렌더링합니다.
  */
-export default function MainHeader({
-  timerDisplay = '23 : 44 : 59',
-  onSettingPress,
-}: MainHeaderProps) {
+export default function MainHeader({ onSettingPress }: MainHeaderProps) {
   const { colors } = useThemeColors();
 
   return (
     <View style={styles.container}>
-      {/* Title */}
-      <Text style={[styles.title, { color: colors.text.primary }]}>Mirror Soul</Text>
+      <TouchableOpacity
+        style={[styles.iconButton, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
+        onPress={() => router.push(MAIN_ROUTES.PROFILE)}
+        activeOpacity={0.7}
+        accessibilityRole="button"
+        accessibilityLabel="내 트윈으로 이동"
+      >
+        <ProfileIcon width={20} height={20} />
+      </TouchableOpacity>
 
-      {/* Timer + Setting */}
-      <View style={styles.rightSection}>
-        {/* Timer Badge */}
-        <View style={[styles.timerBadge, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
-          <TimerIcon width={16} height={16} />
-          <Text style={styles.timerText}>{timerDisplay}</Text>
+      <View style={styles.titleWrapper}>
+        <Text style={[styles.title, { color: colors.text.primary }]}>Discovery</Text>
+        <View style={styles.liveBadge}>
+          <View style={styles.liveDot} />
+          <Text style={styles.liveText}>Live Sync</Text>
         </View>
-
-        {/* Setting Button */}
-        <TouchableOpacity
-          style={[styles.settingButton, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
-          onPress={onSettingPress}
-          activeOpacity={0.7}
-          accessibilityRole="button"
-          accessibilityLabel="설정"
-        >
-          <SettingIcon width={21} height={21} />
-        </TouchableOpacity>
       </View>
+
+      <TouchableOpacity
+        style={[styles.iconButton, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
+        onPress={onSettingPress}
+        activeOpacity={0.7}
+        accessibilityRole="button"
+        accessibilityLabel="설정"
+      >
+        <SettingIcon width={20} height={20} />
+      </TouchableOpacity>
     </View>
   );
 }
@@ -53,45 +56,50 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    height: 48,
     alignSelf: 'stretch',
+  },
+  iconButton: {
+    width: 44,
+    height: 44,
+    borderRadius: Radii.lg,
+    borderWidth: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  titleWrapper: {
+    alignItems: 'center',
   },
   title: {
     fontFamily: FontFamily.sans,
-    fontSize: FontSize.xxxl,
-    fontWeight: FontWeight.medium,
-    lineHeight: 32,
-    letterSpacing: 0.07,
+    fontStyle: 'italic',
+    fontSize: FontSize.xxl,
+    fontWeight: FontWeight.black,
+    letterSpacing: -1.45,
   },
-  rightSection: {
+  liveBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.md,
-  },
-  timerBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    paddingHorizontal: Spacing.md,
-    height: 30,
+    gap: 6,
+    marginTop: 6,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 2,
     borderRadius: Radii.full,
-    borderWidth: 0.612,
+    backgroundColor: Colors.glass.cyan10_d3,
+    borderWidth: 1,
+    borderColor: Colors.glass.cyan20_d3,
   },
-  timerText: {
+  liveDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: Colors.primary.electricCyan,
+  },
+  liveText: {
+    fontFamily: FontFamily.sans,
+    fontSize: 8,
+    fontWeight: FontWeight.black,
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
     color: Colors.primary.electricCyan,
-    fontFamily: 'Menlo',
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.regular,
-    lineHeight: 16,
-    letterSpacing: 0.6,
-    textAlign: 'center',
-  },
-  settingButton: {
-    width: 40,
-    height: 40,
-    borderRadius: Radii.full,
-    borderWidth: 0.612,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
 });
