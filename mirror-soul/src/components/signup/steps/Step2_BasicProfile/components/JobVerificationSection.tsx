@@ -2,9 +2,10 @@ import VerificationSuccessIcon from '@/assets/images/common/Verification_sucess.
 import VerifySendIcon from '@/assets/images/common/Verify_send.svg';
 import FormLabel from '@/src/components/signup/common/FormLabel';
 import StepSelectDropdown from '@/src/components/signup/common/StepSelectDropdown';
+import { useDropdownAnchor } from '@/src/components/signup/common/useDropdownAnchor';
 import {Colors, Radii, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import React, { useState } from 'react';
-import { Platform, StyleSheet, Text, TextInput, TouchableOpacity, View, ActivityIndicator, Alert } from 'react-native';
+import { StyleSheet, Text, TextInput, TouchableOpacity, View, ActivityIndicator, Alert } from 'react-native';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import JobCategoryDropdown from '../Professional/JobCategoryDropdown';
 import { SectionProps } from '../types/step2';
@@ -23,6 +24,7 @@ interface JobVerificationSectionProps extends SectionProps {
 export default function JobVerificationSection({ state, onChange, onVerify }: JobVerificationSectionProps) {
   const { colors } = useThemeColors();
   const [isOpen, setIsOpen] = useState(false);
+  const { triggerRef, anchor, measureAndOpen } = useDropdownAnchor();
 
   // 파일 선택 및 업로드 핸들러 (C안: 갤러리/파일 + 카메라)
   const handlePickDocument = async () => {
@@ -73,30 +75,40 @@ export default function JobVerificationSection({ state, onChange, onVerify }: Jo
     );
   };
 
+  const handleToggle = () => {
+    if (isOpen) {
+      setIsOpen(false);
+    } else {
+      measureAndOpen(() => setIsOpen(true));
+    }
+  };
+
   return (
-    <View style={[styles.container, isOpen && styles.containerOpen]}>
+    <View style={styles.container}>
       <FormLabel label="직업" />
 
-      <View style={styles.dropdownWrapper}>
+      <View style={styles.dropdownWrapper} ref={triggerRef}>
         <StepSelectDropdown
-          label="" 
+          label=""
           placeholder={jobCategories.find(j => j.value === state.jobCategory)?.label || "직군을 선택하세요"}
-          onPress={() => setIsOpen(!isOpen)}
+          onPress={handleToggle}
           isOpen={isOpen}
         />
-        {isOpen && (
-          <JobCategoryDropdown
-            onSelect={(job) => {
-              onChange({ 
-                jobCategory: job,
-                isJobVerified: false 
-              });
-              setIsOpen(false);
-            }}
-            onClose={() => setIsOpen(false)}
-          />
-        )}
       </View>
+
+      {isOpen && anchor && (
+        <JobCategoryDropdown
+          anchor={anchor}
+          onSelect={(job) => {
+            onChange({
+              jobCategory: job,
+              isJobVerified: false
+            });
+            setIsOpen(false);
+          }}
+          onClose={() => setIsOpen(false)}
+        />
+      )}
 
       <TextInput
         style={[styles.jobTitleInput, { color: colors.text.primary }]}
@@ -163,13 +175,8 @@ const styles = StyleSheet.create({
   container: {
     width: '100%',
     alignSelf: 'stretch',
-    ...(Platform.OS === 'ios' ? { zIndex: 5 } : { elevation: 5 }),
-  },
-  containerOpen: {
-    ...(Platform.OS === 'ios' ? { zIndex: 100 } : { elevation: 100 }),
   },
   dropdownWrapper: {
-    position: 'relative',
     width: '100%',
   },
   jobTitleInput: {
