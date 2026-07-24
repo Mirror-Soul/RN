@@ -3,7 +3,7 @@ import HeartIcon from '@/assets/images/common/bottomNavbar/Heart.svg';
 import HistoryIcon from '@/assets/images/common/bottomNavbar/History_button.svg';
 import ProfileIcon from '@/assets/images/common/bottomNavbar/Profile.svg';
 import SimilarityMainIcon from '@/assets/images/common/main/Similarity.svg';
-import {Colors, FontFamily, Layout, Radii, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
+import { Colors, FontFamily, Layout, Radii, FontSize, FontWeight, Spacing } from '@/src/constants/theme';
 import React, { useCallback, useEffect } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, {
@@ -12,7 +12,6 @@ import Animated, {
   withTiming,
   Easing,
 } from 'react-native-reanimated';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 
@@ -39,7 +38,8 @@ interface BottomNavbarProps {
 
 /**
  * 개별 탭 아이템 컴포넌트
- * 활성화 상태에 따라 아이콘 scale + 그라디언트 dot indicator 표시.
+ * 활성 탭은 원형 액센트 배지(Common Navigation System 기준)로,
+ * 비활성 탭은 무채색 아이콘+라벨로 렌더링합니다.
  */
 function TabItem({
   tab,
@@ -52,29 +52,24 @@ function TabItem({
   onPress: () => void;
   mutedColor: string;
 }) {
-  const scale = useSharedValue(isActive ? 1.1 : 1);
-  const dotOpacity = useSharedValue(isActive ? 1 : 0);
+  const badgeScale = useSharedValue(isActive ? 1 : 0.6);
+  const badgeOpacity = useSharedValue(isActive ? 1 : 0);
 
   useEffect(() => {
-    scale.value = withTiming(isActive ? 1.1 : 1, {
-      duration: 200,
+    badgeScale.value = withTiming(isActive ? 1 : 0.6, {
+      duration: 220,
+      easing: Easing.out(Easing.cubic),
+    });
+    badgeOpacity.value = withTiming(isActive ? 1 : 0, {
+      duration: 180,
       easing: Easing.inOut(Easing.ease),
     });
-    dotOpacity.value = withTiming(isActive ? 1 : 0, {
-      duration: 200,
-      easing: Easing.inOut(Easing.ease),
-    });
-  }, [isActive, scale, dotOpacity]);
+  }, [isActive, badgeScale, badgeOpacity]);
 
-  const iconStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
+  const badgeStyle = useAnimatedStyle(() => ({
+    opacity: badgeOpacity.value,
+    transform: [{ scale: badgeScale.value }],
   }));
-
-  const dotStyle = useAnimatedStyle(() => ({
-    opacity: dotOpacity.value,
-  }));
-
-  const color = isActive ? Colors.primary.electricCyan : mutedColor;
 
   return (
     <TouchableOpacity
@@ -85,28 +80,24 @@ function TabItem({
       accessibilityLabel={tab.label}
       accessibilityState={{ selected: isActive }}
     >
-      <Animated.View style={iconStyle}>
-        <tab.Icon width={24} height={24} color={color} />
-      </Animated.View>
-      <Text style={[styles.tabLabel, { color }]}>{tab.label}</Text>
-
-      {/* 그라디언트 Dot indicator */}
-      <Animated.View style={[styles.dotWrapper, dotStyle]}>
-        <LinearGradient
-          colors={Colors.gradient.cyanToPurple}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.dot}
-        />
-      </Animated.View>
+      {isActive ? (
+        <Animated.View style={[styles.activeBadge, badgeStyle]}>
+          <tab.Icon width={22} height={22} color={Colors.primary.soulBlack} />
+        </Animated.View>
+      ) : (
+        <tab.Icon width={22} height={22} color={mutedColor} />
+      )}
+      <Text style={[styles.tabLabel, { color: isActive ? Colors.primary.electricCyan : mutedColor }]}>
+        {tab.label}
+      </Text>
     </TouchableOpacity>
   );
 }
 
 /**
  * BottomNavbar 컴포넌트
- * 메인 화면의 하단 부유형(Floating) 네비게이션 바.
- * 각 탭 전환 시 scale + dot indicator 애니메이션 적용.
+ * 모든 메인 탭 화면에서 공유하는 부유형(Floating) 글래스모피즘 내비게이션 바.
+ * 현재 활성 탭은 원형 액센트 배지로 강조합니다 (Common Navigation System 기준).
  */
 export default function BottomNavbar({ activeTab = 'discover', onTabPress }: BottomNavbarProps) {
   const insets = useSafeAreaInsets();
@@ -165,7 +156,20 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     gap: Spacing.xs,
-    position: 'relative',
+  },
+  activeBadge: {
+    width: 44,
+    height: 44,
+    borderRadius: Radii.full,
+    backgroundColor: Colors.primary.electricCyan,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: Colors.primary.electricCyan,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 8,
+    marginBottom: 4,
   },
   tabLabel: {
     fontFamily: FontFamily.sans,
@@ -173,15 +177,5 @@ const styles = StyleSheet.create({
     fontWeight: FontWeight.medium,
     lineHeight: 14,
     textAlign: 'center',
-  },
-  dotWrapper: {
-    position: 'absolute',
-    bottom: -12,
-    alignSelf: 'center',
-  },
-  dot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
   },
 });
