@@ -80,13 +80,15 @@ function TabItem({
       accessibilityLabel={tab.label}
       accessibilityState={{ selected: isActive }}
     >
-      {isActive ? (
-        <Animated.View style={[styles.activeBadge, badgeStyle]}>
-          <tab.Icon width={22} height={22} color={Colors.primary.soulBlack} />
-        </Animated.View>
-      ) : (
-        <tab.Icon width={22} height={22} color={mutedColor} />
-      )}
+      <View style={styles.iconSlot}>
+        {isActive ? (
+          <Animated.View style={[styles.activeBadge, badgeStyle]}>
+            <tab.Icon width={22} height={22} color={Colors.primary.soulBlack} />
+          </Animated.View>
+        ) : (
+          <tab.Icon width={22} height={22} color={mutedColor} />
+        )}
+      </View>
       <Text style={[styles.tabLabel, { color: isActive ? Colors.primary.electricCyan : mutedColor }]}>
         {tab.label}
       </Text>
@@ -157,6 +159,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.xs,
   },
+  iconSlot: {
+    width: 44,
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   activeBadge: {
     width: 44,
     height: 44,
@@ -169,7 +177,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.4,
     shadowRadius: 12,
     elevation: 8,
-    marginBottom: 4,
   },
   tabLabel: {
     fontFamily: FontFamily.sans,
