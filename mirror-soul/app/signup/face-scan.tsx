@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, StyleSheet, Platform, Animated, Alert } from 'react-native';
+import { View, StyleSheet, Platform, Animated, Alert, ScrollView } from 'react-native';
 import {Colors, Layout, FontSize, FontWeight, Radii, Spacing} from '@/src/constants/theme';
 import { useRouter } from 'expo-router';
 import { useCameraDevice } from 'react-native-vision-camera';
@@ -125,7 +125,13 @@ export default function FaceScanScreen() {
   return (
     <View style={styles.baseContainer}>
       <FaceScanGlow />
-      <View style={styles.contentContainer}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.contentContainer}
+        showsVerticalScrollIndicator={false}
+        bounces={false}
+        overScrollMode="never"
+      >
         {/* 헤더 섹션 */}
         <View style={styles.headerWrapper}>
           <FaceScanHeader guideMessage={guideMessage} />
@@ -194,7 +200,7 @@ export default function FaceScanScreen() {
             onNext={handleNext}
           />
         </View>
-      </View>
+      </ScrollView>
     </View>
   );
 }
@@ -204,8 +210,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.primary.soulBlack,
   },
-  contentContainer: {
+  scrollView: {
     flex: 1,
+  },
+  contentContainer: {
+    flexGrow: 1,
     alignItems: 'center',
     paddingTop: Platform.OS === 'ios' ? 16 : 8,
     paddingBottom: 50,

@@ -1,7 +1,8 @@
 import {Colors, Radii, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import React, { useState, useEffect, useCallback } from 'react';
-import { Dimensions, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View, ActivityIndicator, Alert } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View, ActivityIndicator, Alert } from 'react-native';
 import { getSidoList, getSigunguList, getEupmyeondongList } from '@/src/services/onboardingService';
+import SelectDropdownModal, { DropdownAnchor } from '@/src/components/signup/common/SelectDropdownModal';
 
 interface LocationResult {
   sidoName: string;
@@ -14,11 +15,10 @@ interface LocationDropdownProps {
   onClose: () => void;
   sigunguCache: React.MutableRefObject<Map<string, string[]>>;
   eupmyeondongCache: React.MutableRefObject<Map<string, string[]>>;
+  anchor: DropdownAnchor;
 }
 
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
-
-export default function LocationDropdown({ onSelect, onClose, sigunguCache, eupmyeondongCache }: LocationDropdownProps) {
+export default function LocationDropdown({ onSelect, onClose, sigunguCache, eupmyeondongCache, anchor }: LocationDropdownProps) {
   const [activeTab, setActiveTab] = useState<0 | 1 | 2>(0);
   const [selectedSido, setSelectedSido] = useState<string | null>(null);
   const [selectedSigungu, setSelectedSigungu] = useState<string | null>(null);
@@ -141,70 +141,47 @@ export default function LocationDropdown({ onSelect, onClose, sigunguCache, eupm
   };
 
   return (
-    <View style={styles.overlayContainer}>
-      <Pressable style={styles.backdrop} onPress={onClose} />
-
-      <View style={styles.dropdownPanel}>
-        <View style={styles.tabHeader}>
-          {renderTab(0, '시/도')}
-          {renderTab(1, '시/구/군')}
-          {renderTab(2, '동/읍/면')}
-        </View>
-
-        {isLoading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator color={Colors.primary.electricCyan} />
-          </View>
-        ) : (
-          <ScrollView
-            style={styles.listContainer}
-            contentContainerStyle={styles.listContent}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-          >
-            {currentList.map((item) => (
-              <TouchableOpacity
-                key={item}
-                style={styles.listItem}
-                onPress={() => handleSelect(item)}
-              >
-                <Text style={styles.listItemText}>{item}</Text>
-              </TouchableOpacity>
-            ))}
-            {currentList.length === 0 && (
-              <View style={styles.emptyContainer}>
-                <Text style={styles.emptyText}>데이터가 없습니다.</Text>
-              </View>
-            )}
-          </ScrollView>
-        )}
+    <SelectDropdownModal onClose={onClose} anchor={anchor} panelStyle={styles.dropdownPanel}>
+      <View style={styles.tabHeader}>
+        {renderTab(0, '시/도')}
+        {renderTab(1, '시/구/군')}
+        {renderTab(2, '동/읍/면')}
       </View>
-    </View>
+
+      {isLoading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator color={Colors.primary.electricCyan} />
+        </View>
+      ) : (
+        <ScrollView
+          style={styles.listContainer}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          {currentList.map((item) => (
+            <TouchableOpacity
+              key={item}
+              style={styles.listItem}
+              onPress={() => handleSelect(item)}
+            >
+              <Text style={styles.listItemText}>{item}</Text>
+            </TouchableOpacity>
+          ))}
+          {currentList.length === 0 && (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>데이터가 없습니다.</Text>
+            </View>
+          )}
+        </ScrollView>
+      )}
+    </SelectDropdownModal>
   );
 }
 
 const styles = StyleSheet.create({
-  overlayContainer: {
-    position: 'absolute',
-    top: -SCREEN_HEIGHT,
-    left: -100,
-    right: -100,
-    height: SCREEN_HEIGHT * 2,
-    zIndex: 1000,
-  },
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'transparent',
-  },
   dropdownPanel: {
-    marginTop: SCREEN_HEIGHT + 70,
-    marginHorizontal: 100,
     height: 303.5,
-    borderRadius: Radii.lg,
-    borderWidth: 0.612,
-    borderColor: Colors.glass.white10,
-    backgroundColor: Colors.glass.slate95,
-    overflow: 'hidden',
   },
   tabHeader: {
     height: 46.4,

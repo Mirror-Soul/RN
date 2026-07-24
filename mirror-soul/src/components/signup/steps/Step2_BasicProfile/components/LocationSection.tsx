@@ -1,7 +1,8 @@
 import FormLabel from '@/src/components/signup/common/FormLabel';
 import StepSelectDropdown from '@/src/components/signup/common/StepSelectDropdown';
+import { useDropdownAnchor } from '@/src/components/signup/common/useDropdownAnchor';
 import React, { useState } from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import LocationDropdown from '../Location/LocationDropdown';
 import { SectionProps } from '../types/step2';
 import { Spacing } from '@/src/constants/theme';
@@ -18,12 +19,21 @@ interface LocationSectionProps extends SectionProps {
  */
 export default function LocationSection({ state, onChange, sigunguCache, eupmyeondongCache }: LocationSectionProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const { triggerRef, anchor, measureAndOpen } = useDropdownAnchor();
+
+  const handleToggle = () => {
+    if (isOpen) {
+      setIsOpen(false);
+    } else {
+      measureAndOpen(() => setIsOpen(true));
+    }
+  };
 
   return (
-    <View style={[styles.container, isOpen && styles.containerOpen]}>
+    <View style={styles.container}>
       <FormLabel label="지역" />
 
-      <View style={styles.dropdownWrapper}>
+      <View style={styles.dropdownWrapper} ref={triggerRef}>
         <StepSelectDropdown
           label="" // Subtitle 제거를 위해 빈 라벨
           placeholder={
@@ -31,27 +41,28 @@ export default function LocationSection({ state, onChange, sigunguCache, eupmyeo
               ? `${state.sidoName} ${state.sigunguName} ${state.eupmyeondongName}`
               : "거주 중인 지역을 선택하세요"
           }
-          onPress={() => setIsOpen(!isOpen)}
+          onPress={handleToggle}
           isOpen={isOpen}
           style={styles.dropdown}
         />
-
-        {isOpen && (
-          <LocationDropdown
-            sigunguCache={sigunguCache}
-            eupmyeondongCache={eupmyeondongCache}
-            onSelect={(result) => {
-              onChange({
-                sidoName: result.sidoName,
-                sigunguName: result.sigunguName,
-                eupmyeondongName: result.eupmyeondongName
-              });
-              setIsOpen(false);
-            }}
-            onClose={() => setIsOpen(false)}
-          />
-        )}
       </View>
+
+      {isOpen && anchor && (
+        <LocationDropdown
+          anchor={anchor}
+          sigunguCache={sigunguCache}
+          eupmyeondongCache={eupmyeondongCache}
+          onSelect={(result) => {
+            onChange({
+              sidoName: result.sidoName,
+              sigunguName: result.sigunguName,
+              eupmyeondongName: result.eupmyeondongName
+            });
+            setIsOpen(false);
+          }}
+          onClose={() => setIsOpen(false)}
+        />
+      )}
     </View>
   );
 }
@@ -59,13 +70,8 @@ export default function LocationSection({ state, onChange, sigunguCache, eupmyeo
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    ...(Platform.OS === 'ios' ? { zIndex: 10 } : { elevation: 10 }),
-  },
-  containerOpen: {
-    ...(Platform.OS === 'ios' ? { zIndex: 100 } : { elevation: 100 }),
   },
   dropdownWrapper: {
-    position: 'relative',
     width: '100%',
   },
   dropdown: {
