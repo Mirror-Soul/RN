@@ -8,6 +8,9 @@ export function useRotatingMessages(messages: string[], intervalMs: number): str
   const [index, setIndex] = useState(0);
 
   useEffect(() => {
+    // messages가 짧아져 이전 index가 범위를 벗어나면 보정 (빈 티커 노출 방지)
+    setIndex((prev) => (prev >= messages.length ? 0 : prev));
+
     if (messages.length <= 1) return;
     const timer = setInterval(() => {
       setIndex((prev) => (prev + 1) % messages.length);
@@ -15,5 +18,5 @@ export function useRotatingMessages(messages: string[], intervalMs: number): str
     return () => clearInterval(timer);
   }, [messages, intervalMs]);
 
-  return messages[index] ?? '';
+  return messages[index] ?? messages[0] ?? '';
 }
