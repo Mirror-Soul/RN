@@ -1,30 +1,44 @@
 import EvolveBodyTitle from '@/src/components/home/grow/EvolveBodyTitle';
 import EvolveFooter from '@/src/components/home/grow/EvolveFooter';
 import EvolveHeader from '@/src/components/home/grow/EvolveHeader';
-import EvolveTwinCard from '@/src/components/home/grow/EvolveTwinCard';
-import EvolveFaceScanCard from '@/src/components/home/grow/parts/EvolveFaceScanCard';
-import EvolveInterviewCard from '@/src/components/home/grow/parts/EvolveInterviewCard';
-import EvolveMyselfCard from '@/src/components/home/grow/parts/EvolveMyselfCard';
-import EvolveVoiceCard from '@/src/components/home/grow/parts/EvolveVoiceCard';
-import {Colors, Layout, Spacing} from '@/src/constants/theme';
-import React from 'react';
+import EmotionMissionCard from '@/src/components/home/grow/EmotionMissionCard';
+import FaceDataMissionCard from '@/src/components/home/grow/FaceDataMissionCard';
+import GrowthHeroSection from '@/src/components/home/grow/GrowthHeroSection';
+import TwinSimulationCard from '@/src/components/home/grow/TwinSimulationCard';
+import ValueBalanceMissionCard from '@/src/components/home/grow/ValueBalanceMissionCard';
+import VoiceMissionCard from '@/src/components/home/grow/VoiceMissionCard';
+import EmotionLogModal from '@/src/components/home/grow/modals/EmotionLogModal';
+import ValueBalanceModal from '@/src/components/home/grow/modals/ValueBalanceModal';
+import VerificationModal from '@/src/components/home/grow/modals/VerificationModal';
+import { Layout, Spacing } from '@/src/constants/theme';
+import React, { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 /**
- * 성장(Evolve) 탭 화면
- * 내 트윈의 완성도를 높이기 위한 미션들을 관리합니다.
+ * 성장(Growth) 탭 화면
+ * 내 트윈의 유사도를 높이기 위한 미션들을 관리합니다.
+ *
+ * 모달 상태(프로필 인증 / 가치관 밸런스 게임 / 감정 기록)와 유사도 % 누적은
+ * 이 화면이 소유하고, 하위 카드/섹션 컴포넌트들은 콜백을 통해서만 상태 변경을
+ * 요청합니다 (SRP).
  */
 export default function GrowScreen() {
   const insets = useSafeAreaInsets();
+  const { colors } = useThemeColors();
 
   // Mock 데이터 (추후 API 연동)
-  const mockProgress = {
-    completionPercent: 92,
-  };
+  const [similarityPercent, setSimilarityPercent] = useState(92.4);
+  const [isVerified, setIsVerified] = useState(false);
 
-  const { colors } = useThemeColors();
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
+  const [showBalanceModal, setShowBalanceModal] = useState(false);
+  const [showEmotionModal, setShowEmotionModal] = useState(false);
+
+  const handleBoost = useCallback((boost: number) => {
+    setSimilarityPercent((prev) => parseFloat(Math.min(100, prev + boost).toFixed(1)));
+  }, []);
 
   return (
     <ScrollView
@@ -37,32 +51,50 @@ export default function GrowScreen() {
     >
       <View style={[styles.container, { paddingTop: Math.max(insets.top + 12, Layout.SCREEN_PADDING) }]}>
         <EvolveHeader />
-        
-        {/* 내 트윈 완성도 카드 */}
-        <EvolveTwinCard 
-          completionPercent={mockProgress.completionPercent}
+
+        <GrowthHeroSection
+          similarityPercent={similarityPercent}
+          isVerified={isVerified}
+          onVerifyPress={() => setShowVerifyModal(true)}
         />
 
-        {/* 성장 미션 섹션 */}
-        <EvolveBodyTitle />
-        
-        <View style={styles.missionGrid}>
-          {/* 인터뷰 (Full Width) */}
-          <EvolveInterviewCard />
-          
-          {/* 얼굴 스캔 & 목소리 녹음 (Side by Side) */}
-          <View style={styles.row}>
-            <EvolveFaceScanCard />
-            <EvolveVoiceCard />
-          </View>
+        <TwinSimulationCard />
 
-          {/* 내 트윈과 대화하기 (Full Width) */}
-          <EvolveMyselfCard />
+        <View style={styles.missionSection}>
+          <EvolveBodyTitle />
+
+          <View style={styles.missionGrid}>
+            <View style={styles.row}>
+              <FaceDataMissionCard />
+              <EmotionMissionCard onPress={() => setShowEmotionModal(true)} />
+            </View>
+
+            <ValueBalanceMissionCard onPress={() => setShowBalanceModal(true)} />
+
+            <VoiceMissionCard />
+          </View>
         </View>
 
-        {/* 하단 푸터 안내 */}
         <EvolveFooter />
       </View>
+
+      <VerificationModal
+        isOpen={showVerifyModal}
+        onClose={() => setShowVerifyModal(false)}
+        onVerified={() => setIsVerified(true)}
+      />
+
+      <ValueBalanceModal
+        isOpen={showBalanceModal}
+        onClose={() => setShowBalanceModal(false)}
+        onComplete={() => handleBoost(1.2)}
+      />
+
+      <EmotionLogModal
+        isOpen={showEmotionModal}
+        onClose={() => setShowEmotionModal(false)}
+        onComplete={() => handleBoost(0.2)}
+      />
     </ScrollView>
   );
 }
@@ -79,8 +111,12 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: Layout.MAX_CONTENT_WIDTH,
     alignSelf: 'center',
-    gap: Spacing.lg,
-    paddingHorizontal: Spacing.xs, // 양 끝 여유 공간
+    gap: Spacing.xxxl,
+    paddingHorizontal: Spacing.xs,
+  },
+  missionSection: {
+    gap: Spacing.xl,
+    alignSelf: 'stretch',
   },
   missionGrid: {
     gap: Spacing.md,

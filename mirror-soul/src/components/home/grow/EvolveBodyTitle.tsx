@@ -1,41 +1,39 @@
-import {Colors, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
+import { FontFamily, FontSize, FontWeight, Spacing } from '@/src/constants/theme';
 import React from 'react';
-import { Text, StyleSheet, View } from 'react-native';
+import { StyleSheet, View, Text } from 'react-native';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 /**
  * 성장 미션 섹션 타이틀 (SRP)
+ * "Deep Learning Mission" 라벨 + 구분선을 렌더링합니다.
  */
 export default function EvolveBodyTitle() {
   const { colors } = useThemeColors();
 
   return (
     <View style={styles.container}>
-      <Text style={[styles.heading, { color: colors.text.primary }]}>성장 미션</Text>
-      <Text style={[styles.paragraph, { color: colors.text.secondary }]}>
-        미션을 완료하고 내 트윈을 더 나답게 만들어보세요
-      </Text>
+      <Text style={[styles.label, { color: colors.text.muted }]}>Deep Learning Mission</Text>
+      <View style={[styles.divider, { backgroundColor: colors.border.primary }]} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    paddingVertical: Spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
     alignSelf: 'stretch',
-    gap: Spacing.xxs,
   },
-  heading: {
+  label: {
     fontFamily: FontFamily.sans,
-    fontSize: FontSize.xxl,
-    fontWeight: FontWeight.medium,
-    lineHeight: 30,
-    letterSpacing: -0.449,
+    fontSize: FontSize.xs,
+    fontWeight: FontWeight.black,
+    letterSpacing: 3.1,
+    textTransform: 'uppercase',
   },
-  paragraph: {
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.regular,
-    lineHeight: 16,
+  divider: {
+    flex: 1,
+    height: 1,
   },
 });

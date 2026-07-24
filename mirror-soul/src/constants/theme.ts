@@ -38,6 +38,7 @@ export const Colors = {
     lavender: '#DAB2FF',           // 통화 상세 알림 텍스트
   },
   glass: {
+    white03: 'rgba(255, 255, 255, 0.03)',
     white5: 'rgba(255, 255, 255, 0.05)',
     white10: 'rgba(255, 255, 255, 0.10)',
     white20: 'rgba(255, 255, 255, 0.20)',
@@ -164,6 +165,7 @@ export const FontSize = {
   xl: 18,
   xxl: 20,
   xxxl: 24,
+  display: 36, // 히어로 타이틀 등 대형 타이틀
   giant: 48,
 } as const;
 
