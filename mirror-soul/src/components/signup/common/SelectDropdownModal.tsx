@@ -19,6 +19,7 @@ interface SelectDropdownModalProps {
 
 const GAP = 8;
 const SCREEN_MARGIN = 16;
+const MIN_PANEL_HEIGHT = 120;
 
 /**
  * 선택형 드롭다운(지역/직군 등)을 위한 공통 모달 오버레이.
@@ -39,8 +40,11 @@ export default function SelectDropdownModal({ onClose, children, panelStyle, anc
   }, [progress]);
 
   const { height: screenHeight } = Dimensions.get('window');
-  const top = anchor.y + anchor.height + GAP;
-  const maxHeight = Math.max(120, screenHeight - top - SCREEN_MARGIN);
+  const rawTop = anchor.y + anchor.height + GAP;
+  // 트리거가 화면 하단에 가까워 아래 공간이 부족하면, 패널이 화면 밖으로 넘치지 않도록
+  // top을 위로 clamp하여 최소 높이(MIN_PANEL_HEIGHT)가 항상 화면 안에 들어오게 합니다.
+  const top = Math.min(rawTop, Math.max(SCREEN_MARGIN, screenHeight - MIN_PANEL_HEIGHT - SCREEN_MARGIN));
+  const maxHeight = screenHeight - top - SCREEN_MARGIN;
 
   return (
     <Modal visible transparent animationType="none" statusBarTranslucent onRequestClose={onClose}>
