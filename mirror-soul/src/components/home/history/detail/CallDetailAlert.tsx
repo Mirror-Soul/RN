@@ -1,23 +1,20 @@
-import EditPencilIcon from '@/assets/images/common/history/call_history/call_edit_pencil.svg';
-import PurpleInfoIcon from '@/assets/images/common/history/call_history/puple_info.svg';
-import {Colors, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { Feather } from '@expo/vector-icons';
+import { Colors, FontFamily, FontSize, FontWeight, Spacing } from '@/src/constants/theme';
 
 /**
- * 통화 상세 상단 알림 배너 (SRP)
- * 편집 기능 안내 문구를 자주색 글래스 배너로 표시합니다.
+ * 통화 상세 유사도 힌트 배너 (SRP)
+ * 유사도가 높아 대화가 잘 통할 것임을 Sparkles + cyan 글래스 배너로 안내합니다.
  */
 export default function CallDetailAlert() {
   return (
     <View style={styles.container}>
       <View style={styles.row}>
-        <PurpleInfoIcon width={16} height={16} />
-        <View style={styles.paragraph}>
-          <Text style={styles.text}>우측 상단의 </Text>
-          <EditPencilIcon width={12} height={12} />
-          <Text style={styles.text}> 아이콘을 탭하여 내 Twin의 답변을 수정할 수 있습니다</Text>
-        </View>
+        <Feather name="zap" size={14} color={Colors.primary.electricCyan} />
+        <Text style={styles.text}>
+          유사도가 높아 대화가 잘 통할 확률이 높아요
+        </Text>
       </View>
     </View>
   );
@@ -25,30 +22,23 @@ export default function CallDetailAlert() {
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: Spacing.md,
-    paddingTop: Spacing.md,
-    paddingBottom: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
     borderBottomWidth: 0.612,
-    borderBottomColor: Colors.glass.purple20,
-    backgroundColor: Colors.glass.purple10,
+    borderBottomColor: Colors.glass.cyan20_d3,
+    backgroundColor: Colors.glass.cyan10_d3,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.sm,
-    alignSelf: 'stretch',
-  },
-  paragraph: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
+    justifyContent: 'center',
   },
   text: {
-    color: Colors.neutral.lavender,
+    color: Colors.primary.electricCyan,
     fontFamily: FontFamily.sans,
     fontSize: FontSize.sm,
-    fontWeight: FontWeight.regular,
+    fontWeight: FontWeight.medium,
     lineHeight: 16,
   },
 });

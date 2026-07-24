@@ -1,6 +1,12 @@
+/**
+ * @deprecated CallTagRow는 CallMeta (CallSubInfo.tsx)로 통합되었습니다.
+ * DRY 원칙에 따라 태그 렌더링 로직을 단일 위치로 통합했습니다.
+ * 이 파일은 참조용으로 유지되며, 직접 import하여 사용하지 마세요.
+ */
 import {Colors, Radii, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import React from 'react';
+
 import { StyleSheet, Text, View } from 'react-native';
 
 export interface CallTagRowProps {

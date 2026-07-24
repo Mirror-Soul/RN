@@ -18,6 +18,8 @@ export const MOCK_CALL_HISTORY: HistoryCallItemData[] = [
     durationLabel: '8분 23초',
     twinMatchLabel: '상대 Twin 92%',
     tags: ['음악', '전시회', '크리에이티브'],
+    isNew: true,
+    satisfactionPercent: 92,
     messages: [
       {
         id: 'm1',
@@ -64,13 +66,15 @@ export const MOCK_CALL_HISTORY: HistoryCallItemData[] = [
     age: 26,
     consistencyPercent: 88,
     callSequenceNumber: 1,
-    dateStr: '어제',
-    timeStr: '21:15',
+    dateStr: '오늘',
+    timeStr: '11:15',
     direction: 'RECEIVED',
     callTypeDesc: '상대방이 시작한 통화',
     durationLabel: '12분 40초',
     twinMatchLabel: '상대 Twin 85%',
     tags: ['여행', '맛집'],
+    isNew: true,
+    satisfactionPercent: 88,
     messages: [
       {
         id: 'm1',
@@ -86,4 +90,63 @@ export const MOCK_CALL_HISTORY: HistoryCallItemData[] = [
       },
     ],
   },
+  {
+    id: '3',
+    name: '예진',
+    age: 29,
+    consistencyPercent: 87,
+    callSequenceNumber: 3,
+    dateStr: '어제',
+    timeStr: '19:20',
+    direction: 'SENT',
+    callTypeDesc: '내가 시작한 통화',
+    durationLabel: '15분 10초',
+    twinMatchLabel: '상대 Twin 95%',
+    tags: ['여행 기록', '사진', '긍정 에너지'],
+    isNew: false,
+    satisfactionPercent: 95,
+    messages: [
+      {
+        id: 'm1',
+        direction: 'RECEIVED',
+        text: '안녕하세요! 예진이에요.',
+        timestamp: '19:20',
+      },
+    ],
+  },
+  {
+    id: '4',
+    name: '수빈',
+    age: 28,
+    consistencyPercent: 94,
+    callSequenceNumber: 1,
+    dateStr: '어제',
+    timeStr: '16:45',
+    direction: 'RECEIVED',
+    callTypeDesc: '상대방이 시작한 통화',
+    durationLabel: '6분 30초',
+    twinMatchLabel: '상대 Twin 90%',
+    tags: ['책', '갤러리', '창의적인 생각'],
+    isNew: false,
+    satisfactionPercent: 90,
+    messages: [
+      {
+        id: 'm1',
+        direction: 'RECEIVED',
+        text: '안녕하세요! 오늘 전시 어떠셨어요?',
+        timestamp: '16:45',
+      },
+    ],
+  },
 ];
+
+/**
+ * 주간 통계 Mock 데이터 (임시 — API 연동 시 제거)
+ * HistoryStatsRow에서 사용합니다.
+ */
+export const MOCK_WEEKLY_STATS = {
+  totalHours: 12.5,
+  received: 8,
+  sent: 4,
+  weeklyGrowthPercent: 12,
+} as const;
