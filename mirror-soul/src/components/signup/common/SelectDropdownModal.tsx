@@ -1,6 +1,6 @@
 import { Colors, Radii } from '@/src/constants/theme';
 import React, { useEffect, useRef } from 'react';
-import { Animated, Dimensions, Modal, Pressable, StyleSheet, ViewStyle, StyleProp } from 'react-native';
+import { Animated, Dimensions, Easing, Modal, Pressable, StyleSheet, ViewStyle, StyleProp } from 'react-native';
 
 export interface DropdownAnchor {
   x: number;
@@ -30,11 +30,11 @@ export default function SelectDropdownModal({ onClose, children, panelStyle, anc
   const progress = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    Animated.spring(progress, {
+    Animated.timing(progress, {
       toValue: 1,
+      duration: 220,
+      easing: Easing.out(Easing.cubic),
       useNativeDriver: true,
-      tension: 120,
-      friction: 14,
     }).start();
   }, [progress]);
 
@@ -53,8 +53,7 @@ export default function SelectDropdownModal({ onClose, children, panelStyle, anc
           {
             opacity: progress,
             transform: [
-              { scaleY: progress.interpolate({ inputRange: [0, 1], outputRange: [0.9, 1] }) },
-              { translateY: progress.interpolate({ inputRange: [0, 1], outputRange: [-8, 0] }) },
+              { translateY: progress.interpolate({ inputRange: [0, 1], outputRange: [-GAP, 0] }) },
             ],
           },
         ]}

@@ -18,7 +18,7 @@ interface Props {
 export default function StepSelectDropdown({ label, placeholder, onPress, style, isOpen = false }: Props) {
   return (
     <View style={[styles.container, style]}>
-      <Text style={styles.label}>{label}</Text>
+      {label ? <Text style={styles.label}>{label}</Text> : null}
       <TouchableOpacity
         style={styles.button}
         activeOpacity={0.8}

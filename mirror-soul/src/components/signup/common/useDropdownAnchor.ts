@@ -11,9 +11,11 @@ export function useDropdownAnchor() {
   const [anchor, setAnchor] = useState<DropdownAnchor | null>(null);
 
   const measureAndOpen = useCallback((onMeasured: () => void) => {
-    triggerRef.current?.measureInWindow((x, y, width, height) => {
-      setAnchor({ x, y, width, height });
-      onMeasured();
+    requestAnimationFrame(() => {
+      triggerRef.current?.measureInWindow((x, y, width, height) => {
+        setAnchor({ x, y, width, height });
+        onMeasured();
+      });
     });
   }, []);
 
