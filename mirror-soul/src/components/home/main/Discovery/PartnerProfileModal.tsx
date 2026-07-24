@@ -36,22 +36,37 @@ export default function PartnerProfileModal({ match, onClose, onConnectNow }: Pa
   const { colors } = useThemeColors();
   const progress = useRef(new Animated.Value(0)).current;
   const [isPlaying, setIsPlaying] = useState(false);
+  const [imageFailed, setImageFailed] = useState(false);
+  // match가 null이 되어도 닫힘 애니메이션이 끝날 때까지 마지막 match를 계속 렌더링하기 위한 상태
+  const [displayedMatch, setDisplayedMatch] = useState<SoulMatch | null>(null);
 
   useEffect(() => {
     if (match) {
+      setDisplayedMatch(match);
+      setImageFailed(false);
       Animated.timing(progress, {
         toValue: 1,
         duration: 300,
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }).start();
-    } else {
-      progress.setValue(0);
-      setIsPlaying(false);
+    } else if (displayedMatch) {
+      Animated.timing(progress, {
+        toValue: 0,
+        duration: 250,
+        easing: Easing.in(Easing.cubic),
+        useNativeDriver: true,
+      }).start(({ finished }) => {
+        if (finished) {
+          setDisplayedMatch(null);
+          setIsPlaying(false);
+        }
+      });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [match, progress]);
 
-  if (!match) return null;
+  if (!displayedMatch) return null;
 
   return (
     <Modal visible transparent animationType="none" statusBarTranslucent onRequestClose={onClose}>
@@ -70,7 +85,18 @@ export default function PartnerProfileModal({ match, onClose, onConnectNow }: Pa
       >
         <ScrollView showsVerticalScrollIndicator={false} bounces={false}>
           <View style={styles.hero}>
-            <Image source={{ uri: match.profileImage }} style={styles.heroImage} resizeMode="cover" />
+            {imageFailed ? (
+              <LinearGradient colors={Colors.gradient.avatarPlaceholder} style={styles.heroImage}>
+                <Text style={styles.heroImageFallbackText}>{displayedMatch.name.charAt(0).toUpperCase()}</Text>
+              </LinearGradient>
+            ) : (
+              <Image
+                source={{ uri: displayedMatch.profileImage }}
+                style={styles.heroImage}
+                resizeMode="cover"
+                onError={() => setImageFailed(true)}
+              />
+            )}
             <LinearGradient colors={['transparent', 'rgba(5,5,5,0.4)', '#050505']} style={StyleSheet.absoluteFill} />
 
             <TouchableOpacity
@@ -86,25 +112,25 @@ export default function PartnerProfileModal({ match, onClose, onConnectNow }: Pa
             <View style={styles.heroInfo}>
               <View style={styles.badgeRow}>
                 <View style={styles.compatBadge}>
-                  <Text style={styles.compatBadgeText}>Similarity {match.compatibility}%</Text>
+                  <Text style={styles.compatBadgeText}>Similarity {displayedMatch.compatibility}%</Text>
                 </View>
                 <View style={styles.mbtiBadge}>
-                  <Text style={styles.mbtiBadgeText}>{match.mbti}</Text>
+                  <Text style={styles.mbtiBadgeText}>{displayedMatch.mbti}</Text>
                 </View>
               </View>
               <Text style={styles.nameText}>
-                {match.name}
-                <Text style={styles.ageText}> {match.age}</Text>
+                {displayedMatch.name}
+                <Text style={styles.ageText}> {displayedMatch.age}</Text>
               </Text>
               <View style={styles.metaRow}>
                 <View style={styles.metaItem}>
                   <LocationIcon width={14} height={14} />
-                  <Text style={styles.metaText}>{match.location}</Text>
+                  <Text style={styles.metaText}>{displayedMatch.location}</Text>
                 </View>
                 <View style={styles.metaItem}>
                   <Feather name="briefcase" size={14} color={Colors.neutral.lightGray} />
-                  <Text style={styles.metaText}>{match.job}</Text>
-                  {match.isJobVerified ? <VerifiedIcon width={14} height={14} /> : null}
+                  <Text style={styles.metaText}>{displayedMatch.job}</Text>
+                  {displayedMatch.isJobVerified ? <VerifiedIcon width={14} height={14} /> : null}
                 </View>
               </View>
             </View>
@@ -113,7 +139,7 @@ export default function PartnerProfileModal({ match, onClose, onConnectNow }: Pa
           <View style={styles.content}>
             <Section title="AI Persona Scan" icon="cpu">
               <View style={styles.tagRow}>
-                {match.aiAnalysisTags.map((tag) => (
+                {displayedMatch.aiAnalysisTags.map((tag) => (
                   <View key={tag} style={styles.aiTag}>
                     <Text style={styles.aiTagText}># {tag}</Text>
                   </View>
@@ -132,19 +158,19 @@ export default function PartnerProfileModal({ match, onClose, onConnectNow }: Pa
                 >
                   <Feather name={isPlaying ? 'pause' : 'play'} size={22} color={Colors.primary.soulBlack} />
                 </TouchableOpacity>
-                <Text style={[styles.voiceStyleText, { color: colors.text.primary }]}>{match.voiceStyle}</Text>
+                <Text style={[styles.voiceStyleText, { color: colors.text.primary }]}>{displayedMatch.voiceStyle}</Text>
               </View>
             </Section>
 
             <Section title="Soul Record">
               <View style={[styles.bioCard, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
-                <Text style={[styles.bioText, { color: colors.text.secondary }]}>&quot;{match.bio}&quot;</Text>
+                <Text style={[styles.bioText, { color: colors.text.secondary }]}>&quot;{displayedMatch.bio}&quot;</Text>
               </View>
             </Section>
 
             <Section title="Interests">
               <View style={styles.interestGrid}>
-                {match.interests.map((item) => (
+                {displayedMatch.interests.map((item) => (
                   <View
                     key={item.label}
                     style={[styles.interestItem, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
@@ -163,6 +189,7 @@ export default function PartnerProfileModal({ match, onClose, onConnectNow }: Pa
         <View style={styles.floatingBar}>
           <TouchableOpacity
             style={[styles.iconAction, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
+            // TODO: 관심 표시(찜) 기능 범위가 정해지면 실제 핸들러로 교체
             activeOpacity={0.8}
             accessibilityRole="button"
             accessibilityLabel="관심 표시"
@@ -171,7 +198,7 @@ export default function PartnerProfileModal({ match, onClose, onConnectNow }: Pa
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.connectNowButton}
-            onPress={() => onConnectNow?.(match)}
+            onPress={() => onConnectNow?.(displayedMatch)}
             activeOpacity={0.85}
             accessibilityRole="button"
             accessibilityLabel="Connect Now"
@@ -181,6 +208,7 @@ export default function PartnerProfileModal({ match, onClose, onConnectNow }: Pa
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.iconAction, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
+            // TODO: 공유 기능 범위가 정해지면 실제 핸들러로 교체
             activeOpacity={0.8}
             accessibilityRole="button"
             accessibilityLabel="공유"
@@ -217,6 +245,14 @@ const styles = StyleSheet.create({
   },
   heroImage: {
     ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  heroImageFallbackText: {
+    fontFamily: FontFamily.sans,
+    fontSize: 96,
+    fontWeight: FontWeight.black,
+    color: Colors.neutral.pureWhite,
   },
   closeButton: {
     position: 'absolute',
