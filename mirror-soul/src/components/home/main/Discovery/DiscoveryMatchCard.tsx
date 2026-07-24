@@ -5,7 +5,7 @@ import RightNarrowIcon from '@/assets/images/common/Right_narrow.svg';
 import VerifiedIcon from '@/assets/images/common/Verification_protect_icon.svg';
 import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
-import React from 'react';
+import React, { useState } from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export interface SoulMatch {
@@ -37,9 +37,22 @@ interface DiscoveryMatchCardProps {
  * 상태(현재 인덱스, 전환 애니메이션)는 DiscoveryMatchSection이 관리합니다.
  */
 export default function DiscoveryMatchCard({ match, onPass, onConnect, onOpenDetail }: DiscoveryMatchCardProps) {
+  const [imageFailed, setImageFailed] = useState(false);
+
   return (
     <View style={styles.card}>
-      <Image source={{ uri: match.profileImage }} style={styles.image} resizeMode="cover" />
+      {imageFailed ? (
+        <LinearGradient colors={Colors.gradient.avatarPlaceholder} style={styles.image}>
+          <Text style={styles.imageFallbackText}>{match.name.charAt(0).toUpperCase()}</Text>
+        </LinearGradient>
+      ) : (
+        <Image
+          source={{ uri: match.profileImage }}
+          style={styles.image}
+          resizeMode="cover"
+          onError={() => setImageFailed(true)}
+        />
+      )}
       <LinearGradient
         colors={['transparent', 'rgba(0,0,0,0.2)', '#000000']}
         style={StyleSheet.absoluteFill}
@@ -110,6 +123,14 @@ const styles = StyleSheet.create({
   },
   image: {
     ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  imageFallbackText: {
+    fontFamily: FontFamily.sans,
+    fontSize: 64,
+    fontWeight: FontWeight.black,
+    color: Colors.neutral.pureWhite,
   },
   topRow: {
     position: 'absolute',
