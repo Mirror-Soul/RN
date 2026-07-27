@@ -10,6 +10,7 @@ export const Colors = {
     activeRedText: '#FF6467', // "실시간 음성 인식 중" 텍스트 컬러
     goldText: '#FFDF20',      // "NEW" 배지 텍스트 컬러
     mirrorOrange: '#FF8904',  // 매칭 포인트 오렌지
+    cardBlack: '#111111',     // 히어로 카드 등 짙은 카드 배경
   },
   gradient: {
     cyanToPurple: ['#00D3F3', '#C27AFF'] as [string, string],
@@ -165,7 +166,7 @@ export const FontSize = {
   xl: 18,
   xxl: 20,
   xxxl: 24,
-  display: 36, // 히어로 타이틀 등 대형 타이틀
+  display: 36, // 히어로 카드 이름 등 대형 타이틀
   giant: 48,
 } as const;
 
