@@ -12,6 +12,7 @@ import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, View } from 're
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 // Step 1 Specific Parts
+import AgeVerificationSection from './components/AgeVerificationSection';
 import AgreementSection from './components/AgreementSection';
 import EmailSection from './components/EmailSection';
 import IdentityVerificationSection from './components/IdentityVerificationSection';
@@ -128,6 +129,12 @@ export default function Step1AccountContainer() {
           <IdentityVerificationSection
             state={state}
             onVerify={handlePassVerification}
+          />
+
+          {/* Age Verification Section */}
+          <AgeVerificationSection
+            state={state}
+            onChange={updateState}
           />
 
           {/* Agreement Section */}

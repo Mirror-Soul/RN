@@ -26,6 +26,7 @@ export function useStep1Form() {
     isPasswordConfirmVisible: false,
     isIdentityVerified: false,
     agreedToTerms: false,
+    isAdultConfirmed: false,
     agreedToBiometricData: false,
     agreedToMarketing: false,
     isLoading: false,
@@ -137,6 +138,7 @@ export function useStep1Form() {
     state.password === state.passwordConfirm &&
     state.isIdentityVerified &&
     state.agreedToTerms &&
+    state.isAdultConfirmed;
     state.agreedToBiometricData;
     state.agreedToTerms;
 

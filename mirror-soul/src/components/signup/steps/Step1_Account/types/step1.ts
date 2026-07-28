@@ -9,6 +9,7 @@ export interface Step1State {
   isPasswordConfirmVisible: boolean;
   isIdentityVerified: boolean;
   agreedToTerms: boolean;
+  isAdultConfirmed: boolean;
   agreedToBiometricData: boolean;
   /** 선택 동의 — isFormValid 조건에 포함하지 않는다. */
   agreedToMarketing: boolean;
