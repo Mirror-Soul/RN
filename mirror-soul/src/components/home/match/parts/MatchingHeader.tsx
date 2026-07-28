@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
-import {FontFamily, Radii, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
-import { Ionicons, Feather } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
+import { tabHeaderStyles } from '@/src/components/home/common/tabHeaderStyles';
 
 export default function MatchingHeader() {
   const { colors } = useThemeColors();
@@ -24,25 +24,7 @@ export default function MatchingHeader() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    height: 52,
-    marginTop: Spacing.sm,
-  },
-  title: {
-    fontFamily: FontFamily.sans,
-    fontWeight: FontWeight.black,
-    fontSize: FontSize.xxxl,
-    letterSpacing: -1.1,
-  },
-  iconButton: {
-    width: 44,
-    height: 44,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderRadius: Radii.lg,
-  },
+  container: tabHeaderStyles.container,
+  title: tabHeaderStyles.title,
+  iconButton: tabHeaderStyles.iconButton,
 });

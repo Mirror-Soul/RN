@@ -1,11 +1,12 @@
 import SettingIcon from '@/assets/images/common/Setting.svg';
 import ProfileIcon from '@/assets/images/common/bottomNavbar/Profile.svg';
-import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
+import { Colors, FontFamily, FontWeight, Radii, Spacing } from '@/src/constants/theme';
 import { MAIN_ROUTES } from '@/src/constants/routes/mainRoutes';
 import { router } from 'expo-router';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
+import { tabHeaderStyles } from '@/src/components/home/common/tabHeaderStyles';
 
 interface MainHeaderProps {
   onSettingPress?: () => void;
@@ -52,30 +53,12 @@ export default function MainHeader({ onSettingPress }: MainHeaderProps) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    alignSelf: 'stretch',
-  },
-  iconButton: {
-    width: 44,
-    height: 44,
-    borderRadius: Radii.lg,
-    borderWidth: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+  container: tabHeaderStyles.container,
+  iconButton: tabHeaderStyles.iconButton,
   titleWrapper: {
     alignItems: 'center',
   },
-  title: {
-    fontFamily: FontFamily.sans,
-    fontStyle: 'italic',
-    fontSize: FontSize.xxl,
-    fontWeight: FontWeight.black,
-    letterSpacing: -1.45,
-  },
+  title: tabHeaderStyles.title,
   liveBadge: {
     flexDirection: 'row',
     alignItems: 'center',

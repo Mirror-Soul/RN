@@ -4,6 +4,7 @@ import HistoryIcon from '@/assets/images/common/bottomNavbar/History_button.svg'
 import ProfileIcon from '@/assets/images/common/bottomNavbar/Profile.svg';
 import SimilarityMainIcon from '@/assets/images/common/main/Similarity.svg';
 import { Colors, FontFamily, Layout, Radii, FontSize, FontWeight, Spacing } from '@/src/constants/theme';
+import { BlurView } from 'expo-blur';
 import React, { useCallback, useEffect } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, {
@@ -103,7 +104,7 @@ function TabItem({
  */
 export default function BottomNavbar({ activeTab = 'discover', onTabPress }: BottomNavbarProps) {
   const insets = useSafeAreaInsets();
-  const { colors } = useThemeColors();
+  const { colors, isDark } = useThemeColors();
 
   const handleTabPress = useCallback(
     (tab: BottomTabId) => onTabPress?.(tab),
@@ -112,21 +113,26 @@ export default function BottomNavbar({ activeTab = 'discover', onTabPress }: Bot
 
   return (
     <View style={[styles.wrapper, { bottom: insets.bottom + 16 }]}>
-      <View
-        style={[
-          styles.bar,
-          { backgroundColor: colors.background.glass, borderColor: colors.border.primary, shadowColor: colors.text.primary },
-        ]}
-      >
-        {TABS.map((tab) => (
-          <TabItem
-            key={tab.id}
-            tab={tab}
-            isActive={tab.id === activeTab}
-            onPress={() => handleTabPress(tab.id)}
-            mutedColor={colors.text.muted}
-          />
-        ))}
+      {/* 그림자는 블러 클리핑(overflow: hidden)과 같은 레이어에 두면 안 보이므로 분리 */}
+      <View style={[styles.shadowLayer, { shadowColor: colors.text.primary }]}>
+        <BlurView
+          intensity={isDark ? 40 : 60}
+          tint={isDark ? 'dark' : 'light'}
+          style={[styles.bar, { borderColor: colors.border.primary }]}
+        >
+          {/* 블러 위에 브랜드 톤을 살짝 얹어서 아이폰 탭바 같은 "흐릿하지만 색이 있는" 느낌을 낸다 */}
+          <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.background.glass }]} pointerEvents="none" />
+
+          {TABS.map((tab) => (
+            <TabItem
+              key={tab.id}
+              tab={tab}
+              isActive={tab.id === activeTab}
+              onPress={() => handleTabPress(tab.id)}
+              mutedColor={colors.text.muted}
+            />
+          ))}
+        </BlurView>
       </View>
     </View>
   );
@@ -141,6 +147,13 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     zIndex: 1000,
   },
+  shadowLayer: {
+    borderRadius: Radii.full,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 15,
+  },
   bar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -149,10 +162,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
     borderRadius: Radii.full,
     borderWidth: 1,
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-    elevation: 15,
+    overflow: 'hidden', // BlurView를 pill 모양으로 클리핑
   },
   tabItem: {
     flex: 1,

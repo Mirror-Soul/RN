@@ -1,10 +1,10 @@
 import { Feather } from '@expo/vector-icons';
 import { MAIN_ROUTES } from '@/src/constants/routes/mainRoutes';
-import { FontFamily, FontSize, FontWeight, Radii } from '@/src/constants/theme';
 import { router } from 'expo-router';
 import React from 'react';
 import { StyleSheet, TouchableOpacity, View, Text } from 'react-native';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
+import { tabHeaderStyles } from '@/src/components/home/common/tabHeaderStyles';
 
 interface EvolveHeaderProps {
   onSettingPress?: () => void;
@@ -45,26 +45,7 @@ export default function EvolveHeader({ onSettingPress }: EvolveHeaderProps) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    alignSelf: 'stretch',
-  },
-  iconButton: {
-    width: 44,
-    height: 44,
-    borderRadius: Radii.lg,
-    borderWidth: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  title: {
-    fontFamily: FontFamily.sans,
-    fontStyle: 'italic',
-    fontSize: FontSize.xxl,
-    fontWeight: FontWeight.black,
-    letterSpacing: -1.13,
-    textTransform: 'uppercase',
-  },
+  container: tabHeaderStyles.container,
+  iconButton: tabHeaderStyles.iconButton,
+  title: tabHeaderStyles.title,
 });
