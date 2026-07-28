@@ -27,6 +27,8 @@ export function useStep1Form() {
     isIdentityVerified: false,
     agreedToTerms: false,
     isAdultConfirmed: false,
+    agreedToBiometricData: false,
+    agreedToMarketing: false,
     isLoading: false,
   });
 
@@ -120,14 +122,16 @@ export function useStep1Form() {
     }
   }, [isEmailActionLoading, verifyAttemptCount, updateState, resetTimer]);
 
-  // PASS 본인인증 처리 (추후 구현 예정)
+  // PASS 본인인증 처리 (연동사 계약 전까지 "준비 중" 안내만 표시)
+  // isFormValid에서 제외되어 있으므로 이 버튼은 가입을 막지 않으며,
+  // 실제 인증 완료 여부를 허위로 표시하지 않는다.
   const handlePassVerification = useCallback(() => {
-    console.log('PASS Identity Verification requested');
-    // Mock logic: 즉시 완료 처리
-    updateState({ isIdentityVerified: true });
-  }, [updateState]);
+    Alert.alert('준비 중입니다', 'PASS 본인인증은 아직 지원되지 않습니다. 빠른 시일 내에 제공할 예정입니다.');
+  }, []);
 
   // 다음 단계 이동 가능 여부 체크
+  // NOTE: PASS 본인인증(isIdentityVerified)은 실제 연동 전까지 필수 조건에서 제외한다.
+  // 연동 완료 후 이 필드를 다시 필수 조건에 추가할 것.
   const isFormValid =
     state.isEmailVerified &&
     isValidPassword(state.password) &&
@@ -135,6 +139,9 @@ export function useStep1Form() {
     state.isIdentityVerified &&
     state.agreedToTerms &&
     state.isAdultConfirmed;
+    state.agreedToBiometricData;
+    state.agreedToTerms;
+
 
   return {
     state,

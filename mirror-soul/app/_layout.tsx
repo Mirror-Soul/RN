@@ -7,12 +7,23 @@ import { useEffect } from 'react';
 import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import * as Sentry from '@sentry/react-native';
 
 /**
  * hydration 완료 전까지 스플래시 화면 유지.
  * 반드시 컴포넌트 렌더링 전에 호출되어야 합니다.
  */
 SplashScreen.preventAutoHideAsync();
+
+// DSN이 없으면(로컬 개발 등) 크래시 리포팅을 초기화하지 않습니다.
+// 실제 DSN은 Sentry 프로젝트 생성 후 .env의 EXPO_PUBLIC_SENTRY_DSN에 설정하세요.
+if (process.env.EXPO_PUBLIC_SENTRY_DSN) {
+  Sentry.init({
+    dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
+    sendDefaultPii: false,
+    tracesSampleRate: __DEV__ ? 1.0 : 0.2,
+  });
+}
 
 const queryClient = new QueryClient();
 
@@ -27,7 +38,7 @@ const getOnboardingRoute = (status: string | null) => {
   }
 };
 
-export default function RootLayout() {
+function RootLayout() {
   const rootNavigationState = useRootNavigationState();
   const { isHydrated, isLoggedIn, userStatus, hydrate } = useAuthStore();
 
@@ -95,3 +106,6 @@ export default function RootLayout() {
     </GestureHandlerRootView>
   );
 }
+
+// DSN 미설정 시 Sentry.init을 호출하지 않으므로 wrap()도 순수 pass-through로 동작합니다.
+export default Sentry.wrap(RootLayout);

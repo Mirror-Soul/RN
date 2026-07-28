@@ -3,8 +3,10 @@ import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
+import { useCallTimeStore, formatCallTime } from '@/src/store/useCallTimeStore';
 
 interface AvailableTimeCardProps {
+  /** 지정하지 않으면 useCallTimeStore의 값을 사용합니다. */
   timeDisplay?: string;
   onRefillPress?: () => void;
 }
@@ -15,10 +17,12 @@ interface AvailableTimeCardProps {
  * 충전 바텀시트의 열림 상태는 부모(index.tsx)가 소유합니다.
  */
 export default function AvailableTimeCard({
-  timeDisplay = '02:30:00',
+  timeDisplay,
   onRefillPress,
 }: AvailableTimeCardProps) {
   const { colors } = useThemeColors();
+  const remainingSeconds = useCallTimeStore((state) => state.remainingSeconds);
+  const displayValue = timeDisplay ?? formatCallTime(remainingSeconds);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
@@ -28,7 +32,7 @@ export default function AvailableTimeCard({
         </View>
         <View>
           <Text style={[styles.label, { color: colors.text.muted }]}>Available Time</Text>
-          <Text style={[styles.value, { color: colors.text.primary }]}>{timeDisplay}</Text>
+          <Text style={[styles.value, { color: colors.text.primary }]}>{displayValue}</Text>
         </View>
       </View>
 

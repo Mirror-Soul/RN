@@ -38,7 +38,7 @@ export default function IdentityVerificationSection({ state, onVerify }: Identit
             end={{ x: 1, y: 0 }}
             style={styles.gradient}
           >
-            <Text style={styles.buttonText}>PASS 본인인증</Text>
+            <Text style={styles.buttonText}>PASS 본인인증 (준비 중)</Text>
           </LinearGradient>
         </TouchableOpacity>
       ) : (

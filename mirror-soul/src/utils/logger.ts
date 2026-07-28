@@ -2,6 +2,7 @@
  * 중앙 집중식 로깅 유틸리티
  * 프로덕션 환경에서는 로그 출력을 제한하여 보안 및 성능을 최적화합니다.
  */
+import * as Sentry from '@sentry/react-native';
 
 const SENSITIVE_KEYS = ['answer', 'password', 'token', 'refreshtoken', 'accesstoken'];
 
@@ -55,12 +56,12 @@ export const logger = {
         console.error(`-> Error Message: ${errorObj.message}`);
       }
 
-      /**
-       * TODO: 외부 에러 트래킹 서비스 연동 예시
-       * if (Sentry) {
-       *   Sentry.captureException(errorObj || message, { extra: { details: args } });
-       * }
-       */
+      // Sentry로 전송 (민감 정보는 마스킹된 args만 extra로 첨부)
+      if (errorObj) {
+        Sentry.captureException(errorObj, { extra: { message, details: maskSensitiveData(args) } });
+      } else {
+        Sentry.captureMessage(message, { level: 'error', extra: { details: maskSensitiveData(args) } });
+      }
     }
   },
 };
