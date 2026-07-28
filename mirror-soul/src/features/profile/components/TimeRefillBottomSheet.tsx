@@ -6,6 +6,7 @@ import { BottomSheet } from '../../../components/common/BottomSheet/BottomSheet'
 import { TIME_REFILL_OPTIONS } from '../constants/timeRefillOptions';
 import { TimeRefillOption } from './TimeRefillOption';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
+import { useCallTimeStore, formatCallTime } from '@/src/store/useCallTimeStore';
 
 interface TimeRefillBottomSheetProps {
   isOpen: boolean;
@@ -14,6 +15,7 @@ interface TimeRefillBottomSheetProps {
 
 export const TimeRefillBottomSheet = ({ isOpen, onClose }: TimeRefillBottomSheetProps) => {
   const { colors } = useThemeColors();
+  const remainingSeconds = useCallTimeStore((state) => state.remainingSeconds);
 
   return (
     <BottomSheet isOpen={isOpen} onClose={onClose} height={580}>
@@ -24,7 +26,7 @@ export const TimeRefillBottomSheet = ({ isOpen, onClose }: TimeRefillBottomSheet
         {/* Header */}
         <View style={styles.header}>
           <Text style={[styles.title, { color: colors.text.primary }]}>대화 시간 채우기</Text>
-          <Text style={[styles.subtitle, { color: colors.text.secondary }]}>현재 남은 시간: 02:30:00</Text>
+          <Text style={[styles.subtitle, { color: colors.text.secondary }]}>현재 남은 시간: {formatCallTime(remainingSeconds)}</Text>
         </View>
 
         {/* Options */}

@@ -24,9 +24,8 @@ export const ProfileSettingsScreen = () => {
         <Header title="공간 관리 및 설정" delay={0} />
 
         <View style={styles.content}>
-          {/* 대화 가능 시간 카드 */}
+          {/* 대화 가능 시간 카드 (미지정 시 useCallTimeStore 값 사용) */}
           <AvailableTimeCard
-            timeString="02:30:00"
             delay={80}
             onPressRefill={handleOpenSheet}
           />
