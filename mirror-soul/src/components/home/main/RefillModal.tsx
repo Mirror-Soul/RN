@@ -3,6 +3,7 @@ import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { TIME_REFILL_OPTIONS } from '@/src/features/profile/constants/timeRefillOptions';
 
 interface TimePackage {
   id: string;
@@ -13,12 +14,16 @@ interface TimePackage {
   note: string;
 }
 
-// 시간 충전 패키지 — 다른 곳에서 재사용되지 않으므로 별도 상수 파일 없이 colocate
-const TIME_PACKAGES: TimePackage[] = [
-  { id: 'lite', duration: '30분', tagline: '30분 동안 이야기 나누기', price: '₩4,900', best: false, note: '' },
-  { id: 'best', duration: '2시간', tagline: '2시간 동안 이야기 나누기', price: '₩14,900', best: true, note: '인기' },
-  { id: 'bulk', duration: '10시간', tagline: '10시간 가득 채우기', price: '₩59,000', best: false, note: '경제적' },
-];
+// TIME_REFILL_OPTIONS(단일 소스)에서 파생 — 여기서 별도로 가격/구성을 하드코딩하면
+// TimeRefillBottomSheet.tsx와 가격이 어긋날 수 있다.
+const TIME_PACKAGES: TimePackage[] = TIME_REFILL_OPTIONS.map((option) => ({
+  id: option.id,
+  duration: option.addedTime.replace('+ ', ''),
+  tagline: option.durationLabel,
+  price: option.price,
+  best: option.badge?.type === 'popular',
+  note: option.badge?.text ?? '',
+}));
 
 interface RefillModalProps {
   visible: boolean;
