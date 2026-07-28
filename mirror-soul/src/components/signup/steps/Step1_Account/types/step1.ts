@@ -9,6 +9,7 @@ export interface Step1State {
   isPasswordConfirmVisible: boolean;
   isIdentityVerified: boolean;
   agreedToTerms: boolean;
+  isAdultConfirmed: boolean;
   isLoading: boolean;
 }
 
