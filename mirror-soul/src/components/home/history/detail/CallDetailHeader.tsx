@@ -53,7 +53,7 @@ export default function CallDetailHeader({
 
         {/* 텍스트 정보 */}
         <View style={styles.textInfo}>
-          <Text style={styles.nameText}>{name}</Text>
+          <Text style={styles.nameText}>{name}의 AI 트윈</Text>
           <View style={styles.subRow}>
             <Text style={styles.consistencyText}>유사도 {consistencyPercent}%</Text>
             <View style={styles.dot} />
