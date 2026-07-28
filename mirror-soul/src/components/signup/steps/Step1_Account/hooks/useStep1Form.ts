@@ -27,6 +27,7 @@ export function useStep1Form() {
     isIdentityVerified: false,
     agreedToTerms: false,
     agreedToBiometricData: false,
+    agreedToMarketing: false,
     isLoading: false,
   });
 
