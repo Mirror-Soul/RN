@@ -26,6 +26,8 @@ interface MessageRoomOptionsPanelProps {
   room: ChatRoom;
   isOpen: boolean;
   onClose: () => void;
+  /** 차단 완료 후 호출 (대화방에서 나가기 등) */
+  onBlocked: () => void;
 }
 
 const PANEL_WIDTH = 280;
@@ -48,6 +50,7 @@ export default function MessageRoomOptionsPanel({
   room,
   isOpen,
   onClose,
+  onBlocked,
 }: MessageRoomOptionsPanelProps) {
   const { height: screenHeight } = useWindowDimensions();
   const insets = useSafeAreaInsets();
@@ -104,7 +107,7 @@ export default function MessageRoomOptionsPanel({
       >
         <OptionsProfileSection room={room} />
         <OptionsSettingsSection />
-        <OptionsDangerSection />
+        <OptionsDangerSection room={room} onBlocked={onBlocked} />
 
         {/* ─ 닫기 버튼 (하단 고정) ─ */}
         <View style={styles.closeSection}>

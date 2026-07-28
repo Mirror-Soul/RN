@@ -8,6 +8,12 @@
     "scheme": "mirrorsoul",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/REPLACE_WITH_EAS_PROJECT_ID"
+    },
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
@@ -15,7 +21,24 @@
         "NSMicrophoneUsageDescription": "Mirror Soul에서 음성 인터뷰를 위해 마이크 접근이 필요합니다.",
         "NSCameraUsageDescription": "Mirror Soul에서 3D 얼굴 스캔을 위해 카메라 접근이 필요합니다."
       },
-      "bundleIdentifier": "com.anonymous.mirror-soul"
+      "bundleIdentifier": "com.mirrorsoul.app",
+      "privacyManifests": {
+        "NSPrivacyCollectedDataTypes": [
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeAudioData",
+            "NSPrivacyCollectedDataTypeLinked": true,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": ["NSPrivacyCollectedDataTypePurposeAppFunctionality"]
+          },
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypePhotosorVideos",
+            "NSPrivacyCollectedDataTypeLinked": true,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": ["NSPrivacyCollectedDataTypePurposeAppFunctionality"]
+          }
+        ],
+        "NSPrivacyAccessedAPITypes": []
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -31,7 +54,7 @@
         "android.permission.MODIFY_AUDIO_SETTINGS",
         "android.permission.CAMERA"
       ],
-      "package": "com.anonymous.mirrorsoul"
+      "package": "com.mirrorsoul.app"
     },
     "web": {
       "output": "static",
@@ -84,20 +107,41 @@
             {
               "fontFamily": "Inter",
               "fontDefinitions": [
-                { "path": "./assets/fonts/Inter_400Regular.ttf", "weight": 400 },
-                { "path": "./assets/fonts/Inter_500Medium.ttf", "weight": 500 },
-                { "path": "./assets/fonts/Inter_600SemiBold.ttf", "weight": 600 },
-                { "path": "./assets/fonts/Inter_700Bold.ttf", "weight": 700 },
-                { "path": "./assets/fonts/Inter_900Black.ttf", "weight": 900 }
+                {
+                  "path": "./assets/fonts/Inter_400Regular.ttf",
+                  "weight": 400
+                },
+                {
+                  "path": "./assets/fonts/Inter_500Medium.ttf",
+                  "weight": 500
+                },
+                {
+                  "path": "./assets/fonts/Inter_600SemiBold.ttf",
+                  "weight": 600
+                },
+                {
+                  "path": "./assets/fonts/Inter_700Bold.ttf",
+                  "weight": 700
+                },
+                {
+                  "path": "./assets/fonts/Inter_900Black.ttf",
+                  "weight": 900
+                }
               ]
             }
           ]
         }
-      ]
+      ],
+      "@sentry/react-native"
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "REPLACE_WITH_EAS_PROJECT_ID"
+      }
     }
   }
 }

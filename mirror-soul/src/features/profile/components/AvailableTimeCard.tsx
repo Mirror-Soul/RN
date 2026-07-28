@@ -8,14 +8,18 @@ import { Feather } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { usePulseAnimation, usePressAnimation } from '../hooks/useProfileAnimations';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
+import { useCallTimeStore, formatCallTime } from '@/src/store/useCallTimeStore';
 
 interface AvailableTimeCardProps {
-  timeString: string;
+  /** 지정하지 않으면 useCallTimeStore의 값을 사용합니다. */
+  timeString?: string;
   delay?: number;
   onPressRefill?: () => void;
 }
 
 export const AvailableTimeCard = ({ timeString, delay = 100, onPressRefill }: AvailableTimeCardProps) => {
+  const remainingSeconds = useCallTimeStore((state) => state.remainingSeconds);
+  const displayValue = timeString ?? formatCallTime(remainingSeconds);
   const { startPulse, animatedStyle: pulseStyle } = usePulseAnimation();
   const { handlePressIn, handlePressOut, animatedStyle: pressStyle } = usePressAnimation();
   const { colors } = useThemeColors();
@@ -46,7 +50,7 @@ export const AvailableTimeCard = ({ timeString, delay = 100, onPressRefill }: Av
           <MaskedView
             style={styles.maskContainer}
             maskElement={
-              <Text style={styles.timeTextMask}>{timeString}</Text>
+              <Text style={styles.timeTextMask}>{displayValue}</Text>
             }
           >
             <LinearGradient

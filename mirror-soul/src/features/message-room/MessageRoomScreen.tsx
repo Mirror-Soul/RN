@@ -122,6 +122,10 @@ export default function MessageRoomScreen({ room }: MessageRoomScreenProps) {
         room={room}
         isOpen={isPanelOpen}
         onClose={() => setIsPanelOpen(false)}
+        onBlocked={() => {
+          setIsPanelOpen(false);
+          router.back();
+        }}
       />
     </View>
   );
