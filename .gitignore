@@ -1,0 +1,5 @@
+# Claude Code local session state (not shared) — keep .claude/artifacts/ tracked
+.claude/settings.local.json
+
+# OS
+.DS_Store
