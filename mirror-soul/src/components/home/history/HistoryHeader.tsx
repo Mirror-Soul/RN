@@ -2,8 +2,8 @@ import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
+import { tabHeaderStyles } from '@/src/components/home/common/tabHeaderStyles';
 
 /**
  * HistoryHeader 컴포넌트 (SRP)
@@ -45,27 +45,7 @@ export default function HistoryHeader() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    height: 52,
-    alignSelf: 'stretch',
-    paddingTop: Spacing.sm,
-  },
-  iconButton: {
-    width: 44,
-    height: 44,
-    borderRadius: Radii.lg,
-    borderWidth: 0.612,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  title: {
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.xxxl,
-    fontWeight: FontWeight.black as any,
-    letterSpacing: -1.13,
-    lineHeight: 32,
-  },
+  container: tabHeaderStyles.container,
+  iconButton: tabHeaderStyles.iconButton,
+  title: tabHeaderStyles.title,
 });
