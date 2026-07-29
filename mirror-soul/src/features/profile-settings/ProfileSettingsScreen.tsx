@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -9,11 +9,17 @@ import { Header } from '@/src/components/common/Header';
 import { ScreenLayout } from '@/src/components/common/ScreenLayout';
 import { useProfileSections } from '../profile/constants/profileMenu';
 import { Spacing } from '@/src/constants/theme';
+import { useCallTimeStore } from '@/src/store/useCallTimeStore';
 
 
 export const ProfileSettingsScreen = () => {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const profileSections = useProfileSections();
+  const fetchRemainingTime = useCallTimeStore((state) => state.fetchRemainingTime);
+
+  useEffect(() => {
+    fetchRemainingTime();
+  }, [fetchRemainingTime]);
 
   const handleOpenSheet = useCallback(() => setIsSheetOpen(true), []);
   const handleCloseSheet = useCallback(() => setIsSheetOpen(false), []);

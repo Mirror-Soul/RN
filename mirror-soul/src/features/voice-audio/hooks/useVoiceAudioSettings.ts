@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { SpeedOption, useVoiceAudioStore } from '../../../store/useVoiceAudioStore';
 
 /**
@@ -9,13 +9,18 @@ import { SpeedOption, useVoiceAudioStore } from '../../../store/useVoiceAudioSto
  */
 export const useVoiceAudioSettings = () => {
   const speechSpeed = useVoiceAudioStore((s) => s.speechSpeed);
-  const setSpeechSpeed = useVoiceAudioStore((s) => s.setSpeechSpeed);
+  const fetchAudioSettings = useVoiceAudioStore((s) => s.fetchAudioSettings);
+  const syncSpeechSpeed = useVoiceAudioStore((s) => s.syncSpeechSpeed);
+
+  useEffect(() => {
+    fetchAudioSettings();
+  }, [fetchAudioSettings]);
 
   const handleSpeedChange = useCallback(
     (speed: SpeedOption) => {
-      setSpeechSpeed(speed);
+      syncSpeechSpeed(speed);
     },
-    [setSpeechSpeed]
+    [syncSpeechSpeed]
   );
 
   return {
