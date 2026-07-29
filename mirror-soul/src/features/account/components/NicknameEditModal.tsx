@@ -18,6 +18,8 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useAccountStore } from '@/src/store/useAccountStore';
+import { modifyNickname } from '@/src/services/profileService';
+import { getErrorDisplayMessage } from '@/src/utils/apiErrorCode';
 
 const nicknameSchema = z.object({
   nickname: z
@@ -43,6 +45,7 @@ export const NicknameEditModal = ({ isOpen, onClose }: NicknameEditModalProps) =
     control,
     handleSubmit,
     reset,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm<NicknameFormData>({
     resolver: zodResolver(nicknameSchema),
@@ -57,9 +60,13 @@ export const NicknameEditModal = ({ isOpen, onClose }: NicknameEditModalProps) =
   }, [isOpen, nickname, reset]);
 
   const onSubmit = async (data: NicknameFormData) => {
-    await new Promise((resolve) => setTimeout(resolve, 800)); // API delay mock
-    setNickname(data.nickname);
-    onClose();
+    try {
+      await modifyNickname(data.nickname);
+      setNickname(data.nickname);
+      onClose();
+    } catch (error) {
+      setError('nickname', { message: getErrorDisplayMessage(error, '닉네임 변경에 실패했습니다.') });
+    }
   };
 
   return (

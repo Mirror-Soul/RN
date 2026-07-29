@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 
@@ -34,9 +34,15 @@ const MOCK_PROFILE: ProfileViewData = {
 
 export const ProfileScreen = () => {
   const router = useRouter();
-  const { nickname } = useAccountStore();
+  const { nickname, fetchProfile } = useAccountStore();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
+
+  // 백엔드 GET /my-page는 name/email만 제공한다. age/mbti/twinSimilarity 등
+  // 나머지 필드는 대응하는 API가 없어 당분간 mock을 유지한다 (feat/134-api 스코프 밖).
   const profile: ProfileViewData = {
     ...MOCK_PROFILE,
     name: nickname || MOCK_PROFILE.name,

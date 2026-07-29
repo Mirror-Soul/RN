@@ -1,12 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 
-import { View, Text, StyleSheet } from 'react-native';
+import { Alert, View, Text, StyleSheet } from 'react-native';
 import { BottomSheet } from '../../../components/common/BottomSheet/BottomSheet';
-import { TIME_REFILL_OPTIONS } from '../constants/timeRefillOptions';
+import { TIME_REFILL_OPTIONS, TimeRefillOptionData } from '../constants/timeRefillOptions';
 import { TimeRefillOption } from './TimeRefillOption';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { useCallTimeStore, formatCallTime } from '@/src/store/useCallTimeStore';
+import { buyTime } from '@/src/services/profileService';
+import { getErrorDisplayMessage } from '@/src/utils/apiErrorCode';
 
 interface TimeRefillBottomSheetProps {
   isOpen: boolean;
@@ -16,6 +18,24 @@ interface TimeRefillBottomSheetProps {
 export const TimeRefillBottomSheet = ({ isOpen, onClose }: TimeRefillBottomSheetProps) => {
   const { colors } = useThemeColors();
   const remainingSeconds = useCallTimeStore((state) => state.remainingSeconds);
+  const setRemainingSeconds = useCallTimeStore((state) => state.setRemainingSeconds);
+  const [purchasingId, setPurchasingId] = useState<string | null>(null);
+
+  const handleSelectOption = async (option: TimeRefillOptionData) => {
+    if (purchasingId) return;
+    setPurchasingId(option.id);
+    try {
+      const response = await buyTime(option.seconds);
+      if (response.isSuccess) {
+        setRemainingSeconds(response.result.remainingTalkTime);
+        onClose();
+      }
+    } catch (error) {
+      Alert.alert('시간 충전 실패', getErrorDisplayMessage(error, '시간 충전에 실패했습니다. 잠시 후 다시 시도해주세요.'));
+    } finally {
+      setPurchasingId(null);
+    }
+  };
 
   return (
     <BottomSheet isOpen={isOpen} onClose={onClose} height={580}>
@@ -32,14 +52,11 @@ export const TimeRefillBottomSheet = ({ isOpen, onClose }: TimeRefillBottomSheet
         {/* Options */}
         <View style={styles.optionsContainer}>
           {TIME_REFILL_OPTIONS.map((option, index) => (
-            <TimeRefillOption 
-              key={option.id} 
-              option={option} 
+            <TimeRefillOption
+              key={option.id}
+              option={option}
               delay={index * 100} // Staggered entrance
-              onPress={() => {
-                // handle purchase logic
-                console.log('Selected:', option.id);
-              }}
+              onPress={() => handleSelectOption(option)}
             />
           ))}
         </View>
