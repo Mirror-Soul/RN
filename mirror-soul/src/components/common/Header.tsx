@@ -125,8 +125,10 @@ const styles = StyleSheet.create({
     width: 40,
     alignItems: 'flex-end',
   },
-  /** rightElement 슬롯 — 너비를 콘텐츠에 맞게 자동 조절 */
+  /** rightElement 슬롯 — 콘텐츠가 없을 때도 backButton(40px)과 동일한 최소 너비를 확보해
+   *  title이 진짜 중앙에 오도록 한다. rightElement가 이보다 넓으면 그만큼 자연스럽게 늘어난다. */
   rightSlot: {
+    minWidth: 40,
     alignItems: 'flex-end',
     flexShrink: 0,
   },
