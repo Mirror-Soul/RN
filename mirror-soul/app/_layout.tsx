@@ -1,5 +1,6 @@
 import { useAuthStore } from '@/src/store/useAuthStore';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClient } from '@/src/services/queryClient';
 import { Stack, router, useRootNavigationState } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
@@ -8,6 +9,7 @@ import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import * as Sentry from '@sentry/react-native';
+import { ToastProvider } from '@/src/components/common/Toast/ToastProvider';
 
 /**
  * hydration 완료 전까지 스플래시 화면 유지.
@@ -24,8 +26,6 @@ if (process.env.EXPO_PUBLIC_SENTRY_DSN) {
     tracesSampleRate: __DEV__ ? 1.0 : 0.2,
   });
 }
-
-const queryClient = new QueryClient();
 
 // 백엔드 확정 전 임시 온보딩 라우트 매핑
 const getOnboardingRoute = (status: string | null) => {
@@ -82,25 +82,27 @@ function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <QueryClientProvider client={queryClient}>
         <SafeAreaProvider>
-          <Stack
-            screenOptions={{
-              headerShown: false,
-              // 화면 전환 시 부드러운 fade 애니메이션
-              animation: 'fade',
-              animationDuration: 200,
-            }}
-          >
-            <Stack.Screen name="index" />
-            <Stack.Screen name="signup" options={{ animation: 'slide_from_right' }} />
-            <Stack.Screen name="(main)" options={{ animation: 'fade' }} />
-            <Stack.Screen name="call-detail" />
-            <Stack.Screen name="voice-update" />
-            <Stack.Screen
-              name="message-room/[id]"
-              options={{ animation: 'slide_from_right' }}
-            />
-          </Stack>
-          <StatusBar style="light" />
+          <ToastProvider>
+            <Stack
+              screenOptions={{
+                headerShown: false,
+                // 화면 전환 시 부드러운 fade 애니메이션
+                animation: 'fade',
+                animationDuration: 200,
+              }}
+            >
+              <Stack.Screen name="index" />
+              <Stack.Screen name="signup" options={{ animation: 'slide_from_right' }} />
+              <Stack.Screen name="(main)" options={{ animation: 'fade' }} />
+              <Stack.Screen name="call-detail" />
+              <Stack.Screen name="voice-update" />
+              <Stack.Screen
+                name="message-room/[id]"
+                options={{ animation: 'slide_from_right' }}
+              />
+            </Stack>
+            <StatusBar style="light" />
+          </ToastProvider>
         </SafeAreaProvider>
       </QueryClientProvider>
     </GestureHandlerRootView>
