@@ -1,36 +1,43 @@
 # MVP 작업 로그 및 고도화 로드맵
 
-> 이 문서는 여러 세션에 걸쳐 진행된 DX 리팩토링 + 1차 MVP 출시 준비 작업을 정리한 것이다.
+> 이 문서는 여러 세션에 걸쳐 진행된 DX 리팩토링 + 1차 MVP 출시 준비 작업 + Profile/my-page 고도화 작업을 정리한 것이다.
 > 목적은 하나: **미래의 Claude Code 세션(또는 사람)이 이 문서만 읽고 바로 이어서 작업할 수 있게 하는 것.**
-> 브랜치는 전부 `main`에서 개별 분기했고, 이 문서 작성 시점 기준 모두 origin에 push만 되어 있고 아직 merge되지 않았다.
+>
+> **먼저 볼 것**: 저장소 루트 `../../CLAUDE.md`(모노레포 공통: git 습관, 백엔드 API 정본 위치, iOS 빌드 트러블슈팅)와 `../CLAUDE.md`(RN 앱 컨벤션: API 서비스 레이어 패턴, react-query 마이그레이션 이후의 최신 상태관리 패턴) — 이 문서는 "무엇을 했고 무엇이 남았는지"에 집중하고, "어떻게 하는지"는 그 두 파일에 정리했다.
+>
+> **주의**: 이 세 파일(`../../CLAUDE.md`, `../CLAUDE.md`, `.claude/artifacts/*`)은 원래 `docs/claude-code-efficiency-guide` 브랜치에서 작성됐고, 지금 이 문서가 있는 `feat/136-mypage-api-advancement` 브랜치에는 없었다 (두 브랜치가 별개로 `main`에서 분기됨). 2026-07-30 세션에서 `git show`로 해당 브랜치의 최신 버전을 그대로 이 브랜치 워킹트리에도 복사해서 반영했다 (커밋 전 상태). 두 브랜치가 나중에 각자 머지되면 이 파일들의 내용이 중복/충돌할 수 있으니 유의할 것.
 
 ---
 
 ## 1. 전체 작업 흐름 (시간순)
 
-1. **DX 리팩토링** — `feat/123-dx-logic` (11개 커밋, mirror-soul 앱 한정)
-2. **1차 MVP 출시 준비도 감사** — RN 코드 기준으로 법적/스토어 심사/비즈니스 크리티컬 문제를 찾고, 문제별로 독립 브랜치 7개 생성
+1. **DX 리팩토링** — `feat/123-dx-logic` (11개 커밋). ⚠️ **원격 브랜치의 실제 상태 미확인** — 로컬에만 커밋되고 push가 안 됐을 가능성이 있으니, 이 브랜치를 이어서 작업하려면 먼저 로컬/원격 상태를 직접 확인할 것.
+2. **1차 MVP 출시 준비도 감사** — RN 코드 기준으로 법적/스토어 심사/비즈니스 크리티컬 문제를 찾고, 문제별로 독립 브랜치 7개 생성 → **전부 `main`에 merge 완료**
 3. **동의 UX 후속 개선** — 7개 중 2개 브랜치(`feat/mvp-biometric-consent`, `feat/mvp-age-gate`)에 "동의 항목 클릭 시 실제 내용을 보여주는" 기능 + 마케팅 선택 동의 추가
+4. **헤더/바텀바 UI 리팩토링** — `refactor/132-header-bottom-ui` (탭 헤더 텍스트 스타일 통일 + 아이폰 스타일 프로스티드 블러 바텀바) → **`main`에 merge 완료 (PR #133)**
+5. **iOS 실기기 빌드 트러블슈팅** — `expo-font` 플러그인 스키마 버그, Sentry 소스맵 자동 업로드 실패, Expo CLI의 기기 설치 버그, SDK 버전 정렬 후 `node_modules` 꼬임까지 총 4개의 순차적 빌드 차단 이슈를 진단/수정 (§4.5 참고)
+6. **백엔드 API 스키마 전수 조사 (Phase 1)** — 백엔드 12개 컨트롤러·46개 엔드포인트·47개 에러코드를 Service 계층까지 검증해서 `.claude/artifacts/backend-schema.json`/`analysis-report.md`로 산출 (§4.6 참고)
+7. **Profile/my-page 백엔드 연동** — `feat/134-api` (마이페이지 6개 화면을 실제 API로 연결 + 공통 에러코드 유틸리티 신규) → **`main`에 merge 완료 (PR #135)**
+8. **Profile/my-page 고도화 (1단계+2단계)** — `feat/136-mypage-api-advancement` (Toast/로딩/dedup-guard UX 하드닝 → 이후 프로젝트에 이미 설치돼 있던 react-query로 전면 마이그레이션) → **구현 완료, 아직 커밋 전 / 미merge** (§4.8 참고, 지금 이 브랜치)
 
 ---
 
 ## 2. 브랜치 인벤토리
 
-| 브랜치 | 기반 | 커밋 수 | 상태 | 핵심 내용 |
-|---|---|---|---|---|
-| `feat/123-dx-logic` | main | 11 | push됨, PR 없음 | 툴링/린팅/타입/테스트/CI 정비 + 재사용 스킬 + 멀티기기 통화 설계 문서 |
-| `fix/mvp-remove-fake-pass-verification` | main | 1 | push됨 | 가짜 PASS 인증 UI 제거 |
-| `feat/mvp-biometric-consent` | main | 2 | push됨 | 생체정보 별도 동의 + 상세보기 시트 + 마케팅 선택 동의 |
-| `feat/mvp-age-gate` | main | 2 | push됨 | 만 19세 자가 확인 + 상세보기 시트 |
-| `feat/mvp-ai-twin-disclosure` | main | 1 | push됨 | 통화 기록에 "AI 트윈" 라벨링 |
-| `feat/mvp-block-report` | main | 1 | push됨 | 차단/신고 클라이언트 사이드 구현 |
-| `chore/mvp-app-store-config` | main | 1 | push됨 | 번들ID, privacy manifest, eas.json, Sentry, expo-updates |
-| `refactor/mvp-call-time-display` | main | 1 | push됨 | 통화시간 표시 상태 통합 |
-
-**머지 시 주의할 충돌 지점**:
-- `feat/mvp-biometric-consent`와 `feat/mvp-age-gate`는 둘 다 `Step1AccountContainer.tsx`, `step1.ts`, 그리고 **동일한 신규 파일** `src/constants/consentContent.ts` / `src/components/common/ConsentDetailSheet.tsx`를 각자 만들었다 (브랜치가 독립적이라 부득이하게 중복 생성). 먼저 머지되는 쪽이 파일을 만들고, 나중 쪽은 "같은 파일을 둘 다 만듦" 충돌만 나며, 내용이 동일하니 아무 쪽이나 채택하면 된다.
-- `refactor/mvp-call-time-display`는 `AvailableTimeCard.tsx`(2곳)와 `TimeRefillBottomSheet.tsx`를 건드리므로 나머지 브랜치와는 겹치지 않는다.
-- 나머지는 서로 다른 파일을 건드려서 충돌 가능성이 낮다.
+| 브랜치 | 기반 | 상태 | 핵심 내용 |
+|---|---|---|---|
+| `feat/123-dx-logic` | main | ⚠️ 원격 상태 불확실 (§1 참고) | 툴링/린팅/타입/테스트/CI 정비 + 재사용 스킬 + 멀티기기 통화 설계 문서 |
+| `fix/mvp-remove-fake-pass-verification` | main | ✅ merge 완료 | 가짜 PASS 인증 UI 제거 |
+| `feat/mvp-biometric-consent` | main | ✅ merge 완료 | 생체정보 별도 동의 + 상세보기 시트 + 마케팅 선택 동의 |
+| `feat/mvp-age-gate` | main | ✅ merge 완료 | 만 19세 자가 확인 + 상세보기 시트 |
+| `feat/mvp-ai-twin-disclosure` | main | ✅ merge 완료 | 통화 기록에 "AI 트윈" 라벨링 |
+| `feat/mvp-block-report` | main | ✅ merge 완료 | 차단/신고 클라이언트 사이드 구현 |
+| `chore/mvp-app-store-config` | main | ✅ merge 완료 | 번들ID, privacy manifest, eas.json, Sentry, expo-updates |
+| `refactor/mvp-call-time-display` | main | ✅ merge 완료 | 통화시간 표시 상태 통합 |
+| `refactor/132-header-bottom-ui` | main | ✅ merge 완료 (PR #133) | 탭 헤더 텍스트 스타일 통일, 프로스티드 블러 바텀바, iOS 빌드 차단 이슈 4건 수정 |
+| `feat/134-api` | main | ✅ merge 완료 (PR #135) | 마이페이지(Profile) 6개 화면 실제 API 연동 + 공통 에러코드 유틸리티 |
+| `docs/claude-code-efficiency-guide` | main | 🔵 미merge (상태 불확실) | 루트/`mirror-soul/` `CLAUDE.md` 신규 작성 + 백엔드 스키마 아티팩트 커밋 |
+| `feat/136-mypage-api-advancement` | main (8ffcbdf, feat/134-api merge 직후) | 🟡 구현 완료, 커밋 전 (지금 이 브랜치) | Toast/로딩/에러 UX 하드닝 + react-query 전면 마이그레이션 (§4.8) |
 
 ---
 
@@ -57,7 +64,7 @@
 - `mirror-soul/docs/MULTI_DEVICE_CALL_CHAT_ARCHITECTURE.md` — 여러 휴대폰이 통화/채팅으로 연결되는 기능의 아키텍처 제안
 
 **겪었던 삽질 (다음에 반복하지 않도록)**:
-- `jest-expo`/`@testing-library/react-native`는 **Expo SDK 버전에 정확히 맞는 major**를 설치해야 한다. latest를 깔면 React 19.2+를 요구해서 이 프로젝트(React 19.1.0)와 충돌하고, `renderHook()`이 에러 없이 `result: undefined`만 반환하는 조용한 실패로 나타난다. `mirror-soul/.claude/skills/dx-audit/SKILL.md`에 정확한 버전 조합이 기록되어 있다.
+- `jest-expo`/`@testing-library/react-native`는 **Expo SDK 버전에 정확히 맞는 major**를 설치해야 한다. latest를 깔면 React 19.2+를 요구해서 이 프로젝트(React 19.1.0)와 충돌한다. 이번 세션(§4.8)에서 다시 겪었다: `jest-expo@54.0.17` + `@testing-library/react-native@13.3.3` + `@types/jest@30.0.0` + **`react-test-renderer@19.1.0`을 devDependency로 명시 고정**해야 `npm install`이 peer-dependency 충돌 없이 성공한다 (안 그러면 `@testing-library/react-native`가 `react-test-renderer@19.2.8`을 끌어와서 `react@^19.2.8`을 요구).
 - `mirror-soul`은 모노레포 서브디렉토리라 자체 `.git`이 없다. Husky 훅은 `mirror-soul/.husky/`에 두고, 저장소 루트에서 `git config core.hooksPath mirror-soul/.husky`로 수동 연결해야 한다.
 
 ---
@@ -66,7 +73,7 @@
 
 3개 서브에이전트로 (1) 온보딩 생체정보 수집 흐름, (2) 결제 흐름, (3) 앱스토어 배포 설정을 조사해서 나온 결론: **"다듬어야 할 앱"이 아니라 "결제·본인인증·삭제권이 통째로 mock이거나 없는 앱"**이었다.
 
-발견한 문제는 심각도별로 나눴다 (전체 목록은 아래 "고도화 로드맵" §7 참고):
+발견한 문제는 심각도별로 나눴다 (전체 목록은 아래 "고도화 로드맵" §6 참고):
 - **P0 법적/컴플라이언스**: 생체정보 별도 동의 없음, 가짜 PASS 인증, 회원탈퇴 미구현, 나이 확인 없음, 약관이 플레이스홀더 링크
 - **P0 스토어 심사 거절 위험**: 차단/신고 미작동, Apple privacy manifest 없음, 결제 없이 앱스토어에 디지털 콘텐츠 판매 시도 중
 - **P0 비즈니스 크리티컬**: 통화 시작 시 잔액 체크가 전혀 없어 무료로 무제한 통화 가능
@@ -74,36 +81,87 @@
 
 이 중 **RN 코드만으로 이번 세션에 바로 해결 가능한 7개**를 브랜치로 분리해서 처리했고 (§2 참고), 나머지는 Track 2(별도 IAP 브랜치)/Track 3(백엔드 협업)/Track 4(법무 검토)로 분류해서 아래 로드맵에 남겨뒀다.
 
+### 4.5 iOS 실기기 빌드 트러블슈팅 (원인/해결 확정됨 — 상세는 루트 `../../CLAUDE.md`)
+
+`refactor/132-header-bottom-ui` 검증 중 `npx expo run:ios -d`가 순차적으로 4개의 다른 이유로 실패했다. 전부 원인 확정, 수정 완료:
+
+1. `app.json`의 `expo-font` 플러그인 설정이 잘못된 스키마(객체)를 쓰고 있어 `prebuild --clean` 자체가 크래시 → 경로 문자열 배열로 수정.
+2. 실제 Sentry 프로젝트가 없는 상태에서 `sentry-cli` 소스맵 자동 업로드가 항상 실패 → `plugins/withSentryDisableAutoUpload.js` 신규 작성, prebuild 시 `SENTRY_DISABLE_AUTO_UPLOAD=true`를 자동 주입.
+3. 빌드는 성공하지만 Expo CLI 자체의 기기 설치 버그(`LockdowndClient` TypeError, 업스트림 이슈)로 설치가 실패 → `ios-deploy`로 우회.
+4. `npx expo install --fix`로 SDK 버전을 맞춘 뒤 `node_modules`가 꼬여 Metro가 `@expo/metro-config` 모듈을 못 찾음 → `rm -rf node_modules && npm install` + `npx expo start --clear`.
+5. **(2026-07-30, 근본 원인 확정 — 구조적으로 해결 불가)** `mirrorsoul` 스킴이 iOS 시뮬레이터 destination을 아예 못 찾는 문제 발생 → 원인 추적 결과 `GoogleMLKit`(얼굴 스캔용) Pod들이 Apple Silicon arm64 시뮬레이터 슬라이스를 제공하지 않는 게 근본 원인으로 확정됨. 상세는 루트 `../../CLAUDE.md` iOS 빌드 트러블슈팅 §6 참고 — **시뮬레이터 빌드 자체가 현재 불가능하며, 실기기(§4.5의 3번 항목, ios-deploy)로만 검증 가능**.
+
+### 4.6 백엔드 API 스키마 전수 조사 (Phase 1)
+
+프론트-백엔드 동기화를 위해 백엔드(`mirror-soul-back`) 전체를 정밀 조사해서 저장소 루트 `.claude/artifacts/`에 산출했다:
+
+- `backend-schema.json` — 12개 컨트롤러·46개 엔드포인트 전수(요청/응답 DTO, 검증 규칙), 47개 에러코드 전수. 에러코드 매핑은 처음엔 이름 기반 추론이었으나, 이후 **19개 Service 클래스의 실제 `throw` 호출부 70곳을 전부 대조**해서 검증했다 (`verified: true`). 이 과정에서 정의만 있고 코드베이스 어디서도 안 던져지는 에러코드 9개(`DUPLICATE_LOGINID`, `FILE_EMPTY` 등)를 확인했다.
+- `analysis-report.md` — `ApiResponse<T>` 실제 구조, 프론트-백엔드 API 커버리지 격차(§6.1 참고), 아키텍처 특이사항 서술.
+
+**중요**: 이 두 파일은 조사 시점의 스냅샷이다. 백엔드 코드가 그 이후 바뀌었을 수 있으니, 실제로 뭔가 이상하면 백엔드 코드를 다시 확인할 것 — 하지만 처음부터 다시 조사하는 것보다는 이 파일을 기준점 삼아 달라진 부분만 확인하는 게 훨씬 빠르다.
+
+### 4.7 Profile/my-page 백엔드 연동 (`feat/134-api`, merge 완료)
+
+§4.6에서 찾은 FE-BE 커버리지 격차 중 Profile/my-page 도메인을 실제로 연동했다:
+
+- 신규: `src/types/api/profile.ts`, `src/services/profileService.ts`, `src/utils/apiErrorCode.ts`(공통 에러코드 유틸리티 — 향후 Chat/Meeting/Evolve/PushDevice 연동 시에도 재사용).
+- 마이페이지 6개 화면(로그아웃, 닉네임 변경, 회원탈퇴, 시간 조회/충전, 오디오 속도, 알림 설정 중 "시간 소진 알림")을 `console.log`/하드코딩 mock에서 실제 API 호출로 교체.
+- 이때는 zustand 스토어(`useAccountStore`, `useCallTimeStore`, `useVoiceAudioStore`, `useNotificationStore`)에 `fetchXxx()` async 액션을 추가하는 패턴을 썼다 — **이 패턴은 §4.8에서 react-query로 전면 교체되어 더 이상 쓰지 않는다.**
+
+### 4.8 Profile/my-page 고도화 — Toast/UX 하드닝 + react-query 전면 마이그레이션 (`feat/136-mypage-api-advancement`, 지금 이 브랜치)
+
+`feat/134-api`가 만든 API 연동을 두 단계로 고도화했다. **1단계**를 다 만든 뒤 사용자가 "왜 이미 설치돼 있고 다른 화면(`useInterviewQuestions.ts`)에 선례가 있는 `@tanstack/react-query`를 안 쓰냐"고 지적해서, **2단계에서 1단계 산출물 상당수를 react-query로 대체**했다. 두 단계 다 구현/검증(lint+tsc+test) 완료, **아직 git commit 전**이다.
+
+**1단계 (UX 하드닝, 이후 일부 대체됨)**:
+- `src/components/common/Toast/ToastProvider.tsx` 신규 — `Context`+`useToast()` 훅, `app/_layout.tsx`에 마운트. 스토어 등 React 컴포넌트 밖에서도 토스트를 띄울 수 있게 모듈 레벨 브릿지(`showGlobalToast`)도 노출 (React Navigation의 `navigationRef` 패턴과 동일).
+- `src/utils/fetchGuard.ts` 신규 — in-flight dedup + staleness 캐시. **→ 2단계에서 삭제됨** (react-query가 기본 제공).
+- zustand 스토어들에 `if (response.isSuccess)` 체크 추가 — 알고 보니 `apiClient.ts` 인터셉터가 이미 `isSuccess===false`면 reject하므로 **죽은 코드**였다 (2단계에서 자연히 없어짐).
+- `apiClient.ts` 세션 만료(refresh 실패) 시 `showGlobalToast(...)` 안내 추가 — **유지됨**.
+- jest-expo 테스트 인프라 신규 (§3의 "겪었던 삽질" 참고) + `apiErrorCode.test.ts`(11 tests)/`profileService.test.ts`(10 tests) — **유지됨, 2단계에서도 그대로 통과**.
+
+**2단계 (react-query 마이그레이션, 최신 상태)**:
+- 상세 패턴은 `../CLAUDE.md`의 "API 연동 패턴" 절 참고 — 이 문서에서는 무엇을 했는지만 요약.
+- `src/services/queryClient.ts` 신규(싱글턴 `QueryClient`, `app/_layout.tsx`와 `apiClient.ts` 양쪽이 참조 — 순환참조 회피용).
+- 신규 쿼리/뮤테이션 훅: `useProfileQuery`, `useAccountInfoQuery`+`useModifyNicknameMutation`, `useTimeStatusQuery`+`useBuyTimeMutation`, `useDeleteAccountMutation` (전부 `src/features/{profile,account}/hooks/`). `useVoiceAudioSettings.ts`/`useNotificationSettings.ts`는 기존 파일을 훅 내부에서 `useQuery`+`useMutation` 쓰도록 전면 재작성(화면 컴포넌트는 안 건드림).
+- **삭제**: `src/utils/fetchGuard.ts`, `src/store/useAccountStore.ts`, `src/store/useCallTimeStore.ts` — 전부 react-query 캐시로 완전 대체.
+- **zustand는 다음 두 개로 스코프 축소**: `useVoiceAudioStore`(`speechSpeed`만 — `useAICallFlow.ts`가 훅 없이 `getState()`로 동기 접근할 미러 용도, 단 실제로 `useAICallFlow.ts`가 아직 이 값을 안 읽고 있음을 확인함 — 향후 연동 예정 필드), `useNotificationStore`(`eventAlert`만 — 백엔드 대응 개념이 아예 없는 순수 로컬 설정).
+- `formatCallTime`을 `useCallTimeStore.ts`에서 `src/utils/formatCallTime.ts`(순수 함수)로 이동 — 스토어 삭제와 무관하게 여러 컴포넌트가 계속 참조.
+- 검증: `npx tsc --noEmit`(건드린 파일 기준 새 에러 0), `npm run lint`(건드린 파일 기준 새 에러 0, 기존 pre-existing warning만), `npm test`(21/21 통과, `apiErrorCode.test.ts`+`profileService.test.ts` 모두 그대로).
+- **실기기/시뮬레이터 검증은 아직 못 함** — §4.5의 5번 항목(GoogleMLKit이 Apple Silicon 시뮬레이터 슬라이스를 안 갖고 있어 `mirrorsoul` 스킴 자체가 시뮬레이터로 빌드 불가능, 근본 원인 확정됨)에 막혀서 UI 동작 확인이 안 된 상태다. **다음 세션에서 이어서 할 일**: §4.5의 3번 항목(`ios-deploy` 경유 실기기 설치)으로 마이페이지 플로우(닉네임 변경, 시간 충전, 오디오/알림 토글, 회원탈퇴)를 실제로 눌러보고 확인할 것 — 시뮬레이터로는 이 앱을 검증할 수 없다는 점을 다음 세션이 반복해서 재발견하지 않도록 유의.
+- **아직 git add/commit 안 됨** — 사용자가 명시적으로 "커밋은 아직 하지 마세요"라고 함 (시뮬레이터 검증 먼저 원함). `git status`로 변경분 확인 후 커밋 진행할 것.
+
 ---
 
 ## 5. 향후 세션을 위한 실전 팁
 
-- **브랜치 전환 시 항상 `git branch --show-current`로 재확인할 것.** 이 세션에서 사용자가 로컬 터미널로 동시에 브랜치를 왔다갔다 하면서 내가 체크아웃한 브랜치가 바뀐 적이 있다. 같은 작업 디렉토리를 사람과 동시에 쓰고 있을 수 있다는 걸 전제해야 한다.
-- **`git add`는 항상 특정 파일만 지정할 것 (`git add -A`/`git add .` 금지).** 사용자가 로컬에 Firebase 연동(`GoogleService-Info.plist`, `plugins/withFmtConstevalFix.js`, `app.json`/`package.json`의 미커밋 로컬 변경)을 진행 중이며, 이 세션 내내 커밋되지 않은 채로 작업 디렉토리에 남아있다. 이건 사용자의 별도 작업이니 내 브랜치 커밋에 섞으면 안 된다.
-- **`gh` CLI가 이 환경에 없다.** PR은 `git push -u origin <branch>` 후 `https://github.com/Mirror-Soul/RN/pull/new/<branch>` 링크와 미리 작성한 title/body를 안내하는 방식으로 처리했다. GitHub Issue도 마찬가지로 못 만드므로, 이슈 트래킹이 필요하면 `docs/*_BACKLOG.md` 같은 문서로 대체한다.
-- **tsc 베이스라인은 의도적으로 88개 에러가 남아있다** (`main` 기준. `feat/123-dx-logic`에서는 svg.d.ts 덕에 34개로 줄어듦). 새 작업을 할 때는 절대 개수가 아니라 **작업 전/후 diff로 새 에러가 없는지만 확인**하면 된다 (`git stash` 전후 비교, 또는 그냥 건드린 파일만 `grep`).
-- **7개 MVP 브랜치는 각각 `main`에서 독립적으로 분기했다.** 순서 상관없이 머지 가능하지만, `feat/mvp-biometric-consent` + `feat/mvp-age-gate`는 같은 파일(`Step1AccountContainer.tsx`, `step1.ts`, `consentContent.ts`, `ConsentDetailSheet.tsx`)을 건드려서 사소한 충돌이 예상된다 (§2 참고).
+일반적인 git/빌드 습관(브랜치 재확인, `git add` 특정 파일만, `gh` CLI 없음, tsc 베이스라인 diff 확인법 등)은 저장소 루트 `../../CLAUDE.md`와 `../CLAUDE.md`로 옮겼다 — 거기가 최신이니 그쪽을 볼 것. 아래는 이 문서에만 있는, 브랜치 히스토리에 특화된 메모:
+
+- 사용자가 로컬에 별도로 Firebase 연동 실험(`GoogleService-Info.plist`, `plugins/withFmtConstevalFix.js` 등)을 진행할 때가 있다. 미커밋 상태로 작업 디렉토리에 남아있을 수 있으니, `git status`에서 낯선 파일이 보이면 지우지 말고 사용자의 진행 중인 작업일 가능성을 먼저 의심할 것.
+- §2의 7개 MVP 브랜치 + header-bottom-ui + feat/134-api는 이미 전부 `main`에 merge되어 있다 — 과거에 있었던 충돌 지점은 더 이상 재현되지 않는다.
+- **"고도화"를 요청받으면**: 표면적인 UX 폴리시(토스트, 스피너)만 추가하지 말고, 먼저 그 문제에 대해 프로젝트에 이미 설치돼 있지만 충분히 안 쓰인 라이브러리/컨벤션이 있는지 확인할 것 (`package.json`, 기존 코드의 일회성 선례 grep). §4.8이 정확히 이 교훈에서 나온 재작업이었다.
+- **아키텍처/라이브러리 경계 관련 질문은 실무적 근거를 먼저 제시할 것.** 사용자는 `AskUserQuestion`으로 옵션만 던지는 것보다, "실무적으로는 어떻게 하나요?" 같은 질문에 구체적 이유(업계 표준, 이 코드베이스에서의 실제 트레이드오프)를 먼저 설명해주는 걸 선호한다.
 
 ---
 
 ## 6. 고도화(Enhancement) 로드맵
 
 ### 6.1 지금 바로 RN 단독으로 해볼 만한 것
-- [ ] `src/components/home/main/AvailableTimeCard.tsx`와 `src/features/profile/components/AvailableTimeCard.tsx` — 이름은 같지만 완전히 다른 두 컴포넌트를 하나로 통합 (디자인 결정 필요, `refactor/mvp-call-time-display`에서 상태만 통일하고 UI 병합은 안 함)
-- [ ] `src/components/home/main/RefillModal.tsx`와 `src/features/profile/components/TimeRefillBottomSheet.tsx` — 마찬가지로 UI 자체를 하나로 병합
+- [x] ~~회원탈퇴/로그아웃/닉네임변경/시간조회·충전/오디오설정/알림설정(일부)을 실제 API로 연결~~ → `feat/134-api`에서 완료 (§4.7)
+- [x] ~~Toast/로딩 스피너/dedup-guard UX 하드닝, react-query로 서버 상태 관리 전면 전환~~ → `feat/136-mypage-api-advancement`에서 완료, 커밋 전 (§4.8)
+- [ ] `src/components/home/main/AvailableTimeCard.tsx`와 `src/features/profile/components/AvailableTimeCard.tsx` — 이름은 같지만 완전히 다른 두 컴포넌트를 하나로 통합 (디자인 결정 필요, 상태/API 연동은 이미 통일됨, UI 병합만 안 함)
+- [ ] `src/components/home/main/RefillModal.tsx`와 `src/features/profile/components/TimeRefillBottomSheet.tsx` — 마찬가지로 UI 자체를 하나로 병합 (`TimeRefillBottomSheet.tsx`만 실제 `buyTime` API에 연결됨, `RefillModal.tsx`는 여전히 UI만 있고 API 미연결)
 - [ ] `chore/mvp-app-store-config`의 `REPLACE_WITH_EAS_PROJECT_ID` placeholder 2곳 — `eas init` 실행 후 실제 값으로 교체
-- [ ] Sentry DSN 실제 발급받아 `.env`에 설정하고 크래시 리포팅 동작 확인
-- [ ] `docs/DX_TYPE_LINT_BACKLOG.md`에 정리된 남은 tsc 34개 / lint 14개 에러를 파일별로 점진적으로 해결 (한 번에 다 하지 말고 카테고리별로 작게)
-- [ ] `docs/TODO_BACKLOG.md`의 나머지 TODO 6건 — 얼굴 스캔 라우트, 이미지 업로드 API 연동, 찜/공유 기능 스코프 확정 등
-- [ ] `message-room`(채팅) — 지금은 100% 로컬 mock. `docs/MULTI_DEVICE_CALL_CHAT_ARCHITECTURE.md`의 설계를 참고해 실제 구현 착수 가능 (단, 백엔드 채팅 API가 없으므로 백엔드 협업 필요 항목과 겹침)
+- [ ] Sentry DSN 실제 발급받아 `.env`에 설정하고 크래시 리포팅 동작 확인 (발급 전까지는 `plugins/withSentryDisableAutoUpload.js`가 소스맵 업로드 실패를 막아주고 있음 — §4.5)
+- [ ] 남은 tsc/lint 에러 정리 (`docs/DX_TYPE_LINT_BACKLOG.md`는 §1의 이유로 위치 불확실 — 있으면 참고, 없으면 `npx tsc --noEmit`/`npm run lint`로 새로 그룹핑)
+- [ ] `docs/TODO_BACKLOG.md`의 나머지 TODO — 얼굴 스캔 라우트, 이미지 업로드 API 연동, 찜/공유 기능 스코프 확정 등 (마찬가지로 위치 불확실)
+- [ ] **Chat/Meeting/PushDevice/Evolve API 연동** — `message-room`(채팅)은 지금도 100% 로컬 mock, 매칭 수락/거절 버튼은 `onPress`조차 없음. 백엔드 API는 이미 있다(`.claude/artifacts/backend-schema.json`의 `ChatController`/`MeetingController`/`PushDeviceController`/`EvolveController`) — `feat/134-api`+`feat/136-mypage-api-advancement`에서 확립한 react-query 기반 서비스 레이어 패턴(`../CLAUDE.md`)을 그대로 적용하면 된다.
 
 ### 6.2 백엔드 협업이 필요한 것 (RN 단독으로 못 끝남)
-- [ ] **실제 IAP/결제 연동** (Track 2) — `react-native-iap` 또는 RevenueCat, 서버 잔액 관리 API, `useAICallFlow.ts`의 `startCall()`에 사전 잔액 체크 추가. 현재 통화 시작 시 잔액 확인이 전혀 없어 실제로는 누구나 무제한 통화가 가능한 상태임을 재확인할 것
-- [ ] 회원탈퇴 실제 API (30일 소프트 삭제 → 영구 삭제, 생체정보 원본 파일 삭제 포함) — `AccountDeleteScreen.tsx`는 여전히 `logger.debug` 한 줄짜리 mock
-- [ ] 차단/신고의 서버 사이드 강제 — `feat/mvp-block-report`의 로컬 차단목록은 "내 화면에서 안 보이게"만 할 뿐, 상대가 실제로 연락 못 하게 막지는 못함
+- [ ] **실제 IAP/결제 연동** (Track 2) — `react-native-iap` 또는 RevenueCat, 영수증 검증 API. `POST /my-page/buy-time`은 `feat/134-api`로 실제 연동됐지만 **결제 검증 없이 초 단위 값을 그대로 더해주는 API**다(백엔드 자체가 아직 mock에 가까움, `analysis-report.md` §5 참고) — `useAICallFlow.ts`의 `startCall()`에 사전 잔액 체크가 여전히 없어 무료로 무제한 통화가 가능한 상태임을 재확인할 것
+- [ ] 차단/신고의 서버 사이드 강제 — `feat/mvp-block-report`의 로컬 차단목록은 "내 화면에서 안 보이게"만 할 뿐, 상대가 실제로 연락 못 하게 막지는 못함. 백엔드에 차단/신고 API 자체가 없음(`backend-schema.json` 12개 컨트롤러에 없음) — 신규 백엔드 API 설계부터 필요
 - [ ] PASS 본인인증 벤더 계약 및 실제 연동 (`fix/mvp-remove-fake-pass-verification`은 가짜 UI만 제거, 실제 연동은 비즈니스 결정 대기)
-- [ ] 채팅 영속화 API (`docs/MULTI_DEVICE_CALL_CHAT_ARCHITECTURE.md` §5 참고)
-- [ ] 멀티기기(여러 휴대폰) 통화/채팅 — `docs/MULTI_DEVICE_CALL_CHAT_ARCHITECTURE.md`에 설계만 있고 구현은 시작 안 함. 백엔드 시그널링 서버를 1:1 relay에서 room 기반 브로드캐스트로 바꿔야 함
+- [ ] 회원탈퇴의 "30일 후 영구 삭제" 실제 이행 여부 미확인 — `DELETE /my-page`는 상태를 `INACTIVE`로 바꿀 뿐, 30일 뒤 실제로 데이터를 지우는 배치/스케줄러가 백엔드 Service 계층에서는 발견되지 않았다(`analysis-report.md` §7). 별도 스케줄드 잡이 있는지 백엔드 쪽에 확인 필요
+- [ ] 멀티기기(여러 휴대폰) 통화/채팅 — `docs/MULTI_DEVICE_CALL_CHAT_ARCHITECTURE.md`(위치 불확실, §1 참고)에 설계만 있고 구현은 시작 안 함. 백엔드 시그널링 서버를 1:1 relay에서 room 기반 브로드캐스트로 바꿔야 함
 
 ### 6.3 법무/콘텐츠 (코드 아님)
 - [ ] `feat/mvp-biometric-consent`, `feat/mvp-age-gate`에서 작성한 동의 문구(`src/constants/consentContent.ts`)는 엔지니어가 초안으로 작성한 것 — **정식 출시 전 반드시 법무 검토**를 거쳐 실제 문구로 교체
@@ -119,10 +177,14 @@
 
 ## 7. 참고 문서 링크 모음
 
-| 문서 | 위치(브랜치) | 내용 |
+| 문서 | 위치 | 내용 |
 |---|---|---|
-| `docs/DX_TYPE_LINT_BACKLOG.md` | `feat/123-dx-logic` | 남은 tsc/lint 에러 그룹별 정리 |
-| `docs/TODO_BACKLOG.md` | `feat/123-dx-logic` | 백엔드/제품 결정 필요한 TODO 목록 |
-| `docs/MULTI_DEVICE_CALL_CHAT_ARCHITECTURE.md` | `feat/123-dx-logic` | 멀티기기 통화/채팅 설계 제안 |
-| `.claude/skills/dx-audit/SKILL.md` | `feat/123-dx-logic` | 재사용 가능한 DX 점검 체크리스트 스킬 |
-| `docs/MVP_WORK_LOG_AND_ROADMAP.md` (이 문서) | `docs/mvp-work-summary` | 전체 작업 로그 + 고도화 로드맵 |
+| `../../CLAUDE.md` | `docs/claude-code-efficiency-guide` (이 브랜치 워킹트리에도 복사됨, §1 주의사항 참고) | 모노레포 공통: 저장소 구조, git 습관, 백엔드 API 정본 위치, iOS 빌드 트러블슈팅 |
+| `../CLAUDE.md` | `docs/claude-code-efficiency-guide` (이 브랜치 워킹트리에도 복사됨, §1 주의사항 참고) | RN 앱 컨벤션: react-query 기반 API 연동 패턴, 상태관리, 에러코드 유틸리티 |
+| `.claude/artifacts/backend-schema.json` | `docs/claude-code-efficiency-guide` (이 브랜치 워킹트리에도 복사됨) | 백엔드 12개 컨트롤러·46개 엔드포인트·47개 에러코드 전수 (Service 계층까지 검증됨) |
+| `.claude/artifacts/analysis-report.md` | `docs/claude-code-efficiency-guide` (이 브랜치 워킹트리에도 복사됨) | 백엔드 아키텍처 분석 + FE-BE 커버리지 격차 |
+| `docs/MVP_WORK_LOG_AND_ROADMAP.md` (이 문서) | `feat/136-mypage-api-advancement` | 전체 작업 로그 + 고도화 로드맵 |
+| `docs/DX_TYPE_LINT_BACKLOG.md` | `feat/123-dx-logic`(위치 불확실, §1) | 남은 tsc/lint 에러 그룹별 정리 |
+| `docs/TODO_BACKLOG.md` | `feat/123-dx-logic`(위치 불확실, §1) | 백엔드/제품 결정 필요한 TODO 목록 |
+| `docs/MULTI_DEVICE_CALL_CHAT_ARCHITECTURE.md` | `feat/123-dx-logic`(위치 불확실, §1) | 멀티기기 통화/채팅 설계 제안 |
+| `.claude/skills/dx-audit/SKILL.md` | `feat/123-dx-logic`(위치 불확실, §1) | 재사용 가능한 DX 점검 체크리스트 스킬 |
