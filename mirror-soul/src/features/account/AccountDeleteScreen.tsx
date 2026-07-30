@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Alert, View, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { Header } from '@/src/components/common/Header';
@@ -8,17 +8,20 @@ import { ScreenLayout } from '@/src/components/common/ScreenLayout';
 import { DeleteWarningSection } from './components/DeleteWarningSection';
 import { DeleteConsentSection } from './components/DeleteConsentSection';
 import { DeleteConfirmBottomSheet } from './components/DeleteConfirmBottomSheet';
-import { deleteAccount } from '@/src/services/profileService';
+import { useDeleteAccountMutation } from './hooks/useDeleteAccountMutation';
 import { logout as logoutApi } from '@/src/services/authService';
 import { useAuthStore } from '@/src/store/useAuthStore';
 import { getErrorDisplayMessage } from '@/src/utils/apiErrorCode';
 import { logger } from '@/src/utils/logger';
+import { useToast } from '@/src/components/common/Toast/ToastProvider';
 
 export const AccountDeleteScreen = () => {
   const { colors } = useThemeColors();
   const router = useRouter();
+  const { showToast } = useToast();
   const [isConsentChecked, setIsConsentChecked] = useState(false);
   const [isConfirmSheetOpen, setIsConfirmSheetOpen] = useState(false);
+  const deleteAccountMutation = useDeleteAccountMutation();
 
   const toggleConsent = () => setIsConsentChecked(!isConsentChecked);
 
@@ -30,8 +33,9 @@ export const AccountDeleteScreen = () => {
   const handleCloseConfirm = () => setIsConfirmSheetOpen(false);
 
   const performDeleteAccount = async () => {
+    if (deleteAccountMutation.isPending) return; // 연타로 인한 중복 탈퇴 요청 방지
     try {
-      await deleteAccount();
+      await deleteAccountMutation.mutateAsync();
       try {
         await logoutApi();
       } catch (error) {
@@ -43,7 +47,7 @@ export const AccountDeleteScreen = () => {
       router.replace('/');
     } catch (error) {
       setIsConfirmSheetOpen(false);
-      Alert.alert('회원 탈퇴 실패', getErrorDisplayMessage(error, '회원 탈퇴에 실패했습니다. 잠시 후 다시 시도해주세요.'));
+      showToast(getErrorDisplayMessage(error, '회원 탈퇴에 실패했습니다. 잠시 후 다시 시도해주세요.'), 'error');
     }
   };
 

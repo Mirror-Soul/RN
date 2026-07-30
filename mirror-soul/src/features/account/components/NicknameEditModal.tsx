@@ -17,8 +17,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useAccountStore } from '@/src/store/useAccountStore';
-import { modifyNickname } from '@/src/services/profileService';
+import { useAccountInfoQuery } from '../hooks/useAccountInfoQuery';
+import { useModifyNicknameMutation } from '../hooks/useModifyNicknameMutation';
 import { getErrorDisplayMessage } from '@/src/utils/apiErrorCode';
 
 const nicknameSchema = z.object({
@@ -38,8 +38,10 @@ interface NicknameEditModalProps {
 
 export const NicknameEditModal = ({ isOpen, onClose }: NicknameEditModalProps) => {
   const { colors, isDark } = useThemeColors();
-  
-  const { nickname, setNickname } = useAccountStore();
+
+  const { data: accountInfo } = useAccountInfoQuery();
+  const nickname = accountInfo?.name ?? '';
+  const modifyNicknameMutation = useModifyNicknameMutation();
 
   const {
     control,
@@ -61,8 +63,7 @@ export const NicknameEditModal = ({ isOpen, onClose }: NicknameEditModalProps) =
 
   const onSubmit = async (data: NicknameFormData) => {
     try {
-      await modifyNickname(data.nickname);
-      setNickname(data.nickname);
+      await modifyNicknameMutation.mutateAsync(data.nickname);
       onClose();
     } catch (error) {
       setError('nickname', { message: getErrorDisplayMessage(error, '닉네임 변경에 실패했습니다.') });

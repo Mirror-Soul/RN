@@ -7,7 +7,7 @@ import Constants from 'expo-constants';
 
 import { NicknameEditModal } from './components/NicknameEditModal';
 import { LogoutBottomSheet } from './components/LogoutBottomSheet';
-import { useAccountStore } from '@/src/store/useAccountStore';
+import { useAccountInfoQuery } from './hooks/useAccountInfoQuery';
 import { useAuthStore } from '@/src/store/useAuthStore';
 import { logout as logoutApi } from '@/src/services/authService';
 import { logger } from '@/src/utils/logger';
@@ -20,7 +20,8 @@ import {FontFamily, FontSize, FontWeight, Radii, Spacing} from '@/src/constants/
 
 export const AccountSettingsScreen = () => {
   const router = useRouter();
-  const { nickname } = useAccountStore();
+  const { data: accountInfo } = useAccountInfoQuery();
+  const nickname = accountInfo?.name ?? '';
   const { colors } = useThemeColors();
   const appVersion = Constants.expoConfig?.version || '1.0.0';
 
