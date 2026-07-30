@@ -42,7 +42,8 @@ export const Header = ({
     } else if (router.canGoBack()) {
       router.back();
     } else {
-      router.replace('/'); // Fallback if no history
+      // Header는 인증 후 (main) 화면들에서만 쓰이므로, 히스토리가 없을 때의 안전한 기본값은 홈이다.
+      router.replace('/(main)'); // Fallback if no history
     }
   };
 

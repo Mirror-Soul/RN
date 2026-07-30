@@ -46,9 +46,13 @@ export const AccountSettingsScreen = () => {
       // 서버 세션 정리가 실패해도 로컬 로그아웃(토큰 삭제)은 계속 진행
       logger.error('AccountSettingsScreen: /auth/logout failed', error);
     }
-    await useAuthStore.getState().logout();
-    setIsLogoutSheetOpen(false);
-    router.replace('/');
+    // 이후 단계가 예상치 못한 이유로 실패하더라도 로그인 화면 이동은 항상 보장한다
+    try {
+      await useAuthStore.getState().logout();
+    } finally {
+      setIsLogoutSheetOpen(false);
+      router.replace('/login');
+    }
   };
 
   const handleWithdraw = () => {

@@ -39,20 +39,28 @@ export const AccountDeleteScreen = () => {
     isDeletingRef.current = true;
     try {
       await deleteAccountMutation.mutateAsync();
-      try {
-        await logoutApi();
-      } catch (error) {
-        // 탈퇴는 이미 성공했으므로 서버 세션 정리 실패는 무시하고 로컬 로그아웃은 계속 진행
-        logger.error('AccountDeleteScreen: /auth/logout after delete failed', error);
-      }
-      await useAuthStore.getState().logout();
-      setIsConfirmSheetOpen(false);
-      router.replace('/');
     } catch (error) {
       setIsConfirmSheetOpen(false);
       showToast(getErrorDisplayMessage(error, '회원 탈퇴에 실패했습니다. 잠시 후 다시 시도해주세요.'), 'error');
-    } finally {
       isDeletingRef.current = false;
+      return;
+    }
+
+    // 탈퇴 자체는 이미 성공했으므로, 이후 로그아웃 처리가 예상치 못한 이유로
+    // 실패하더라도 로그인 화면 이동은 항상 보장한다 (탈퇴 성공 후 화면에 머무는 것을 방지)
+    try {
+      await logoutApi();
+    } catch (error) {
+      logger.error('AccountDeleteScreen: /auth/logout after delete failed', error);
+    }
+    try {
+      await useAuthStore.getState().logout();
+    } catch (error) {
+      logger.error('AccountDeleteScreen: local logout after delete failed', error);
+    } finally {
+      setIsConfirmSheetOpen(false);
+      isDeletingRef.current = false;
+      router.replace('/login');
     }
   };
 

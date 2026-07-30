@@ -94,7 +94,8 @@ export default function FaceScanScreen() {
 
   // --- 이벤트 핸들러 ---
   const handleNext = () => {
-    router.replace('/');
+    // '/'는 (main) 홈 탭과 로그인 화면이 동시에 매칭될 수 있어 명시적으로 홈을 지정한다.
+    router.replace('/(main)');
   };
 
   // --- 텍스트 결정 로직 ---

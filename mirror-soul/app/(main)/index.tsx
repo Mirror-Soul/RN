@@ -61,12 +61,13 @@ export default function MainHomeScreen() {
               } catch (error) {
                 logger.warn('Server logout failed, proceeding with local logout', error);
               } finally {
+                // 이후 단계가 예상치 못한 이유로 실패하더라도 로그인 화면 이동은 항상 보장한다
                 try {
                   await useAuthStore.getState().logout();
-                  router.replace('/');
                 } catch (localError) {
                   logger.error('Local logout failed', localError);
-                  Alert.alert('알림', '로그아웃 처리 중 문제가 발생했습니다.');
+                } finally {
+                  router.replace('/login');
                 }
               }
             }, 100);
