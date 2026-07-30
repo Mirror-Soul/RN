@@ -5,7 +5,7 @@
 >
 > **먼저 볼 것**: 저장소 루트 `../../CLAUDE.md`(모노레포 공통: git 습관, 백엔드 API 정본 위치, iOS 빌드 트러블슈팅)와 `../CLAUDE.md`(RN 앱 컨벤션: API 서비스 레이어 패턴, react-query 마이그레이션 이후의 최신 상태관리 패턴) — 이 문서는 "무엇을 했고 무엇이 남았는지"에 집중하고, "어떻게 하는지"는 그 두 파일에 정리했다.
 >
-> **주의**: 이 세 파일(`../../CLAUDE.md`, `../CLAUDE.md`, `.claude/artifacts/*`)은 원래 `docs/claude-code-efficiency-guide` 브랜치에서 작성됐고, 지금 이 문서가 있는 `feat/136-mypage-api-advancement` 브랜치에는 없었다 (두 브랜치가 별개로 `main`에서 분기됨). 2026-07-30 세션에서 `git show`로 해당 브랜치의 최신 버전을 그대로 이 브랜치 워킹트리에도 복사해서 반영했다 (커밋 전 상태). 두 브랜치가 나중에 각자 머지되면 이 파일들의 내용이 중복/충돌할 수 있으니 유의할 것.
+> **주의**: 이 세 파일(`../../CLAUDE.md`, `../CLAUDE.md`, `.claude/artifacts/*`)은 원래 `docs/claude-code-efficiency-guide` 브랜치에서 작성됐고, `feat/136-mypage-api-advancement`/`feat/137-auth-hardening` 브랜치에는 없었다 (두 브랜치가 별개로 `main`에서 분기됨). 2026-07-30 세션에서 `git show`로 해당 브랜치의 최신 버전을 그대로 이 브랜치 워킹트리에도 복사해서 반영했고, `feat/136-mypage-api-advancement`의 `docs:` 커밋으로 이미 커밋됨. 두 브랜치가 나중에 각자 머지되면 이 파일들의 내용이 중복/충돌할 수 있으니 유의할 것.
 
 ---
 
@@ -18,7 +18,8 @@
 5. **iOS 실기기 빌드 트러블슈팅** — `expo-font` 플러그인 스키마 버그, Sentry 소스맵 자동 업로드 실패, Expo CLI의 기기 설치 버그, SDK 버전 정렬 후 `node_modules` 꼬임까지 총 4개의 순차적 빌드 차단 이슈를 진단/수정 (§4.5 참고)
 6. **백엔드 API 스키마 전수 조사 (Phase 1)** — 백엔드 12개 컨트롤러·46개 엔드포인트·47개 에러코드를 Service 계층까지 검증해서 `.claude/artifacts/backend-schema.json`/`analysis-report.md`로 산출 (§4.6 참고)
 7. **Profile/my-page 백엔드 연동** — `feat/134-api` (마이페이지 6개 화면을 실제 API로 연결 + 공통 에러코드 유틸리티 신규) → **`main`에 merge 완료 (PR #135)**
-8. **Profile/my-page 고도화 (1단계+2단계)** — `feat/136-mypage-api-advancement` (Toast/로딩/dedup-guard UX 하드닝 → 이후 프로젝트에 이미 설치돼 있던 react-query로 전면 마이그레이션) → **구현 완료, 아직 커밋 전 / 미merge** (§4.8 참고, 지금 이 브랜치)
+8. **Profile/my-page 고도화 (1단계+2단계)** — `feat/136-mypage-api-advancement` (Toast/로딩/dedup-guard UX 하드닝 → 이후 프로젝트에 이미 설치돼 있던 react-query로 전면 마이그레이션) → **8개 도메인별 커밋으로 정리해 push 완료, 아직 PR 미생성/미merge** (§4.8 참고)
+9. **인증(Auth) 고도화 분석 + 프론트 개선** — `feat/137-auth-hardening` (백엔드/프론트 인증 전수 분석 → 프론트에서 바로 할 수 있는 4가지: 사전 토큰 갱신, 로그아웃 캐시 정리, 로그인/회원가입 react-query 마이그레이션, 비밀번호 찾기 UI 스캐폴딩) → **구현+커밋+push 완료, PR 미생성/미merge** (§4.9 참고, 지금 이 브랜치). 백엔드 변경(리프레시 토큰 rotation, access token 즉시 무효화, rate limiting, 비밀번호 재설정 엔드포인트)은 이번 세션에서 하지 않고 §6.2에 협의 체크리스트로만 정리했다.
 
 ---
 
@@ -37,7 +38,8 @@
 | `refactor/132-header-bottom-ui` | main | ✅ merge 완료 (PR #133) | 탭 헤더 텍스트 스타일 통일, 프로스티드 블러 바텀바, iOS 빌드 차단 이슈 4건 수정 |
 | `feat/134-api` | main | ✅ merge 완료 (PR #135) | 마이페이지(Profile) 6개 화면 실제 API 연동 + 공통 에러코드 유틸리티 |
 | `docs/claude-code-efficiency-guide` | main | 🔵 미merge (상태 불확실) | 루트/`mirror-soul/` `CLAUDE.md` 신규 작성 + 백엔드 스키마 아티팩트 커밋 |
-| `feat/136-mypage-api-advancement` | main (8ffcbdf, feat/134-api merge 직후) | 🟡 구현 완료, 커밋 전 (지금 이 브랜치) | Toast/로딩/에러 UX 하드닝 + react-query 전면 마이그레이션 (§4.8) |
+| `feat/136-mypage-api-advancement` | main (8ffcbdf, feat/134-api merge 직후) | 🟡 커밋+push 완료, PR 미생성 | Toast/로딩/에러 UX 하드닝 + react-query 전면 마이그레이션 (§4.8) |
+| `feat/137-auth-hardening` | `feat/136-mypage-api-advancement` (0db0ce7) | 🟡 커밋+push 완료, PR 미생성 (지금 이 브랜치) | 백엔드/프론트 인증 전수 분석 + 사전 토큰 갱신/로그아웃 캐시 정리/로그인·회원가입 react-query 마이그레이션/비밀번호 찾기 스캐폴딩 (§4.9) |
 
 ---
 
@@ -110,7 +112,7 @@
 
 ### 4.8 Profile/my-page 고도화 — Toast/UX 하드닝 + react-query 전면 마이그레이션 (`feat/136-mypage-api-advancement`, 지금 이 브랜치)
 
-`feat/134-api`가 만든 API 연동을 두 단계로 고도화했다. **1단계**를 다 만든 뒤 사용자가 "왜 이미 설치돼 있고 다른 화면(`useInterviewQuestions.ts`)에 선례가 있는 `@tanstack/react-query`를 안 쓰냐"고 지적해서, **2단계에서 1단계 산출물 상당수를 react-query로 대체**했다. 두 단계 다 구현/검증(lint+tsc+test) 완료, **아직 git commit 전**이다.
+`feat/134-api`가 만든 API 연동을 두 단계로 고도화했다. **1단계**를 다 만든 뒤 사용자가 "왜 이미 설치돼 있고 다른 화면(`useInterviewQuestions.ts`)에 선례가 있는 `@tanstack/react-query`를 안 쓰냐"고 지적해서, **2단계에서 1단계 산출물 상당수를 react-query로 대체**했다. 두 단계 다 구현/검증(lint+tsc+test) 완료, 2026-07-30 세션에서 8개 도메인별 커밋으로 정리해 push 완료.
 
 **1단계 (UX 하드닝, 이후 일부 대체됨)**:
 - `src/components/common/Toast/ToastProvider.tsx` 신규 — `Context`+`useToast()` 훅, `app/_layout.tsx`에 마운트. 스토어 등 React 컴포넌트 밖에서도 토스트를 띄울 수 있게 모듈 레벨 브릿지(`showGlobalToast`)도 노출 (React Navigation의 `navigationRef` 패턴과 동일).
@@ -127,8 +129,33 @@
 - **zustand는 다음 두 개로 스코프 축소**: `useVoiceAudioStore`(`speechSpeed`만 — `useAICallFlow.ts`가 훅 없이 `getState()`로 동기 접근할 미러 용도, 단 실제로 `useAICallFlow.ts`가 아직 이 값을 안 읽고 있음을 확인함 — 향후 연동 예정 필드), `useNotificationStore`(`eventAlert`만 — 백엔드 대응 개념이 아예 없는 순수 로컬 설정).
 - `formatCallTime`을 `useCallTimeStore.ts`에서 `src/utils/formatCallTime.ts`(순수 함수)로 이동 — 스토어 삭제와 무관하게 여러 컴포넌트가 계속 참조.
 - 검증: `npx tsc --noEmit`(건드린 파일 기준 새 에러 0), `npm run lint`(건드린 파일 기준 새 에러 0, 기존 pre-existing warning만), `npm test`(21/21 통과, `apiErrorCode.test.ts`+`profileService.test.ts` 모두 그대로).
-- **실기기/시뮬레이터 검증은 아직 못 함** — §4.5의 5번 항목(GoogleMLKit이 Apple Silicon 시뮬레이터 슬라이스를 안 갖고 있어 `mirrorsoul` 스킴 자체가 시뮬레이터로 빌드 불가능, 근본 원인 확정됨)에 막혀서 UI 동작 확인이 안 된 상태다. **다음 세션에서 이어서 할 일**: §4.5의 3번 항목(`ios-deploy` 경유 실기기 설치)으로 마이페이지 플로우(닉네임 변경, 시간 충전, 오디오/알림 토글, 회원탈퇴)를 실제로 눌러보고 확인할 것 — 시뮬레이터로는 이 앱을 검증할 수 없다는 점을 다음 세션이 반복해서 재발견하지 않도록 유의.
-- **아직 git add/commit 안 됨** — 사용자가 명시적으로 "커밋은 아직 하지 마세요"라고 함 (시뮬레이터 검증 먼저 원함). `git status`로 변경분 확인 후 커밋 진행할 것.
+- **실기기/시뮬레이터 검증은 아직 못 함** — §4.5의 5번 항목(GoogleMLKit이 Apple Silicon 시뮬레이터 슬라이스를 안 갖고 있어 `mirrorsoul` 스킴 자체가 시뮬레이터로 빌드 불가능, 근본 원인 확정됨)과 `../CLAUDE.md`의 웹 미리보기 크래시(react-native-webrtc, 2026-07-30 확인)에 막혀서 UI 동작 확인이 안 된 상태다. **다음 세션/QA에서 할 일**: §4.5의 3번 항목(`ios-deploy` 경유 실기기 설치)으로 마이페이지 플로우(닉네임 변경, 시간 충전, 오디오/알림 토글, 회원탈퇴)를 실제로 눌러보고 확인할 것 — 시뮬레이터/웹으로는 이 앱을 검증할 수 없다는 점을 다음 세션이 반복해서 재발견하지 않도록 유의.
+- 2026-07-30 세션에서 8개 도메인별 커밋으로 정리해 `origin/feat/136-mypage-api-advancement`에 push 완료. PR은 아직 생성 안 됨 (`gh` CLI 없음 — 루트 CLAUDE.md 참고, compare 링크로 대체 안내).
+
+### 4.9 인증(Auth) 고도화 분석 + 프론트 개선 (`feat/137-auth-hardening`, 지금 이 브랜치)
+
+`feat/136-mypage-api-advancement` 기준으로 분기해서, 로그인/회원가입/토큰 갱신/로그아웃 전 구간을 백엔드(Spring Boot, submodule)와 프론트 양쪽에서 전수 분석한 뒤, **이번 세션에서는 프론트만** 개선했다 — 사용자가 "백엔드는 제가 수정하지 않는다"고 명시적으로 확인.
+
+**분석에서 확인된 사실 (백엔드, `mirror-soul-back`)**:
+- 로그인/회원가입은 이메일+비밀번호뿐, 소셜 로그인 없음(1차 MVP에서 의도적으로 제외됨, 프론트 코드 주석에도 기록됨).
+- Refresh token은 유저당 1개만 DB 컬럼에 평문 저장, rotation 없음, 새 기기 로그인 시 이전 기기 자동 로그아웃(멀티 디바이스 미지원).
+- 로그아웃은 refresh token만 무효화 — access token(최대 1시간)은 자연 만료까지 계속 유효, 서버 측 블랙리스트 없음.
+- `/auth/login`, `/join/send-code`에 rate limiting 없음. `/join/verify-code`에는 개발용 마스터코드(`123456`)가 하드코딩되어 있음.
+- CORS가 `allowedOriginPatterns=["*"]` + `allowCredentials(true)` 조합(안티패턴), `JWT_SECRET` 미설정 시 하드코드 fallback 사용, RBAC 없음(`/admin/**`도 인증만 되면 통과).
+- **비밀번호 재설정 관련 엔드포인트가 전혀 없음** (`backend-schema.json` 기준 로그인/회원가입/refresh/logout뿐).
+
+**프론트 확인 사항**: 인증 흐름(로그인/회원가입/사일런트 리프레시 큐잉/라우트 가드/로그아웃) 자체는 이미 견고하게 구현되어 있었음 — 스텁이 아니었다. `apiClient.ts`의 401 리액티브 갱신 + `isRefreshing`/`failedQueue` 동시성 처리는 이미 잘 되어 있었고, 이번엔 그 위에 사전 갱신을 얹었다.
+
+**이번 세션에서 구현한 것 (프론트, 5개 커밋)**:
+1. `feat(auth): add pre-emptive access token refresh` — `apiClient.ts`에서 `refreshAccessToken()` 추출(순수 리팩터링) + `jwtUtils.ts`의 `getTokenRemainingMs()` + 신규 `src/hooks/useProactiveTokenRefresh.ts`(만료 60초 전 사전 갱신, `AppState` 포그라운드 복귀 시 재계산).
+2. `fix(auth): clear react-query cache on manual logout` — `authService.performLogout()` 신규(서버 세션 정리 실패 무시 → 로컬 로그아웃 → `queryClient.clear()`), 수동 로그아웃 3곳(계정 관리/홈 임시 버튼/회원탈퇴)에 적용. `app/(main)/index.tsx`의 중첩 try/finally 버그(내부 catch가 바깥으로 전파 안 되던 문제)도 같이 수정.
+3. `refactor(signup): migrate step1 account creation to react-query` — `useCreateAccountMutation` 신규.
+4. `feat(auth): add forgot password UI scaffolding` — `app/forgot-password.tsx` + `useForgotPasswordFlow.ts` + `ForgotPasswordScreen.tsx`. 백엔드 엔드포인트가 없어 이메일/인증코드/재설정 3단계 전부 스텁(`setTimeout` 기반 가짜 지연), TODO 주석으로 실제 연동 지점 표시.
+5. `refactor(auth): migrate login to react-query, wire up forgot-password entry` — `useLoginMutation` 신규, `useLoginForm.ts`의 `handleForgotPassword`가 Alert 대신 `/forgot-password`로 라우팅.
+
+**검증**: `npx tsc --noEmit`(건드린 파일 기준 새 에러 0 — `expo-router` typed routes가 신규 `forgot-password` 라우트를 인식 못 해 일시적으로 에러가 났었는데, `npx expo start`를 짧게 한 번 돌려 `.expo/types/router.d.ts`를 재생성해서 해결함, gitignore된 파일이라 커밋 대상 아님), `npx jest`(기존 21/21 통과, 이번 작업에 대한 신규 유닛 테스트는 추가 안 함). **실기기 UI 검증은 다음 QA에서** — §4.5/`../CLAUDE.md`의 이유로 시뮬레이터/웹 둘 다 불가능.
+
+**백엔드 협의가 필요한 항목**은 §6.2로 옮겼다.
 
 ---
 
@@ -147,7 +174,8 @@
 
 ### 6.1 지금 바로 RN 단독으로 해볼 만한 것
 - [x] ~~회원탈퇴/로그아웃/닉네임변경/시간조회·충전/오디오설정/알림설정(일부)을 실제 API로 연결~~ → `feat/134-api`에서 완료 (§4.7)
-- [x] ~~Toast/로딩 스피너/dedup-guard UX 하드닝, react-query로 서버 상태 관리 전면 전환~~ → `feat/136-mypage-api-advancement`에서 완료, 커밋 전 (§4.8)
+- [x] ~~Toast/로딩 스피너/dedup-guard UX 하드닝, react-query로 서버 상태 관리 전면 전환~~ → `feat/136-mypage-api-advancement`에서 완료, push 완료 (§4.8)
+- [x] ~~로그인/회원가입 react-query 마이그레이션, 로그아웃 캐시 정리, 사전 토큰 갱신, 비밀번호 찾기 UI 스캐폴딩~~ → `feat/137-auth-hardening`에서 완료, push 완료 (§4.9)
 - [ ] `src/components/home/main/AvailableTimeCard.tsx`와 `src/features/profile/components/AvailableTimeCard.tsx` — 이름은 같지만 완전히 다른 두 컴포넌트를 하나로 통합 (디자인 결정 필요, 상태/API 연동은 이미 통일됨, UI 병합만 안 함)
 - [ ] `src/components/home/main/RefillModal.tsx`와 `src/features/profile/components/TimeRefillBottomSheet.tsx` — 마찬가지로 UI 자체를 하나로 병합 (`TimeRefillBottomSheet.tsx`만 실제 `buyTime` API에 연결됨, `RefillModal.tsx`는 여전히 UI만 있고 API 미연결)
 - [ ] `chore/mvp-app-store-config`의 `REPLACE_WITH_EAS_PROJECT_ID` placeholder 2곳 — `eas init` 실행 후 실제 값으로 교체
@@ -162,6 +190,15 @@
 - [ ] PASS 본인인증 벤더 계약 및 실제 연동 (`fix/mvp-remove-fake-pass-verification`은 가짜 UI만 제거, 실제 연동은 비즈니스 결정 대기)
 - [ ] 회원탈퇴의 "30일 후 영구 삭제" 실제 이행 여부 미확인 — `DELETE /my-page`는 상태를 `INACTIVE`로 바꿀 뿐, 30일 뒤 실제로 데이터를 지우는 배치/스케줄러가 백엔드 Service 계층에서는 발견되지 않았다(`analysis-report.md` §7). 별도 스케줄드 잡이 있는지 백엔드 쪽에 확인 필요
 - [ ] 멀티기기(여러 휴대폰) 통화/채팅 — `docs/MULTI_DEVICE_CALL_CHAT_ARCHITECTURE.md`(위치 불확실, §1 참고)에 설계만 있고 구현은 시작 안 함. 백엔드 시그널링 서버를 1:1 relay에서 room 기반 브로드캐스트로 바꿔야 함
+- [ ] **인증(Auth) 백엔드 협의 항목** (§4.9에서 분석만 하고 구현은 안 함, 전부 `mirror-soul-back` 쪽 변경 필요):
+  - **로그아웃 시 access token 즉시 무효화**: 현재 `/auth/logout`은 refresh token만 지우고 access token(최대 1시간)은 자연 만료까지 유효함. Redis 블랙리스트(즉시 무효화, 매 요청 조회 필요) vs. TTL 단축(인프라 추가 없음) 트레이드오프 논의 필요 — 프론트에 사전 갱신(§4.9)이 이미 들어갔으므로 TTL을 5~10분으로 줄여도 UX 저하가 크지 않음. 실제 access token TTL 값도 확인 필요(사전 갱신 마진 튜닝에 필요).
+  - **로그인/이메일 인증코드 rate limiting**: `/auth/login`, `/join/send-code`에 시도 횟수 제한 없음. `/join/verify-code`의 개발용 마스터코드(`123456`) 하드코딩이 프로덕션에서 비활성화되는지도 확인 필요.
+  - **비밀번호 재설정 엔드포인트 신규 필요** (현재 전무) — `/join/*` 3단계 패턴 차용, 제안 스펙:
+    - `POST /auth/password/send-code { email }` → 계정 존재 여부와 무관하게 항상 동일한 성공 응답(이메일 존재 노출 방지), `HttpSession`이 아닌 별도 스코프(단기 토큰/Redis, email 키) 필요.
+    - `POST /auth/password/verify-code { email, code }` → `{ resetToken }`(5~10분 단기 토큰, `/join/verify-code`처럼 시도횟수 캡).
+    - `POST /auth/password/reset { resetToken, newPassword }` → 성공 시 해당 계정의 기존 refresh token 전체 무효화(전 기기 강제 로그아웃) 여부 논의.
+    - 프론트 스캐폴딩(`src/features/auth/hooks/useForgotPasswordFlow.ts`)은 이미 준비되어 있어 엔드포인트가 나오면 스텁만 교체하면 됨.
+  - **리프레시 토큰 정책**: 사용자가 이번엔 "현재 방식 유지"로 확정함(단일 세션, rotation 없음) — 당장 변경 불필요, 멀티 디바이스 지원이 나중에 요구되면 재논의.
 
 ### 6.3 법무/콘텐츠 (코드 아님)
 - [ ] `feat/mvp-biometric-consent`, `feat/mvp-age-gate`에서 작성한 동의 문구(`src/constants/consentContent.ts`)는 엔지니어가 초안으로 작성한 것 — **정식 출시 전 반드시 법무 검토**를 거쳐 실제 문구로 교체

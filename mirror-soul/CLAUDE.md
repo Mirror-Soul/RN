@@ -10,6 +10,8 @@
 - **서비스 파일**: `apiClient`(`src/services/apiClient.ts`, axios 인스턴스, 토큰 갱신/에러 정규화 인터셉터 내장) 호출 + `logger.debug/info/error` + try/catch 후 rethrow. `response.data`(전체 `ApiResponse<T>` envelope, `.result`로 미리 언랩하지 않음)를 반환.
 - **에러 처리**: `src/utils/apiErrorCode.ts`의 `getErrorDisplayMessage(error, fallback)`을 쓸 것 — 백엔드가 이미 적절한 한글 메시지를 `error.message`로 보내주므로 번역하지 말고, 코드별로 FE 쪽 동작을 다르게 하고 싶을 때만(`isConflictError`, `isAuthError` 등) 분기한다. `ApiErrorCode` 타입에 47개 백엔드 코드가 다 들어있으니 매직 스트링 쓰지 말 것.
 - **화면 ↔ API 연동 지점 (2026-07-30 react-query 마이그레이션 이후 — 최신 표준)**: 서버 상태는 zustand가 아니라 **`@tanstack/react-query`**(`useQuery`/`useMutation`)로 관리한다. `src/features/profile/hooks/useProfileQuery.ts`(GET), `src/features/profile/hooks/useBuyTimeMutation.ts`(POST), `src/features/voice-audio/hooks/useVoiceAudioSettings.ts`(GET+PATCH 결합형)가 정본 예시. 화면 컴포넌트는 건드리지 않고, 화면과 API 사이의 **훅 하나**(쿼리+뮤테이션 다 포함)에서 처리한다.
+  - **인증(auth) 도메인도 동일 패턴을 따른다** (`feat/137-auth-hardening`, 2026-07-30): `src/features/auth/hooks/useLoginMutation.ts`, `src/components/signup/steps/Step1_Account/hooks/useCreateAccountMutation.ts`가 예시 — `onSuccess`에서 `useAuthStore.getState().login(...)`을 호출해 인증 상태 전환까지 mutation이 책임진다. 단, `useAuthStore` 자체는 아래 "zustand에 남기는 것" 이유로 계속 zustand에 남는다.
+  - **로그아웃은 `src/services/authService.ts`의 `performLogout()`을 항상 재사용할 것** — 서버 세션 정리(실패 무시) → `useAuthStore.getState().logout()` → `queryClient.clear()` 3단계를 한 곳에 캡슐화했다. 새 로그아웃 진입점을 추가할 때 이 3단계를 직접 인라인하지 말 것 (과거에 이걸 빠뜨려 캐시가 안 지워지는 버그가 있었다).
   - 쿼리 키는 `['profile', '<subdomain>']` 네임스페이스 컨벤션(`me`/`time`/`audioSettings`/`alarmSettings`/`accountInfo`)을 따를 것 — `src/services/queryClient.ts`의 싱글턴 `QueryClient`를 공유한다(`app/_layout.tsx`와 `apiClient.ts`(세션 만료 시 `queryClient.clear()`) 양쪽에서 import).
   - `queryFn`에서 `(await getXxx()).result`로 언랩해서 반환(서비스 레이어는 안 건드리고 훅에서 언랩) — `profileService.ts`는 여전히 `ApiResponse<T>` 전체 envelope을 반환하는 컨벤션을 유지한다.
   - 캐시 갱신은 백엔드가 최신값을 돌려주면 `mutation.onSuccess`에서 `queryClient.setQueryData(key, response.result)`로 직접 반영(재조회 불필요). 백엔드가 `Void`만 반환하면(예: 닉네임 변경) 클라이언트가 이미 아는 값으로 낙관적 갱신(`useModifyNicknameMutation.ts` 참고).
@@ -34,7 +36,10 @@ npx expo run:android -d  # 실기기 빌드+설치 (정상 동작)
 npx expo start            # 이미 설치된 dev client에 JS만 갱신 (네이티브/app.json 변경 없을 때는 이것만으로 충분)
 npm run lint               # expo lint
 npx tsc --noEmit           # 타입체크 (package.json에 별도 typecheck 스크립트 없음)
+npx jest                   # 유닛 테스트 (jest-expo 프리셋, package.json에 "test" 스크립트로도 등록됨)
 ```
+
+**`npx expo start --web`은 이 프로젝트에서 항상 크래시난다 (2026-07-30 확인, 근본 원인 확정됨)** — `react-native-webrtc`(통화 기능에 사용)가 웹 구현체를 아예 제공하지 않아 `RTCView.js`에서 `_reactNative.requireNativeComponent is not a function`으로 Metro 번들링 자체가 실패한다. iOS 시뮬레이터가 막혀 있는 것(루트 CLAUDE.md의 iOS 빌드 트러블슈팅 참고)과 별개로, **웹 미리보기도 이 앱을 검증하는 유효한 방법이 아니다** — 매번 새로 발견하지 말 것. UI 검증은 실기기(`ios-deploy` 경유, 루트 CLAUDE.md 3번 항목) 경로만 유효하다.
 
 ## 문서
 
