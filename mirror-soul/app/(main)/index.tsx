@@ -10,8 +10,7 @@ import RefillModal from '@/src/components/home/main/RefillModal';
 import SoulConnectTip from '@/src/components/home/main/SoulConnectTip';
 import { Layout } from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
-import { logout } from '@/src/services/authService';
-import { useAuthStore } from '@/src/store/useAuthStore';
+import { performLogout } from '@/src/services/authService';
 import { useBuyTimeMutation } from '@/src/features/profile/hooks/useBuyTimeMutation';
 import { TIME_REFILL_OPTIONS } from '@/src/features/profile/constants/timeRefillOptions';
 import { useToast } from '@/src/components/common/Toast/ToastProvider';
@@ -56,19 +55,13 @@ export default function MainHomeScreen() {
             // iOS Alert 애니메이션이 끝난 후 실행 (씹히는 현상 방지)
             setTimeout(async () => {
               logger.debug('User clicked logout from Home Settings');
+              // performLogout이 예상치 못한 이유로 실패하더라도 로그인 화면 이동은 항상 보장한다
               try {
-                await logout();
-              } catch (error) {
-                logger.warn('Server logout failed, proceeding with local logout', error);
+                await performLogout();
+              } catch (localError) {
+                logger.error('Local logout failed', localError);
               } finally {
-                // 이후 단계가 예상치 못한 이유로 실패하더라도 로그인 화면 이동은 항상 보장한다
-                try {
-                  await useAuthStore.getState().logout();
-                } catch (localError) {
-                  logger.error('Local logout failed', localError);
-                } finally {
-                  router.replace('/login');
-                }
+                router.replace('/login');
               }
             }, 100);
           },

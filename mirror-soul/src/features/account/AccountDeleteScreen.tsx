@@ -9,10 +9,8 @@ import { DeleteWarningSection } from './components/DeleteWarningSection';
 import { DeleteConsentSection } from './components/DeleteConsentSection';
 import { DeleteConfirmBottomSheet } from './components/DeleteConfirmBottomSheet';
 import { useDeleteAccountMutation } from './hooks/useDeleteAccountMutation';
-import { logout as logoutApi } from '@/src/services/authService';
-import { useAuthStore } from '@/src/store/useAuthStore';
+import { performLogout } from '@/src/services/authService';
 import { getErrorDisplayMessage } from '@/src/utils/apiErrorCode';
-import { logger } from '@/src/utils/logger';
 import { useToast } from '@/src/components/common/Toast/ToastProvider';
 
 export const AccountDeleteScreen = () => {
@@ -46,17 +44,10 @@ export const AccountDeleteScreen = () => {
       return;
     }
 
-    // 탈퇴 자체는 이미 성공했으므로, 이후 로그아웃 처리가 예상치 못한 이유로
+    // 탈퇴 자체는 이미 성공했으므로, 이후 로그아웃 처리(performLogout)가 예상치 못한 이유로
     // 실패하더라도 로그인 화면 이동은 항상 보장한다 (탈퇴 성공 후 화면에 머무는 것을 방지)
     try {
-      await logoutApi();
-    } catch (error) {
-      logger.error('AccountDeleteScreen: /auth/logout after delete failed', error);
-    }
-    try {
-      await useAuthStore.getState().logout();
-    } catch (error) {
-      logger.error('AccountDeleteScreen: local logout after delete failed', error);
+      await performLogout();
     } finally {
       setIsConfirmSheetOpen(false);
       isDeletingRef.current = false;

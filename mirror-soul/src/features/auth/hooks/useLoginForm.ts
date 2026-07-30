@@ -1,8 +1,8 @@
 import { useCallback, useState } from 'react';
-import { Alert } from 'react-native';
-import { login } from '@/src/services/authService';
-import { useAuthStore } from '@/src/store/useAuthStore';
+import { useRouter } from 'expo-router';
+import { useLoginMutation } from './useLoginMutation';
 import { isValidEmail } from '@/src/utils/validation';
+import { getErrorDisplayMessage } from '@/src/utils/apiErrorCode';
 import { logger } from '@/src/utils/logger';
 
 interface LoginFormState {
@@ -40,9 +40,11 @@ const INITIAL_STATE: LoginFormState = {
  *
  * - 인라인 에러 메시지 (Alert 미사용)
  * - 이메일/비밀번호 입력 시 관련 에러 자동 초기화
- * - 비밀번호 찾기: "준비 중" 안내
+ * - 실제 로그인 API 호출은 useLoginMutation(react-query)에 위임하고, 이 훅은 폼 검증/상태만 소유
  */
 export function useLoginForm(): UseLoginFormReturn {
+  const router = useRouter();
+  const loginMutation = useLoginMutation();
   const [state, setState] = useState<LoginFormState>(INITIAL_STATE);
 
   const updateState = useCallback((updates: Partial<LoginFormState>) => {
@@ -81,35 +83,23 @@ export function useLoginForm(): UseLoginFormReturn {
     if (hasError) return;
 
     // ── API 호출 ───────────────────────────────────────────────
+    // Zustand 스토어 업데이트(useLoginMutation.onSuccess)는 _layout.tsx 라우팅 가드가 감지해 자동 이동 (SoC)
     try {
       updateState({ isSubmitting: true, generalError: '' });
-
-      const response = await login(state.email, state.password);
-
-      if (response.isSuccess) {
-        // Zustand 스토어 업데이트 → _layout.tsx 라우팅 가드가 감지 후 자동 이동 (SoC)
-        await useAuthStore.getState().login({
-          accessToken: response.result.accessToken,
-          refreshToken: response.result.refreshToken,
-          userUuid: response.result.userUuid,
-          userStatus: response.result.userStatus,
-        });
-      } else {
-        updateState({ generalError: response.message || '이메일 또는 비밀번호를 확인해주세요.' });
-      }
-    } catch (error: any) {
+      await loginMutation.mutateAsync({ email: state.email, password: state.password });
+    } catch (error) {
       logger.warn('useLoginForm: Login failed', error);
       updateState({
-        generalError: error?.message || '로그인 처리 중 문제가 발생했습니다.',
+        generalError: getErrorDisplayMessage(error, '로그인 처리 중 문제가 발생했습니다.'),
       });
     } finally {
       updateState({ isSubmitting: false });
     }
-  }, [state.isSubmitting, state.email, state.password, updateState]);
+  }, [state.isSubmitting, state.email, state.password, updateState, loginMutation]);
 
   const handleForgotPassword = useCallback(() => {
-    Alert.alert('준비 중', '비밀번호 찾기 기능을 준비 중입니다.');
-  }, []);
+    router.push('/forgot-password');
+  }, [router]);
 
   return {
     state,
