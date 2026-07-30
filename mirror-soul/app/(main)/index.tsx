@@ -10,8 +10,7 @@ import RefillModal from '@/src/components/home/main/RefillModal';
 import SoulConnectTip from '@/src/components/home/main/SoulConnectTip';
 import { Layout } from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
-import { logout } from '@/src/services/authService';
-import { useAuthStore } from '@/src/store/useAuthStore';
+import { performLogout } from '@/src/services/authService';
 import { useBuyTimeMutation } from '@/src/features/profile/hooks/useBuyTimeMutation';
 import { TIME_REFILL_OPTIONS } from '@/src/features/profile/constants/timeRefillOptions';
 import { useToast } from '@/src/components/common/Toast/ToastProvider';
@@ -56,17 +55,11 @@ export default function MainHomeScreen() {
             setTimeout(async () => {
               logger.debug('User clicked logout from Home Settings');
               try {
-                await logout();
-              } catch (error) {
-                logger.warn('Server logout failed, proceeding with local logout', error);
-              } finally {
-                try {
-                  await useAuthStore.getState().logout();
-                  router.replace('/');
-                } catch (localError) {
-                  logger.error('Local logout failed', localError);
-                  Alert.alert('알림', '로그아웃 처리 중 문제가 발생했습니다.');
-                }
+                await performLogout();
+                router.replace('/');
+              } catch (localError) {
+                logger.error('Local logout failed', localError);
+                Alert.alert('알림', '로그아웃 처리 중 문제가 발생했습니다.');
               }
             }, 100);
           },

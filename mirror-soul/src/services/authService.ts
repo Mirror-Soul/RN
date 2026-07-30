@@ -7,6 +7,8 @@ import {
   BasicProfileResponse,
 } from '@/src/types/api/auth';
 import apiClient from './apiClient';
+import { queryClient } from './queryClient';
+import { useAuthStore } from '../store/useAuthStore';
 import { logger } from '../utils/logger';
 
 /**
@@ -58,4 +60,19 @@ export const logout = async () => {
   logger.info('authService: Attempting logout');
   const response = await apiClient.post('/auth/logout');
   return response.data;
+};
+
+/**
+ * 로그아웃 공통 절차: 서버 세션 정리(실패해도 무시) → 로컬 토큰/스토어 정리 → react-query 캐시 초기화.
+ * 화면들은 이 함수 호출 후 자체적으로 네비게이션(router.replace 등)만 처리하면 된다.
+ */
+export const performLogout = async (): Promise<void> => {
+  try {
+    await logout();
+  } catch (error) {
+    logger.warn('authService: /auth/logout failed, proceeding with local logout', error);
+  } finally {
+    await useAuthStore.getState().logout();
+    queryClient.clear();
+  }
 };

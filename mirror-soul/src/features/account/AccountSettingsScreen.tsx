@@ -8,9 +8,7 @@ import Constants from 'expo-constants';
 import { NicknameEditModal } from './components/NicknameEditModal';
 import { LogoutBottomSheet } from './components/LogoutBottomSheet';
 import { useAccountInfoQuery } from './hooks/useAccountInfoQuery';
-import { useAuthStore } from '@/src/store/useAuthStore';
-import { logout as logoutApi } from '@/src/services/authService';
-import { logger } from '@/src/utils/logger';
+import { performLogout } from '@/src/services/authService';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { Header } from '@/src/components/common/Header';
 import { ScreenLayout } from '@/src/components/common/ScreenLayout';
@@ -39,14 +37,8 @@ export const AccountSettingsScreen = () => {
     setIsLogoutSheetOpen(false);
   };
 
-  const performLogout = async () => {
-    try {
-      await logoutApi();
-    } catch (error) {
-      // 서버 세션 정리가 실패해도 로컬 로그아웃(토큰 삭제)은 계속 진행
-      logger.error('AccountSettingsScreen: /auth/logout failed', error);
-    }
-    await useAuthStore.getState().logout();
+  const handleConfirmLogout = async () => {
+    await performLogout();
     setIsLogoutSheetOpen(false);
     router.replace('/');
   };
@@ -130,10 +122,10 @@ export const AccountSettingsScreen = () => {
       </Animated.View>
 
       <NicknameEditModal isOpen={isModalOpen} onClose={handleCloseModal} />
-      <LogoutBottomSheet 
-        isOpen={isLogoutSheetOpen} 
-        onClose={handleCloseLogoutSheet} 
-        onLogout={performLogout} 
+      <LogoutBottomSheet
+        isOpen={isLogoutSheetOpen}
+        onClose={handleCloseLogoutSheet}
+        onLogout={handleConfirmLogout}
       />
     </ScreenLayout>
   );
