@@ -2,9 +2,8 @@ import SecurityFooter from '@/src/components/home/SecurityFooter';
 import GradientButton from '@/src/components/common/GradientButton';
 import { SIGNUP_ROUTES } from '@/src/constants/routes/signupRoutes';
 import {Colors, Layout, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
-import { createBasicProfile } from '@/src/services/authService';
+import { getErrorDisplayMessage } from '@/src/utils/apiErrorCode';
 
-import { useAuthStore } from '@/src/store/useAuthStore';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
@@ -19,6 +18,7 @@ import IdentityVerificationSection from './components/IdentityVerificationSectio
 import PasswordSection from './components/PasswordSection';
 import Step1Header from './components/Step1Header';
 import { useStep1Form } from './hooks/useStep1Form';
+import { useCreateAccountMutation } from './hooks/useCreateAccountMutation';
 
 /**
  * Step1AccountContainer 컴포넌트
@@ -44,6 +44,8 @@ export default function Step1AccountContainer() {
     isEmailActionLoading,
   } = useStep1Form();
 
+  const createAccountMutation = useCreateAccountMutation();
+
   // 로딩 오버레이 애니메이션
   const overlayOpacity = useSharedValue(0);
   const overlayAnimatedStyle = useAnimatedStyle(() => ({
@@ -57,7 +59,8 @@ export default function Step1AccountContainer() {
       updateState({ isLoading: true });
       overlayOpacity.value = withTiming(1, { duration: 200 });
 
-      const response = await createBasicProfile({
+      // AuthStore 저장(로그인 상태 전환)은 useCreateAccountMutation.onSuccess가 처리
+      await createAccountMutation.mutateAsync({
         email: state.email,
         password: state.password,
         gender: null,     // PASS 인증 미구현 → null
@@ -65,21 +68,12 @@ export default function Step1AccountContainer() {
         termsAgreed: state.agreedToTerms,
       });
 
-
-      // 발급받은 토큰 및 상태를 AuthStore에 저장하여 로그인 상태로 전환
-      await useAuthStore.getState().login({
-        accessToken: response.result.accessToken,
-        refreshToken: response.result.refreshToken,
-        userUuid: response.result.userUuid,
-        userStatus: response.result.userStatus,
-      });
-
       // 성공: Step2로 이동
       router.push(SIGNUP_ROUTES.PROFILE);
-    } catch (error: any) {
+    } catch (error) {
       Alert.alert(
         '계정 생성 실패',
-        error?.message || '잠시 후 다시 시도해주세요.'
+        getErrorDisplayMessage(error, '잠시 후 다시 시도해주세요.')
       );
     } finally {
       overlayOpacity.value = withTiming(0, { duration: 200 });
