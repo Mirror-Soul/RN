@@ -1,5 +1,6 @@
 import { useAuthStore } from '@/src/store/useAuthStore';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClient } from '@/src/services/queryClient';
 import { Stack, router, useRootNavigationState } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
@@ -8,6 +9,7 @@ import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import * as Sentry from '@sentry/react-native';
+import { ToastProvider } from '@/src/components/common/Toast/ToastProvider';
 
 /**
  * hydration 완료 전까지 스플래시 화면 유지.
@@ -24,8 +26,6 @@ if (process.env.EXPO_PUBLIC_SENTRY_DSN) {
     tracesSampleRate: __DEV__ ? 1.0 : 0.2,
   });
 }
-
-const queryClient = new QueryClient();
 
 // 백엔드 확정 전 임시 온보딩 라우트 매핑
 const getOnboardingRoute = (status: string | null) => {
@@ -68,7 +68,10 @@ function RootLayout() {
           router.replace(getOnboardingRoute(userStatus));
         }
       } else {
-        router.replace('/');
+        // (main) 그룹의 홈 탭도 파일명이 index라 로그인 화면을 "/"에 두면 두 화면이
+        // 같은 경로를 두고 충돌해 로그아웃 후에도 홈 화면에 머무는 버그가 생긴다.
+        // 그래서 로그인 화면은 /login(app/login.tsx)이라는 고유 경로를 쓴다.
+        router.replace('/login');
       }
     }, 0);
 
@@ -82,25 +85,27 @@ function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <QueryClientProvider client={queryClient}>
         <SafeAreaProvider>
-          <Stack
-            screenOptions={{
-              headerShown: false,
-              // 화면 전환 시 부드러운 fade 애니메이션
-              animation: 'fade',
-              animationDuration: 200,
-            }}
-          >
-            <Stack.Screen name="index" />
-            <Stack.Screen name="signup" options={{ animation: 'slide_from_right' }} />
-            <Stack.Screen name="(main)" options={{ animation: 'fade' }} />
-            <Stack.Screen name="call-detail" />
-            <Stack.Screen name="voice-update" />
-            <Stack.Screen
-              name="message-room/[id]"
-              options={{ animation: 'slide_from_right' }}
-            />
-          </Stack>
-          <StatusBar style="light" />
+          <ToastProvider>
+            <Stack
+              screenOptions={{
+                headerShown: false,
+                // 화면 전환 시 부드러운 fade 애니메이션
+                animation: 'fade',
+                animationDuration: 200,
+              }}
+            >
+              <Stack.Screen name="login" />
+              <Stack.Screen name="signup" options={{ animation: 'slide_from_right' }} />
+              <Stack.Screen name="(main)" options={{ animation: 'fade' }} />
+              <Stack.Screen name="call-detail" />
+              <Stack.Screen name="voice-update" />
+              <Stack.Screen
+                name="message-room/[id]"
+                options={{ animation: 'slide_from_right' }}
+              />
+            </Stack>
+            <StatusBar style="light" />
+          </ToastProvider>
         </SafeAreaProvider>
       </QueryClientProvider>
     </GestureHandlerRootView>

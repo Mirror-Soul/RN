@@ -3,6 +3,8 @@ import { router } from 'expo-router';
 import { useAuthStore } from '../store/useAuthStore';
 import { logger } from '../utils/logger';
 import { tokenStorage } from '../utils/tokenStorage';
+import { showGlobalToast } from '../components/common/Toast/ToastProvider';
+import { queryClient } from './queryClient';
 
 const apiBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
 
@@ -116,7 +118,9 @@ apiClient.interceptors.response.use(
         } catch (refreshError) {
           processQueue(refreshError, null);
           await useAuthStore.getState().logout();
-          router.replace('/');
+          queryClient.clear(); // 만료된 세션의 캐시된 서버 상태(닉네임, 잔액 등)를 남기지 않는다
+          showGlobalToast('세션이 만료되어 다시 로그인해주세요.', 'info');
+          router.replace('/login');
           return Promise.reject(refreshError);
         } finally {
           isRefreshing = false;

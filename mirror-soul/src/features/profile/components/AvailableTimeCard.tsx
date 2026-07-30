@@ -8,18 +8,20 @@ import { Feather } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { usePulseAnimation, usePressAnimation } from '../hooks/useProfileAnimations';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
-import { useCallTimeStore, formatCallTime } from '@/src/store/useCallTimeStore';
+import { useTimeStatusQuery } from '../hooks/useTimeStatusQuery';
+import { formatCallTime } from '@/src/utils/formatCallTime';
 
 interface AvailableTimeCardProps {
-  /** 지정하지 않으면 useCallTimeStore의 값을 사용합니다. */
+  /** 지정하지 않으면 서버에서 조회한 남은 시간을 사용합니다. */
   timeString?: string;
   delay?: number;
   onPressRefill?: () => void;
 }
 
 export const AvailableTimeCard = ({ timeString, delay = 100, onPressRefill }: AvailableTimeCardProps) => {
-  const remainingSeconds = useCallTimeStore((state) => state.remainingSeconds);
-  const displayValue = timeString ?? formatCallTime(remainingSeconds);
+  const { data, isLoading, isError, refetch } = useTimeStatusQuery();
+  const displayValue =
+    timeString ?? (isLoading ? '--:--:--' : isError ? '조회 실패 · 재시도' : formatCallTime(data?.remainingTalkTime ?? 0));
   const { startPulse, animatedStyle: pulseStyle } = usePulseAnimation();
   const { handlePressIn, handlePressOut, animatedStyle: pressStyle } = usePressAnimation();
   const { colors } = useThemeColors();
@@ -47,19 +49,25 @@ export const AvailableTimeCard = ({ timeString, delay = 100, onPressRefill }: Av
         <Text style={[styles.titleText, { color: colors.text.muted }]}>대화 가능한 시간</Text>
 
         <View style={styles.timeContainer}>
-          <MaskedView
-            style={styles.maskContainer}
-            maskElement={
-              <Text style={styles.timeTextMask}>{displayValue}</Text>
-            }
-          >
-            <LinearGradient
-              colors={['#00FFFF', '#A855F7']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={StyleSheet.absoluteFill}
-            />
-          </MaskedView>
+          {isError && !timeString ? (
+            <Pressable onPress={() => refetch()} accessibilityRole="button" accessibilityLabel="남은 시간 다시 조회">
+              <Text style={[styles.timeTextError, { color: colors.state.danger }]}>{displayValue}</Text>
+            </Pressable>
+          ) : (
+            <MaskedView
+              style={styles.maskContainer}
+              maskElement={
+                <Text style={styles.timeTextMask}>{displayValue}</Text>
+              }
+            >
+              <LinearGradient
+                colors={['#00FFFF', '#A855F7']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={StyleSheet.absoluteFill}
+              />
+            </MaskedView>
+          )}
         </View>
 
         <Pressable
@@ -132,6 +140,13 @@ const styles = StyleSheet.create({
     lineHeight: 48,
     letterSpacing: 4.8,
     backgroundColor: 'transparent',
+  },
+  timeTextError: {
+    fontFamily: FontFamily.sans,
+    fontWeight: FontWeight.medium,
+    fontSize: FontSize.lg,
+    lineHeight: 48,
+    textDecorationLine: 'underline',
   },
   buttonContainer: {
     position: 'absolute',

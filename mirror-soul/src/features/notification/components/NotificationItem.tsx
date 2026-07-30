@@ -12,6 +12,7 @@ interface NotificationItemProps {
   value: boolean;
   onToggle: () => void;
   isLast?: boolean;
+  disabled?: boolean;
 }
 
 export const NotificationItem = ({
@@ -20,17 +21,18 @@ export const NotificationItem = ({
   value,
   onToggle,
   isLast = false,
+  disabled = false,
 }: NotificationItemProps) => {
   const { animatedText, animatedTextMuted, animatedBorder } = useAnimatedTheme();
 
   return (
-    <Animated.View style={[styles.container, !isLast && styles.borderBottom, !isLast && animatedBorder]}>
+    <Animated.View style={[styles.container, !isLast && styles.borderBottom, !isLast && animatedBorder, disabled && styles.disabled]}>
       <View style={styles.textContainer}>
         <Animated.Text style={[styles.title, animatedText]}>{title}</Animated.Text>
         <Animated.Text style={[styles.description, animatedTextMuted]}>{description}</Animated.Text>
       </View>
 
-      <AnimatedSwitch value={value} onToggle={onToggle} accessibilityLabel={title} />
+      <AnimatedSwitch value={value} onToggle={onToggle} disabled={disabled} accessibilityLabel={title} />
     </Animated.View>
   );
 };
@@ -63,5 +65,8 @@ const styles = StyleSheet.create({
     fontSize: FontSize.sm,
     lineHeight: 20,
     marginTop: Spacing.xxs,
+  },
+  disabled: {
+    opacity: 0.5,
   },
 });

@@ -11,7 +11,7 @@ import {Radii, Spacing} from '@/src/constants/theme';
 
 
 export const NotificationScreen = () => {
-  const { timeLimitAlert, eventAlert, handleToggleTimeLimit, handleToggleEvent } = useNotificationSettings();
+  const { timeLimitAlert, eventAlert, handleToggleTimeLimit, handleToggleEvent, isTimeLimitLoading } = useNotificationSettings();
   const { colors } = useThemeColors();
 
   return (
@@ -29,6 +29,7 @@ export const NotificationScreen = () => {
             value={timeLimitAlert}
             onToggle={handleToggleTimeLimit}
             isLast={false}
+            disabled={isTimeLimitLoading}
           />
           <NotificationItem
             title="혜택 및 이벤트 알림"

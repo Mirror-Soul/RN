@@ -3,10 +3,11 @@ import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
-import { useCallTimeStore, formatCallTime } from '@/src/store/useCallTimeStore';
+import { useTimeStatusQuery } from '@/src/features/profile/hooks/useTimeStatusQuery';
+import { formatCallTime } from '@/src/utils/formatCallTime';
 
 interface AvailableTimeCardProps {
-  /** 지정하지 않으면 useCallTimeStore의 값을 사용합니다. */
+  /** 지정하지 않으면 서버에서 조회한 남은 시간을 사용합니다. */
   timeDisplay?: string;
   onRefillPress?: () => void;
 }
@@ -21,8 +22,9 @@ export default function AvailableTimeCard({
   onRefillPress,
 }: AvailableTimeCardProps) {
   const { colors } = useThemeColors();
-  const remainingSeconds = useCallTimeStore((state) => state.remainingSeconds);
-  const displayValue = timeDisplay ?? formatCallTime(remainingSeconds);
+  const { data, isLoading, isError, refetch } = useTimeStatusQuery();
+  const displayValue =
+    timeDisplay ?? (isLoading ? '--:--:--' : isError ? '조회 실패 · 재시도' : formatCallTime(data?.remainingTalkTime ?? 0));
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
@@ -32,7 +34,13 @@ export default function AvailableTimeCard({
         </View>
         <View>
           <Text style={[styles.label, { color: colors.text.muted }]}>Available Time</Text>
-          <Text style={[styles.value, { color: colors.text.primary }]}>{displayValue}</Text>
+          {isError && !timeDisplay ? (
+            <TouchableOpacity onPress={() => refetch()} accessibilityRole="button" accessibilityLabel="남은 시간 다시 조회">
+              <Text style={[styles.value, styles.valueError, { color: colors.state.danger }]}>{displayValue}</Text>
+            </TouchableOpacity>
+          ) : (
+            <Text style={[styles.value, { color: colors.text.primary }]}>{displayValue}</Text>
+          )}
         </View>
       </View>
 
@@ -86,6 +94,10 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xxl,
     fontWeight: FontWeight.black,
     letterSpacing: -0.45,
+  },
+  valueError: {
+    fontSize: FontSize.sm,
+    textDecorationLine: 'underline',
   },
   refillButton: {
     paddingHorizontal: Spacing.lg,
