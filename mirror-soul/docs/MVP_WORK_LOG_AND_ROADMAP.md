@@ -199,6 +199,9 @@
     - `POST /auth/password/reset { resetToken, newPassword }` → 성공 시 해당 계정의 기존 refresh token 전체 무효화(전 기기 강제 로그아웃) 여부 논의.
     - 프론트 스캐폴딩(`src/features/auth/hooks/useForgotPasswordFlow.ts`)은 이미 준비되어 있어 엔드포인트가 나오면 스텁만 교체하면 됨.
   - **리프레시 토큰 정책**: 사용자가 이번엔 "현재 방식 유지"로 확정함(단일 세션, rotation 없음) — 당장 변경 불필요, 멀티 디바이스 지원이 나중에 요구되면 재논의.
+  - **회원가입 이메일 중복 체크가 너무 늦게 일어남 (요청됨, 백엔드 수정 대기 중)**: 2026-07-30 세션에서 소스 직접 확인함 — 중복 이메일 체크(`userRepository.existsByEmail`)가 `POST /join/send-code`나 `/join/verify-code`가 아니라 **`JoinService.basicProfile()`(`mirror-soul-back/src/main/java/com/mirrorsoul/mirrorsoul_api/service/JoinService.java:54-58`)에서만** 일어난다. `EmailAuthService`(`.../service/EmailAuthService.java`)의 `sendCode`/`verifyCode`는 `UserRepository` 의존성 자체가 없어서, 이미 가입된 이메일이라도 인증코드 발송/확인까지는 전부 성공하고, Step1의 비밀번호·PASS·나이·약관까지 다 입력한 뒤 "다음"을 눌러야만 `DUPLICATE_EMAIL`(HTTP 409, `USER_4090`)을 받는다.
+    - **요청할 수정**: `EmailAuthService`에 `UserRepository`를 주입하고, `sendCode()`(`EmailAuthService.java:24-40`, `mailService.sendVerificationCode(...)` 호출 이전)에서 `userRepository.existsByEmail(dto.getEmail())`이면 기존 `GeneralErrorCode.DUPLICATE_EMAIL`(`common/apiPayload/code/GeneralErrorCode.java:48`)을 던지도록. `verifyCode()`에도 동일 체크를 넣을지, 아니면 `send-code` 시점 체크로 충분한지는 백엔드팀 판단에 맡김.
+    - **백엔드 수정 완료되면 바로 이어서 할 프론트 작업** (별도 조사 없이 아래로 바로 진행 가능): `src/components/signup/steps/Step1_Account/hooks/useStep1Form.ts`의 `handleSendEmailCode`(현재 catch 블록이 실패 사유 구분 없이 통째로 롤백+`Alert.alert('인증 코드 발송 실패', ...)`) 안에서 `src/utils/apiErrorCode.ts`의 `isConflictError(error)`를 분기해 "이미 가입된 이메일입니다" 인라인 에러(`EmailSection`에 이미 있는 에러 표시 슬롯 재사용)로 바꾸고, 이메일 입력 필드에 포커스를 되돌려 바로 재입력할 수 있게 한다. `Step1AccountContainer.tsx`의 최종 제출 실패 처리(`handleContinue`의 catch)도 동일하게 `isConflictError`면 이메일 필드로 되돌리는 처리를 추가해 최후 방어선으로 남겨둘 것.
 
 ### 6.3 법무/콘텐츠 (코드 아님)
 - [ ] `feat/mvp-biometric-consent`, `feat/mvp-age-gate`에서 작성한 동의 문구(`src/constants/consentContent.ts`)는 엔지니어가 초안으로 작성한 것 — **정식 출시 전 반드시 법무 검토**를 거쳐 실제 문구로 교체
