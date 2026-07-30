@@ -12,6 +12,10 @@ import { Layout } from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { logout } from '@/src/services/authService';
 import { useAuthStore } from '@/src/store/useAuthStore';
+import { useBuyTimeMutation } from '@/src/features/profile/hooks/useBuyTimeMutation';
+import { TIME_REFILL_OPTIONS } from '@/src/features/profile/constants/timeRefillOptions';
+import { useToast } from '@/src/components/common/Toast/ToastProvider';
+import { getErrorDisplayMessage } from '@/src/utils/apiErrorCode';
 import { logger } from '@/src/utils/logger';
 import React, { useCallback, useState } from 'react';
 import { Alert, ScrollView, StyleSheet } from 'react-native';
@@ -35,6 +39,8 @@ export default function MainHomeScreen() {
   const [showRefillModal, setShowRefillModal] = useState(false);
   const [selectedLocations, setSelectedLocations] = useState<string[]>(['강남구']);
   const [selectedMatch, setSelectedMatch] = useState<SoulMatch | null>(null);
+  const buyTimeMutation = useBuyTimeMutation();
+  const { showToast } = useToast();
 
   const handleSettingPress = useCallback(() => {
     Alert.alert(
@@ -88,11 +94,19 @@ export default function MainHomeScreen() {
     Alert.alert('안내', '검색 기능은 곧 제공될 예정입니다.');
   }, []);
 
-  const handleSelectPackage = useCallback((pkgId: string) => {
-    // TODO: 결제 연동이 정해지면 실제 결제 플로우로 교체
-    logger.debug('Time package selected', { pkgId });
-    Alert.alert('안내', '결제 기능은 곧 제공될 예정입니다.');
-  }, []);
+  const handleSelectPackage = useCallback(async (pkgId: string) => {
+    if (buyTimeMutation.isPending) return; // 연타로 인한 중복 구매 요청 방지
+    const option = TIME_REFILL_OPTIONS.find((o) => o.id === pkgId);
+    if (!option) return;
+
+    try {
+      await buyTimeMutation.mutateAsync(option.seconds);
+      setShowRefillModal(false);
+    } catch (error) {
+      logger.error('handleSelectPackage: buyTime failed', error);
+      showToast(getErrorDisplayMessage(error, '시간 충전에 실패했습니다. 잠시 후 다시 시도해주세요.'), 'error');
+    }
+  }, [buyTimeMutation, showToast]);
 
   return (
     <ScrollView

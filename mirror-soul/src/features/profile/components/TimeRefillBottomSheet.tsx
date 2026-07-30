@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
 import {FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 
-import { Alert, View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { BottomSheet } from '../../../components/common/BottomSheet/BottomSheet';
 import { TIME_REFILL_OPTIONS, TimeRefillOptionData } from '../constants/timeRefillOptions';
 import { TimeRefillOption } from './TimeRefillOption';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
-import { useCallTimeStore, formatCallTime } from '@/src/store/useCallTimeStore';
-import { buyTime } from '@/src/services/profileService';
+import { useTimeStatusQuery } from '../hooks/useTimeStatusQuery';
+import { useBuyTimeMutation } from '../hooks/useBuyTimeMutation';
+import { formatCallTime } from '@/src/utils/formatCallTime';
 import { getErrorDisplayMessage } from '@/src/utils/apiErrorCode';
+import { useToast } from '@/src/components/common/Toast/ToastProvider';
 
 interface TimeRefillBottomSheetProps {
   isOpen: boolean;
@@ -17,21 +19,19 @@ interface TimeRefillBottomSheetProps {
 
 export const TimeRefillBottomSheet = ({ isOpen, onClose }: TimeRefillBottomSheetProps) => {
   const { colors } = useThemeColors();
-  const remainingSeconds = useCallTimeStore((state) => state.remainingSeconds);
-  const setRemainingSeconds = useCallTimeStore((state) => state.setRemainingSeconds);
+  const { data } = useTimeStatusQuery();
+  const buyTimeMutation = useBuyTimeMutation();
   const [purchasingId, setPurchasingId] = useState<string | null>(null);
+  const { showToast } = useToast();
 
   const handleSelectOption = async (option: TimeRefillOptionData) => {
     if (purchasingId) return;
     setPurchasingId(option.id);
     try {
-      const response = await buyTime(option.seconds);
-      if (response.isSuccess) {
-        setRemainingSeconds(response.result.remainingTalkTime);
-        onClose();
-      }
+      await buyTimeMutation.mutateAsync(option.seconds);
+      onClose();
     } catch (error) {
-      Alert.alert('시간 충전 실패', getErrorDisplayMessage(error, '시간 충전에 실패했습니다. 잠시 후 다시 시도해주세요.'));
+      showToast(getErrorDisplayMessage(error, '시간 충전에 실패했습니다. 잠시 후 다시 시도해주세요.'), 'error');
     } finally {
       setPurchasingId(null);
     }
@@ -46,7 +46,7 @@ export const TimeRefillBottomSheet = ({ isOpen, onClose }: TimeRefillBottomSheet
         {/* Header */}
         <View style={styles.header}>
           <Text style={[styles.title, { color: colors.text.primary }]}>대화 시간 채우기</Text>
-          <Text style={[styles.subtitle, { color: colors.text.secondary }]}>현재 남은 시간: {formatCallTime(remainingSeconds)}</Text>
+          <Text style={[styles.subtitle, { color: colors.text.secondary }]}>현재 남은 시간: {formatCallTime(data?.remainingTalkTime ?? 0)}</Text>
         </View>
 
         {/* Options */}
@@ -57,6 +57,8 @@ export const TimeRefillBottomSheet = ({ isOpen, onClose }: TimeRefillBottomSheet
               option={option}
               delay={index * 100} // Staggered entrance
               onPress={() => handleSelectOption(option)}
+              isLoading={purchasingId === option.id}
+              disabled={purchasingId !== null && purchasingId !== option.id}
             />
           ))}
         </View>

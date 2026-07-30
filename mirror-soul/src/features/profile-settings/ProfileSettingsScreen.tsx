@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -9,17 +9,10 @@ import { Header } from '@/src/components/common/Header';
 import { ScreenLayout } from '@/src/components/common/ScreenLayout';
 import { useProfileSections } from '../profile/constants/profileMenu';
 import { Spacing } from '@/src/constants/theme';
-import { useCallTimeStore } from '@/src/store/useCallTimeStore';
-
 
 export const ProfileSettingsScreen = () => {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const profileSections = useProfileSections();
-  const fetchRemainingTime = useCallTimeStore((state) => state.fetchRemainingTime);
-
-  useEffect(() => {
-    fetchRemainingTime();
-  }, [fetchRemainingTime]);
 
   const handleOpenSheet = useCallback(() => setIsSheetOpen(true), []);
   const handleCloseSheet = useCallback(() => setIsSheetOpen(false), []);
@@ -30,7 +23,7 @@ export const ProfileSettingsScreen = () => {
         <Header title="공간 관리 및 설정" delay={0} />
 
         <View style={styles.content}>
-          {/* 대화 가능 시간 카드 (미지정 시 useCallTimeStore 값 사용) */}
+          {/* 대화 가능 시간 카드 (미지정 시 서버에서 조회한 남은 시간 사용) */}
           <AvailableTimeCard
             delay={80}
             onPressRefill={handleOpenSheet}

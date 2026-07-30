@@ -3,10 +3,11 @@ import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
-import { useCallTimeStore, formatCallTime } from '@/src/store/useCallTimeStore';
+import { useTimeStatusQuery } from '@/src/features/profile/hooks/useTimeStatusQuery';
+import { formatCallTime } from '@/src/utils/formatCallTime';
 
 interface AvailableTimeCardProps {
-  /** 지정하지 않으면 useCallTimeStore의 값을 사용합니다. */
+  /** 지정하지 않으면 서버에서 조회한 남은 시간을 사용합니다. */
   timeDisplay?: string;
   onRefillPress?: () => void;
 }
@@ -21,8 +22,8 @@ export default function AvailableTimeCard({
   onRefillPress,
 }: AvailableTimeCardProps) {
   const { colors } = useThemeColors();
-  const remainingSeconds = useCallTimeStore((state) => state.remainingSeconds);
-  const displayValue = timeDisplay ?? formatCallTime(remainingSeconds);
+  const { data } = useTimeStatusQuery();
+  const displayValue = timeDisplay ?? formatCallTime(data?.remainingTalkTime ?? 0);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>

@@ -8,18 +8,19 @@ import { Feather } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { usePulseAnimation, usePressAnimation } from '../hooks/useProfileAnimations';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
-import { useCallTimeStore, formatCallTime } from '@/src/store/useCallTimeStore';
+import { useTimeStatusQuery } from '../hooks/useTimeStatusQuery';
+import { formatCallTime } from '@/src/utils/formatCallTime';
 
 interface AvailableTimeCardProps {
-  /** 지정하지 않으면 useCallTimeStore의 값을 사용합니다. */
+  /** 지정하지 않으면 서버에서 조회한 남은 시간을 사용합니다. */
   timeString?: string;
   delay?: number;
   onPressRefill?: () => void;
 }
 
 export const AvailableTimeCard = ({ timeString, delay = 100, onPressRefill }: AvailableTimeCardProps) => {
-  const remainingSeconds = useCallTimeStore((state) => state.remainingSeconds);
-  const displayValue = timeString ?? formatCallTime(remainingSeconds);
+  const { data } = useTimeStatusQuery();
+  const displayValue = timeString ?? formatCallTime(data?.remainingTalkTime ?? 0);
   const { startPulse, animatedStyle: pulseStyle } = usePulseAnimation();
   const { handlePressIn, handlePressOut, animatedStyle: pressStyle } = usePressAnimation();
   const { colors } = useThemeColors();
