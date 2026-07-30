@@ -17,6 +17,7 @@ import { useThemeColors } from '@/src/hooks/useThemeColors';
 interface SpeedSegmentControlProps {
   selectedSpeed: SpeedOption;
   onSelect: (speed: SpeedOption) => void;
+  disabled?: boolean;
 }
 
 const SPRING_CONFIG = {
@@ -32,7 +33,7 @@ const SPRING_CONFIG = {
  * - interpolateColor로 텍스트 색상이 선택/비선택 상태에 따라 전환
  * - UI Thread에서 동작하므로 60FPS 보장
  */
-export const SpeedSegmentControl = ({ selectedSpeed, onSelect }: SpeedSegmentControlProps) => {
+export const SpeedSegmentControl = ({ selectedSpeed, onSelect, disabled = false }: SpeedSegmentControlProps) => {
   const { colors } = useThemeColors();
   const containerWidth = useSharedValue(0);
   const selectedIndex = useSharedValue(SPEED_OPTIONS.findIndex((o) => o.value === selectedSpeed));
@@ -65,7 +66,7 @@ export const SpeedSegmentControl = ({ selectedSpeed, onSelect }: SpeedSegmentCon
   }));
 
   return (
-    <View style={[styles.container, { borderColor: colors.border.primary }]} onLayout={onContainerLayout}>
+    <View style={[styles.container, { borderColor: colors.border.primary }, disabled && styles.disabled]} onLayout={onContainerLayout}>
       {/* 슬라이딩 선택 배경 */}
       <Animated.View style={[styles.slidingBg, animatedBgStyle]} pointerEvents="none">
         <LinearGradient
@@ -84,6 +85,7 @@ export const SpeedSegmentControl = ({ selectedSpeed, onSelect }: SpeedSegmentCon
           index={index}
           selectedIndex={selectedIndex}
           onPress={() => onSelect(option.value)}
+          disabled={disabled}
         />
       ))}
     </View>
@@ -96,9 +98,10 @@ interface SegmentButtonProps {
   index: number;
   selectedIndex: Animated.SharedValue<number>;
   onPress: () => void;
+  disabled?: boolean;
 }
 
-const SegmentButton = ({ label, index, selectedIndex, onPress }: SegmentButtonProps) => {
+const SegmentButton = ({ label, index, selectedIndex, onPress, disabled = false }: SegmentButtonProps) => {
   const { colors } = useThemeColors();
 
   // 선택 여부에 따라 텍스트 색상을 UI Thread에서 직접 보간
@@ -117,7 +120,7 @@ const SegmentButton = ({ label, index, selectedIndex, onPress }: SegmentButtonPr
   }));
 
   return (
-    <Pressable onPress={onPress} style={styles.button}>
+    <Pressable onPress={disabled ? undefined : onPress} style={styles.button}>
       <Animated.Text style={[styles.buttonText, animatedTextStyle]}>
         {label}
       </Animated.Text>
@@ -134,6 +137,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     position: 'relative',
     overflow: 'hidden',
+  },
+  disabled: {
+    opacity: 0.5,
   },
   slidingBg: {
     position: 'absolute',

@@ -17,7 +17,7 @@ import { TIME_REFILL_OPTIONS } from '@/src/features/profile/constants/timeRefill
 import { useToast } from '@/src/components/common/Toast/ToastProvider';
 import { getErrorDisplayMessage } from '@/src/utils/apiErrorCode';
 import { logger } from '@/src/utils/logger';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { Alert, ScrollView, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -40,6 +40,7 @@ export default function MainHomeScreen() {
   const [selectedLocations, setSelectedLocations] = useState<string[]>(['강남구']);
   const [selectedMatch, setSelectedMatch] = useState<SoulMatch | null>(null);
   const buyTimeMutation = useBuyTimeMutation();
+  const purchaseInFlightRef = useRef(false);
   const { showToast } = useToast();
 
   const handleSettingPress = useCallback(() => {
@@ -95,16 +96,20 @@ export default function MainHomeScreen() {
   }, []);
 
   const handleSelectPackage = useCallback(async (pkgId: string) => {
-    if (buyTimeMutation.isPending) return; // 연타로 인한 중복 구매 요청 방지
+    // isPending은 리렌더 이후에나 반영되므로, 연속 탭에 의한 중복 결제를 막으려면 동기 락이 필요하다.
+    if (purchaseInFlightRef.current) return;
     const option = TIME_REFILL_OPTIONS.find((o) => o.id === pkgId);
     if (!option) return;
 
+    purchaseInFlightRef.current = true;
     try {
       await buyTimeMutation.mutateAsync(option.seconds);
       setShowRefillModal(false);
     } catch (error) {
       logger.error('handleSelectPackage: buyTime failed', error);
       showToast(getErrorDisplayMessage(error, '시간 충전에 실패했습니다. 잠시 후 다시 시도해주세요.'), 'error');
+    } finally {
+      purchaseInFlightRef.current = false;
     }
   }, [buyTimeMutation, showToast]);
 

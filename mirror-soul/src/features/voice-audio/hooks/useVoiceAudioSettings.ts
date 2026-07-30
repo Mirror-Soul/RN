@@ -41,9 +41,13 @@ export const useVoiceAudioSettings = () => {
 
   const mutation = useMutation({
     mutationFn: (speed: SpeedOption) => {
+      // 캐시가 아직 없으면(조회 전) 숨김 필드값을 임의로 추측하지 않고 요청 자체를 막는다.
       const current = queryClient.getQueryData<AudioSettingsResult>(['profile', 'audioSettings']);
+      if (!current) {
+        return Promise.reject(new Error('음성 설정을 아직 불러오지 못했습니다.'));
+      }
       return updateAudioSettings({
-        opponentVoiceVolume: current?.opponentVoiceVolume ?? 50,
+        opponentVoiceVolume: current.opponentVoiceVolume,
         opponentSpeechSpeed: SPEECH_SPEED_BY_SPEED_OPTION[speed],
       });
     },
@@ -60,13 +64,15 @@ export const useVoiceAudioSettings = () => {
 
   const handleSpeedChange = useCallback(
     (speed: SpeedOption) => {
+      if (!query.data) return; // 조회 완료 전에는 변경 자체를 막는다.
       mutation.mutate(speed);
     },
-    [mutation]
+    [mutation, query.data]
   );
 
   return {
     speechSpeed,
     handleSpeedChange,
+    isLoading: query.isLoading || !query.data,
   };
 };

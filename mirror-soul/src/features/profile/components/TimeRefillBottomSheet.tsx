@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 
 import { View, Text, StyleSheet } from 'react-native';
@@ -19,13 +19,17 @@ interface TimeRefillBottomSheetProps {
 
 export const TimeRefillBottomSheet = ({ isOpen, onClose }: TimeRefillBottomSheetProps) => {
   const { colors } = useThemeColors();
-  const { data } = useTimeStatusQuery();
+  const { data, isLoading, isError, refetch } = useTimeStatusQuery();
+  const remainingTimeText = isLoading ? '조회 중...' : isError ? '조회 실패' : formatCallTime(data?.remainingTalkTime ?? 0);
   const buyTimeMutation = useBuyTimeMutation();
   const [purchasingId, setPurchasingId] = useState<string | null>(null);
+  const purchaseInFlightRef = useRef(false);
   const { showToast } = useToast();
 
   const handleSelectOption = async (option: TimeRefillOptionData) => {
-    if (purchasingId) return;
+    // purchasingId/isPending은 리렌더 이후에나 반영되므로, 연속 탭에 의한 중복 결제를 막으려면 동기 락이 필요하다.
+    if (purchaseInFlightRef.current) return;
+    purchaseInFlightRef.current = true;
     setPurchasingId(option.id);
     try {
       await buyTimeMutation.mutateAsync(option.seconds);
@@ -33,6 +37,7 @@ export const TimeRefillBottomSheet = ({ isOpen, onClose }: TimeRefillBottomSheet
     } catch (error) {
       showToast(getErrorDisplayMessage(error, '시간 충전에 실패했습니다. 잠시 후 다시 시도해주세요.'), 'error');
     } finally {
+      purchaseInFlightRef.current = false;
       setPurchasingId(null);
     }
   };
@@ -46,7 +51,18 @@ export const TimeRefillBottomSheet = ({ isOpen, onClose }: TimeRefillBottomSheet
         {/* Header */}
         <View style={styles.header}>
           <Text style={[styles.title, { color: colors.text.primary }]}>대화 시간 채우기</Text>
-          <Text style={[styles.subtitle, { color: colors.text.secondary }]}>현재 남은 시간: {formatCallTime(data?.remainingTalkTime ?? 0)}</Text>
+          {isError ? (
+            <Text
+              style={[styles.subtitle, styles.subtitleError, { color: colors.state.danger }]}
+              onPress={() => refetch()}
+              accessibilityRole="button"
+              accessibilityLabel="남은 시간 다시 조회"
+            >
+              현재 남은 시간: {remainingTimeText} · 재시도
+            </Text>
+          ) : (
+            <Text style={[styles.subtitle, { color: colors.text.secondary }]}>현재 남은 시간: {remainingTimeText}</Text>
+          )}
         </View>
 
         {/* Options */}
@@ -101,6 +117,9 @@ const styles = StyleSheet.create({
     fontSize: FontSize.sm,
     lineHeight: 16,
     marginTop: Spacing.xs,
+  },
+  subtitleError: {
+    textDecorationLine: 'underline',
   },
   optionsContainer: {
     flex: 1,

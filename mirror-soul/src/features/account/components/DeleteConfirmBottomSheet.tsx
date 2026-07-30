@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { BottomSheet } from '@/src/components/common/BottomSheet/BottomSheet';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import {Colors, FontFamily, FontSize, FontWeight, Radii, Spacing} from '@/src/constants/theme';
@@ -7,11 +7,12 @@ import { Feather } from '@expo/vector-icons';
 
 interface DeleteConfirmBottomSheetProps {
   isOpen: boolean;
+  isConfirming?: boolean;
   onClose: () => void;
   onConfirm: () => void;
 }
 
-export const DeleteConfirmBottomSheet = ({ isOpen, onClose, onConfirm }: DeleteConfirmBottomSheetProps) => {
+export const DeleteConfirmBottomSheet = ({ isOpen, isConfirming = false, onClose, onConfirm }: DeleteConfirmBottomSheetProps) => {
   const { colors } = useThemeColors();
 
   return (
@@ -36,7 +37,8 @@ export const DeleteConfirmBottomSheet = ({ isOpen, onClose, onConfirm }: DeleteC
           <TouchableOpacity
             activeOpacity={0.8}
             onPress={onClose}
-            style={[styles.button, styles.cancelButton, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
+            disabled={isConfirming}
+            style={[styles.button, styles.cancelButton, { backgroundColor: colors.background.glass, borderColor: colors.border.primary, opacity: isConfirming ? 0.5 : 1 }]}
           >
             <Text style={[styles.buttonText, { color: colors.text.secondary }]}>취소</Text>
           </TouchableOpacity>
@@ -44,9 +46,14 @@ export const DeleteConfirmBottomSheet = ({ isOpen, onClose, onConfirm }: DeleteC
           <TouchableOpacity
             activeOpacity={0.8}
             onPress={onConfirm}
-            style={[styles.button, styles.deleteButton]}
+            disabled={isConfirming}
+            style={[styles.button, styles.deleteButton, { opacity: isConfirming ? 0.7 : 1 }]}
           >
-            <Text style={[styles.buttonText, { color: Colors.primary.activeRedText }]}>탈퇴하기</Text>
+            {isConfirming ? (
+              <ActivityIndicator color={Colors.primary.activeRedText} />
+            ) : (
+              <Text style={[styles.buttonText, { color: Colors.primary.activeRedText }]}>탈퇴하기</Text>
+            )}
           </TouchableOpacity>
         </View>
       </View>

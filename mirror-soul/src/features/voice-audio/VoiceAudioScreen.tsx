@@ -11,7 +11,7 @@ import { Header } from '@/src/components/common/Header';
 import { ScreenLayout } from '@/src/components/common/ScreenLayout';
 
 export const VoiceAudioScreen = () => {
-  const { speechSpeed, handleSpeedChange } = useVoiceAudioSettings();
+  const { speechSpeed, handleSpeedChange, isLoading } = useVoiceAudioSettings();
   const { colors } = useThemeColors();
 
   return (
@@ -37,6 +37,7 @@ export const VoiceAudioScreen = () => {
             <SpeedSegmentControl
               selectedSpeed={speechSpeed}
               onSelect={handleSpeedChange}
+              disabled={isLoading}
             />
           </View>
         </Animated.View>

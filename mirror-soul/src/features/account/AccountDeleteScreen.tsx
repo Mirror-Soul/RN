@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
@@ -22,6 +22,7 @@ export const AccountDeleteScreen = () => {
   const [isConsentChecked, setIsConsentChecked] = useState(false);
   const [isConfirmSheetOpen, setIsConfirmSheetOpen] = useState(false);
   const deleteAccountMutation = useDeleteAccountMutation();
+  const isDeletingRef = useRef(false);
 
   const toggleConsent = () => setIsConsentChecked(!isConsentChecked);
 
@@ -33,7 +34,9 @@ export const AccountDeleteScreen = () => {
   const handleCloseConfirm = () => setIsConfirmSheetOpen(false);
 
   const performDeleteAccount = async () => {
-    if (deleteAccountMutation.isPending) return; // 연타로 인한 중복 탈퇴 요청 방지
+    // isPending은 리렌더 이후에나 반영되므로, 연타 시 중복 탈퇴 요청을 확실히 막으려면 동기 락이 필요하다.
+    if (isDeletingRef.current) return;
+    isDeletingRef.current = true;
     try {
       await deleteAccountMutation.mutateAsync();
       try {
@@ -48,6 +51,8 @@ export const AccountDeleteScreen = () => {
     } catch (error) {
       setIsConfirmSheetOpen(false);
       showToast(getErrorDisplayMessage(error, '회원 탈퇴에 실패했습니다. 잠시 후 다시 시도해주세요.'), 'error');
+    } finally {
+      isDeletingRef.current = false;
     }
   };
 
@@ -67,6 +72,7 @@ export const AccountDeleteScreen = () => {
 
       <DeleteConfirmBottomSheet
         isOpen={isConfirmSheetOpen}
+        isConfirming={deleteAccountMutation.isPending}
         onClose={handleCloseConfirm}
         onConfirm={performDeleteAccount}
       />
