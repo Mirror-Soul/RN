@@ -87,6 +87,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     logger.info('useAuthStore: Logging out');
     try {
       await tokenStorage.clearAll();
+    } catch (error) {
+      // SecureStore 삭제가 실패해도 로그아웃 자체는 성공으로 취급 — 여기서 throw하면
+      // 호출부(performLogout 등)의 후속 로직(예: 로그인 화면 이동)이 통째로 스킵된다.
+      logger.error('useAuthStore: tokenStorage.clearAll failed during logout', error);
     } finally {
       // clearAll()이 실패하더라도 메모리 상태는 반드시 초기화 (라우팅 가드 작동 보장)
       set({ isLoggedIn: false, accessToken: null, userUuid: null, userStatus: null });

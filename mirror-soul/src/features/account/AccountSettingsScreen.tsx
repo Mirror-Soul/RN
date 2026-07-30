@@ -38,9 +38,13 @@ export const AccountSettingsScreen = () => {
   };
 
   const handleConfirmLogout = async () => {
-    await performLogout();
-    setIsLogoutSheetOpen(false);
-    router.replace('/');
+    // performLogout이 예상치 못한 이유로 실패하더라도 로그인 화면 이동은 항상 보장한다
+    try {
+      await performLogout();
+    } finally {
+      setIsLogoutSheetOpen(false);
+      router.replace('/');
+    }
   };
 
   const handleWithdraw = () => {
