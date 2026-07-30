@@ -100,6 +100,7 @@ function RootLayout() {
               <Stack.Screen name="(main)" options={{ animation: 'fade' }} />
               <Stack.Screen name="call-detail" />
               <Stack.Screen name="voice-update" />
+              <Stack.Screen name="forgot-password" />
               <Stack.Screen
                 name="message-room/[id]"
                 options={{ animation: 'slide_from_right' }}
