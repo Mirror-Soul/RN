@@ -10,6 +10,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import * as Sentry from '@sentry/react-native';
 import { ToastProvider } from '@/src/components/common/Toast/ToastProvider';
+import { useProactiveTokenRefresh } from '@/src/hooks/useProactiveTokenRefresh';
 
 /**
  * hydration 완료 전까지 스플래시 화면 유지.
@@ -46,6 +47,9 @@ function RootLayout() {
   useEffect(() => {
     hydrate();
   }, []);
+
+  // access token 만료 전 사전 갱신 (hydration 이후에만 의미 있음 — 훅 내부에서 isLoggedIn/accessToken 가드)
+  useProactiveTokenRefresh();
 
   // hydration 완료 → 스플래시 숨김
   useEffect(() => {

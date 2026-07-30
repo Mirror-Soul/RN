@@ -42,6 +42,42 @@ const processQueue = (error: any, token: string | null) => {
   failedQueue = [];
 };
 
+/**
+ * Access token 갱신. 401 리액티브 갱신과 사전(pre-emptive) 갱신이 동시에 호출되어도
+ * isRefreshing/failedQueue로 직렬화되어 실제 /auth/refresh 호출은 한 번만 나간다.
+ */
+export const refreshAccessToken = async (): Promise<string> => {
+  if (isRefreshing) {
+    return new Promise((resolve, reject) => {
+      failedQueue.push({ resolve, reject });
+    }) as Promise<string>;
+  }
+
+  isRefreshing = true;
+
+  try {
+    const refreshToken = await tokenStorage.getRefreshToken();
+    if (!refreshToken) throw new Error('No refresh token');
+
+    const { data } = await apiClient.post('/auth/refresh', { refreshToken });
+
+    if (!data.isSuccess) throw new Error('Refresh failed by server');
+
+    await useAuthStore.getState().updateToken(data.result.accessToken, data.result.refreshToken);
+    processQueue(null, data.result.accessToken);
+    return data.result.accessToken;
+  } catch (refreshError) {
+    processQueue(refreshError, null);
+    await useAuthStore.getState().logout();
+    queryClient.clear(); // 만료된 세션의 캐시된 서버 상태(닉네임, 잔액 등)를 남기지 않는다
+    showGlobalToast('세션이 만료되어 다시 로그인해주세요.', 'info');
+    router.replace('/');
+    throw refreshError;
+  } finally {
+    isRefreshing = false;
+  }
+};
+
 // ─────────────────────────────────────────────
 // 응답 인터셉터
 // ─────────────────────────────────────────────
@@ -86,44 +122,15 @@ apiClient.interceptors.response.use(
       // 일반 API 호출 중 401/403 발생 시에만 토큰 갱신 시도
       if (!originalRequest._retry) {
         logger.info(`apiClient: ${error.response.status} detected on normal request. Attempting refresh...`);
-
-        if (isRefreshing) {
-          return new Promise((resolve, reject) => {
-            failedQueue.push({ resolve, reject });
-          }).then(token => {
-            originalRequest.headers = originalRequest.headers ?? {};
-            originalRequest.headers.Authorization = `Bearer ${token}`;
-            return apiClient(originalRequest);
-          }).catch(err => Promise.reject(err));
-        }
-
         originalRequest._retry = true;
-        isRefreshing = true;
 
         try {
-          const refreshToken = await tokenStorage.getRefreshToken();
-          if (!refreshToken) throw new Error("No refresh token");
-
-          const { data } = await apiClient.post('/auth/refresh', { refreshToken });
-
-          if (data.isSuccess) {
-            await useAuthStore.getState().updateToken(data.result.accessToken, data.result.refreshToken);
-            processQueue(null, data.result.accessToken);
-            originalRequest.headers = originalRequest.headers ?? {};
-            originalRequest.headers.Authorization = `Bearer ${data.result.accessToken}`;
-            return apiClient(originalRequest);
-          } else {
-            throw new Error('Refresh failed by server');
-          }
+          const newAccessToken = await refreshAccessToken();
+          originalRequest.headers = originalRequest.headers ?? {};
+          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+          return apiClient(originalRequest);
         } catch (refreshError) {
-          processQueue(refreshError, null);
-          await useAuthStore.getState().logout();
-          queryClient.clear(); // 만료된 세션의 캐시된 서버 상태(닉네임, 잔액 등)를 남기지 않는다
-          showGlobalToast('세션이 만료되어 다시 로그인해주세요.', 'info');
-          router.replace('/');
           return Promise.reject(refreshError);
-        } finally {
-          isRefreshing = false;
         }
       }
     }
