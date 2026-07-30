@@ -72,7 +72,10 @@ function RootLayout() {
           router.replace(getOnboardingRoute(userStatus));
         }
       } else {
-        router.replace('/');
+        // (main) 그룹의 홈 탭도 파일명이 index라 로그인 화면을 "/"에 두면 두 화면이
+        // 같은 경로를 두고 충돌해 로그아웃 후에도 홈 화면에 머무는 버그가 생긴다.
+        // 그래서 로그인 화면은 /login(app/login.tsx)이라는 고유 경로를 쓴다.
+        router.replace('/login');
       }
     }, 0);
 
@@ -95,7 +98,7 @@ function RootLayout() {
                 animationDuration: 200,
               }}
             >
-              <Stack.Screen name="index" />
+              <Stack.Screen name="login" />
               <Stack.Screen name="signup" options={{ animation: 'slide_from_right' }} />
               <Stack.Screen name="(main)" options={{ animation: 'fade' }} />
               <Stack.Screen name="call-detail" />

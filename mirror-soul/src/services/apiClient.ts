@@ -71,7 +71,8 @@ export const refreshAccessToken = async (): Promise<string> => {
     await useAuthStore.getState().logout();
     queryClient.clear(); // 만료된 세션의 캐시된 서버 상태(닉네임, 잔액 등)를 남기지 않는다
     showGlobalToast('세션이 만료되어 다시 로그인해주세요.', 'info');
-    router.replace('/');
+    // (main) 그룹 홈 탭도 파일명이 index라 "/"에 두면 경로가 충돌해 로그인 화면으로 못 나간다 (app/CLAUDE.md 참고)
+    router.replace('/login');
     throw refreshError;
   } finally {
     isRefreshing = false;
@@ -130,6 +131,7 @@ apiClient.interceptors.response.use(
           originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
           return apiClient(originalRequest);
         } catch (refreshError) {
+          // 로그아웃/캐시정리/토스트/리다이렉트는 refreshAccessToken() 내부에서 이미 처리된다
           return Promise.reject(refreshError);
         }
       }

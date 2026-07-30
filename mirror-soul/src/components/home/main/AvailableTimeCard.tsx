@@ -22,8 +22,9 @@ export default function AvailableTimeCard({
   onRefillPress,
 }: AvailableTimeCardProps) {
   const { colors } = useThemeColors();
-  const { data } = useTimeStatusQuery();
-  const displayValue = timeDisplay ?? formatCallTime(data?.remainingTalkTime ?? 0);
+  const { data, isLoading, isError, refetch } = useTimeStatusQuery();
+  const displayValue =
+    timeDisplay ?? (isLoading ? '--:--:--' : isError ? '조회 실패 · 재시도' : formatCallTime(data?.remainingTalkTime ?? 0));
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
@@ -33,7 +34,13 @@ export default function AvailableTimeCard({
         </View>
         <View>
           <Text style={[styles.label, { color: colors.text.muted }]}>Available Time</Text>
-          <Text style={[styles.value, { color: colors.text.primary }]}>{displayValue}</Text>
+          {isError && !timeDisplay ? (
+            <TouchableOpacity onPress={() => refetch()} accessibilityRole="button" accessibilityLabel="남은 시간 다시 조회">
+              <Text style={[styles.value, styles.valueError, { color: colors.state.danger }]}>{displayValue}</Text>
+            </TouchableOpacity>
+          ) : (
+            <Text style={[styles.value, { color: colors.text.primary }]}>{displayValue}</Text>
+          )}
         </View>
       </View>
 
@@ -87,6 +94,10 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xxl,
     fontWeight: FontWeight.black,
     letterSpacing: -0.45,
+  },
+  valueError: {
+    fontSize: FontSize.sm,
+    textDecorationLine: 'underline',
   },
   refillButton: {
     paddingHorizontal: Spacing.lg,

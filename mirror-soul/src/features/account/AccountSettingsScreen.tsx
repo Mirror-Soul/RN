@@ -43,7 +43,7 @@ export const AccountSettingsScreen = () => {
       await performLogout();
     } finally {
       setIsLogoutSheetOpen(false);
-      router.replace('/');
+      router.replace('/login');
     }
   };
 

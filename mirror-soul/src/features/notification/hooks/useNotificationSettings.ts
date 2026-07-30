@@ -28,10 +28,14 @@ export const useNotificationSettings = () => {
 
   const mutation = useMutation({
     mutationFn: (nextTimeLimitAlert: boolean) => {
+      // 캐시가 아직 없으면(조회 전) 숨김 필드값을 임의로 추측하지 않고 요청 자체를 막는다.
       const current = queryClient.getQueryData<AlarmSettingResult>(['profile', 'alarmSettings']);
+      if (!current) {
+        return Promise.reject(new Error('알림 설정을 아직 불러오지 못했습니다.'));
+      }
       return modifyAlarmSetting({
         lowTimeNotificationEnabled: nextTimeLimitAlert,
-        missedCallNotificationEnabled: current?.missedCallNotificationEnabled ?? true,
+        missedCallNotificationEnabled: current.missedCallNotificationEnabled,
       });
     },
     onSuccess: (response) => {
@@ -45,8 +49,9 @@ export const useNotificationSettings = () => {
   const timeLimitAlert = query.data?.lowTimeNotificationEnabled ?? true;
 
   const handleToggleTimeLimit = useCallback(() => {
+    if (!query.data) return; // 조회 완료 전에는 토글 자체를 막는다.
     mutation.mutate(!timeLimitAlert);
-  }, [mutation, timeLimitAlert]);
+  }, [mutation, timeLimitAlert, query.data]);
 
   const handleToggleEvent = useCallback(() => {
     toggleEventAlert();
@@ -57,5 +62,6 @@ export const useNotificationSettings = () => {
     eventAlert,
     handleToggleTimeLimit,
     handleToggleEvent,
+    isTimeLimitLoading: query.isLoading || !query.data,
   };
 };

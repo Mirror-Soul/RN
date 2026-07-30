@@ -5,7 +5,7 @@
 >
 > **먼저 볼 것**: 저장소 루트 `../../CLAUDE.md`(모노레포 공통: git 습관, 백엔드 API 정본 위치, iOS 빌드 트러블슈팅)와 `../CLAUDE.md`(RN 앱 컨벤션: API 서비스 레이어 패턴, react-query 마이그레이션 이후의 최신 상태관리 패턴) — 이 문서는 "무엇을 했고 무엇이 남았는지"에 집중하고, "어떻게 하는지"는 그 두 파일에 정리했다.
 >
-> **주의**: 이 세 파일(`../../CLAUDE.md`, `../CLAUDE.md`, `.claude/artifacts/*`)은 원래 `docs/claude-code-efficiency-guide` 브랜치에서 작성됐고, `feat/136-mypage-api-advancement`/`feat/137-auth-hardening` 브랜치에는 없었다 (두 브랜치가 별개로 `main`에서 분기됨). 2026-07-30 세션에서 `git show`로 해당 브랜치의 최신 버전을 그대로 이 브랜치 워킹트리에도 복사해서 반영했고, `feat/136-mypage-api-advancement`의 `docs:` 커밋으로 이미 커밋됨. 두 브랜치가 나중에 각자 머지되면 이 파일들의 내용이 중복/충돌할 수 있으니 유의할 것.
+> **주의**: 이 세 파일(`../../CLAUDE.md`, `../CLAUDE.md`, `.claude/artifacts/*`)은 원래 `docs/claude-code-efficiency-guide` 브랜치에서 작성됐고, `feat/136-mypage-api-advancement`/`feat/137-auth-hardening`에는 없었다 (두 브랜치가 별개로 `main`에서 분기됨). 2026-07-30 세션에서 `git show`로 해당 브랜치의 최신 버전을 `feat/136-mypage-api-advancement` 워킹트리에 복사해서 커밋했다(`0db0ce7`). `feat/137-auth-hardening`은 그 커밋 이후로 분기했으므로 이미 포함하고 있다. 2026-07-30 세션 후반에 `feat/136-mypage-api-advancement`가 먼저 `main`에 merge됐고(§1의 8~9번), 이 문서는 그 뒤 `feat/137-auth-hardening`을 `main`에 merge하며 발생한 충돌을 해결하는 과정에서 두 브랜치의 로그를 합쳤다.
 
 ---
 
@@ -18,8 +18,9 @@
 5. **iOS 실기기 빌드 트러블슈팅** — `expo-font` 플러그인 스키마 버그, Sentry 소스맵 자동 업로드 실패, Expo CLI의 기기 설치 버그, SDK 버전 정렬 후 `node_modules` 꼬임까지 총 4개의 순차적 빌드 차단 이슈를 진단/수정 (§4.5 참고)
 6. **백엔드 API 스키마 전수 조사 (Phase 1)** — 백엔드 12개 컨트롤러·46개 엔드포인트·47개 에러코드를 Service 계층까지 검증해서 `.claude/artifacts/backend-schema.json`/`analysis-report.md`로 산출 (§4.6 참고)
 7. **Profile/my-page 백엔드 연동** — `feat/134-api` (마이페이지 6개 화면을 실제 API로 연결 + 공통 에러코드 유틸리티 신규) → **`main`에 merge 완료 (PR #135)**
-8. **Profile/my-page 고도화 (1단계+2단계)** — `feat/136-mypage-api-advancement` (Toast/로딩/dedup-guard UX 하드닝 → 이후 프로젝트에 이미 설치돼 있던 react-query로 전면 마이그레이션) → **8개 도메인별 커밋으로 정리해 push 완료, 아직 PR 미생성/미merge** (§4.8 참고)
-9. **인증(Auth) 고도화 분석 + 프론트 개선** — `feat/137-auth-hardening` (백엔드/프론트 인증 전수 분석 → 프론트에서 바로 할 수 있는 4가지: 사전 토큰 갱신, 로그아웃 캐시 정리, 로그인/회원가입 react-query 마이그레이션, 비밀번호 찾기 UI 스캐폴딩) → **구현+커밋+push 완료, PR 미생성/미merge** (§4.9 참고, 지금 이 브랜치). 백엔드 변경(리프레시 토큰 rotation, access token 즉시 무효화, rate limiting, 비밀번호 재설정 엔드포인트)은 이번 세션에서 하지 않고 §6.2에 협의 체크리스트로만 정리했다.
+8. **Profile/my-page 고도화 (1단계+2단계)** — `feat/136-mypage-api-advancement` (Toast/로딩/dedup-guard UX 하드닝 → 이후 프로젝트에 이미 설치돼 있던 react-query로 전면 마이그레이션) → **`main`에 merge 완료** (§4.8 참고)
+9. **CodeRabbit 리뷰 대응 + 로그인 라우트 충돌 버그 수정** — 여전히 `feat/136-mypage-api-advancement` (§4.8에 대한 CodeRabbit 리뷰 6건 반영 + 로그아웃/회원탈퇴 후 로그인 화면으로 안 나가지는 버그의 실제 원인(라우트 충돌) 발견/수정) → **`main`에 merge 완료** (§4.9 참고)
+10. **인증(Auth) 고도화 분석 + 프론트 개선** — `feat/137-auth-hardening` (백엔드/프론트 인증 전수 분석 → 프론트에서 바로 할 수 있는 4가지: 사전 토큰 갱신, 로그아웃 캐시 정리, 로그인/회원가입 react-query 마이그레이션, 비밀번호 찾기 UI 스캐폴딩) → **구현+커밋+push 완료. `main`에 merge하는 과정에서 §4.9의 라우팅 수정과 충돌해서(둘 다 같은 로그아웃 버그를 각자 고침), 병합 시 §4.9의 `/login` 수정을 유지하면서 이 브랜치의 `performLogout()` 공유 헬퍼로 통일했다** (§4.10 참고, 지금 이 브랜치). 백엔드 변경(리프레시 토큰 rotation, access token 즉시 무효화, rate limiting, 비밀번호 재설정 엔드포인트)은 이번 세션에서 하지 않고 §6.2에 협의 체크리스트로만 정리했다.
 
 ---
 
@@ -38,8 +39,8 @@
 | `refactor/132-header-bottom-ui` | main | ✅ merge 완료 (PR #133) | 탭 헤더 텍스트 스타일 통일, 프로스티드 블러 바텀바, iOS 빌드 차단 이슈 4건 수정 |
 | `feat/134-api` | main | ✅ merge 완료 (PR #135) | 마이페이지(Profile) 6개 화면 실제 API 연동 + 공통 에러코드 유틸리티 |
 | `docs/claude-code-efficiency-guide` | main | 🔵 미merge (상태 불확실) | 루트/`mirror-soul/` `CLAUDE.md` 신규 작성 + 백엔드 스키마 아티팩트 커밋 |
-| `feat/136-mypage-api-advancement` | main (8ffcbdf, feat/134-api merge 직후) | 🟡 커밋+push 완료, PR 미생성 | Toast/로딩/에러 UX 하드닝 + react-query 전면 마이그레이션 (§4.8) |
-| `feat/137-auth-hardening` | `feat/136-mypage-api-advancement` (0db0ce7) | 🟡 커밋+push 완료, PR 미생성 (지금 이 브랜치) | 백엔드/프론트 인증 전수 분석 + 사전 토큰 갱신/로그아웃 캐시 정리/로그인·회원가입 react-query 마이그레이션/비밀번호 찾기 스캐폴딩 (§4.9) |
+| `feat/136-mypage-api-advancement` | main (8ffcbdf, feat/134-api merge 직후) | ✅ `main`에 merge 완료 | Toast/로딩/에러 UX 하드닝 + react-query 전면 마이그레이션(§4.8) + CodeRabbit 대응/로그인 라우트 충돌 수정(§4.9) |
+| `feat/137-auth-hardening` | `feat/136-mypage-api-advancement` (0db0ce7) | 🟡 커밋+push 완료, `main` merge 중 충돌 해결(지금 이 브랜치) | 백엔드/프론트 인증 전수 분석 + 사전 토큰 갱신/로그인·회원가입 react-query 마이그레이션/비밀번호 찾기 스캐폴딩 (§4.10). 로그아웃 관련 파일에서 §4.9와 충돌 발생 → `performLogout()` 헬퍼 유지 + `/login` 타겟으로 통일 |
 
 ---
 
@@ -112,7 +113,7 @@
 
 ### 4.8 Profile/my-page 고도화 — Toast/UX 하드닝 + react-query 전면 마이그레이션 (`feat/136-mypage-api-advancement`, 지금 이 브랜치)
 
-`feat/134-api`가 만든 API 연동을 두 단계로 고도화했다. **1단계**를 다 만든 뒤 사용자가 "왜 이미 설치돼 있고 다른 화면(`useInterviewQuestions.ts`)에 선례가 있는 `@tanstack/react-query`를 안 쓰냐"고 지적해서, **2단계에서 1단계 산출물 상당수를 react-query로 대체**했다. 두 단계 다 구현/검증(lint+tsc+test) 완료, 2026-07-30 세션에서 8개 도메인별 커밋으로 정리해 push 완료.
+`feat/134-api`가 만든 API 연동을 두 단계로 고도화했다. **1단계**를 다 만든 뒤 사용자가 "왜 이미 설치돼 있고 다른 화면(`useInterviewQuestions.ts`)에 선례가 있는 `@tanstack/react-query`를 안 쓰냐"고 지적해서, **2단계에서 1단계 산출물 상당수를 react-query로 대체**했다. 두 단계 다 구현/검증(lint+tsc+test) 완료, 2026-07-30 세션에서 8개 도메인별 커밋으로 정리해 push 완료 (§4.9에서 이어서 CodeRabbit 리뷰 대응까지 완료, 이후 `main`에 merge).
 
 **1단계 (UX 하드닝, 이후 일부 대체됨)**:
 - `src/components/common/Toast/ToastProvider.tsx` 신규 — `Context`+`useToast()` 훅, `app/_layout.tsx`에 마운트. 스토어 등 React 컴포넌트 밖에서도 토스트를 띄울 수 있게 모듈 레벨 브릿지(`showGlobalToast`)도 노출 (React Navigation의 `navigationRef` 패턴과 동일).
@@ -130,9 +131,26 @@
 - `formatCallTime`을 `useCallTimeStore.ts`에서 `src/utils/formatCallTime.ts`(순수 함수)로 이동 — 스토어 삭제와 무관하게 여러 컴포넌트가 계속 참조.
 - 검증: `npx tsc --noEmit`(건드린 파일 기준 새 에러 0), `npm run lint`(건드린 파일 기준 새 에러 0, 기존 pre-existing warning만), `npm test`(21/21 통과, `apiErrorCode.test.ts`+`profileService.test.ts` 모두 그대로).
 - **실기기/시뮬레이터 검증은 아직 못 함** — §4.5의 5번 항목(GoogleMLKit이 Apple Silicon 시뮬레이터 슬라이스를 안 갖고 있어 `mirrorsoul` 스킴 자체가 시뮬레이터로 빌드 불가능, 근본 원인 확정됨)과 `../CLAUDE.md`의 웹 미리보기 크래시(react-native-webrtc, 2026-07-30 확인)에 막혀서 UI 동작 확인이 안 된 상태다. **다음 세션/QA에서 할 일**: §4.5의 3번 항목(`ios-deploy` 경유 실기기 설치)으로 마이페이지 플로우(닉네임 변경, 시간 충전, 오디오/알림 토글, 회원탈퇴)를 실제로 눌러보고 확인할 것 — 시뮬레이터/웹으로는 이 앱을 검증할 수 없다는 점을 다음 세션이 반복해서 재발견하지 않도록 유의.
-- 2026-07-30 세션에서 8개 도메인별 커밋으로 정리해 `origin/feat/136-mypage-api-advancement`에 push 완료. PR은 아직 생성 안 됨 (`gh` CLI 없음 — 루트 CLAUDE.md 참고, compare 링크로 대체 안내).
+- 2026-07-30 세션에서 8개 도메인별 커밋으로 정리해 push 완료, 이후 `main`에 merge.
 
-### 4.9 인증(Auth) 고도화 분석 + 프론트 개선 (`feat/137-auth-hardening`, 지금 이 브랜치)
+### 4.9 CodeRabbit 리뷰 대응 + 로그인 라우트 충돌 버그 수정 (`feat/136-mypage-api-advancement`)
+
+**CodeRabbit이 §4.8 PR에 남긴 리뷰 6건을 검토 후 전부 반영** (커밋 `279940c`):
+- Toast에 스크린리더 지원 추가 — `AccessibilityInfo.announceForAccessibility` + `accessibilityLiveRegion`/`accessibilityRole="alert"` 병행. 프로젝트 전체에 `AccessibilityInfo` 사용례가 이게 처음이었음.
+- 잔여 시간 표시 3곳(`components/home/main/AvailableTimeCard.tsx`, `features/profile/components/AvailableTimeCard.tsx`, `TimeRefillBottomSheet.tsx`)이 조회 전/실패 시에도 0초를 그대로 보여주던 문제 → 로딩/에러 상태를 구분해서 재시도 가능한 UI로 교체. `useTimeStatusQuery`가 `staleTime: 0`이라 화면 진입마다 매번 재조회되므로 실제로 자주 발생하는 문제였음.
+- 계정탈퇴/시간구매: `isPending` 같은 렌더 파생 상태만으로는 리렌더 사이의 좁은 레이스 윈도우에서 중복 요청이 가능 → `useRef` 동기 락을 `isPending`과 **병행**해서 추가 (`AccountDeleteScreen.tsx`, `TimeRefillBottomSheet.tsx`, `app/(main)/index.tsx`).
+- 알림/음성 설정: 조회 완료 전 캐시가 없는 상태에서 토글하면, FE에 UI가 없는 숨김 필드(`missedCallNotificationEnabled`, `opponentVoiceVolume`)를 임의 기본값으로 PATCH해서 실제 서버값을 덮어쓸 위험 → `mutationFn`이 캐시 없으면 reject하고, 조회 완료 전엔 토글/세그먼트 자체를 비활성화.
+- 검증: 건드린 13개 파일 기준 tsc/lint 신규 에러 0 (stash 대조로 베이스라인 확인).
+
+**로그아웃 후 로그인 화면으로 안 나가지는 버그** — 사용자가 실기기에서 두 차례에 걸쳐 재현:
+1. 1차 시도: `useAuthStore.logout()`이 `tokenStorage.clearAll()` 실패 시 예외를 그대로 던져서, 호출부의 `router.replace('/')`가 스킵되던 문제로 진단하고 try/finally로 방어 (feat/137-auth-hardening의 `0fd17b2` 커밋과 동일한 수정을 이 브랜치에도 포팅).
+2. 2차 시도(실제 근본 원인): 그래도 안 됨 — **토큰/상태는 정리되는데 화면 전환이 안 됨**. 원인은 `app/index.tsx`(로그인)와 `(main)` 그룹의 홈 탭이 **둘 다 파일명이 `index`라 경로 `/`를 두고 충돌**하고 있었던 것. `(main)` 안에 있는 상태에서 `router.replace('/')`를 호출하면 라우터가 "이미 `/`에 해당하는 화면(홈)에 있다"고 판단해 로그인 화면으로 안 바뀐다 — `.expo/types/router.d.ts`(생성 파일)에 `{ pathname: '/(main)' | '/' }`로 실제로 명시되어 있어서 확인함.
+   - **수정**: `app/index.tsx` → `app/login.tsx`로 rename(고유 경로 `/login` 확보), 로그인/홈을 가리키던 7곳(`app/_layout.tsx` 인증 가드, `app/(main)/index.tsx`, `AccountSettingsScreen.tsx`, `AccountDeleteScreen.tsx`, `apiClient.ts` 세션만료 핸들러, `Header.tsx`의 back-fallback, `app/signup/face-scan.tsx`의 가입완료 이동)를 전부 명시적 경로(`/login` 또는 `/(main)`)로 교체 — 더 이상 모호한 `/`에 기대지 않음.
+   - `npx expo start`를 짧게 돌려 `.expo/types/router.d.ts`를 재생성해서 `/login`이 독립 경로로, `/`는 `(main)` 홈에만 매칭되는 것으로 바뀐 걸 직접 확인함.
+   - 상세 배경은 `mirror-soul/app/CLAUDE.md` 참고.
+- **관찰**: 로그아웃 처리 로직(`authService.logout()` → `useAuthStore.logout()` → `router.replace(...)`, try/finally로 항상 이동 보장)이 `app/(main)/index.tsx`/`AccountSettingsScreen.tsx`/`AccountDeleteScreen.tsx` 3곳에 각각 살짝 다른 모양으로 중복 구현되어 있다. `feat/137-auth-hardening`엔 이미 이걸 묶은 `authService.performLogout()` 공유 헬퍼가 있으니, 두 브랜치를 나중에 합칠 때 그쪽 구현으로 통일하는 게 좋다. 상세는 `mirror-soul/src/features/account/CLAUDE.md` 참고. → **2026-07-30 세션 후반에 실제로 `feat/137-auth-hardening`을 `main`에 merge하면서 그대로 실행함 (§4.10 끝부분 참고).**
+
+### 4.10 인증(Auth) 고도화 분석 + 프론트 개선 (`feat/137-auth-hardening`)
 
 `feat/136-mypage-api-advancement` 기준으로 분기해서, 로그인/회원가입/토큰 갱신/로그아웃 전 구간을 백엔드(Spring Boot, submodule)와 프론트 양쪽에서 전수 분석한 뒤, **이번 세션에서는 프론트만** 개선했다 — 사용자가 "백엔드는 제가 수정하지 않는다"고 명시적으로 확인.
 
@@ -157,6 +175,8 @@
 
 **백엔드 협의가 필요한 항목**은 §6.2로 옮겼다.
 
+**`main` merge 시 실제로 벌어진 충돌** (2026-07-30 세션 후반): 이 브랜치가 `main`을 merge하면서 §4.9와 충돌했다 — 둘 다 "로그아웃 후 로그인 화면으로 안 나가짐" 버그를 각자 고쳤기 때문 (§4.9가 나중에 찾은 진짜 근본 원인이라 `/login` 타겟은 그쪽이 맞고, 이 브랜치의 `authService.performLogout()` 공유 헬퍼는 아키텍처가 더 낫다). 해결 방향: `performLogout()` 헬퍼 구조를 유지하되 모든 `router.replace('/')`를 `router.replace('/login')`으로 교체(`app/(main)/index.tsx`, `AccountSettingsScreen.tsx`, `AccountDeleteScreen.tsx`, `apiClient.ts`의 `refreshAccessToken()`). `git merge-tree --write-tree`로 사전에 충돌 지점을 확인한 뒤 `git merge origin/main`으로 실제 병합, 6개 파일(코드 5 + 이 문서) 충돌을 전부 수동 해결.
+
 ---
 
 ## 5. 향후 세션을 위한 실전 팁
@@ -175,7 +195,9 @@
 ### 6.1 지금 바로 RN 단독으로 해볼 만한 것
 - [x] ~~회원탈퇴/로그아웃/닉네임변경/시간조회·충전/오디오설정/알림설정(일부)을 실제 API로 연결~~ → `feat/134-api`에서 완료 (§4.7)
 - [x] ~~Toast/로딩 스피너/dedup-guard UX 하드닝, react-query로 서버 상태 관리 전면 전환~~ → `feat/136-mypage-api-advancement`에서 완료, push 완료 (§4.8)
-- [x] ~~로그인/회원가입 react-query 마이그레이션, 로그아웃 캐시 정리, 사전 토큰 갱신, 비밀번호 찾기 UI 스캐폴딩~~ → `feat/137-auth-hardening`에서 완료, push 완료 (§4.9)
+- [x] ~~CodeRabbit 리뷰 대응(a11y/로딩·에러 UX/중복요청 가드/숨김필드 보호) + 로그인 라우트 충돌 버그 수정~~ → `feat/136-mypage-api-advancement`에서 완료 (§4.9)
+- [x] ~~로그인/회원가입 react-query 마이그레이션, 로그아웃 캐시 정리(`performLogout()` 공유 헬퍼), 사전 토큰 갱신, 비밀번호 찾기 UI 스캐폴딩~~ → `feat/137-auth-hardening`에서 완료 (§4.10)
+- [x] ~~로그아웃 로직 중복 제거~~ → `feat/137-auth-hardening`을 `main`에 merge하면서 `authService.performLogout()` 공유 헬퍼로 통일 완료 (§4.10 끝부분 참고)
 - [ ] `src/components/home/main/AvailableTimeCard.tsx`와 `src/features/profile/components/AvailableTimeCard.tsx` — 이름은 같지만 완전히 다른 두 컴포넌트를 하나로 통합 (디자인 결정 필요, 상태/API 연동은 이미 통일됨, UI 병합만 안 함)
 - [ ] `src/components/home/main/RefillModal.tsx`와 `src/features/profile/components/TimeRefillBottomSheet.tsx` — 마찬가지로 UI 자체를 하나로 병합 (`TimeRefillBottomSheet.tsx`만 실제 `buyTime` API에 연결됨, `RefillModal.tsx`는 여전히 UI만 있고 API 미연결)
 - [ ] `chore/mvp-app-store-config`의 `REPLACE_WITH_EAS_PROJECT_ID` placeholder 2곳 — `eas init` 실행 후 실제 값으로 교체
@@ -224,6 +246,8 @@
 | `.claude/artifacts/backend-schema.json` | `docs/claude-code-efficiency-guide` (이 브랜치 워킹트리에도 복사됨) | 백엔드 12개 컨트롤러·46개 엔드포인트·47개 에러코드 전수 (Service 계층까지 검증됨) |
 | `.claude/artifacts/analysis-report.md` | `docs/claude-code-efficiency-guide` (이 브랜치 워킹트리에도 복사됨) | 백엔드 아키텍처 분석 + FE-BE 커버리지 격차 |
 | `docs/MVP_WORK_LOG_AND_ROADMAP.md` (이 문서) | `feat/136-mypage-api-advancement` | 전체 작업 로그 + 고도화 로드맵 |
+| `mirror-soul/app/CLAUDE.md` | `feat/136-mypage-api-advancement` | 라우팅/네비게이션 도메인: `/` 경로 충돌 위험, Stack/Tabs 구조, 명시적 경로 규칙 |
+| `mirror-soul/src/features/account/CLAUDE.md` | `feat/136-mypage-api-advancement` | 인증/로그아웃 도메인: `useAuthStore.logout()` 계약, 로그아웃 진입점 3곳과 중복 현황 |
 | `docs/DX_TYPE_LINT_BACKLOG.md` | `feat/123-dx-logic`(위치 불확실, §1) | 남은 tsc/lint 에러 그룹별 정리 |
 | `docs/TODO_BACKLOG.md` | `feat/123-dx-logic`(위치 불확실, §1) | 백엔드/제품 결정 필요한 TODO 목록 |
 | `docs/MULTI_DEVICE_CALL_CHAT_ARCHITECTURE.md` | `feat/123-dx-logic`(위치 불확실, §1) | 멀티기기 통화/채팅 설계 제안 |

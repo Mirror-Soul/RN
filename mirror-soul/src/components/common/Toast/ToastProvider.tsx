@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { AccessibilityInfo, Pressable, StyleSheet, Text } from 'react-native';
 import Animated, { FadeInDown, FadeOutUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
@@ -62,6 +62,8 @@ export const ToastProvider = ({ children }: { children: React.ReactNode }) => {
     if (dismissTimer.current) clearTimeout(dismissTimer.current);
     setToast({ id: Date.now(), message, type });
     dismissTimer.current = setTimeout(() => setToast(null), AUTO_DISMISS_MS);
+    // accessibilityLiveRegion은 iOS에서 지원이 제한적이라, 명령형 announce를 함께 호출해 스크린리더에도 확실히 전달한다.
+    AccessibilityInfo.announceForAccessibility(message);
   }, []);
 
   useEffect(() => {
@@ -91,8 +93,11 @@ export const ToastProvider = ({ children }: { children: React.ReactNode }) => {
             { top: insets.top + Spacing.md, backgroundColor: colors.background.glass, borderColor: accentColor },
           ]}
           pointerEvents="box-none"
+          accessible
+          accessibilityRole="alert"
+          accessibilityLiveRegion="polite"
         >
-          <Pressable onPress={dismiss} style={styles.pressable}>
+          <Pressable onPress={dismiss} style={styles.pressable} accessibilityLabel="알림 닫기" accessibilityRole="button">
             <Text style={[styles.message, { color: colors.text.primary }]} numberOfLines={3}>
               {toast.message}
             </Text>
