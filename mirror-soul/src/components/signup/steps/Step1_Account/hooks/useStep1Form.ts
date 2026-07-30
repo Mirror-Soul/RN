@@ -136,11 +136,9 @@ export function useStep1Form() {
     state.isEmailVerified &&
     isValidPassword(state.password) &&
     state.password === state.passwordConfirm &&
-    state.isIdentityVerified &&
     state.agreedToTerms &&
+    state.agreedToBiometricData &&
     state.isAdultConfirmed;
-    state.agreedToBiometricData;
-    state.agreedToTerms;
 
 
   return {
