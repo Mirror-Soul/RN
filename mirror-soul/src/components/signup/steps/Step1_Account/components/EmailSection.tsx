@@ -101,6 +101,10 @@ export default function EmailSection({
         </View>
       )}
 
+      {!!state.emailError && !state.isEmailVerified && (
+        <Text style={[styles.errorText, { color: colors.state.danger }]}>{state.emailError}</Text>
+      )}
+
       {state.isEmailVerified && (
         <Text style={styles.successText}>이메일 인증이 완료되었습니다.</Text>
       )}
@@ -168,6 +172,11 @@ const styles = StyleSheet.create({
   },
   successText: {
     color: Colors.primary.successGreen,
+    fontFamily: FontFamily.sans,
+    fontSize: FontSize.sm,
+    marginTop: Spacing.xs,
+  },
+  errorText: {
     fontFamily: FontFamily.sans,
     fontSize: FontSize.sm,
     marginTop: Spacing.xs,

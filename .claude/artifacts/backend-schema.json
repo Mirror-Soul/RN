@@ -468,9 +468,9 @@
           { "name": "refreshToken", "type": "String", "nullable": null },
           { "name": "userStatus", "type": "UserStatus (enum)", "nullable": null }
         ] },
-      "possibleErrorCodes": ["EMAIL_CODE_NOT_REQUESTED", "MISSING_AUTH_INFO", "EMAIL_NOT_VERIFIED", "NOT_AGREED_TERM", "DUPLICATE_EMAIL"],
+      "possibleErrorCodes": ["EMAIL_CODE_NOT_REQUESTED", "MISSING_AUTH_INFO", "EMAIL_NOT_VERIFIED", "NOT_AGREED_TERM"],
       "verified": true,
-      "verifiedNote": "JoinService.basicProfile(): 세션에 인증된 이메일이 아예 없음 → EMAIL_CODE_NOT_REQUESTED, 세션 이메일과 요청 이메일 불일치 → MISSING_AUTH_INFO(이름과 실제 의미가 다소 어긋남), 인증은 했지만 verified=false → EMAIL_NOT_VERIFIED, 약관 미동의 → NOT_AGREED_TERM, 이메일 중복 → DUPLICATE_EMAIL. v1.0.0은 이 중 2개(NOT_AGREED_TERM, DUPLICATE_EMAIL)만 추론했었음 — 나머지 3개가 누락되어 있었다"
+      "verifiedNote": "JoinService.basicProfile(): 세션에 인증된 이메일이 아예 없음 → EMAIL_CODE_NOT_REQUESTED, 세션 이메일과 요청 이메일 불일치 → MISSING_AUTH_INFO(이름과 실제 의미가 다소 어긋남), 인증은 했지만 verified=false → EMAIL_NOT_VERIFIED, 약관 미동의 → NOT_AGREED_TERM. (2026-07-30 정정) 커밋 1f61d00(mirror-soul-back, PR #116 'Fix/email-dup-check')에서 이메일 중복 체크가 /join/send-code로 이동하면서 여기 있던 userRepository.existsByEmail() 체크는 삭제됨 — 이제 이 엔드포인트는 DUPLICATE_EMAIL을 던지지 않는다. 다만 email 컬럼엔 DB unique 제약(uk_users_email)이 남아있고 ExceptionAdvice에 DataIntegrityViolationException 핸들러가 없어서, 이메일 인증 이후 최종 제출 사이의 레이스(같은 이메일로 거의 동시에 가입 완료)가 발생하면 깔끔한 409 대신 raw 500 INTERNAL_SERVER_ERROR가 나간다 — 백엔드에 안전망 핸들러 추가를 요청할 만한 지점"
     },
     {
       "controller": "JoinController",
@@ -484,9 +484,9 @@
         "bodyDto": { "dtoName": "JoinReqDTO.sendCodeReqDTO", "filePath": "mirror-soul-back/src/main/java/com/mirrorsoul/mirrorsoul_api/dto/join/JoinReqDTO.java", "valid": false,
           "fields": [ { "name": "email", "type": "String", "validations": [ {"annotation": "@NotBlank", "message": "이메일은 필수입니다."}, {"annotation": "@Email", "message": "올바른 이메일 형식이 아닙니다."} ], "note": "검증 어노테이션은 있으나 컨트롤러 메서드 파라미터에 @Valid가 없어 실제로 검증되지 않음" } ] } },
       "response": { "dtoName": "Void", "fields": [] },
-      "possibleErrorCodes": ["EMAIL_SEND_FAILED"],
+      "possibleErrorCodes": ["EMAIL_SEND_FAILED", "DUPLICATE_EMAIL"],
       "verified": true,
-      "verifiedNote": "EmailAuthService.sendCode()는 이메일 중복 체크를 하지 않는다 (v1.0.0에서 DUPLICATE_EMAIL을 추론했던 것은 오류 — 정정, 실제로 이 엔드포인트에서 DUPLICATE_EMAIL은 절대 나오지 않는다). mailService.sendVerificationCode() 실패 시에만 EMAIL_SEND_FAILED"
+      "verifiedNote": "(2026-07-30 정정) 커밋 1f61d00(mirror-soul-back, PR #116 'Fix/email-dup-check')부터 EmailAuthService.sendCode()가 mailService.sendVerificationCode() 호출 이전에 userRepository.existsByEmail(email)을 체크해서 중복이면 DUPLICATE_EMAIL(409)을 즉시 던진다 — 예전 노트(이 엔드포인트에서 DUPLICATE_EMAIL이 절대 안 나온다는 정정)는 이제 다시 틀렸다. 이 변경으로 회원가입 폼을 끝까지 채운 뒤에야 중복을 알게 되던 문제가 해결됨 (프론트 대응은 feat/139-email-duplicate-check-ux 참고). mailService.sendVerificationCode() 자체 실패 시엔 여전히 EMAIL_SEND_FAILED."
     },
     {
       "controller": "JoinController",
