@@ -2,6 +2,7 @@ import React from 'react';
 import { View, StyleSheet, ScrollView, ViewStyle, StyleProp } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
+import { useLayout } from '@/src/hooks/useLayout';
 
 interface ScreenLayoutProps {
   children: React.ReactNode;
@@ -9,19 +10,24 @@ interface ScreenLayoutProps {
   style?: StyleProp<ViewStyle>;
   contentContainerStyle?: StyleProp<ViewStyle>;
   paddingBottomOffset?: number;
+  /** 히어로 배경처럼 화면 끝까지 닿아야 하는 화면은 false로 캡을 끌 것. 기본은 켜짐. */
+  centerContent?: boolean;
 }
 
-export const ScreenLayout = ({ 
-  children, 
-  withScroll = true, 
-  style, 
+export const ScreenLayout = ({
+  children,
+  withScroll = true,
+  style,
   contentContainerStyle,
-  paddingBottomOffset = 40 
+  paddingBottomOffset = 40,
+  centerContent = true,
 }: ScreenLayoutProps) => {
   const insets = useSafeAreaInsets();
   const { colors } = useThemeColors();
+  const { contentContainerStyle: responsiveStyle } = useLayout();
 
   const bottomPadding = insets.bottom + paddingBottomOffset;
+  const contentWrapperStyle = centerContent ? responsiveStyle : undefined;
 
   if (withScroll) {
     return (
@@ -30,7 +36,7 @@ export const ScreenLayout = ({
           showsVerticalScrollIndicator={false}
           contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomPadding }, contentContainerStyle]}
         >
-          {children}
+          <View style={contentWrapperStyle}>{children}</View>
         </ScrollView>
       </View>
     );
@@ -38,7 +44,7 @@ export const ScreenLayout = ({
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background.primary, paddingBottom: bottomPadding }, style]}>
-      {children}
+      <View style={[styles.flexFill, contentWrapperStyle]}>{children}</View>
     </View>
   );
 };
@@ -49,5 +55,8 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
+  },
+  flexFill: {
+    flex: 1,
   },
 });

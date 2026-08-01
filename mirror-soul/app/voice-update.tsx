@@ -7,6 +7,7 @@ import {Colors, Spacing} from '@/src/constants/theme';
 import React, { useState, useRef, useEffect } from 'react';
 import { StyleSheet, View, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useLayout } from '@/src/hooks/useLayout';
 
 const SENTENCES = [
   "주말에는 친구들과 영화를 보러 갈 예정이에요.",
@@ -20,6 +21,7 @@ const SENTENCES = [
  * 녹음 프로세스 및 실시간 STT 인터랙션을 관리합니다.
  */
 export default function VoiceUpdateScreen() {
+  const { contentContainerStyle } = useLayout();
   const [status, setStatus] = useState<VoiceUpdateStatus>('idle');
   const [elapsed, setElapsed] = useState(0);
   const [sentenceIndex, setSentenceIndex] = useState(0);
@@ -102,7 +104,7 @@ export default function VoiceUpdateScreen() {
       <View style={styles.container}>
         <VoiceUpdateHeader />
         
-        <View style={styles.main}>
+        <View style={[styles.main, contentContainerStyle]}>
           <VoiceUpdatePrompt sentence={SENTENCES[sentenceIndex]} />
           
           {/* 실시간 STT 결과창: 빈 공간을 채우고 사용자에게 피드백 제공 */}

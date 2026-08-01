@@ -9,6 +9,7 @@ import MainHeader from '@/src/components/home/main/MainHeader';
 import RefillModal from '@/src/components/home/main/RefillModal';
 import SoulConnectTip from '@/src/components/home/main/SoulConnectTip';
 import { Layout } from '@/src/constants/theme';
+import { useLayout } from '@/src/hooks/useLayout';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { performLogout } from '@/src/services/authService';
 import { useBuyTimeMutation } from '@/src/features/profile/hooks/useBuyTimeMutation';
@@ -33,6 +34,7 @@ import { router } from 'expo-router';
 export default function MainHomeScreen() {
   const insets = useSafeAreaInsets();
   const { colors } = useThemeColors();
+  const { contentContainerStyle, screenPadding } = useLayout();
 
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [showRefillModal, setShowRefillModal] = useState(false);
@@ -115,7 +117,7 @@ export default function MainHomeScreen() {
     >
       <Animated.View
         entering={FadeInDown.duration(400).springify().damping(18)}
-        style={[styles.dashboard, { paddingTop: Math.max(insets.top + 12, Layout.SCREEN_PADDING) }]}
+        style={[styles.dashboard, contentContainerStyle, { paddingTop: Math.max(insets.top + 12, Layout.SCREEN_PADDING), paddingHorizontal: screenPadding }]}
       >
         <MainHeader onSettingPress={handleSettingPress} />
 
@@ -169,9 +171,6 @@ const styles = StyleSheet.create({
     paddingBottom: 140, // Floating BottomNavbar 높이만큼 여유 공간 확보
   },
   dashboard: {
-    width: '100%',
-    maxWidth: Layout.MAX_CONTENT_WIDTH,
-    alignSelf: 'center',
     gap: Layout.SCREEN_PADDING,
   },
 });

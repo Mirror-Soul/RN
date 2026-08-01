@@ -3,7 +3,7 @@ import HeartIcon from '@/assets/images/common/bottomNavbar/Heart.svg';
 import HistoryIcon from '@/assets/images/common/bottomNavbar/History_button.svg';
 import ProfileIcon from '@/assets/images/common/bottomNavbar/Profile.svg';
 import SimilarityMainIcon from '@/assets/images/common/main/Similarity.svg';
-import { Colors, FontFamily, Layout, Radii, FontSize, FontWeight, Spacing } from '@/src/constants/theme';
+import { Colors, FontFamily, Radii, FontSize, FontWeight, Spacing } from '@/src/constants/theme';
 import { BlurView } from 'expo-blur';
 import React, { useCallback, useEffect } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -14,7 +14,16 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useLayout, WindowSizeClass } from '@/src/hooks/useLayout';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
+
+// 부유형 pill 내비바는 일반 컨텐츠 캡(useLayout의 contentMaxWidth)만큼 넓어지면 탭 사이
+// 간격이 과하게 벌어져 보인다. 태블릿에서도 손이 닿기 좋은 너비로 별도 상한을 둔다.
+const NAV_BAR_MAX_WIDTH: Record<WindowSizeClass, number | undefined> = {
+  compact: undefined,
+  medium: 480,
+  expanded: 560,
+};
 
 export type BottomTabId = 'history' | 'grow' | 'discover' | 'match' | 'profile';
 
@@ -105,6 +114,7 @@ function TabItem({
 export default function BottomNavbar({ activeTab = 'discover', onTabPress }: BottomNavbarProps) {
   const insets = useSafeAreaInsets();
   const { colors, isDark } = useThemeColors();
+  const { sizeClass } = useLayout();
 
   const handleTabPress = useCallback(
     (tab: BottomTabId) => onTabPress?.(tab),
@@ -112,7 +122,7 @@ export default function BottomNavbar({ activeTab = 'discover', onTabPress }: Bot
   );
 
   return (
-    <View style={[styles.wrapper, { bottom: insets.bottom + 16 }]}>
+    <View style={[styles.wrapper, { maxWidth: NAV_BAR_MAX_WIDTH[sizeClass], bottom: insets.bottom + 16 }]}>
       {/* 그림자는 블러 클리핑(overflow: hidden)과 같은 레이어에 두면 안 보이므로 분리 */}
       <View style={[styles.shadowLayer, { shadowColor: colors.text.primary }]}>
         <BlurView
@@ -142,7 +152,6 @@ const styles = StyleSheet.create({
   wrapper: {
     position: 'absolute',
     width: '100%',
-    maxWidth: Layout.MAX_CONTENT_WIDTH + 48,
     paddingHorizontal: Spacing.xxl,
     alignSelf: 'center',
     zIndex: 1000,

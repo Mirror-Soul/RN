@@ -1,7 +1,8 @@
-import {Colors, Layout, Spacing} from '@/src/constants/theme';
+import {Colors, Spacing} from '@/src/constants/theme';
+import { useLayout } from '@/src/hooks/useLayout';
 import { useRouter } from 'expo-router';
 import React, { useEffect } from 'react';
-import { Alert, KeyboardAvoidingView, Linking, Platform, ScrollView, StyleSheet, View, useWindowDimensions, ActivityIndicator } from 'react-native';
+import { Alert, KeyboardAvoidingView, Linking, Platform, ScrollView, StyleSheet, View, ActivityIndicator } from 'react-native';
 
 // Step 4 Components
 import InterviewAIBox from '@/src/components/signup/steps/Step4_Interview/components/InterviewAIBox';
@@ -19,8 +20,7 @@ import { useInterviewUpload } from '@/src/components/signup/steps/Step4_Intervie
 import MicPermissionModal from '@/src/components/signup/steps/Step4_Interview/components/parts/MicPermissionModal';
 
 export default function InterviewScreen() {
-  const { width: windowWidth } = useWindowDimensions();
-  const containerWidth = Math.min(windowWidth - 48, Layout.MAX_CONTENT_WIDTH); // 패딩 조정
+  const { contentContainerStyle } = useLayout();
   const router = useRouter();
   
   const {
@@ -153,7 +153,7 @@ export default function InterviewScreen() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          <View style={[styles.container, { width: containerWidth }]}>
+          <View style={[styles.container, contentContainerStyle]}>
             <View style={styles.headerWrapper}>
               <InterviewHeader
                 currentQuestion={currentQuestionIndex + 1}
@@ -217,8 +217,6 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    width: '100%',
-    maxWidth: Layout.MAX_CONTENT_WIDTH,
     alignItems: 'center',
     marginTop: Spacing.xl,
   },
