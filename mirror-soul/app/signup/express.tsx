@@ -3,7 +3,8 @@ import GradientButton from '@/src/components/common/GradientButton';
 import Step3Header from '@/src/components/signup/steps/Step3_ExpressPersonal/components/Step3Header';
 import SelfDescriptionInput from '@/src/components/signup/steps/Step3_ExpressPersonal/Description/SelfDescriptionInput';
 import MbtiSelector from '@/src/components/signup/steps/Step3_ExpressPersonal/Mbti/MbtiSelector';
-import {Layout, Spacing} from '@/src/constants/theme';
+import {Spacing} from '@/src/constants/theme';
+import { useLayout } from '@/src/hooks/useLayout';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
@@ -14,6 +15,7 @@ import { useStep3Form } from '@/src/components/signup/steps/Step3_ExpressPersona
 
 export default function ExpressYourselfScreen() {
   const router = useRouter();
+  const { contentContainerStyle } = useLayout();
   const {
     mbti,
     setMbti,
@@ -45,7 +47,7 @@ export default function ExpressYourselfScreen() {
         scrollEnabled={!isSliding}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={styles.container}>
+        <View style={[styles.container, contentContainerStyle]}>
           {/* Header Section */}
           <View style={styles.headerWrapper}>
             <Step3Header />
@@ -91,8 +93,6 @@ const styles = StyleSheet.create({
     paddingBottom: 50,
   },
   container: {
-    width: '100%',
-    maxWidth: Layout.MAX_CONTENT_WIDTH,
     alignItems: 'center',
     marginTop: 25,
   },

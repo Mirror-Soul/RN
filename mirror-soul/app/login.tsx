@@ -16,7 +16,8 @@ import AuthTabToggle from '@/src/components/login/AuthTabToggle';
 import LoginHeader from '@/src/components/login/LoginHeader';
 import LoginTabView from '@/src/features/auth/components/LoginTabView';
 import SignupTabView from '@/src/features/auth/components/SignupTabView';
-import {Layout, Spacing} from '@/src/constants/theme';
+import {Spacing} from '@/src/constants/theme';
+import { useLayout } from '@/src/hooks/useLayout';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 /**
@@ -34,6 +35,7 @@ import { useThemeColors } from '@/src/hooks/useThemeColors';
  */
 export default function HomeScreen() {
   const { colors, isDark } = useThemeColors();
+  const { contentContainerStyle } = useLayout();
   const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
 
   const handleTabChange = useCallback((tab: 'login' | 'signup') => {
@@ -64,7 +66,7 @@ export default function HomeScreen() {
           keyboardDismissMode="on-drag"
           onScrollBeginDrag={Keyboard.dismiss}
         >
-          <View style={styles.container}>
+          <View style={[styles.container, contentContainerStyle]}>
             {/* Header: 타이틀 & 부제 */}
             <LoginHeader />
 
@@ -106,8 +108,6 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.giant,
   },
   container: {
-    width: '100%',
-    maxWidth: Layout.MAX_CONTENT_WIDTH,
     alignItems: 'center',
     paddingHorizontal: Spacing.lg,
     gap: 28,

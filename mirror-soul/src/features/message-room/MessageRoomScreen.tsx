@@ -32,6 +32,7 @@ import { MessageRoomHeaderLeft } from './components/MessageRoomHeaderLeft';
 import { MessageRoomHeaderRight } from './components/MessageRoomHeaderRight';
 import { MessageListItemRenderer } from './components/MessageListItemRenderer';
 import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
+import { useLayout } from '@/src/hooks/useLayout';
 
 interface MessageRoomScreenProps {
   room: ChatRoom;
@@ -48,6 +49,7 @@ interface MessageRoomScreenProps {
  */
 export default function MessageRoomScreen({ room }: MessageRoomScreenProps) {
   const router = useRouter();
+  const { contentContainerStyle } = useLayout();
 
   const {
     dateGroups,
@@ -98,7 +100,7 @@ export default function MessageRoomScreen({ room }: MessageRoomScreenProps) {
         />
 
         {/* ── 메시지 목록 ── */}
-        <View style={styles.messageList}>
+        <View style={[styles.messageList, contentContainerStyle]}>
           {/* @ts-ignore: estimatedItemSize is valid but types might be outdated */}
           <FlashList
             ref={scrollRef}

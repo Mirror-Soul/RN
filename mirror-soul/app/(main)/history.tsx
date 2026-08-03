@@ -3,6 +3,7 @@ import HistoryHeader from '@/src/components/home/history/HistoryHeader';
 import HistoryList from '@/src/components/home/history/HistoryList';
 import HistoryStatsRow from '@/src/components/home/history/HistoryStatsRow';
 import { Layout, Spacing } from '@/src/constants/theme';
+import { useLayout } from '@/src/hooks/useLayout';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { MOCK_WEEKLY_STATS } from '@/src/mocks/historyMocks';
 import React, { useState } from 'react';
@@ -12,6 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 export default function HistoryScreen() {
   const insets = useSafeAreaInsets();
   const { colors } = useThemeColors();
+  const { contentContainerStyle, screenPadding } = useLayout();
   const [activeFilter, setActiveFilter] = useState<HistoryFilterType>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -25,7 +27,7 @@ export default function HistoryScreen() {
       showsVerticalScrollIndicator={false}
       keyboardShouldPersistTaps="handled"
     >
-      <View style={[styles.dashboard, { paddingTop: Math.max(insets.top + 12, Layout.SCREEN_PADDING) }]}>
+      <View style={[styles.dashboard, contentContainerStyle, { paddingTop: Math.max(insets.top + 12, Layout.SCREEN_PADDING), paddingHorizontal: screenPadding }]}>
         {/* 헤더: 아바타버튼 / History 타이틀 / 설정버튼 */}
         <HistoryHeader />
 
@@ -56,9 +58,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   dashboard: {
-    width: '100%',
-    maxWidth: Layout.MAX_CONTENT_WIDTH,
-    alignSelf: 'center',
     gap: Spacing.md,
   },
 });

@@ -1,11 +1,12 @@
 import SecurityFooter from '@/src/components/home/SecurityFooter';
 import GradientButton from '@/src/components/common/GradientButton';
 import { SIGNUP_ROUTES } from '@/src/constants/routes/signupRoutes';
-import {Colors, Layout, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
+import {Colors, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import { getErrorDisplayMessage } from '@/src/utils/apiErrorCode';
 
 import { useRouter } from 'expo-router';
 import React from 'react';
+import { useLayout } from '@/src/hooks/useLayout';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
@@ -26,6 +27,7 @@ import { useCreateAccountMutation } from './hooks/useCreateAccountMutation';
  */
 export default function Step1AccountContainer() {
   const router = useRouter();
+  const { contentContainerStyle } = useLayout();
   const { colors } = useThemeColors();
 
   const {
@@ -85,7 +87,7 @@ export default function Step1AccountContainer() {
     <>
     <ScrollView
       style={styles.scrollView}
-      contentContainerStyle={styles.scrollContent}
+      contentContainerStyle={[styles.scrollContent, contentContainerStyle]}
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.container}>
@@ -178,9 +180,6 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    width: '100%',
-    maxWidth: Layout.MAX_CONTENT_WIDTH,
-    alignSelf: 'center',
     alignItems: 'center',
     paddingBottom: Spacing.giant,
   },

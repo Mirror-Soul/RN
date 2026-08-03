@@ -13,6 +13,10 @@ import CallErrorFallback from '@/src/components/call/CallErrorFallback';
  *
  * 진입 경로: Grow 탭 → 나를 알아가는 인터뷰 카드 클릭
  * 통화 종료 후 자동으로 이전 화면으로 돌아갑니다.
+ *
+ * 의도적으로 `useLayout()`의 컨텐츠 폭 캡을 적용하지 않는다 — 통화 화면은 몰입형
+ * 풀블리드 UI(아바타/컨트롤이 화면 전체를 채움)가 맞고, 태블릿에서도 좁은 칼럼으로
+ * 가운데 정렬할 이유가 없다.
  */
 export default function AICallScreen() {
   const router = useRouter();

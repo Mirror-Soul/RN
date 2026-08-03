@@ -8,6 +8,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import React from 'react';
 import { StyleSheet, View, Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useLayout } from '@/src/hooks/useLayout';
 
 /**
  * 통화 기록 상세 화면 (루트 스택 레벨)
@@ -17,6 +18,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 export default function CallDetailScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { contentContainerStyle } = useLayout();
   const { id } = useLocalSearchParams<{ id: string }>();
 
   // id로 통화 데이터 조회 (API 연동 시 useQuery 등으로 교체)
@@ -32,19 +34,21 @@ export default function CallDetailScreen() {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      <CallDetailHeader
-        name={callItem.name}
-        age={callItem.age}
-        consistencyPercent={callItem.consistencyPercent}
-        isOnline={false} // API 연동 시 실제 온라인 상태로 교체
-        onBack={() => router.back()}
-        onCallPress={() => {/* 향후 통화 기능 연동 */}}
-        onMorePress={() => {/* 향후 더보기 메뉴 연동 */}}
-      />
-      <CallDetailAlert />
-      <CallDetailBody key={callItem.id} initialMessages={callItem.messages} />
-      <View style={{ paddingBottom: insets.bottom }}>
-        <CallDetailFooter />
+      <View style={[styles.contentWrapper, contentContainerStyle]}>
+        <CallDetailHeader
+          name={callItem.name}
+          age={callItem.age}
+          consistencyPercent={callItem.consistencyPercent}
+          isOnline={false} // API 연동 시 실제 온라인 상태로 교체
+          onBack={() => router.back()}
+          onCallPress={() => {/* 향후 통화 기능 연동 */}}
+          onMorePress={() => {/* 향후 더보기 메뉴 연동 */}}
+        />
+        <CallDetailAlert />
+        <CallDetailBody key={callItem.id} initialMessages={callItem.messages} />
+        <View style={{ paddingBottom: insets.bottom }}>
+          <CallDetailFooter />
+        </View>
       </View>
     </View>
   );
@@ -54,6 +58,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.primary.soulBlack,
+  },
+  contentWrapper: {
+    flex: 1,
   },
   errorText: {
     color: '#99A1AF',
