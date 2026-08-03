@@ -1,14 +1,14 @@
 import { Feather } from '@expo/vector-icons';
 import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
+import { router } from 'expo-router';
 import React from 'react';
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 /**
  * FaceDataMissionCard 컴포넌트 (SRP)
- * 얼굴 데이터(표정/감정) 학습 미션 진입 카드입니다.
- * TODO: 실제 "일일 얼굴 스캔" 화면 라우트가 아직 없어 임시 안내로 대체.
- * 라우트가 준비되면 router.push로 교체.
+ * 얼굴 데이터(표정) 학습 미션 진입 카드입니다. VoiceMissionCard/ValueBalanceMissionCard와
+ * 동일한 와이드 카드 레이아웃으로 통일해 미션 리스트 전체의 UI 일관성을 유지합니다.
  */
 export default function FaceDataMissionCard() {
   const { colors } = useThemeColors();
@@ -16,23 +16,25 @@ export default function FaceDataMissionCard() {
   return (
     <TouchableOpacity
       style={[styles.card, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
-      onPress={() => Alert.alert('안내', '얼굴 데이터 학습 기능은 곧 제공될 예정입니다.')}
+      onPress={() => router.push('/face-data-update')}
       activeOpacity={0.85}
       accessibilityRole="button"
       accessibilityLabel="얼굴 데이터 미션"
+      accessibilityHint="표정 데이터를 촬영해 트윈을 학습시키는 화면으로 이동"
     >
-      <View style={styles.iconWrapper}>
-        <Feather name="camera" size={24} color={Colors.primary.electricCyan} />
+      <View style={styles.left}>
+        <View style={[styles.iconWrapper, { backgroundColor: colors.background.card }]}>
+          <Feather name="camera" size={28} color={Colors.primary.electricCyan} />
+        </View>
+        <View style={styles.textArea}>
+          <Text style={[styles.title, { color: colors.text.primary }]} numberOfLines={1}>얼굴 데이터</Text>
+          <Text style={[styles.subtitle, { color: colors.text.muted }]}>표정과 감정 업데이트</Text>
+        </View>
       </View>
 
-      <View>
-        <Text style={[styles.title, { color: colors.text.primary }]}>얼굴 데이터</Text>
-        <Text style={[styles.subtitle, { color: colors.text.muted }]}>표정과 감정 업데이트</Text>
-
-        <View style={styles.statusRow}>
-          <View style={styles.statusDot} />
-          <Text style={[styles.statusText, { color: colors.text.muted }]}>Active Now</Text>
-        </View>
+      <View style={styles.statusRow}>
+        <View style={styles.statusDot} />
+        <Text style={[styles.statusText, { color: colors.text.muted }]}>Active Now</Text>
       </View>
     </TouchableOpacity>
   );
@@ -40,37 +42,45 @@ export default function FaceDataMissionCard() {
 
 const styles = StyleSheet.create({
   card: {
-    flex: 1,
-    aspectRatio: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     borderRadius: Radii.xxl,
     borderWidth: 1,
     padding: Spacing.xl,
-    justifyContent: 'space-between',
+    alignSelf: 'stretch',
+  },
+  left: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.lg,
+    flex: 1,
   },
   iconWrapper: {
-    width: 48,
-    height: 48,
+    width: 56,
+    height: 56,
     borderRadius: Radii.lg,
-    backgroundColor: Colors.glass.cyan10_d3,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  textArea: {
+    flex: 1,
+    gap: 2,
+  },
   title: {
     fontFamily: FontFamily.sans,
-    fontSize: FontSize.base,
+    fontSize: FontSize.md,
     fontWeight: FontWeight.black,
   },
   subtitle: {
     fontFamily: FontFamily.sans,
-    fontSize: FontSize.xs,
+    fontSize: 11,
     fontWeight: FontWeight.medium,
-    marginTop: 4,
   },
   statusRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.xs,
-    marginTop: Spacing.md,
   },
   statusDot: {
     width: 4,

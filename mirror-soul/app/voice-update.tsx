@@ -3,11 +3,12 @@ import VoiceUpdateHeader from '@/src/components/home/grow/voice-update/VoiceUpda
 import VoiceUpdatePrompt from '@/src/components/home/grow/voice-update/VoiceUpdatePrompt';
 import VoiceUpdateTranscriptBox from '@/src/components/home/grow/voice-update/VoiceUpdateTranscriptBox';
 import { useSTT } from '@/src/hooks/useSTT';
-import {Colors, Spacing} from '@/src/constants/theme';
+import { Spacing } from '@/src/constants/theme';
 import React, { useState, useRef, useEffect } from 'react';
 import { StyleSheet, View, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLayout } from '@/src/hooks/useLayout';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 const SENTENCES = [
   "주말에는 친구들과 영화를 보러 갈 예정이에요.",
@@ -22,6 +23,7 @@ const SENTENCES = [
  */
 export default function VoiceUpdateScreen() {
   const { contentContainerStyle } = useLayout();
+  const { colors } = useThemeColors();
   const [status, setStatus] = useState<VoiceUpdateStatus>('idle');
   const [elapsed, setElapsed] = useState(0);
   const [sentenceIndex, setSentenceIndex] = useState(0);
@@ -100,7 +102,7 @@ export default function VoiceUpdateScreen() {
   }, [stopListening]);
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background.primary }]}>
       <View style={styles.container}>
         <VoiceUpdateHeader />
         
@@ -128,7 +130,6 @@ export default function VoiceUpdateScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: Colors.primary.soulBlack,
   },
   container: {
     flex: 1,
