@@ -4,7 +4,7 @@ import { ApiResponse } from './common';
  * 파일 도메인 API 타입 정의
  */
 
-export type FileType = 'interviews' | 'face-videos' | 'job-certifications' | 'call-recordings';
+export type FileType = 'interviews' | 'face-videos' | 'job-certifications' | 'call-recordings' | 'voice-updates';
 
 // ─────────────────────────────────────────────
 // POST /files/presigned-url
