@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getAlarmSetting, modifyAlarmSetting } from '@/src/services/profileService';
 import type { AlarmSettingResult } from '@/src/types/api/profile';
 import { useNotificationStore } from '@/src/store/useNotificationStore';
+import { useAuthStore } from '@/src/store/useAuthStore';
 import { useToast } from '@/src/components/common/Toast/ToastProvider';
 import { getErrorDisplayMessage } from '@/src/utils/apiErrorCode';
 
@@ -17,6 +18,7 @@ import { getErrorDisplayMessage } from '@/src/utils/apiErrorCode';
 export const useNotificationSettings = () => {
   const queryClient = useQueryClient();
   const { showToast } = useToast();
+  const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
   const eventAlert = useNotificationStore((s) => s.eventAlert);
   const toggleEventAlert = useNotificationStore((s) => s.toggleEventAlert);
 
@@ -24,6 +26,7 @@ export const useNotificationSettings = () => {
     queryKey: ['profile', 'alarmSettings'],
     queryFn: async () => (await getAlarmSetting()).result,
     staleTime: 60_000,
+    enabled: isLoggedIn,
   });
 
   const mutation = useMutation({

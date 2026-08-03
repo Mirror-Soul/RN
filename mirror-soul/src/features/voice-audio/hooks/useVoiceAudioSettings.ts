@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getAudioSettings, updateAudioSettings } from '@/src/services/profileService';
 import type { AudioSettingsResult, SpeechSpeed } from '@/src/types/api/profile';
 import { SpeedOption, useVoiceAudioStore } from '@/src/store/useVoiceAudioStore';
+import { useAuthStore } from '@/src/store/useAuthStore';
 import { useToast } from '@/src/components/common/Toast/ToastProvider';
 import { getErrorDisplayMessage } from '@/src/utils/apiErrorCode';
 
@@ -30,6 +31,7 @@ const SPEECH_SPEED_BY_SPEED_OPTION: Record<SpeedOption, SpeechSpeed> = {
 export const useVoiceAudioSettings = () => {
   const queryClient = useQueryClient();
   const { showToast } = useToast();
+  const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
   const mirroredSpeed = useVoiceAudioStore((s) => s.speechSpeed);
   const setMirroredSpeed = useVoiceAudioStore((s) => s.setSpeechSpeed);
 
@@ -37,6 +39,7 @@ export const useVoiceAudioSettings = () => {
     queryKey: ['profile', 'audioSettings'],
     queryFn: async () => (await getAudioSettings()).result,
     staleTime: 60_000,
+    enabled: isLoggedIn,
   });
 
   const mutation = useMutation({
