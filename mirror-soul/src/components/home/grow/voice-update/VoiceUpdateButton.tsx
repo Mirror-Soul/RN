@@ -133,7 +133,7 @@ export default function VoiceUpdateButton({
               <TouchableOpacity
                 activeOpacity={0.7}
                 onPress={onRetry}
-                style={styles.actionChip}
+                style={[styles.actionChip, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
               >
                 <Text style={[styles.actionChipText, { color: colors.text.secondary }]}>다른 문장 읽어보기</Text>
               </TouchableOpacity>
@@ -143,7 +143,7 @@ export default function VoiceUpdateButton({
                 onPress={() => router.back()}
                 style={[styles.actionChip, styles.primaryChip]}
               >
-                <Text style={[styles.actionChipText, { color: colors.text.secondary }, styles.primaryChipText]}>완료하기</Text>
+                <Text style={[styles.actionChipText, styles.primaryChipText]}>완료하기</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -236,9 +236,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.xxl,
     borderRadius: Radii.full,
-    backgroundColor: Colors.glass.white10,
     borderWidth: 0.6,
-    borderColor: Colors.glass.white20,
   },
   actionChipText: {
     fontSize: FontSize.md,
