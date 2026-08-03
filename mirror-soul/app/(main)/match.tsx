@@ -6,6 +6,7 @@ import {Layout, Radii, Spacing} from '@/src/constants/theme';
 import Animated, { FadeInUp, FadeInDown, FadeIn, FadeOut } from 'react-native-reanimated';
 
 import { useTrackScroll } from '@/src/animations/scroll/useTrackScroll';
+import { useLayout } from '@/src/hooks/useLayout';
 import MatchingHeader from '@/src/components/home/match/parts/MatchingHeader';
 import MatchingActiveStatus from '@/src/components/home/match/parts/MatchingActiveStatus';
 import MatchingActionButtons, { MatchingTab } from '@/src/components/home/match/parts/MatchingActionButtons';
@@ -38,14 +39,17 @@ export default function MatchScreen() {
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const { colors } = useThemeColors();
-  
+  // contentWidth: 태블릿에서도 카드가 화면 전체 폭까지 늘어나지 않도록 다른 화면과 같은 캡을 공유한다.
+  const { contentWidth, contentContainerStyle } = useLayout();
+
   // 전역 스크롤 트래킹 훅 사용
   const { scrollX, scrollHandler } = useTrackScroll();
 
   // 탭 상태
   const [activeTab, setActiveTab] = useState<MatchingTab>('meet');
 
-  const horizontalPadding = (width * 24) / 400; 
+  // 카드 폭(contentWidth) 기준 400을 레퍼런스로 스케일링 — 폰에서는 기존과 동일한 값.
+  const horizontalPadding = (contentWidth * 24) / 400;
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background.primary }]} edges={['top', 'left', 'right']}>
@@ -61,44 +65,46 @@ export default function MatchScreen() {
         ]}
         showsVerticalScrollIndicator={false}
       >
-        <Animated.View entering={FadeInUp.duration(400)} style={styles.container}>
-          <View style={{ paddingHorizontal: horizontalPadding }}>
-            <MatchingHeader />
-            <MatchingActiveStatus />
-            <MatchingActionButtons activeTab={activeTab} onChangeTab={setActiveTab} />
-          </View>
-        </Animated.View>
-
-        {/* 조건부 렌더링 (Cross-fade 애니메이션) */}
-        {activeTab === 'meet' ? (
-          <Animated.View key="meet-tab" entering={FadeIn.duration(400)} exiting={FadeOut.duration(300)}>
-            {/* Carousel Swipe Indicator */}
-            <MatchingCarouselIndicator data={TWIN_DATA} scrollX={scrollX} itemWidth={width} />
-
-            {/* Swipeable Profile Cards */}
-            <Animated.FlatList
-              data={TWIN_DATA}
-              keyExtractor={(item) => item.id}
-              horizontal
-              pagingEnabled
-              showsHorizontalScrollIndicator={false}
-              onScroll={scrollHandler}
-              scrollEventThrottle={16}
-              decelerationRate="fast"
-              snapToInterval={width}
-              contentContainerStyle={{ alignItems: 'flex-start' }}
-              renderItem={({ item, index }) => (
-                <View style={{ width: width, paddingHorizontal: horizontalPadding }}>
-                  <MatchingProfileCard data={item} index={index} scrollX={scrollX} itemWidth={width} />
-                </View>
-              )}
-            />
+        <View style={contentContainerStyle}>
+          <Animated.View entering={FadeInUp.duration(400)} style={styles.container}>
+            <View style={{ paddingHorizontal: horizontalPadding }}>
+              <MatchingHeader />
+              <MatchingActiveStatus />
+              <MatchingActionButtons activeTab={activeTab} onChangeTab={setActiveTab} />
+            </View>
           </Animated.View>
-        ) : (
-          <Animated.View key="chat-tab" entering={FadeIn.duration(400)} exiting={FadeOut.duration(300)} style={{ paddingHorizontal: horizontalPadding }}>
-            <MatchingChatList />
-          </Animated.View>
-        )}
+
+          {/* 조건부 렌더링 (Cross-fade 애니메이션) */}
+          {activeTab === 'meet' ? (
+            <Animated.View key="meet-tab" entering={FadeIn.duration(400)} exiting={FadeOut.duration(300)}>
+              {/* Carousel Swipe Indicator */}
+              <MatchingCarouselIndicator data={TWIN_DATA} scrollX={scrollX} itemWidth={contentWidth} />
+
+              {/* Swipeable Profile Cards */}
+              <Animated.FlatList
+                data={TWIN_DATA}
+                keyExtractor={(item) => item.id}
+                horizontal
+                pagingEnabled
+                showsHorizontalScrollIndicator={false}
+                onScroll={scrollHandler}
+                scrollEventThrottle={16}
+                decelerationRate="fast"
+                snapToInterval={contentWidth}
+                contentContainerStyle={{ alignItems: 'flex-start' }}
+                renderItem={({ item, index }) => (
+                  <View style={{ width: contentWidth, paddingHorizontal: horizontalPadding }}>
+                    <MatchingProfileCard data={item} index={index} scrollX={scrollX} itemWidth={contentWidth} />
+                  </View>
+                )}
+              />
+            </Animated.View>
+          ) : (
+            <Animated.View key="chat-tab" entering={FadeIn.duration(400)} exiting={FadeOut.duration(300)} style={{ paddingHorizontal: horizontalPadding }}>
+              <MatchingChatList />
+            </Animated.View>
+          )}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );

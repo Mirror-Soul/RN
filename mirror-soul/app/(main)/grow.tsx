@@ -14,6 +14,7 @@ import { Layout, Spacing } from '@/src/constants/theme';
 import React, { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useLayout } from '@/src/hooks/useLayout';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 /**
@@ -27,6 +28,7 @@ import { useThemeColors } from '@/src/hooks/useThemeColors';
 export default function GrowScreen() {
   const insets = useSafeAreaInsets();
   const { colors } = useThemeColors();
+  const { contentContainerStyle, screenPadding } = useLayout();
 
   // Mock 데이터 (추후 API 연동)
   const [similarityPercent, setSimilarityPercent] = useState(92.4);
@@ -49,7 +51,7 @@ export default function GrowScreen() {
       ]}
       showsVerticalScrollIndicator={false}
     >
-      <View style={[styles.container, { paddingTop: Math.max(insets.top + 12, Layout.SCREEN_PADDING) }]}>
+      <View style={[styles.container, contentContainerStyle, { paddingTop: Math.max(insets.top + 12, Layout.SCREEN_PADDING), paddingHorizontal: screenPadding }]}>
         <EvolveHeader />
 
         <GrowthHeroSection
@@ -108,11 +110,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   container: {
-    width: '100%',
-    maxWidth: Layout.MAX_CONTENT_WIDTH,
-    alignSelf: 'center',
     gap: Spacing.xxxl,
-    paddingHorizontal: Spacing.xs,
   },
   missionSection: {
     gap: Spacing.xl,

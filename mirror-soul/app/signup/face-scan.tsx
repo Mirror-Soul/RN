@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, StyleSheet, Platform, Animated, Alert, ScrollView } from 'react-native';
-import {Colors, Layout, FontSize, FontWeight, Radii, Spacing} from '@/src/constants/theme';
+import {Colors, FontSize, FontWeight, Radii, Spacing} from '@/src/constants/theme';
+import { useLayout } from '@/src/hooks/useLayout';
 import { useRouter } from 'expo-router';
 import { useCameraDevice } from 'react-native-vision-camera';
 
@@ -26,6 +27,7 @@ import { useFaceScanUpload } from '@/src/components/signup/steps/Step5_FaceScan/
 export default function FaceScanScreen() {
   const router = useRouter();
   const device = useCameraDevice('front');
+  const { contentContainerStyle } = useLayout();
 
   // 1. 상태 및 비즈니스 로직 관리
   const {
@@ -128,7 +130,7 @@ export default function FaceScanScreen() {
       <FaceScanGlow />
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={styles.contentContainer}
+        contentContainerStyle={[styles.contentContainer, contentContainerStyle]}
         showsVerticalScrollIndicator={false}
         bounces={false}
         overScrollMode="never"
@@ -223,16 +225,13 @@ const styles = StyleSheet.create({
   },
   headerWrapper: {
     width: '100%',
-    maxWidth: Layout.MAX_CONTENT_WIDTH,
   },
   bodyWrapper: {
     width: '100%',
-    maxWidth: Layout.MAX_CONTENT_WIDTH,
     marginTop: Spacing.xxxl,
   },
   buttonWrapper: {
     width: '100%',
-    maxWidth: Layout.MAX_CONTENT_WIDTH,
     marginTop: Spacing.giant,
   },
   completionOverlay: {

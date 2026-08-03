@@ -1,11 +1,12 @@
 import SecurityFooter from '@/src/components/home/SecurityFooter';
 import GradientButton from '@/src/components/common/GradientButton';
 import { SIGNUP_ROUTES } from '@/src/constants/routes/signupRoutes';
-import {Colors, Layout, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
+import {Colors, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import { getErrorDisplayMessage, isConflictError } from '@/src/utils/apiErrorCode';
 
 import { useRouter } from 'expo-router';
 import React from 'react';
+import { useLayout } from '@/src/hooks/useLayout';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
@@ -26,6 +27,7 @@ import { useCreateAccountMutation } from './hooks/useCreateAccountMutation';
  */
 export default function Step1AccountContainer() {
   const router = useRouter();
+  const { contentContainerStyle } = useLayout();
   const { colors } = useThemeColors();
 
   const {
@@ -73,7 +75,11 @@ export default function Step1AccountContainer() {
     } catch (error) {
       if (isConflictError(error)) {
         // 이메일 인증 이후 최종 제출 사이에 같은 이메일로 가입이 완료된 드문 레이스 케이스 — 최후 방어선
-        updateState({ emailError: getErrorDisplayMessage(error, '이미 가입된 이메일입니다.') });
+        // isEmailVerified도 함께 해제해야 에러 문구가 보이고 이메일 입력창이 다시 편집 가능해진다 (EmailSection 조건 참고)
+        updateState({
+          emailError: getErrorDisplayMessage(error, '이미 가입된 이메일입니다.'),
+          isEmailVerified: false,
+        });
       } else {
         Alert.alert(
           '계정 생성 실패',
@@ -90,7 +96,7 @@ export default function Step1AccountContainer() {
     <>
     <ScrollView
       style={styles.scrollView}
-      contentContainerStyle={styles.scrollContent}
+      contentContainerStyle={[styles.scrollContent, contentContainerStyle]}
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.container}>
@@ -183,9 +189,6 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    width: '100%',
-    maxWidth: Layout.MAX_CONTENT_WIDTH,
-    alignSelf: 'center',
     alignItems: 'center',
     paddingBottom: Spacing.giant,
   },

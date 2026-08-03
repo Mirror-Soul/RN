@@ -131,9 +131,20 @@ export const Radii = {
  * 레이아웃 관련 상수 시스템
  */
 export const Layout = {
+  /** @deprecated 화면별로 흩어져 재사용되던 옛 상수. 대신 `useLayout()`의 `contentMaxWidth`/`contentWidth`를 쓸 것. */
   MAX_CONTENT_WIDTH: 345,
   SCREEN_PADDING: 24,
   MAIN_TAB_CONTENTS_BOTTOM_PADDING: 100, // BottomNavbar 높이에 대응하는 스크롤 하단 여백
+  /**
+   * Material Design 3의 window size class 기준(dp/pt)을 그대로 채용.
+   * compact: 폰. medium: 태블릿 세로/폴더블 펼침. expanded: 태블릿 가로.
+   * 폰/태블릿/폴더블을 기기 종류가 아니라 실측 너비 하나의 축으로 다룬다.
+   */
+  BREAKPOINTS: {
+    compact: 0,
+    medium: 600,
+    expanded: 840,
+  },
 } as const;
 
 /**

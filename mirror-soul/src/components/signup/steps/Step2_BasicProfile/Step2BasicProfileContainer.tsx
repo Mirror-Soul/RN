@@ -1,11 +1,12 @@
 import SecurityFooter from '@/src/components/home/SecurityFooter';
 import GradientButton from '@/src/components/common/GradientButton';
 import { SIGNUP_ROUTES } from '@/src/constants/routes/signupRoutes';
-import {Colors, Layout, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
+import {Colors, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View, Alert, ActivityIndicator, Text } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import { useLayout } from '@/src/hooks/useLayout';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 
@@ -27,6 +28,7 @@ import { jobCategories } from './Professional/jobData';
 export default function Step2BasicProfileContainer() {
   const router = useRouter();
   const { colors } = useThemeColors();
+  const { contentContainerStyle } = useLayout();
   const [isSaving, setIsSaving] = useState(false);
 
   const {
@@ -97,7 +99,7 @@ export default function Step2BasicProfileContainer() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          <View style={styles.container}>
+          <View style={[styles.container, contentContainerStyle]}>
             <View style={styles.headerWrapper}>
               <Step2Header />
             </View>
@@ -170,8 +172,6 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.giant,
   },
   container: {
-    width: '100%',
-    maxWidth: Layout.MAX_CONTENT_WIDTH,
     alignItems: 'center',
     marginTop: 25,
   },
