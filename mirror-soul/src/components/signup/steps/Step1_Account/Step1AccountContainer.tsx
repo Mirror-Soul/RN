@@ -2,7 +2,7 @@ import SecurityFooter from '@/src/components/home/SecurityFooter';
 import GradientButton from '@/src/components/common/GradientButton';
 import { SIGNUP_ROUTES } from '@/src/constants/routes/signupRoutes';
 import {Colors, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
-import { getErrorDisplayMessage } from '@/src/utils/apiErrorCode';
+import { getErrorDisplayMessage, isConflictError } from '@/src/utils/apiErrorCode';
 
 import { useRouter } from 'expo-router';
 import React from 'react';
@@ -73,10 +73,19 @@ export default function Step1AccountContainer() {
       // 성공: Step2로 이동
       router.push(SIGNUP_ROUTES.PROFILE);
     } catch (error) {
-      Alert.alert(
-        '계정 생성 실패',
-        getErrorDisplayMessage(error, '잠시 후 다시 시도해주세요.')
-      );
+      if (isConflictError(error)) {
+        // 이메일 인증 이후 최종 제출 사이에 같은 이메일로 가입이 완료된 드문 레이스 케이스 — 최후 방어선
+        // isEmailVerified도 함께 해제해야 에러 문구가 보이고 이메일 입력창이 다시 편집 가능해진다 (EmailSection 조건 참고)
+        updateState({
+          emailError: getErrorDisplayMessage(error, '이미 가입된 이메일입니다.'),
+          isEmailVerified: false,
+        });
+      } else {
+        Alert.alert(
+          '계정 생성 실패',
+          getErrorDisplayMessage(error, '잠시 후 다시 시도해주세요.')
+        );
+      }
     } finally {
       overlayOpacity.value = withTiming(0, { duration: 200 });
       updateState({ isLoading: false });

@@ -1,5 +1,6 @@
 import { useCountdown } from '@/src/hooks/useCountdown';
 import { sendVerificationCode, verifyCode } from '@/src/services/authService';
+import { getErrorDisplayMessage, isConflictError } from '@/src/utils/apiErrorCode';
 import { isValidEmail, isValidPassword } from '@/src/utils/validation';
 import { useCallback, useState } from 'react';
 import { Alert } from 'react-native';
@@ -39,7 +40,12 @@ export function useStep1Form() {
 
   // 폼 업데이트 함수
   const updateState = useCallback((updates: Partial<Step1State>) => {
-    setState((prev) => ({ ...prev, ...updates }));
+    setState((prev) => ({
+      ...prev,
+      ...updates,
+      // 이메일을 다시 수정하면 이전 시도의 인라인 에러(예: 중복 이메일)는 더 이상 유효하지 않다.
+      ...(updates.email !== undefined ? { emailError: undefined } : null),
+    }));
   }, []);
 
   // ─────────────────────────────────────────────
@@ -61,6 +67,7 @@ export function useStep1Form() {
       startTimer();
       setIsModalVisible(true);
       setVerifyAttemptCount(0); // 재발송 시 시도 횟수 초기화
+      updateState({ emailError: undefined }); // 이전 시도의 인라인 에러 초기화
 
       try {
         setIsEmailActionLoading(true);
@@ -70,10 +77,15 @@ export function useStep1Form() {
         // 실패: Optimistic UI 롤백
         resetTimer();
         setIsModalVisible(false);
-        Alert.alert(
-          '인증 코드 발송 실패',
-          error?.message || '잠시 후 다시 시도해주세요.'
-        );
+        if (isConflictError(error)) {
+          // 이미 가입된 이메일: Alert 대신 입력창 아래 인라인 에러로 표시
+          updateState({ emailError: getErrorDisplayMessage(error, '이미 가입된 이메일입니다.') });
+        } else {
+          Alert.alert(
+            '인증 코드 발송 실패',
+            error?.message || '잠시 후 다시 시도해주세요.'
+          );
+        }
       } finally {
         setIsEmailActionLoading(false);
       }
