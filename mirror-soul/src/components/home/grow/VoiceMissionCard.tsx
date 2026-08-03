@@ -1,5 +1,5 @@
 import { Feather } from '@expo/vector-icons';
-import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
+import { FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
 import { router } from 'expo-router';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -9,6 +9,9 @@ import { useThemeColors } from '@/src/hooks/useThemeColors';
  * VoiceMissionCard 컴포넌트 (SRP)
  * 목소리 정밀 학습 미션 진입 카드입니다. 기존 EvolveVoiceCard의 /voice-update
  * 라우팅을 그대로 유지하고 새 디자인(전체 폭 와이드 카드)으로 리디자인했습니다.
+ *
+ * 마지막 학습 시점(예: "2일 전")은 백엔드에 조회 API가 아직 없어 표시하지 않는다 —
+ * 실제 값 없이 하드코딩된 문구를 보여주면 사용자가 잘못된 정보로 오인할 수 있다.
  */
 export default function VoiceMissionCard() {
   const { colors } = useThemeColors();
@@ -32,7 +35,7 @@ export default function VoiceMissionCard() {
         </View>
       </View>
 
-      <Text style={[styles.dateText, { color: colors.text.muted }]}>2일 전</Text>
+      <Feather name="chevron-right" size={18} color={colors.text.muted} />
     </TouchableOpacity>
   );
 }
@@ -73,11 +76,5 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.sans,
     fontSize: 11,
     fontWeight: FontWeight.medium,
-  },
-  dateText: {
-    fontFamily: FontFamily.sans,
-    fontSize: 9,
-    fontWeight: FontWeight.bold,
-    textTransform: 'uppercase',
   },
 });
