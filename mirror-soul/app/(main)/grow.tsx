@@ -9,7 +9,8 @@ import VoiceMissionCard from '@/src/components/home/grow/VoiceMissionCard';
 import ValueBalanceModal from '@/src/components/home/grow/modals/ValueBalanceModal';
 import VerificationModal from '@/src/components/home/grow/modals/VerificationModal';
 import { Layout, Spacing } from '@/src/constants/theme';
-import React, { useCallback, useState } from 'react';
+import { useTwinSyncQuery } from '@/src/features/growth/hooks/useTwinSyncQuery';
+import React, { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLayout } from '@/src/hooks/useLayout';
@@ -28,16 +29,12 @@ export default function GrowScreen() {
   const { colors } = useThemeColors();
   const { contentContainerStyle, screenPadding } = useLayout();
 
-  // Mock 데이터 (추후 API 연동)
-  const [similarityPercent, setSimilarityPercent] = useState(92.4);
-  const [isVerified, setIsVerified] = useState(false);
+  const twinSyncQuery = useTwinSyncQuery();
+
+  const [isVerified, setIsVerified] = useState(false); // Mock 상태 (프로필 인증 API 연동 전)
 
   const [showVerifyModal, setShowVerifyModal] = useState(false);
   const [showBalanceModal, setShowBalanceModal] = useState(false);
-
-  const handleBoost = useCallback((boost: number) => {
-    setSimilarityPercent((prev) => parseFloat(Math.min(100, prev + boost).toFixed(1)));
-  }, []);
 
   return (
     <ScrollView
@@ -52,7 +49,10 @@ export default function GrowScreen() {
         <EvolveHeader />
 
         <GrowthHeroSection
-          similarityPercent={similarityPercent}
+          similarityPercent={twinSyncQuery.data?.syncRate ?? null}
+          isLoading={twinSyncQuery.isLoading}
+          isError={twinSyncQuery.isError}
+          onRetry={() => twinSyncQuery.refetch()}
           isVerified={isVerified}
           onVerifyPress={() => setShowVerifyModal(true)}
         />
@@ -80,10 +80,15 @@ export default function GrowScreen() {
         onVerified={() => setIsVerified(true)}
       />
 
+      {/*
+        ValueBalanceModal/EmotionLogModal은 아직 실제 백엔드 연동이 없는 목업 기능이라
+        onComplete에서 더 이상 헤드라인 유사도(twinSyncQuery, 실제 서버값)를 로컬로
+        가짜 증가시키지 않는다 — 실제 값 위에 가짜 증가분을 얹으면 서버 값과 어긋난다.
+      */}
       <ValueBalanceModal
         isOpen={showBalanceModal}
         onClose={() => setShowBalanceModal(false)}
-        onComplete={() => handleBoost(1.2)}
+        onComplete={() => {}}
       />
     </ScrollView>
   );
