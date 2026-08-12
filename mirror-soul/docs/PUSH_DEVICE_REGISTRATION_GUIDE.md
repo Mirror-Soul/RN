@@ -354,3 +354,59 @@ in-app 표시, 백그라운드/종료 상태일 땐 OS 네이티브 배너(자�
 `PushNotificationService.sendChatMessage`가 유저 설정을 전혀 확인하지 않고 무조건 발송하므로,
 `useNotificationStore`의 로컬 토글은 서버 발송 여부에 아무 영향을 못 준다. 이건 백엔드에
 "알림 유형별 on/off" 테이블과 발송 전 체크 로직 추가를 별도로 요청해야 해결된다 (7장 참고).
+
+## 9. 진행 현황 및 남은 작업 체크리스트
+
+이 문서를 다시 볼 때 "지금 어디까지 됐고 다음에 뭘 해야 하는지" 한눈에 보기 위한 섹션.
+비슷한 질문이 다시 나오면 이 섹션부터 확인할 것.
+
+### 9.1 완료됨 (Firebase 없이 가능한 부분, `feat/push-device-registration` 브랜치)
+
+- [x] `src/utils/installationId.ts` — UUID v4 발급 + SecureStore 영구 저장
+- [x] `src/types/api/push.ts`, `src/services/pushDeviceService.ts` — API 서비스 레이어
+- [x] `src/features/push/hooks/useRegisterPushDeviceMutation.ts` — `pushToken`을 인자로
+      받는 구조라 Firebase 없이도 완성됨 (토큰 발급 지점만 나중에 연결하면 됨)
+- [x] `authService.performLogout()` 맨 앞에 `unregisterCurrentPushDevice()` 연결
+      (액세스 토큰이 살아있는 시점 — 401 회피)
+- [x] `expo-crypto` 설치 (표준 모듈, 빌드 리스크 없음)
+
+### 9.2 Firebase 콘솔 준비 — 진행 방법은 별도 진행 중 (외부 계정 작업, 코드 아님)
+
+- [ ] 백엔드 엔지니어에게 기존 Firebase 프로젝트 있는지 먼저 확인 (있으면 새로 만들지 말 것 —
+      토큰이 백엔드가 인증하는 프로젝트와 안 맞으면 발송 자체가 실패함)
+- [ ] (없으면) Firebase Console에서 프로젝트 생성
+- [ ] Android 앱 등록 — 패키지명 `com.mirrorsoul.app` (`app.json`의 `android.package`와
+      정확히 일치해야 함) → `google-services.json` 다운로드
+- [ ] iOS 앱 등록 — 번들 ID `com.mirrorsoul.app` (`app.json`의 `ios.bundleIdentifier`와
+      정확히 일치해야 함) → `GoogleService-Info.plist` 다운로드
+- [ ] Apple Developer 계정에서 APNs 인증키(.p8) 발급 → Firebase Console
+      "Apple 앱 구성"에 업로드 (Key ID, Team ID 포함) — Apple Developer 팀 관리자급 권한 필요
+- [ ] 서비스 계정 키(JSON) 발급 → **시크릿이므로 깃에 커밋 금지, 1Password/DM 등으로만 전달**
+      → 백엔드가 `GOOGLE_APPLICATION_CREDENTIALS` 환경변수로 설정
+- [ ] 백엔드 배포 환경에 `FIREBASE_PUSH_ENABLED=true`, `FIREBASE_PROJECT_ID=<프로젝트ID>`
+      설정 (`application.yaml` 기준 현재 `enabled` 기본값은 `false`)
+
+### 9.3 Firebase 파일 준비된 후 진행할 코드 작업 (우선순위 순)
+
+- [ ] `google-services.json`을 `mirror-soul/` 루트에 배치
+- [ ] `GoogleService-Info.plist`를 `mirror-soul/` 루트에 배치
+- [ ] `@react-native-firebase/app`, `@react-native-firebase/messaging` 설치 +
+      `npx expo prebuild` (네이티브 의존성 — 작은 빌드 검증 스파이크 먼저 권장, 루트
+      CLAUDE.md의 MLKit 이슈 이력 참고)
+- [ ] 권한 요청 2단계 플로우: `hasPermission()` 확인 → `UNDETERMINED`일 때만 커스텀
+      안내 UI 먼저 → OS 권한 요청 (8.6)
+- [ ] `messaging().getToken()` 발급 → `useRegisterPushDeviceMutation().mutate({pushToken, platform})`
+      호출을 로그인 성공 훅(`useLoginMutation`/`useCreateAccountMutation`의 `onSuccess`)에 연결
+- [ ] `messaging().onTokenRefresh(...)` 리스너 등록 (`app/_layout.tsx`) — 토큰 갱신 시 재등록
+- [ ] 콜드 스타트 시 토큰 재확인 로직 (8.5 — 로컬 캐시와 다를 때만 재등록)
+- [ ] `messaging().onMessage(...)` — 포그라운드 수신 시 `useToast()`로 표시 (8.2)
+- [ ] Android 알림 채널 생성 — `chat_messages`(백엔드 `push.firebase.android-channel-id`
+      기본값과 정확히 일치) (8.3)
+- [ ] `messaging().onNotificationOpenedApp()` + `getInitialNotification()` — 알림 탭 시
+      `data.route`로 `router.push()` 딥링크 처리 (8.1, 가장 우선순위 높음)
+
+### 9.4 이번 범위 밖 — 별도로 백엔드에 요청 필요
+
+- [ ] 부재중 통화/시간 부족 알림 발송 로직 (User 엔티티에 토글 필드는 이미 있으나 발송
+      트리거 코드가 없음 — 1번 질문 답변 참고)
+- [ ] 알림 유형별 on/off를 서버가 실제로 체크하는 로직 (8.8)
