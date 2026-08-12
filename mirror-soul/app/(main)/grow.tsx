@@ -1,13 +1,11 @@
 import EvolveBodyTitle from '@/src/components/home/grow/EvolveBodyTitle';
 import EvolveFooter from '@/src/components/home/grow/EvolveFooter';
 import EvolveHeader from '@/src/components/home/grow/EvolveHeader';
-import EmotionMissionCard from '@/src/components/home/grow/EmotionMissionCard';
 import FaceDataMissionCard from '@/src/components/home/grow/FaceDataMissionCard';
 import GrowthHeroSection from '@/src/components/home/grow/GrowthHeroSection';
 import TwinSimulationCard from '@/src/components/home/grow/TwinSimulationCard';
 import ValueBalanceMissionCard from '@/src/components/home/grow/ValueBalanceMissionCard';
 import VoiceMissionCard from '@/src/components/home/grow/VoiceMissionCard';
-import EmotionLogModal from '@/src/components/home/grow/modals/EmotionLogModal';
 import ValueBalanceModal from '@/src/components/home/grow/modals/ValueBalanceModal';
 import VerificationModal from '@/src/components/home/grow/modals/VerificationModal';
 import { Layout, Spacing } from '@/src/constants/theme';
@@ -22,7 +20,7 @@ import { useThemeColors } from '@/src/hooks/useThemeColors';
  * 성장(Growth) 탭 화면
  * 내 트윈의 유사도를 높이기 위한 미션들을 관리합니다.
  *
- * 모달 상태(프로필 인증 / 가치관 밸런스 게임 / 감정 기록)와 유사도 % 누적은
+ * 모달 상태(프로필 인증 / 가치관 밸런스 게임)와 유사도 % 누적은
  * 이 화면이 소유하고, 하위 카드/섹션 컴포넌트들은 콜백을 통해서만 상태 변경을
  * 요청합니다 (SRP).
  */
@@ -37,7 +35,6 @@ export default function GrowScreen() {
 
   const [showVerifyModal, setShowVerifyModal] = useState(false);
   const [showBalanceModal, setShowBalanceModal] = useState(false);
-  const [showEmotionModal, setShowEmotionModal] = useState(false);
 
   return (
     <ScrollView
@@ -66,10 +63,7 @@ export default function GrowScreen() {
           <EvolveBodyTitle />
 
           <View style={styles.missionGrid}>
-            <View style={styles.row}>
-              <FaceDataMissionCard />
-              <EmotionMissionCard onPress={() => setShowEmotionModal(true)} />
-            </View>
+            <FaceDataMissionCard />
 
             <ValueBalanceMissionCard onPress={() => setShowBalanceModal(true)} />
 
@@ -96,12 +90,6 @@ export default function GrowScreen() {
         onClose={() => setShowBalanceModal(false)}
         onComplete={() => {}}
       />
-
-      <EmotionLogModal
-        isOpen={showEmotionModal}
-        onClose={() => setShowEmotionModal(false)}
-        onComplete={() => {}}
-      />
     </ScrollView>
   );
 }
@@ -122,11 +110,6 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
   },
   missionGrid: {
-    gap: Spacing.md,
-    alignSelf: 'stretch',
-  },
-  row: {
-    flexDirection: 'row',
     gap: Spacing.md,
     alignSelf: 'stretch',
   },
