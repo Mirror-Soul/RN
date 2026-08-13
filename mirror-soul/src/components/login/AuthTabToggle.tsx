@@ -1,13 +1,12 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, LayoutChangeEvent } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
   interpolateColor,
 } from 'react-native-reanimated';
-import {Colors, Radii, FontFamily, FontSize, FontWeight} from '@/src/constants/theme';
+import {Radii, FontFamily, FontSize, FontWeight} from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface AuthTabToggleProps {
@@ -83,12 +82,7 @@ export default function AuthTabToggle({ activeTab, onTabChange }: AuthTabToggleP
       {/* Sliding Background Indicator */}
       {containerWidth > 0 && (
         <Animated.View style={[styles.indicatorWrapper, animatedIndicatorStyle]}>
-          <LinearGradient
-            colors={Colors.gradient.subtleLimeGradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.activeTab}
-          />
+          <View style={[styles.activeTab, { backgroundColor: colors.background.card }]} />
         </Animated.View>
       )}
 

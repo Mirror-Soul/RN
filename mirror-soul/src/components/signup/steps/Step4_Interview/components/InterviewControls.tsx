@@ -5,6 +5,7 @@ import {Colors, Radii, FontSize, FontWeight, Spacing} from '@/src/constants/them
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface Props {
   isRecording?: boolean;
@@ -18,9 +19,11 @@ export default function InterviewControls({
   isRecording = false, 
   isLastQuestion = false, 
   isNextDisabled = false,
-  onRecordPress, 
-  onNextPress 
+  onRecordPress,
+  onNextPress
 }: Props) {
+  const { colors } = useThemeColors();
+
   return (
     <View style={styles.container}>
       {/* 1. 녹음 버튼 (상태에 따라 스타일 변화) */}
@@ -55,9 +58,9 @@ export default function InterviewControls({
         activeOpacity={0.8}
         onPress={onNextPress}
         disabled={isNextDisabled}
-        style={[styles.nextButton, isNextDisabled && { opacity: 0.5 }]}
+        style={[styles.nextButton, { borderColor: colors.border.primary, backgroundColor: colors.background.glass }, isNextDisabled && { opacity: 0.5 }]}
       >
-        <Text style={styles.nextText}>{isLastQuestion ? '완료' : '다음'}</Text>
+        <Text style={[styles.nextText, { color: colors.text.secondary }]}>{isLastQuestion ? '완료' : '다음'}</Text>
         <ContinueIcon width={24} height={24} />
       </TouchableOpacity>
     </View>
@@ -130,11 +133,8 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
     borderRadius: Radii.lg,
     borderWidth: 1.836,
-    borderColor: Colors.glass.white10,
-    backgroundColor: Colors.glass.white5,
   },
   nextText: {
-    color: Colors.neutral.disabledText,
     fontSize: FontSize.xl,
     fontWeight: FontWeight.semibold,
     lineHeight: 28,

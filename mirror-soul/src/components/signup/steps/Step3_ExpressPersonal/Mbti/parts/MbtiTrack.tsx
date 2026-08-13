@@ -2,6 +2,7 @@ import {Colors, Radii, Spacing} from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { Animated, Platform, StyleSheet, View } from 'react-native';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 import type { GestureResponderHandlers, ViewStyle } from 'react-native';
 
@@ -18,6 +19,8 @@ export default function MbtiTrack({
   measureContainer,
   animValue,
 }: Props) {
+  const { colors } = useThemeColors();
+
   return (
     <View
       style={styles.trackWrapper}
@@ -25,7 +28,7 @@ export default function MbtiTrack({
       onLayout={(e) => onLayout(e.nativeEvent.layout.width)}
       ref={measureContainer}
     >
-      <View style={styles.track}>
+      <View style={[styles.track, { backgroundColor: colors.border.primary }]}>
         <LinearGradient
           colors={[Colors.primary.vividPurple, 'rgba(0, 0, 0, 0)']}
           start={{ x: 0, y: 0.5 }}
@@ -38,7 +41,7 @@ export default function MbtiTrack({
           end={{ x: 1, y: 0.5 }}
           style={styles.gradientRight}
         />
-        <View style={styles.centerLine} />
+        <View style={[styles.centerLine, { backgroundColor: colors.border.strong }]} />
 
         <Animated.View
           style={[
@@ -80,7 +83,6 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 8,
     borderRadius: Radii.xs,
-    backgroundColor: Colors.glass.white10,
     position: 'relative',
     alignItems: 'center',
   },
@@ -103,7 +105,6 @@ const styles = StyleSheet.create({
     left: '50%',
     width: 1,
     height: '100%',
-    backgroundColor: Colors.glass.white30,
   },
   handleWrapper: {
     position: 'absolute',

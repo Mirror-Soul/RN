@@ -3,6 +3,7 @@ import {Colors, Radii, FontFamily, FontSize, FontWeight, Spacing} from '@/src/co
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { ScanPhase } from '../types/faceScan';
 
 interface FaceScanButtonProps {
@@ -27,6 +28,8 @@ export default function FaceScanButton({
   onStartScan,
   onNext,
 }: FaceScanButtonProps) {
+  const { colors } = useThemeColors();
+
   // 스캔 중에는 버튼 숨김
   if (phase === 'scanning') return null;
 
@@ -41,14 +44,14 @@ export default function FaceScanButton({
       style={[styles.container, isFinalizing && styles.disabledContainer]}
     >
       <LinearGradient
-        colors={isFinalizing ? [Colors.glass.slate95, Colors.glass.slate95] : Colors.gradient.cyanToPurple}
+        colors={isFinalizing ? [colors.background.card, colors.background.card] : Colors.gradient.cyanToPurple}
         start={{ x: 0, y: 0.5 }}
         end={{ x: 1, y: 0.5 }}
         style={styles.gradient}
       >
         {!isCompleted && !isFinalizing && <CameraIcon width={24} height={24} />}
         {isFinalizing && <ActivityIndicator color={Colors.primary.electricCyan} />}
-        <Text style={[styles.text, isFinalizing && styles.disabledText]}>
+        <Text style={[styles.text, isFinalizing && { color: colors.text.muted }]}>
           {isFinalizing ? '영상 데이터 처리 중...' : isCompleted ? '다음' : 'Start Scan'}
         </Text>
       </LinearGradient>
@@ -81,8 +84,5 @@ const styles = StyleSheet.create({
   },
   disabledContainer: {
     opacity: 0.7,
-  },
-  disabledText: {
-    color: Colors.glass.white30,
   },
 });

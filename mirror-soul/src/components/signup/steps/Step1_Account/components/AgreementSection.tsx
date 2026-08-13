@@ -1,6 +1,5 @@
 import CompleteIcon from '@/assets/images/common/Complete.svg';
 import { Colors, Radii, FontFamily, FontSize, FontWeight, Spacing } from '@/src/constants/theme';
-import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SectionProps } from '../types/step1';
@@ -11,6 +10,7 @@ import {
   BIOMETRIC_CONSENT_CONTENT,
   MARKETING_CONSENT_CONTENT,
 } from '@/src/constants/consentContent';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 type ConsentSheetKey = 'terms' | 'privacy' | 'biometric' | 'marketing';
 
@@ -28,9 +28,11 @@ interface CheckboxProps {
 }
 
 function Checkbox({ checked, onToggle, accessibilityLabel }: CheckboxProps) {
+  const { colors } = useThemeColors();
+
   return (
     <TouchableOpacity
-      style={styles.checkboxWrapper}
+      style={[styles.checkboxWrapper, { borderColor: colors.border.primary, backgroundColor: colors.background.glass }]}
       onPress={onToggle}
       activeOpacity={0.8}
       accessibilityRole="checkbox"
@@ -38,14 +40,9 @@ function Checkbox({ checked, onToggle, accessibilityLabel }: CheckboxProps) {
       accessibilityLabel={accessibilityLabel}
     >
       {checked ? (
-        <LinearGradient
-          colors={[Colors.primary.electricCyan, Colors.primary.vividPurple]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.gradientCheck}
-        >
+        <View style={styles.checkedBox}>
           <CompleteIcon width={12} height={12} />
-        </LinearGradient>
+        </View>
       ) : (
         <View style={styles.emptyCheck} />
       )}
@@ -94,62 +91,59 @@ function AgreementRow({
 /**
  * AgreementSection 컴포넌트 (SRP)
  *
- * 동의 항목:
- * 1. 서비스 이용약관 + 개인정보 처리방침 (필수, 체크박스 1개 — 두 문서는 각각 별도로 열람 가능)
- * 2. 얼굴 영상·음성 등 생체정보 수집 및 AI 트윈 생성·활용 동의 — 민감정보 별도 동의 (필수)
- * 3. 마케팅 정보 수신 동의 (선택 — 동의하지 않아도 서비스 이용에 영향 없음)
+ * 동의 항목 (각각 별도 체크박스 + "보기" 상세 시트):
+ * 1. 서비스 이용약관 동의 (필수)
+ * 2. 개인정보 처리방침 동의 (필수)
+ * 3. 얼굴 영상·음성 등 생체정보 수집 및 AI 트윈 생성·활용 동의 — 민감정보 별도 동의 (필수)
+ * 4. 마케팅 정보 수신 동의 (선택 — 동의하지 않아도 서비스 이용에 영향 없음)
  *
  * 개인정보보호법 제23조는 생체정보 같은 민감정보 처리에 별도 동의를 요구하고,
  * 마케팅 수신처럼 서비스 이용에 필수가 아닌 항목은 선택 동의로 분리해야 한다.
- * "보기"를 누르면 실제 동의 내용을 바텀시트로 확인할 수 있다 — 체크박스만 누르고
- * 내용을 한 번도 보여주지 않으면 동의로서 의미가 없다.
+ * 이용약관과 개인정보 처리방침도 각각 별도 체크박스로 분리해 "보기"에서 실제로
+ * 확인한 문서에 대해서만 동의가 성립하도록 한다.
+ * "확인했습니다"를 누르면 해당 체크박스가 자동으로 켜진다 — 내용을 한 번도
+ * 보여주지 않고 체크박스만 누르면 동의로서 의미가 없다.
  */
 export default function AgreementSection({ state, onChange }: SectionProps) {
+  const { colors } = useThemeColors();
   const [activeSheet, setActiveSheet] = useState<ConsentSheetKey | null>(null);
 
   const toggleTerms = () => onChange({ agreedToTerms: !state.agreedToTerms });
+  const togglePrivacy = () => onChange({ agreedToPrivacy: !state.agreedToPrivacy });
   const toggleBiometric = () => onChange({ agreedToBiometricData: !state.agreedToBiometricData });
   const toggleMarketing = () => onChange({ agreedToMarketing: !state.agreedToMarketing });
 
   const activeSheetData = activeSheet ? SHEET_CONTENT[activeSheet] : null;
 
+  // "확인했습니다"로 명시적으로 닫을 때만 해당 체크박스를 자동으로 켠다.
+  const handleSheetConfirm = () => {
+    if (activeSheet === 'terms') onChange({ agreedToTerms: true });
+    else if (activeSheet === 'privacy') onChange({ agreedToPrivacy: true });
+    else if (activeSheet === 'biometric') onChange({ agreedToBiometricData: true });
+    else if (activeSheet === 'marketing') onChange({ agreedToMarketing: true });
+  };
+
   return (
     <View style={styles.container}>
-      <View style={styles.row}>
-        <Checkbox
-          checked={state.agreedToTerms}
-          onToggle={toggleTerms}
-          accessibilityLabel="서비스 이용약관 및 개인정보 처리방침에 동의"
-        />
+      <AgreementRow
+        checked={state.agreedToTerms}
+        onToggle={toggleTerms}
+        accessibilityLabel="서비스 이용약관 동의"
+        onViewDetail={() => setActiveSheet('terms')}
+        viewDetailLabel="서비스 이용약관 자세히 보기"
+      >
+        <Text style={[styles.baseText, { color: colors.text.secondary }]}>서비스 이용약관에 동의합니다. (필수)</Text>
+      </AgreementRow>
 
-        {/*
-          주의: 안쪽 링크 Text가 각자 onPress를 가지므로 바깥을 TouchableOpacity로
-          감싸지 않는다 — 감싸면 RN 터치 응답자 협상 때문에 링크 탭이 씹히거나
-          체크박스 토글과 동시에 발동될 수 있다. 체크박스 토글은 체크박스 자체로만.
-        */}
-        <View style={styles.textContainer}>
-          <Text style={styles.baseText}>
-            <Text
-              style={styles.link}
-              onPress={() => setActiveSheet('terms')}
-              accessibilityRole="link"
-              accessibilityLabel="서비스 이용약관 보기"
-            >
-              서비스 이용약관
-            </Text>
-            <Text style={styles.baseText}> 및 </Text>
-            <Text
-              style={styles.link}
-              onPress={() => setActiveSheet('privacy')}
-              accessibilityRole="link"
-              accessibilityLabel="개인정보 처리방침 보기"
-            >
-              개인정보 처리방침
-            </Text>
-            <Text style={styles.baseText}>에 동의합니다. (필수)</Text>
-          </Text>
-        </View>
-      </View>
+      <AgreementRow
+        checked={state.agreedToPrivacy}
+        onToggle={togglePrivacy}
+        accessibilityLabel="개인정보 처리방침 동의"
+        onViewDetail={() => setActiveSheet('privacy')}
+        viewDetailLabel="개인정보 처리방침 자세히 보기"
+      >
+        <Text style={[styles.baseText, { color: colors.text.secondary }]}>개인정보 처리방침에 동의합니다. (필수)</Text>
+      </AgreementRow>
 
       <AgreementRow
         checked={state.agreedToBiometricData}
@@ -158,14 +152,14 @@ export default function AgreementSection({ state, onChange }: SectionProps) {
         onViewDetail={() => setActiveSheet('biometric')}
         viewDetailLabel="생체정보 수집 및 AI 트윈 활용 동의 자세히 보기"
       >
-        <Text style={styles.baseText}>
+        <Text style={[styles.baseText, { color: colors.text.secondary }]}>
           얼굴 영상, 음성 등{' '}
-          <Text style={styles.emphasisText}>생체정보 수집 및 AI 트윈 생성·활용</Text>에 동의합니다.
+          <Text style={[styles.emphasisText, { color: colors.text.primary }]}>생체정보 수집 및 AI 트윈 생성·활용</Text>에 동의합니다.
           (필수)
         </Text>
       </AgreementRow>
 
-      <View style={styles.divider} />
+      <View style={[styles.divider, { backgroundColor: colors.border.primary }]} />
 
       <AgreementRow
         checked={state.agreedToMarketing}
@@ -174,12 +168,13 @@ export default function AgreementSection({ state, onChange }: SectionProps) {
         onViewDetail={() => setActiveSheet('marketing')}
         viewDetailLabel="마케팅 정보 수신 동의 자세히 보기"
       >
-        <Text style={styles.baseText}>이벤트·혜택 등 마케팅 정보 수신에 동의합니다. (선택)</Text>
+        <Text style={[styles.baseText, { color: colors.text.secondary }]}>이벤트·혜택 등 마케팅 정보 수신에 동의합니다. (선택)</Text>
       </AgreementRow>
 
       <ConsentDetailSheet
         visible={activeSheetData !== null}
         onClose={() => setActiveSheet(null)}
+        onConfirm={handleSheetConfirm}
         title={activeSheetData?.title ?? ''}
         content={activeSheetData?.content ?? ''}
       />
@@ -201,7 +196,6 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: 1,
-    backgroundColor: Colors.glass.white10,
     marginVertical: Spacing.xs,
   },
   checkboxWrapper: {
@@ -209,15 +203,14 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: Radii.xs,
     borderWidth: 1,
-    borderColor: Colors.glass.white10,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: Colors.glass.white5,
   },
-  gradientCheck: {
+  checkedBox: {
     width: 20,
     height: 20,
     borderRadius: Radii.xs,
+    backgroundColor: Colors.primary.electricCyan,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -230,22 +223,16 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   baseText: {
-    color: Colors.neutral.lightGray,
     fontFamily: FontFamily.sans,
     fontSize: FontSize.base,
     fontWeight: FontWeight.regular,
     lineHeight: 20,
   },
   emphasisText: {
-    color: Colors.neutral.pureWhite,
     fontFamily: FontFamily.sans,
     fontSize: FontSize.base,
     fontWeight: FontWeight.medium,
     lineHeight: 20,
-  },
-  link: {
-    color: Colors.primary.electricCyan,
-    textDecorationLine: 'underline',
   },
   viewDetailText: {
     color: Colors.primary.electricCyan,

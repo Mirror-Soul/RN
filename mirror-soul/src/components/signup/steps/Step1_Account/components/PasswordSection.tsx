@@ -1,5 +1,5 @@
 import FormLabel from '@/src/components/signup/common/FormLabel';
-import {Colors, Radii, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
+import {Colors, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import React from 'react';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -23,7 +23,7 @@ export default function PasswordSection({ state, onChange }: SectionProps) {
       {/* Password Input */}
       <View style={styles.fieldBox}>
         <FormLabel label="비밀번호" />
-        <View style={styles.inputWrapper}>
+        <View style={[styles.inputWrapper, { borderBottomColor: colors.border.primary }]}>
           <TextInput
             style={[styles.textInput, isInvalidPassword && styles.inputError, { color: colors.text.primary }]}
             value={state.password}
@@ -55,7 +55,7 @@ export default function PasswordSection({ state, onChange }: SectionProps) {
       {/* Password Confirm Input */}
       <View style={styles.fieldBox}>
         <FormLabel label="비밀번호 확인" />
-        <View style={styles.inputWrapper}>
+        <View style={[styles.inputWrapper, { borderBottomColor: colors.border.primary }]}>
           <TextInput
             style={[
               styles.textInput,
@@ -102,44 +102,38 @@ const styles = StyleSheet.create({
     width: '100%',
     flexDirection: 'column',
     alignItems: 'flex-start',
-    gap: 10, // Reduced from 24 to manage space better
+    gap: Spacing.xl,
     alignSelf: 'stretch',
   },
   fieldBox: {
     flexDirection: 'column',
     alignItems: 'flex-start',
-    gap: 7.995,
+    gap: Spacing.sm,
     alignSelf: 'stretch',
   },
   inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
     alignSelf: 'stretch',
-    justifyContent: 'center',
+    borderBottomWidth: 1,
+    paddingBottom: 10,
   },
   textInput: {
-    height: 49.202,
-    paddingLeft: Spacing.lg,
-    paddingRight: Spacing.massive, // Icon space
-    paddingVertical: Spacing.md,
-    borderRadius: Radii.lg,
-    borderWidth: 0.612,
-    borderColor: Colors.glass.white10,
-    backgroundColor: Colors.glass.white5,
+    flex: 1,
+    padding: 0,
     fontFamily: FontFamily.sans,
-    fontSize: FontSize.lg,
+    fontSize: FontSize.md,
     fontWeight: FontWeight.regular,
-    letterSpacing: -0.312,
-    alignSelf: 'stretch',
   },
   toggleIcon: {
-    position: 'absolute',
-    right: Spacing.lg,
-    zIndex: 10,
+    flexShrink: 0,
   },
   inputError: {
-    borderColor: 'rgba(251, 44, 54, 0.5)',
+    borderBottomColor: 'rgba(251, 44, 54, 0.5)',
   },
   messageArea: {
-    // height: 16, // Fixed height to prevent layout jump or overlap
+    minHeight: 16,
     justifyContent: 'center',
   },
   errorText: {

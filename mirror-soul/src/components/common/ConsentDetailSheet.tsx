@@ -9,6 +9,11 @@ const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 interface ConsentDetailSheetProps {
   visible: boolean;
   onClose: () => void;
+  /**
+   * "확인했습니다" 버튼을 눌러 명시적으로 닫을 때만 호출됨 (배경 탭/스와이프로 닫을 때는 호출 안 함).
+   * 내용을 실제로 확인했을 때만 체크박스를 자동으로 켜고 싶은 호출부에서 사용.
+   */
+  onConfirm?: () => void;
   title: string;
   content: string;
 }
@@ -20,8 +25,13 @@ interface ConsentDetailSheetProps {
  * 기존 BottomSheet(스프링 애니메이션 + 드래그로 닫기)를 재사용해서, 체크박스 옆
  * "보기"를 탭했을 때 실제 내용을 확인하지 않고 동의만 누르는 문제를 없앤다.
  */
-export function ConsentDetailSheet({ visible, onClose, title, content }: ConsentDetailSheetProps) {
+export function ConsentDetailSheet({ visible, onClose, onConfirm, title, content }: ConsentDetailSheetProps) {
   const { colors } = useThemeColors();
+
+  const handleConfirm = () => {
+    onConfirm?.();
+    onClose();
+  };
 
   return (
     <BottomSheet isOpen={visible} onClose={onClose} height={SCREEN_HEIGHT * 0.75}>
@@ -38,7 +48,7 @@ export function ConsentDetailSheet({ visible, onClose, title, content }: Consent
 
         <TouchableOpacity
           style={styles.closeButton}
-          onPress={onClose}
+          onPress={handleConfirm}
           activeOpacity={0.8}
           accessibilityRole="button"
           accessibilityLabel="확인했습니다"

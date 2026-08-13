@@ -1,6 +1,7 @@
 import React from 'react';
 import { Text, StyleSheet, View } from 'react-native';
-import {Colors, FontFamily, FontSize, FontWeight} from '@/src/constants/theme';
+import {FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface FormLabelProps {
   label: string;
@@ -11,25 +12,24 @@ interface FormLabelProps {
  * 이메일, 비밀번호 등 각 섹션 상단의 레이블. (SRP)
  */
 export default function FormLabel({ label }: FormLabelProps) {
+  const { colors } = useThemeColors();
+
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>{label}</Text>
+      <Text style={[styles.text, { color: colors.text.secondary }]}>{label}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    height: 20,
-    justifyContent: 'center',
+    marginBottom: Spacing.sm,
     alignSelf: 'stretch',
   },
   text: {
-    color: Colors.neutral.lightGray,
     fontFamily: FontFamily.sans,
-    fontSize: FontSize.base,
-    fontWeight: FontWeight.medium,
-    lineHeight: 20,
-    letterSpacing: -0.15,
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.regular,
+    letterSpacing: 0.1,
   },
 });

@@ -1,11 +1,11 @@
 import CompleteIcon from '@/assets/images/common/Complete.svg';
 import { Colors, Radii, FontFamily, FontSize, FontWeight, Spacing } from '@/src/constants/theme';
-import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SectionProps } from '../types/step1';
 import { ConsentDetailSheet } from '@/src/components/common/ConsentDetailSheet';
 import { AGE_VERIFICATION_CONTENT } from '@/src/constants/consentContent';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 /**
  * AgeVerificationSection 컴포넌트 (SRP)
@@ -19,6 +19,7 @@ import { AGE_VERIFICATION_CONTENT } from '@/src/constants/consentContent';
  * 무엇에 동의하는지 모른 채 누르게 된다.
  */
 export default function AgeVerificationSection({ state, onChange }: SectionProps) {
+  const { colors } = useThemeColors();
   const [isDetailVisible, setIsDetailVisible] = useState(false);
 
   const toggleAdultConfirmed = () => {
@@ -28,7 +29,7 @@ export default function AgeVerificationSection({ state, onChange }: SectionProps
   return (
     <View style={styles.row}>
       <TouchableOpacity
-        style={styles.checkboxWrapper}
+        style={[styles.checkboxWrapper, { borderColor: colors.border.primary, backgroundColor: colors.background.glass }]}
         onPress={toggleAdultConfirmed}
         activeOpacity={0.8}
         accessibilityRole="checkbox"
@@ -36,14 +37,9 @@ export default function AgeVerificationSection({ state, onChange }: SectionProps
         accessibilityLabel="만 19세 이상 확인"
       >
         {state.isAdultConfirmed ? (
-          <LinearGradient
-            colors={[Colors.primary.electricCyan, Colors.primary.vividPurple]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.gradientCheck}
-          >
+          <View style={styles.checkedBox}>
             <CompleteIcon width={12} height={12} />
-          </LinearGradient>
+          </View>
         ) : (
           <View style={styles.emptyCheck} />
         )}
@@ -54,7 +50,7 @@ export default function AgeVerificationSection({ state, onChange }: SectionProps
         onPress={toggleAdultConfirmed}
         activeOpacity={0.7}
       >
-        <Text style={styles.baseText}>만 19세 이상이며, 본 서비스 이용 자격을 충족합니다. (필수)</Text>
+        <Text style={[styles.baseText, { color: colors.text.secondary }]}>만 19세 이상이며, 본 서비스 이용 자격을 충족합니다. (필수)</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
@@ -69,6 +65,7 @@ export default function AgeVerificationSection({ state, onChange }: SectionProps
       <ConsentDetailSheet
         visible={isDetailVisible}
         onClose={() => setIsDetailVisible(false)}
+        onConfirm={() => onChange({ isAdultConfirmed: true })}
         title="연령 확인 안내"
         content={AGE_VERIFICATION_CONTENT}
       />
@@ -88,15 +85,14 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: Radii.xs,
     borderWidth: 1,
-    borderColor: Colors.glass.white10,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: Colors.glass.white5,
   },
-  gradientCheck: {
+  checkedBox: {
     width: 20,
     height: 20,
     borderRadius: Radii.xs,
+    backgroundColor: Colors.primary.electricCyan,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -109,7 +105,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   baseText: {
-    color: Colors.neutral.lightGray,
     fontFamily: FontFamily.sans,
     fontSize: FontSize.base,
     fontWeight: FontWeight.regular,

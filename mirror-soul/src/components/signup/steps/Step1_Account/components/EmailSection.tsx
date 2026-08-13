@@ -1,5 +1,5 @@
 import FormLabel from '@/src/components/signup/common/FormLabel';
-import {Colors, Radii, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
+import {Colors, FontFamily, FontSize, FontWeight, Radii, Spacing} from '@/src/constants/theme';
 import { isValidEmail } from '@/src/utils/validation';
 import React from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View, ActivityIndicator } from 'react-native';
@@ -52,16 +52,12 @@ export default function EmailSection({
       : '입력한 이메일 주소로 인증 코드를 전송합니다';
 
   return (
-    <View style={[styles.container, state.isEmailVerified && { height: 77 }]}>
+    <View style={styles.container}>
       <FormLabel label="이메일" />
 
-      <View style={styles.inputRow}>
+      <View style={[styles.inputRow, { borderBottomColor: colors.border.primary }]}>
         <TextInput
-          style={[
-            styles.emailInput,
-            state.isEmailVerified && { width: '100%', borderColor: Colors.glass.white10 },
-            { color: colors.text.primary }
-          ]}
+          style={[styles.emailInput, { color: colors.text.primary }]}
           value={state.email}
           onChangeText={(text) => onChange({ email: text })}
           placeholder="your@email.com"
@@ -75,18 +71,25 @@ export default function EmailSection({
         />
         {!state.isEmailVerified && (
           <TouchableOpacity
-            style={styles.sendButton}
+            style={[
+              styles.sendButton,
+              { borderColor: (!isValidEmail(state.email) || isLoading) ? colors.border.primary : Colors.primary.electricCyan },
+            ]}
             onPress={isTimerActive && timeLeft === 0 ? onResendCode : onSendCode}
             disabled={!isValidEmail(state.email) || isLoading}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             accessibilityRole="button"
             accessibilityLabel={sendButtonText}
             accessibilityHint={sendButtonA11yHint}
             accessibilityState={{ disabled: !isValidEmail(state.email) || isLoading }}
           >
             {isLoading ? (
-              <ActivityIndicator size="small" color={colors.text.primary} />
+              <ActivityIndicator size="small" color={Colors.primary.electricCyan} />
             ) : (
-              <Text style={[styles.sendButtonText, { color: colors.text.primary }]}>
+              <Text
+                numberOfLines={1}
+                style={[styles.sendButtonText, (!isValidEmail(state.email) || isLoading) && { color: colors.text.muted }]}
+              >
                 {sendButtonText}
               </Text>
             )}
@@ -94,20 +97,17 @@ export default function EmailSection({
         )}
       </View>
 
-      {/* 남은 시간 표시 (버튼 하단) */}
-      {isTimerActive && timeLeft > 0 && !state.isEmailVerified && (
-        <View style={styles.timerOutsideRow}>
-          <Text style={styles.timerOutsideText}>남은 시간: {formattedTime}</Text>
-        </View>
-      )}
-
-      {!!state.emailError && !state.isEmailVerified && (
-        <Text style={[styles.errorText, { color: colors.state.danger }]}>{state.emailError}</Text>
-      )}
-
-      {state.isEmailVerified && (
-        <Text style={styles.successText}>이메일 인증이 완료되었습니다.</Text>
-      )}
+      <View style={styles.messageRow}>
+        {isTimerActive && timeLeft > 0 && !state.isEmailVerified && (
+          <Text style={styles.timerText}>남은 시간 {formattedTime}</Text>
+        )}
+        {!!state.emailError && !state.isEmailVerified && (
+          <Text style={[styles.errorText, { color: colors.state.danger }]}>{state.emailError}</Text>
+        )}
+        {state.isEmailVerified && (
+          <Text style={styles.successText}>이메일 인증이 완료되었습니다</Text>
+        )}
+      </View>
 
       {/* Verification Modal */}
       <EmailVerificationModal
@@ -128,65 +128,50 @@ const styles = StyleSheet.create({
     width: '100%',
     flexDirection: 'column',
     alignItems: 'flex-start',
-    gap: 7.995,
+    gap: Spacing.sm,
     alignSelf: 'stretch',
-    position: 'relative', // absolute 자식을 기준잡기 위해 추가
   },
   inputRow: {
-    height: 49.202,
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 7.995,
+    alignItems: 'center',
+    gap: Spacing.md,
     alignSelf: 'stretch',
+    borderBottomWidth: 1,
+    paddingBottom: 10,
   },
   emailInput: {
-    width: 224.942,
-    height: 49.202,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    borderRadius: Radii.lg,
-    borderWidth: 0.612,
-    borderColor: Colors.glass.white10,
-    backgroundColor: Colors.glass.white5,
+    flex: 1,
+    padding: 0,
     fontFamily: FontFamily.sans,
-    fontSize: FontSize.lg,
+    fontSize: FontSize.md,
     fontWeight: FontWeight.regular,
-    letterSpacing: -0.312,
   },
   sendButton: {
-    flex: 1,
-    height: 49.202,
-    paddingVertical: 14.5,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: Radii.lg,
-    backgroundColor: Colors.glass.white10,
+    flexShrink: 0,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 7,
+    borderRadius: Radii.full,
+    borderWidth: 1,
   },
   sendButtonText: {
-    textAlign: 'center',
     fontFamily: FontFamily.sans,
-    fontSize: FontSize.base,
+    fontSize: FontSize.sm,
     fontWeight: FontWeight.medium,
-    lineHeight: 20,
-    letterSpacing: -0.15,
+    color: Colors.primary.electricCyan,
+  },
+  messageRow: {
+    minHeight: 16,
   },
   successText: {
     color: Colors.primary.successGreen,
     fontFamily: FontFamily.sans,
     fontSize: FontSize.sm,
-    marginTop: Spacing.xs,
   },
   errorText: {
     fontFamily: FontFamily.sans,
     fontSize: FontSize.sm,
-    marginTop: Spacing.xs,
   },
-  timerOutsideRow: {
-    position: 'absolute',
-    bottom: -22, // 컴포넌트 하단 바깥(여백 공간)으로 띄움으로써 UI 밀림 원천 차단
-    right: Spacing.none, // 컨테이너 우측 끝 정렬 (버튼 우측 끝과 일치)
-  },
-  timerOutsideText: {
+  timerText: {
     color: Colors.primary.electricCyan,
     fontFamily: FontFamily.sans,
     fontSize: FontSize.sm,

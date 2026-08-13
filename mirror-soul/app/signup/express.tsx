@@ -8,6 +8,7 @@ import { useLayout } from '@/src/hooks/useLayout';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { SIGNUP_ROUTES } from '@/src/constants/routes/signupRoutes';
 
@@ -15,7 +16,7 @@ import { useStep3Form } from '@/src/components/signup/steps/Step3_ExpressPersona
 
 export default function ExpressYourselfScreen() {
   const router = useRouter();
-  const { contentContainerStyle } = useLayout();
+  const { contentContainerStyle, screenPadding } = useLayout();
   const {
     mbti,
     setMbti,
@@ -47,13 +48,13 @@ export default function ExpressYourselfScreen() {
         scrollEnabled={!isSliding}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={[styles.container, contentContainerStyle]}>
+        <View style={[styles.container, contentContainerStyle, { paddingHorizontal: screenPadding }]}>
           {/* Header Section */}
-          <View style={styles.headerWrapper}>
+          <Animated.View entering={FadeInDown.delay(0).duration(400).springify()} style={styles.headerWrapper}>
             <Step3Header />
-          </View>
+          </Animated.View>
 
-          <View style={styles.body}>
+          <Animated.View entering={FadeInDown.delay(100).duration(400).springify()} style={styles.body}>
             <MbtiSelector
               onMbtiChange={setMbti}
               onScoresChange={setScores}
@@ -65,9 +66,9 @@ export default function ExpressYourselfScreen() {
               value={description}
               onChangeText={setDescription}
             />
-          </View>
+          </Animated.View>
 
-          <View style={styles.buttonWrapper}>
+          <Animated.View entering={FadeInDown.delay(200).duration(400).springify()} style={styles.buttonWrapper}>
             <GradientButton
               title="Continue"
               onPress={handleContinue}
@@ -75,7 +76,7 @@ export default function ExpressYourselfScreen() {
               style={styles.button}
               variant="full"
             />
-          </View>
+          </Animated.View>
           <SecurityFooter />
         </View>
       </ScrollView>

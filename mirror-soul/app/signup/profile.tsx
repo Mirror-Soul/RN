@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import Step2BasicProfileContainer from '@/src/components/signup/steps/Step2_BasicProfile/Step2BasicProfileContainer';
-import { Colors } from '@/src/constants/theme';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 
 /**
@@ -10,8 +10,10 @@ import { Colors } from '@/src/constants/theme';
  * 모든 로직은 Step2BasicProfileContainer 내부에 캡슐화되어 있습니다.
  */
 export default function BasicProfileScreen() {
+  const { colors } = useThemeColors();
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background.primary }]}>
       <Step2BasicProfileContainer />
     </View>
   );
@@ -20,7 +22,6 @@ export default function BasicProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.primary.soulBlack,
   }
 });
 
