@@ -1,6 +1,7 @@
 import {Colors, Radii, FontSize, Spacing} from '@/src/constants/theme';
 import React from 'react';
 import { Platform, StyleSheet, Text, View } from 'react-native';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 const monospaceFont = Platform.OS === 'ios' ? 'Menlo' : 'monospace';
 
@@ -21,21 +22,23 @@ export default function MbtiLabels({
   value,
   percentageText,
 }: Props) {
+  const { colors } = useThemeColors();
+
   return (
     <View style={styles.header}>
       <View style={styles.labelGroup}>
-        <View style={[styles.charBox, value < 50 && styles.charBoxActiveLeft]}>
-          <Text style={styles.charText}>{leftChar}</Text>
+        <View style={[styles.charBox, { borderColor: colors.border.primary, backgroundColor: colors.background.glass }, value < 50 && styles.charBoxActiveLeft]}>
+          <Text style={[styles.charText, { color: colors.text.primary }]}>{leftChar}</Text>
         </View>
-        <Text style={styles.labelText}>{leftLabel}</Text>
+        <Text style={[styles.labelText, { color: colors.text.secondary }]}>{leftLabel}</Text>
       </View>
 
-      <Text style={styles.percentageText}>{percentageText}</Text>
+      <Text style={[styles.percentageText, { color: colors.text.muted }]}>{percentageText}</Text>
 
       <View style={styles.labelGroup}>
-        <Text style={styles.labelText}>{rightLabel}</Text>
-        <View style={[styles.charBox, value > 50 && styles.charBoxActiveRight]}>
-          <Text style={styles.charText}>{rightChar}</Text>
+        <Text style={[styles.labelText, { color: colors.text.secondary }]}>{rightLabel}</Text>
+        <View style={[styles.charBox, { borderColor: colors.border.primary, backgroundColor: colors.background.glass }, value > 50 && styles.charBoxActiveRight]}>
+          <Text style={[styles.charText, { color: colors.text.primary }]}>{rightChar}</Text>
         </View>
       </View>
     </View>
@@ -60,8 +63,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 0.612,
-    borderColor: Colors.glass.white10,
-    backgroundColor: Colors.glass.white5,
   },
   charBoxActiveLeft: {
     borderColor: Colors.glass.purple80,
@@ -72,17 +73,14 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.glass.cyan30,
   },
   charText: {
-    color: Colors.neutral.pureWhite,
     fontFamily: monospaceFont,
     fontSize: FontSize.base,
   },
   labelText: {
-    color: Colors.neutral.lightGray,
     fontSize: FontSize.base,
     letterSpacing: -0.15,
   },
   percentageText: {
-    color: Colors.neutral.darkGray,
     textAlign: 'center',
     fontSize: FontSize.sm,
     flex: 1,

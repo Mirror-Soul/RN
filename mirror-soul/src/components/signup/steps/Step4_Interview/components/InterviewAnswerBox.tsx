@@ -1,6 +1,7 @@
 import {Colors, Radii, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import React, { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface InterviewAnswerBoxProps {
   answerText?: string;
@@ -9,6 +10,7 @@ interface InterviewAnswerBoxProps {
 }
 
 export default function InterviewAnswerBox({ answerText, isRecording = false, transcript = '' }: InterviewAnswerBoxProps) {
+  const { colors } = useThemeColors();
   // 깜빡이는 빨간 점 애니메이션
   const blinkAnim = useRef(new Animated.Value(0.6712)).current;
   const loopAnim = useRef<Animated.CompositeAnimation | null>(null);
@@ -45,9 +47,9 @@ export default function InterviewAnswerBox({ answerText, isRecording = false, tr
   }, [isRecording, blinkAnim]);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { borderColor: colors.border.primary, backgroundColor: colors.background.card }]}>
       <View style={styles.header}>
-        <Text style={styles.titleText}>당신의 답변</Text>
+        <Text style={[styles.titleText, { color: colors.text.secondary }]}>당신의 답변</Text>
         {isRecording && (
           <View style={styles.recordingIndicator}>
             <Animated.View style={[styles.redDot, { opacity: blinkAnim }]} />
@@ -59,22 +61,22 @@ export default function InterviewAnswerBox({ answerText, isRecording = false, tr
       {isRecording ? (
         <View style={styles.recordingContent}>
           {/* 노이즈 방지 UX 팁 추가 */}
-          <View style={styles.tipContainer}>
+          <View style={[styles.tipContainer, { borderColor: colors.border.primary, backgroundColor: colors.background.glass }]}>
             <Text style={styles.tipText}>💡 주변이 조용한 곳에서 편안하게 말씀해 주세요.</Text>
           </View>
 
           {transcript ? (
-            <Text style={styles.transcriptText}>{transcript}</Text>
+            <Text style={[styles.transcriptText, { color: colors.text.primary }]}>{transcript}</Text>
           ) : (
-            <Text style={styles.transcriptPlaceholder}>말씀해 주세요...</Text>
+            <Text style={[styles.transcriptPlaceholder, { color: colors.text.muted }]}>말씀해 주세요...</Text>
           )}
         </View>
       ) : transcript ? (
-        <Text style={styles.answerText}>{transcript}</Text>
+        <Text style={[styles.answerText, { color: colors.text.primary }]}>{transcript}</Text>
       ) : answerText ? (
-        <Text style={styles.answerText}>{answerText}</Text>
+        <Text style={[styles.answerText, { color: colors.text.primary }]}>{answerText}</Text>
       ) : (
-        <Text style={styles.guideText}>녹음 버튼을 눌러 답변을 시작하세요</Text>
+        <Text style={[styles.guideText, { color: colors.text.muted }]}>녹음 버튼을 눌러 답변을 시작하세요</Text>
       )}
     </View>
   );
@@ -87,8 +89,6 @@ const styles = StyleSheet.create({
     paddingBottom: 44.932,
     borderRadius: Radii.xl,
     borderWidth: 0.612,
-    borderColor: Colors.glass.white10,
-    backgroundColor: Colors.glass.black40,
     shadowColor: Colors.primary.soulBlack,
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.10,
@@ -120,18 +120,15 @@ const styles = StyleSheet.create({
     letterSpacing: -0.15,
   },
   titleText: {
-    color: Colors.neutral.lightGray,
     fontSize: FontSize.base,
     fontWeight: FontWeight.medium,
     lineHeight: 20,
     letterSpacing: -0.15,
   },
   tipContainer: {
-    backgroundColor: Colors.glass.white5,
     padding: 10,
     borderRadius: Radii.md,
     borderWidth: 0.5,
-    borderColor: Colors.glass.white10,
     marginBottom: Spacing.sm,
   },
   tipText: {
@@ -141,7 +138,6 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   guideText: {
-    color: Colors.neutral.darkGray,
     fontSize: FontSize.lg,
     fontStyle: 'italic',
     fontWeight: FontWeight.regular,
@@ -149,7 +145,6 @@ const styles = StyleSheet.create({
     letterSpacing: -0.312,
   },
   answerText: {
-    color: Colors.neutral.pureWhite,
     fontSize: FontSize.lg,
     fontWeight: FontWeight.regular,
     lineHeight: 26,
@@ -159,14 +154,12 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
   },
   transcriptText: {
-    color: Colors.neutral.pureWhite,
     fontSize: FontSize.md,
     fontWeight: FontWeight.regular,
     lineHeight: 24,
     letterSpacing: -0.2,
   },
   transcriptPlaceholder: {
-    color: Colors.neutral.darkGray,
     fontSize: FontSize.md,
     fontStyle: 'italic',
     fontWeight: FontWeight.regular,

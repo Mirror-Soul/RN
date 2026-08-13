@@ -11,6 +11,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import {Colors, FontFamily, Radii, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import ContinueIcon from '@/assets/images/common/Continue_icon.svg';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface GradientButtonProps {
   title: string;
@@ -49,6 +50,7 @@ export default function GradientButton({
   variant = 'full',
   showIcon = true,
 }: GradientButtonProps) {
+  const { colors } = useThemeColors();
   const { width: windowWidth } = useWindowDimensions();
 
   // variant='fixed'일 때만 동적 너비 계산 (불필요한 계산 방지)
@@ -69,7 +71,7 @@ export default function GradientButton({
       style={[
         styles.button,
         variant === 'full' ? styles.fullWidth : { width: buttonWidth, alignSelf: 'center' },
-        isDisabled && styles.buttonDisabled,
+        isDisabled && [styles.buttonDisabled, { backgroundColor: colors.background.glass }],
         style,
       ]}
       accessibilityRole="button"
@@ -79,7 +81,7 @@ export default function GradientButton({
       {/* 활성 상태에서만 그라디언트 렌더링 */}
       {!isDisabled && (
         <LinearGradient
-          colors={Colors.gradient.limeGradient}
+          colors={Colors.gradient.cyanToPurple}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={[StyleSheet.absoluteFill, { borderRadius: Radii.lg }]}
@@ -90,11 +92,11 @@ export default function GradientButton({
       {isLoading ? (
         <ActivityIndicator
           size="small"
-          color={isDisabled ? Colors.neutral.disabledText : Colors.primary.soulBlack}
+          color={isDisabled ? colors.text.muted : Colors.primary.soulBlack}
         />
       ) : (
         <>
-          <Text style={[styles.text, isDisabled ? styles.textDisabled : styles.textActive]}>
+          <Text style={[styles.text, isDisabled ? { color: colors.text.muted } : styles.textActive]}>
             {title}
           </Text>
           {showIcon && <ContinueIcon width={24} height={24} />}
@@ -124,7 +126,6 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   buttonDisabled: {
-    backgroundColor: Colors.glass.white5,
     // 그림자 제거
     shadowOpacity: 0,
     elevation: 0,
@@ -140,8 +141,5 @@ const styles = StyleSheet.create({
   },
   textActive: {
     color: Colors.primary.soulBlack,
-  },
-  textDisabled: {
-    color: Colors.neutral.disabledText,
   },
 });

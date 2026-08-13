@@ -91,6 +91,7 @@ export default function JobVerificationSection({ state, onChange, onVerify }: Jo
         <StepSelectDropdown
           label=""
           placeholder={jobCategories.find(j => j.value === state.jobCategory)?.label || "직군을 선택하세요"}
+          hasValue={!!state.jobCategory}
           onPress={handleToggle}
           isOpen={isOpen}
         />
@@ -110,17 +111,19 @@ export default function JobVerificationSection({ state, onChange, onVerify }: Jo
         />
       )}
 
-      <TextInput
-        style={[styles.jobTitleInput, { color: colors.text.primary }]}
-        value={state.jobTitle}
-        onChangeText={(text) => onChange({ jobTitle: text })}
-        placeholder="상세 직무를 입력해주세요 (선택 사항)"
-        placeholderTextColor={colors.text.muted}
-        autoCapitalize="none"
-      />
+      <View style={[styles.jobTitleRow, { borderBottomColor: colors.border.primary }]}>
+        <TextInput
+          style={[styles.jobTitleInput, { color: colors.text.primary }]}
+          value={state.jobTitle}
+          onChangeText={(text) => onChange({ jobTitle: text })}
+          placeholder="상세 직무를 입력해주세요 (선택 사항)"
+          placeholderTextColor={colors.text.muted}
+          autoCapitalize="none"
+        />
+      </View>
 
       {/* Verification Card */}
-      <View style={styles.verifyCard}>
+      <View style={[styles.verifyCard, { borderColor: colors.border.primary, backgroundColor: colors.background.glass }]}>
         <View style={styles.verifyHeaderRow}>
           <View style={styles.verifyHeaderLeft}>
             <View style={styles.iconCircle}>
@@ -179,20 +182,17 @@ const styles = StyleSheet.create({
   dropdownWrapper: {
     width: '100%',
   },
+  jobTitleRow: {
+    marginTop: Spacing.md,
+    borderBottomWidth: 1,
+    paddingBottom: 10,
+  },
   jobTitleInput: {
     width: '100%',
-    height: 49.202,
-    marginTop: Spacing.md,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    borderRadius: Radii.lg,
-    borderWidth: 0.612,
-    borderColor: Colors.glass.white10,
-    backgroundColor: Colors.glass.white5,
+    padding: 0,
     fontFamily: FontFamily.sans,
-    fontSize: FontSize.lg,
+    fontSize: FontSize.md,
     fontWeight: FontWeight.regular,
-    letterSpacing: -0.312,
   },
   verifyCard: {
     width: '100%',
@@ -200,8 +200,6 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     borderRadius: Radii.lg,
     borderWidth: 0.612,
-    borderColor: Colors.glass.white10,
-    backgroundColor: Colors.glass.white5,
     gap: Spacing.md,
   },
   verifyHeaderRow: {

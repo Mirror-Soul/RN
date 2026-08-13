@@ -1,22 +1,17 @@
-import { Colors } from '@/src/constants/theme';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 /**
  * MovingBackground
- * 
+ *
  * 인터뷰 화면의 배경을 관리합니다.
- * Step 1~3와의 일관성을 위해 Pure Black 배경을 제공하며,
- * 추후 다크/라이트 모드 확장을 위해 테마 색상을 참조합니다.
+ * Step 1~3와의 일관성을 위해 회원가입 다크 배경(useThemeColors, 항상 다크 고정)을 참조합니다.
  */
 export default function MovingBackground() {
+  const { colors } = useThemeColors();
+
   return (
-    <View style={[StyleSheet.absoluteFill, styles.container]} />
+    <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.background.primary }]} />
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: Colors.primary.soulBlack, // #000000
-  },
-});

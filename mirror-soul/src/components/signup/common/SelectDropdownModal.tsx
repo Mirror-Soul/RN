@@ -1,6 +1,7 @@
-import { Colors, Radii } from '@/src/constants/theme';
+import { Radii } from '@/src/constants/theme';
 import React, { useEffect, useRef } from 'react';
 import { Animated, Dimensions, Easing, Modal, Pressable, StyleSheet, ViewStyle, StyleProp } from 'react-native';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 export interface DropdownAnchor {
   x: number;
@@ -28,6 +29,7 @@ const MIN_PANEL_HEIGHT = 120;
  * 토글 버튼 바로 아래에 앵커링되는 자연스러운 드롭다운 형태로 렌더링합니다.
  */
 export default function SelectDropdownModal({ onClose, children, panelStyle, anchor }: SelectDropdownModalProps) {
+  const { colors } = useThemeColors();
   const progress = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -52,7 +54,7 @@ export default function SelectDropdownModal({ onClose, children, panelStyle, anc
       <Animated.View
         style={[
           styles.panel,
-          { top, left: anchor.x, width: anchor.width, maxHeight },
+          { top, left: anchor.x, width: anchor.width, maxHeight, borderColor: colors.border.primary, backgroundColor: colors.background.card },
           panelStyle,
           {
             opacity: progress,
@@ -77,8 +79,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     borderRadius: Radii.lg,
     borderWidth: 0.612,
-    borderColor: Colors.glass.white10,
-    backgroundColor: Colors.glass.slate95,
     overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },

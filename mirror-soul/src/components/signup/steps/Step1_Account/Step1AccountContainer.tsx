@@ -9,7 +9,7 @@ import React from 'react';
 import { useLayout } from '@/src/hooks/useLayout';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, { FadeInDown, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 // Step 1 Specific Parts
 import AgeVerificationSection from './components/AgeVerificationSection';
@@ -27,7 +27,7 @@ import { useCreateAccountMutation } from './hooks/useCreateAccountMutation';
  */
 export default function Step1AccountContainer() {
   const router = useRouter();
-  const { contentContainerStyle } = useLayout();
+  const { contentContainerStyle, screenPadding } = useLayout();
   const { colors } = useThemeColors();
 
   const {
@@ -67,7 +67,9 @@ export default function Step1AccountContainer() {
         password: state.password,
         gender: null,     // PASS 인증 미구현 → null
         birthDate: null,  // PASS 인증 미구현 → null
-        termsAgreed: state.agreedToTerms,
+        // 백엔드는 단일 termsAgreed 필드만 받으므로, FE에서 분리한 이용약관/개인정보처리방침
+        // 두 체크박스를 여기서 합산해서 보낸다 (isFormValid가 이미 둘 다 필수로 강제).
+        termsAgreed: state.agreedToTerms && state.agreedToPrivacy,
       });
 
       // 성공: Step2로 이동
@@ -99,16 +101,16 @@ export default function Step1AccountContainer() {
       contentContainerStyle={[styles.scrollContent, contentContainerStyle]}
       showsVerticalScrollIndicator={false}
     >
-      <View style={styles.container}>
+      <View style={[styles.container, { paddingHorizontal: screenPadding }]}>
         {/* Progress Steps (상위 레이아웃에서 렌더링하므로 여기서는 삭제) */}
 
         {/* Header Section */}
-        <View style={styles.headerWrapper}>
+        <Animated.View entering={FadeInDown.delay(0).duration(400).springify()} style={styles.headerWrapper}>
           <Step1Header />
-        </View>
+        </Animated.View>
 
         {/* Form Body */}
-        <View style={styles.formContainer}>
+        <Animated.View entering={FadeInDown.delay(100).duration(400).springify()} style={styles.formContainer}>
           {/* Email Section */}
           <EmailSection
             state={state}
@@ -158,12 +160,12 @@ export default function Step1AccountContainer() {
               variant="full"
             />
           </View>
-        </View>
+        </Animated.View>
 
         {/* Footer */}
-        <View style={styles.footerContainer}>
+        <Animated.View entering={FadeInDown.delay(200).duration(400).springify()} style={styles.footerContainer}>
           <SecurityFooter />
-        </View>
+        </Animated.View>
       </View>
     </ScrollView>
 
@@ -203,7 +205,7 @@ const styles = StyleSheet.create({
   },
   formContainer: {
     width: '100%',
-    gap: Spacing.giant,
+    gap: Spacing.xxl,
   },
   buttonWrapper: {
     marginTop: Spacing.sm,

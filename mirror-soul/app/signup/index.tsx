@@ -1,7 +1,7 @@
 import Step1AccountContainer from '@/src/components/signup/steps/Step1_Account/Step1AccountContainer';
 import React from 'react';
 import { KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
-import { Colors } from '@/src/constants/theme';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 
 /**
@@ -10,10 +10,12 @@ import { Colors } from '@/src/constants/theme';
  * 고도화된 Step1AccountContainer를 호출하여 UI와 로직을 렌더링합니다. (SRP)
  */
 export default function AccountScreen() {
+  const { colors } = useThemeColors();
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.keyboardView}
+      style={[styles.keyboardView, { backgroundColor: colors.background.primary }]}
     >
       <Step1AccountContainer />
     </KeyboardAvoidingView>
@@ -23,6 +25,5 @@ export default function AccountScreen() {
 const styles = StyleSheet.create({
   keyboardView: {
     flex: 1,
-    backgroundColor: Colors.primary.soulBlack,
   },
 });

@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View, ActivityIndicator, Alert } from 'react-native';
 import { getSidoList, getSigunguList, getEupmyeondongList } from '@/src/services/onboardingService';
 import SelectDropdownModal, { DropdownAnchor } from '@/src/components/signup/common/SelectDropdownModal';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface LocationResult {
   sidoName: string;
@@ -19,6 +20,7 @@ interface LocationDropdownProps {
 }
 
 export default function LocationDropdown({ onSelect, onClose, sigunguCache, eupmyeondongCache, anchor }: LocationDropdownProps) {
+  const { colors } = useThemeColors();
   const [activeTab, setActiveTab] = useState<0 | 1 | 2>(0);
   const [selectedSido, setSelectedSido] = useState<string | null>(null);
   const [selectedSigungu, setSelectedSigungu] = useState<string | null>(null);
@@ -135,14 +137,14 @@ export default function LocationDropdown({ onSelect, onClose, sigunguCache, eupm
         disabled={!canClick}
         onPress={() => setActiveTab(tabIndex)}
       >
-        <Text style={[styles.tabText, isActive && styles.tabTextActive]}>{title}</Text>
+        <Text style={[styles.tabText, { color: colors.text.muted }, isActive && styles.tabTextActive]}>{title}</Text>
       </TouchableOpacity>
     );
   };
 
   return (
     <SelectDropdownModal onClose={onClose} anchor={anchor} panelStyle={styles.dropdownPanel}>
-      <View style={styles.tabHeader}>
+      <View style={[styles.tabHeader, { borderBottomColor: colors.border.primary, backgroundColor: colors.background.glass }]}>
         {renderTab(0, '시/도')}
         {renderTab(1, '시/구/군')}
         {renderTab(2, '동/읍/면')}
@@ -165,12 +167,12 @@ export default function LocationDropdown({ onSelect, onClose, sigunguCache, eupm
               style={styles.listItem}
               onPress={() => handleSelect(item)}
             >
-              <Text style={styles.listItemText}>{item}</Text>
+              <Text style={[styles.listItemText, { color: colors.text.primary }]}>{item}</Text>
             </TouchableOpacity>
           ))}
           {currentList.length === 0 && (
             <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>데이터가 없습니다.</Text>
+              <Text style={[styles.emptyText, { color: colors.text.muted }]}>데이터가 없습니다.</Text>
             </View>
           )}
         </ScrollView>
@@ -189,8 +191,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderBottomWidth: 0.612,
-    borderBottomColor: Colors.glass.white10,
-    backgroundColor: Colors.glass.white5,
   },
   tabButton: {
     flex: 1,
@@ -205,7 +205,6 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.primary.electricCyan,
   },
   tabText: {
-    color: Colors.neutral.darkGray,
     fontSize: FontSize.base,
     fontWeight: FontWeight.medium,
   },
@@ -228,7 +227,6 @@ const styles = StyleSheet.create({
     borderRadius: Radii.md2,
   },
   listItemText: {
-    color: Colors.neutral.pureWhite,
     fontSize: FontSize.lg,
     fontWeight: FontWeight.medium,
   },
@@ -242,7 +240,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   emptyText: {
-    color: Colors.neutral.darkGray,
     fontSize: FontSize.base,
   }
 });

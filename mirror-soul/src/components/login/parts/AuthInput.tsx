@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import {Colors, FontFamily, Radii, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
+import {Colors, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import EmailIcon from '@/assets/images/common/login/login_email.svg';
 import PasswordIcon from '@/assets/images/common/login/login_password.svg';
 import SeePasswordIcon from '@/assets/images/common/login/login_SeePassword.svg';
@@ -65,26 +65,16 @@ const AuthInput = forwardRef<TextInput, AuthInputProps>(
     const borderColor = hasError
       ? 'rgba(251, 44, 54, 0.60)'
       : isFocused
-        ? Colors.glass.cyan30_d3
+        ? Colors.primary.electricCyan
         : colors.border.primary;
 
     return (
-      <View style={styles.container}>
-        <View style={styles.iconContainer}>
-          <Icon width={20} height={20} />
-        </View>
+      <View style={[styles.container, { borderBottomColor: borderColor }]}>
+        <Icon width={18} height={18} />
 
         <TextInput
           ref={ref}
-          style={[
-            styles.input,
-            { 
-              borderColor, 
-              backgroundColor: colors.background.glass,
-              color: colors.text.primary 
-            },
-            isPassword && { paddingRight: Spacing.massive },
-          ]}
+          style={[styles.input, { color: colors.text.primary }]}
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
@@ -103,14 +93,13 @@ const AuthInput = forwardRef<TextInput, AuthInputProps>(
 
         {isPassword && (
           <TouchableOpacity
-            style={styles.seePasswordContainer}
             onPress={handleToggleVisibility}
             accessibilityRole="button"
             accessibilityLabel={isPasswordVisible ? '비밀번호 숨기기' : '비밀번호 보기'}
             accessibilityState={{ selected: isPasswordVisible }}
             hitSlop={{ top: Spacing.md, bottom: Spacing.md, left: Spacing.md, right: Spacing.md }}
           >
-            <SeePasswordIcon width={20} height={20} />
+            <SeePasswordIcon width={18} height={18} />
           </TouchableOpacity>
         )}
       </View>
@@ -125,37 +114,17 @@ export default AuthInput;
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    height: 57,
-    position: 'relative',
-    justifyContent: 'center',
-  },
-  iconContainer: {
-    position: 'absolute',
-    left: Spacing.lg,
-    zIndex: 1,
-    width: 20,
-    height: 20,
-    justifyContent: 'center',
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: Spacing.md,
+    borderBottomWidth: 1,
+    paddingBottom: 12,
   },
   input: {
-    width: '100%',
-    height: '100%',
-    borderRadius: Radii.lg,
-    borderWidth: 1,
-    paddingLeft: Spacing.massive,
-    paddingRight: Spacing.lg,
+    flex: 1,
+    padding: 0,
     fontFamily: FontFamily.sans,
-    fontSize: FontSize.lg,
+    fontSize: FontSize.md,
     fontWeight: FontWeight.regular,
-    letterSpacing: -0.312,
-  },
-  seePasswordContainer: {
-    position: 'absolute',
-    right: Spacing.lg,
-    width: 20,
-    height: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
 });

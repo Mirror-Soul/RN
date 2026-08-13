@@ -1,12 +1,21 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { View, StyleSheet, Platform, Animated, Alert, ScrollView } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, StyleSheet, Platform, Alert, ScrollView, Text } from 'react-native';
+import Animated, {
+  FadeInDown,
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withRepeat,
+  withSequence,
+  withTiming,
+} from 'react-native-reanimated';
 import {Colors, FontSize, FontWeight, Radii, Spacing} from '@/src/constants/theme';
 import { useLayout } from '@/src/hooks/useLayout';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { useRouter } from 'expo-router';
 import { useCameraDevice } from 'react-native-vision-camera';
 
 // Step5 Component Imports
-import FaceScanGlow from '@/src/components/signup/steps/Step5_FaceScan/components/FaceScanGlow';
 import FaceScanHeader from '@/src/components/signup/steps/Step5_FaceScan/components/FaceScanHeader';
 import FaceScanBody from '@/src/components/signup/steps/Step5_FaceScan/components/FaceScanBody';
 import FaceScanButton from '@/src/components/signup/steps/Step5_FaceScan/components/FaceScanButton';
@@ -28,6 +37,7 @@ export default function FaceScanScreen() {
   const router = useRouter();
   const device = useCameraDevice('front');
   const { contentContainerStyle } = useLayout();
+  const { colors } = useThemeColors();
 
   // 1. 상태 및 비즈니스 로직 관리
   const {
@@ -79,20 +89,20 @@ export default function FaceScanScreen() {
   });
 
   // --- 완료 애니메이션 제어 ---
-  const completionAnim = useRef(new Animated.Value(0)).current;
+  const completionAnim = useSharedValue(0);
 
   useEffect(() => {
     if (displayPhase === 'completed') {
-      Animated.spring(completionAnim, {
-        toValue: 1,
-        tension: 50,
-        friction: 7,
-        useNativeDriver: true,
-      }).start();
+      completionAnim.value = withSpring(1, { damping: 8, stiffness: 90 });
     } else {
-      completionAnim.setValue(0);
+      completionAnim.value = 0;
     }
   }, [displayPhase, completionAnim]);
+
+  const completionAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: completionAnim.value,
+    transform: [{ scale: completionAnim.value }],
+  }));
 
   // --- 이벤트 핸들러 ---
   const handleNext = () => {
@@ -111,23 +121,28 @@ export default function FaceScanScreen() {
           : undefined;
 
   // --- Finalizing 애니메이션 ---
-  const pulseAnim = useRef(new Animated.Value(0.8)).current;
+  const pulseAnim = useSharedValue(0.8);
   useEffect(() => {
     if (displayPhase === 'finalizing') {
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(pulseAnim, { toValue: 1.1, duration: 800, useNativeDriver: true }),
-          Animated.timing(pulseAnim, { toValue: 0.8, duration: 800, useNativeDriver: true }),
-        ])
-      ).start();
+      pulseAnim.value = withRepeat(
+        withSequence(
+          withTiming(1.1, { duration: 800 }),
+          withTiming(0.8, { duration: 800 })
+        ),
+        -1,
+        false
+      );
     } else {
-      pulseAnim.stopAnimation();
+      pulseAnim.value = 0.8;
     }
   }, [displayPhase, pulseAnim]);
 
+  const pulseAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: pulseAnim.value }],
+  }));
+
   return (
-    <View style={styles.baseContainer}>
-      <FaceScanGlow />
+    <View style={[styles.baseContainer, { backgroundColor: colors.background.primary }]}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={[styles.contentContainer, contentContainerStyle]}
@@ -136,12 +151,12 @@ export default function FaceScanScreen() {
         overScrollMode="never"
       >
         {/* 헤더 섹션 */}
-        <View style={styles.headerWrapper}>
+        <Animated.View entering={FadeInDown.delay(0).duration(400).springify()} style={styles.headerWrapper}>
           <FaceScanHeader guideMessage={guideMessage} />
-        </View>
+        </Animated.View>
 
         {/* 메인 스캔 영역 (Body) */}
-        <View style={styles.bodyWrapper}>
+        <Animated.View entering={FadeInDown.delay(100).duration(400).springify()} style={styles.bodyWrapper}>
           <FaceScanBody phase={displayPhase}>
             {/* 카메라 뷰: 스캔 및 처리 중일 때만 표시 (마운트 유지를 통해 콜백 수신) */}
             {device && (displayPhase === 'scanning' || displayPhase === 'finalizing') && (
@@ -166,43 +181,30 @@ export default function FaceScanScreen() {
 
             {/* Finalizing (저장 중) 애니메이션 오버레이: 카메라 화면 완전 가림 */}
             {displayPhase === 'finalizing' && (
-              <View style={[styles.completionOverlay, { backgroundColor: Colors.primary.soulBlack }]}>
-                <Animated.View
-                  style={[
-                    styles.processingCircle,
-                    { transform: [{ scale: pulseAnim }] },
-                  ]}
-                />
+              <View style={[styles.completionOverlay, { backgroundColor: colors.background.primary }]}>
+                <Animated.View style={[styles.processingCircle, pulseAnimatedStyle]} />
               </View>
             )}
 
             {/* 완료 체크마크 애니메이션 */}
             {displayPhase === 'completed' && (
-              <Animated.View
-                style={[
-                  styles.completionOverlay,
-                  {
-                    opacity: completionAnim,
-                    transform: [{ scale: completionAnim }],
-                  },
-                ]}
-              >
+              <Animated.View style={[styles.completionOverlay, completionAnimatedStyle]}>
                 <View style={styles.checkmarkCircle}>
-                  <Animated.Text style={styles.checkmarkText}>✓</Animated.Text>
+                  <Text style={styles.checkmarkText}>✓</Text>
                 </View>
               </Animated.View>
             )}
           </FaceScanBody>
-        </View>
+        </Animated.View>
 
         {/* 하단 제어 섹션 */}
-        <View style={styles.buttonWrapper}>
+        <Animated.View entering={FadeInDown.delay(200).duration(400).springify()} style={styles.buttonWrapper}>
           <FaceScanButton
             phase={displayPhase}
             onStartScan={startScan}
             onNext={handleNext}
           />
-        </View>
+        </Animated.View>
       </ScrollView>
     </View>
   );
@@ -211,7 +213,6 @@ export default function FaceScanScreen() {
 const styles = StyleSheet.create({
   baseContainer: {
     flex: 1,
-    backgroundColor: Colors.primary.soulBlack,
   },
   scrollView: {
     flex: 1,

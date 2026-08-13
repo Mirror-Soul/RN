@@ -1,7 +1,5 @@
-import GreenCheckIcon from '@/assets/images/common/Green_check.svg';
-import ProtectIcon from '@/assets/images/common/Verification_protect_icon.svg';
+import { Feather } from '@expo/vector-icons';
 import {Colors, Radii, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
-import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Step1State } from '../types/step1';
@@ -18,127 +16,68 @@ interface IdentityVerificationSectionProps {
  */
 export default function IdentityVerificationSection({ state, onVerify }: IdentityVerificationSectionProps) {
   const { colors } = useThemeColors();
-  return (
-    <View style={styles.container}>
-      {/* Heading */}
-      <View style={styles.heading}>
-        <ProtectIcon width={24} height={24} />
-        <Text style={[styles.headingTitle, { color: colors.text.primary }]}>본인인증</Text>
-      </View>
 
-      {!state.isIdentityVerified ? (
-        <TouchableOpacity
-          style={styles.verifyButton}
-          onPress={onVerify}
-          activeOpacity={0.8}
-        >
-          <LinearGradient
-            colors={['#2B7FFF', '#155DFC']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.gradient}
-          >
-            <Text style={styles.buttonText}>PASS 본인인증 (준비 중)</Text>
-          </LinearGradient>
-        </TouchableOpacity>
-      ) : (
-        <View style={styles.successBox}>
-          <View style={styles.iconCircle}>
-            <GreenCheckIcon width={20} height={20} />
-          </View>
-          <View style={styles.successTextCol}>
-            <Text style={styles.successTitle}>본인인증 완료</Text>
-            <Text style={styles.successSubtitle}>인증이 완료되었습니다</Text>
-          </View>
+  if (state.isIdentityVerified) {
+    return (
+      <View style={[styles.row, styles.rowVerified]}>
+        <Feather name="check-circle" size={18} color={Colors.primary.successGreen} />
+        <View style={styles.textCol}>
+          <Text style={styles.verifiedTitle}>본인인증 완료</Text>
         </View>
-      )}
-    </View>
+      </View>
+    );
+  }
+
+  return (
+    <TouchableOpacity style={[styles.row, { borderColor: colors.border.primary }]} onPress={onVerify} activeOpacity={0.7}>
+      <Text style={[styles.title, { color: colors.text.primary }]}>본인인증 (PASS)</Text>
+      <View style={styles.rightGroup}>
+        <Text style={[styles.rightText, { color: colors.text.muted }]}>준비 중</Text>
+        <Feather name="chevron-right" size={16} color={colors.text.muted} />
+      </View>
+    </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  row: {
     width: '100%',
-    flexDirection: 'column',
-    alignItems: 'flex-start',
-    gap: 10,
-    alignSelf: 'stretch',
-  },
-  heading: {
-    height: 24,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 7.995,
-    alignSelf: 'stretch',
-  },
-  headingTitle: {
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.lg,
-    fontWeight: FontWeight.medium,
-    lineHeight: 24,
-    letterSpacing: -0.312,
-  },
-  verifyButton: {
-    height: 55.992,
+    justifyContent: 'space-between',
+    borderWidth: 1,
     borderRadius: Radii.lg,
-    overflow: 'hidden',
-    alignSelf: 'stretch',
+    paddingVertical: 14,
+    paddingHorizontal: Spacing.lg,
   },
-  gradient: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+  rowVerified: {
+    borderColor: 'rgba(5, 223, 114, 0.25)',
+    backgroundColor: 'rgba(5, 223, 114, 0.06)',
+    gap: Spacing.sm,
+    justifyContent: 'flex-start',
   },
-  buttonText: {
-    color: Colors.neutral.pureWhite,
-    textAlign: 'center',
+  title: {
     fontFamily: FontFamily.sans,
-    fontSize: FontSize.lg,
+    fontSize: FontSize.base,
     fontWeight: FontWeight.medium,
-    lineHeight: 24,
-    letterSpacing: -0.312,
   },
-  successBox: {
-    height: 73.215,
-    paddingLeft: Spacing.lg,
+  rightGroup: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    borderRadius: Radii.lg,
-    borderWidth: 0.612,
-    borderColor: 'rgba(0, 201, 80, 0.30)',
-    backgroundColor: 'rgba(0, 201, 80, 0.10)',
-    alignSelf: 'stretch',
+    gap: 4,
   },
-
-  iconCircle: {
-    width: 39.993,
-    height: 39.993,
-    borderRadius: Radii.full, // Pill 형태
-    backgroundColor: 'rgba(0, 201, 80, 0.20)',
-    justifyContent: 'center',
-    alignItems: 'center',
+  rightText: {
+    fontFamily: FontFamily.sans,
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.regular,
   },
-  successTextCol: {
-    flex: 1,
-    height: 37.994,
+  textCol: {
     flexDirection: 'column',
-    justifyContent: 'center',
-    gap: 1.999,
   },
-  successTitle: {
+  verifiedTitle: {
     color: Colors.primary.successGreen,
     fontFamily: FontFamily.sans,
     fontSize: FontSize.base,
     fontWeight: FontWeight.medium,
-    lineHeight: 20,
-    letterSpacing: -0.15,
-  },
-  successSubtitle: {
-    color: Colors.neutral.lightGray,
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.regular,
-    lineHeight: 16,
   },
 });

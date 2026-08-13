@@ -1,8 +1,10 @@
 import {Colors, Spacing} from '@/src/constants/theme';
 import { useLayout } from '@/src/hooks/useLayout';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { useRouter } from 'expo-router';
 import React, { useEffect } from 'react';
 import { Alert, KeyboardAvoidingView, Linking, Platform, ScrollView, StyleSheet, View, ActivityIndicator } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 
 // Step 4 Components
 import InterviewAIBox from '@/src/components/signup/steps/Step4_Interview/components/InterviewAIBox';
@@ -20,9 +22,10 @@ import { useInterviewUpload } from '@/src/components/signup/steps/Step4_Intervie
 import MicPermissionModal from '@/src/components/signup/steps/Step4_Interview/components/parts/MicPermissionModal';
 
 export default function InterviewScreen() {
-  const { contentContainerStyle } = useLayout();
+  const { contentContainerStyle, screenPadding } = useLayout();
+  const { colors } = useThemeColors();
   const router = useRouter();
-  
+
   const {
     isRecording,
     recordingUri,
@@ -68,7 +71,7 @@ export default function InterviewScreen() {
 
   if (isLoading) {
     return (
-      <View style={[styles.keyboardView, styles.loadingContainer]}>
+      <View style={[styles.keyboardView, styles.loadingContainer, { backgroundColor: colors.background.primary }]}>
         <ActivityIndicator size="large" color={Colors.primary.electricCyan} />
       </View>
     );
@@ -141,7 +144,7 @@ export default function InterviewScreen() {
   };
 
   return (
-    <View style={styles.mainContainer}>
+    <View style={[styles.mainContainer, { backgroundColor: colors.background.primary }]}>
       <MovingBackground />
       
       <KeyboardAvoidingView
@@ -153,20 +156,20 @@ export default function InterviewScreen() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          <View style={[styles.container, contentContainerStyle]}>
-            <View style={styles.headerWrapper}>
+          <View style={[styles.container, contentContainerStyle, { paddingHorizontal: screenPadding }]}>
+            <Animated.View entering={FadeInDown.delay(0).duration(400).springify()} style={styles.headerWrapper}>
               <InterviewHeader
                 currentQuestion={currentQuestionIndex + 1}
                 totalQuestions={totalQuestions}
               />
-            </View>
+            </Animated.View>
 
             {/* AI Visualizer (프리미엄 루핑 애니메이션) */}
-            <View style={styles.visualizerWrapper}>
+            <Animated.View entering={FadeInDown.delay(80).duration(400).springify()} style={styles.visualizerWrapper}>
               <InterviewVisualizer isRecording={isRecording} />
-            </View>
+            </Animated.View>
 
-            <View style={styles.body}>
+            <Animated.View entering={FadeInDown.delay(160).duration(400).springify()} style={styles.body}>
               <InterviewAIBox
                 question={currentQuestion.question}
               />
@@ -184,11 +187,11 @@ export default function InterviewScreen() {
                   onNextPress={handleNextPress}
                 />
               </View>
-            </View>
+            </Animated.View>
 
-            <View style={styles.footerWrapper}>
+            <Animated.View entering={FadeInDown.delay(240).duration(400).springify()} style={styles.footerWrapper}>
               <InterviewFooter />
-            </View>
+            </Animated.View>
           </View>
         </ScrollView>
 
@@ -205,7 +208,6 @@ export default function InterviewScreen() {
 const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
-    backgroundColor: Colors.primary.soulBlack,
   },
   keyboardView: {
     flex: 1,
@@ -249,6 +251,5 @@ const styles = StyleSheet.create({
   loadingContainer: {
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: Colors.primary.soulBlack,
   },
 });

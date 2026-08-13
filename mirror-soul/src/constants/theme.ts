@@ -237,7 +237,7 @@ export interface ThemeColors {
 
 export const lightTheme: ThemeColors = {
   background: {
-    primary: '#F8F7F4',               // Off White
+    primary: '#F0EFEB',               // Off White (카드 배경과의 구분을 위해 이전 #F8F7F4보다 톤을 낮춤)
     card: '#FFFFFF',
     elevated: '#FFFFFF',              // 바텀시트, 팝오버
     glass: 'rgba(0, 0, 0, 0.05)',

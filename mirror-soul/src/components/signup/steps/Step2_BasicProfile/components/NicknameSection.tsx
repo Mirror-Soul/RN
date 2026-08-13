@@ -1,6 +1,6 @@
 import VerificationSuccessIcon from '@/assets/images/common/Verification_sucess.svg';
 import FormLabel from '@/src/components/signup/common/FormLabel';
-import {Radii, FontFamily, Colors, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
+import {FontFamily, Colors, FontSize, FontWeight, Radii, Spacing} from '@/src/constants/theme';
 import React from 'react';
 import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SectionProps } from '../types/step2';
@@ -21,7 +21,7 @@ export default function NicknameSection({ state, onChange, onCheck, isChecking }
     <View style={styles.container}>
       <FormLabel label="닉네임" />
 
-      <View style={styles.infoRow}>
+      <View style={[styles.infoRow, { borderBottomColor: colors.border.primary }]}>
         <TextInput
           style={[styles.textInput, { color: colors.text.primary }]}
           value={state.nickname}
@@ -33,15 +33,24 @@ export default function NicknameSection({ state, onChange, onCheck, isChecking }
         />
 
         <TouchableOpacity
-          style={styles.checkButton}
+          style={[
+            styles.checkButton,
+            { borderColor: (isChecking || state.nickname.length < 2) ? colors.border.primary : Colors.primary.electricCyan },
+          ]}
           onPress={onCheck}
-          activeOpacity={0.8}
+          activeOpacity={0.7}
           disabled={isChecking || state.nickname.length < 2}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
           {isChecking ? (
-            <ActivityIndicator size="small" color={colors.text.primary} />
+            <ActivityIndicator size="small" color={Colors.primary.electricCyan} />
           ) : (
-            <Text style={[styles.checkButtonText, { color: colors.text.primary }]}>중복 확인</Text>
+            <Text
+              numberOfLines={1}
+              style={[styles.checkButtonText, (isChecking || state.nickname.length < 2) && { color: colors.text.muted }]}
+            >
+              중복 확인
+            </Text>
           )}
         </TouchableOpacity>
       </View>
@@ -64,54 +73,41 @@ const styles = StyleSheet.create({
     width: '100%',
     flexDirection: 'column',
     alignItems: 'flex-start',
-    gap: Spacing.md, // Standard label-to-field gap
+    gap: Spacing.sm,
     alignSelf: 'stretch',
   },
   infoRow: {
-    height: 49.202,
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 7.995,
+    alignItems: 'center',
+    gap: Spacing.md,
     alignSelf: 'stretch',
+    borderBottomWidth: 1,
+    paddingBottom: 10,
   },
   textInput: {
-    flex: 3,
-    height: 49.202,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    borderRadius: Radii.lg,
-    borderWidth: 0.612,
-    borderColor: Colors.glass.white10,
-    backgroundColor: Colors.glass.white5,
+    flex: 1,
+    padding: 0,
     fontFamily: FontFamily.sans,
-    fontSize: FontSize.lg,
+    fontSize: FontSize.md,
     fontWeight: FontWeight.regular,
-    letterSpacing: -0.312,
   },
   checkButton: {
-    flex: 1,
-    height: 49.202,
-    paddingHorizontal: 14,
-    paddingVertical: 14,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: Radii.lg,
-    backgroundColor: Colors.glass.white10,
+    flexShrink: 0,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 7,
+    borderRadius: Radii.full,
+    borderWidth: 1,
   },
   checkButtonText: {
-    textAlign: 'center',
     fontFamily: FontFamily.sans,
-    fontSize: FontSize.base,
+    fontSize: FontSize.sm,
     fontWeight: FontWeight.medium,
-    lineHeight: 20,
-    letterSpacing: -0.15,
+    color: Colors.primary.electricCyan,
   },
   successContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.sm,
-    height: 19.996,
-    marginTop: -4, // Adjustment to bring feedback closer to input
   },
   infoContent: {
     justifyContent: 'flex-end',
@@ -120,10 +116,8 @@ const styles = StyleSheet.create({
   successText: {
     color: Colors.primary.successGreen,
     fontFamily: FontFamily.sans,
-    fontSize: FontSize.base,
+    fontSize: FontSize.sm,
     fontWeight: FontWeight.regular,
-    lineHeight: 20,
-    letterSpacing: -0.15,
   },
 });
 

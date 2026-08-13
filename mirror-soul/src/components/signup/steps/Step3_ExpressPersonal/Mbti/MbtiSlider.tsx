@@ -1,9 +1,10 @@
-import {Colors, Radii, Spacing} from '@/src/constants/theme';
+import {Radii, Spacing} from '@/src/constants/theme';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useMbtiSlider } from './hooks/useMbtiSlider';
 import MbtiLabels from './parts/MbtiLabels';
 import MbtiTrack from './parts/MbtiTrack';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface Props {
   leftLabel: string;
@@ -26,6 +27,7 @@ export default function MbtiSlider({
   onDragStart,
   onDragEnd,
 }: Props) {
+  const { colors } = useThemeColors();
   const {
     panResponder,
     animValue,
@@ -42,7 +44,7 @@ export default function MbtiSlider({
         : `${percentage}% ${rightLabel}`;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { borderColor: colors.border.primary, backgroundColor: colors.background.glass }]}>
       {/* 1. Header Labels & Percentage */}
       <MbtiLabels
         leftChar={leftChar}
@@ -70,8 +72,6 @@ const styles = StyleSheet.create({
     padding: Spacing.xl,
     borderRadius: Radii.lg,
     borderWidth: 0.612,
-    borderColor: Colors.glass.white10,
-    backgroundColor: Colors.glass.white5,
     gap: Spacing.lg,
   },
 });

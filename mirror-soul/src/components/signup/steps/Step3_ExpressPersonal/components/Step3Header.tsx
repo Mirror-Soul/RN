@@ -12,12 +12,8 @@ export default function Step3Header() {
   const { colors } = useThemeColors();
   return (
     <View style={styles.header}>
-      <View style={styles.titleContainer}>
-        <Text style={[styles.title, { color: colors.text.primary }]}>성격 유형</Text>
-      </View>
-      <View style={styles.subtitleContainer}>
-        <Text style={[styles.subtitle, { color: colors.text.muted }]}>당신의 성격을 알려주세요</Text>
-      </View>
+      <Text style={[styles.title, { color: colors.text.primary }]}>성격 유형</Text>
+      <Text style={[styles.subtitle, { color: colors.text.secondary }]}>당신의 성격을 알려주세요</Text>
     </View>
   );
 }
@@ -25,37 +21,19 @@ export default function Step3Header() {
 const styles = StyleSheet.create({
   header: {
     width: '100%',
-    height: 63.986,
-    flexDirection: 'column',
     alignItems: 'flex-start',
-    gap: 7.995,
-  },
-  titleContainer: {
-    height: 35.995,
-    alignSelf: 'stretch',
-    justifyContent: 'center',
-    alignItems: 'center',
+    gap: Spacing.sm,
   },
   title: {
-    textAlign: 'center',
     fontFamily: FontFamily.sans,
-    fontSize: 30,
-    fontWeight: FontWeight.medium,
-    lineHeight: 36,
-    letterSpacing: 0.396,
-  },
-  subtitleContainer: {
-    paddingHorizontal: Spacing.lg,
-    alignSelf: 'stretch',
-    justifyContent: 'center',
-    alignItems: 'center',
+    fontSize: 26,
+    fontWeight: FontWeight.semibold,
+    letterSpacing: -0.3,
   },
   subtitle: {
-    textAlign: 'center',
     fontFamily: FontFamily.sans,
     fontSize: FontSize.base,
     fontWeight: FontWeight.regular,
     lineHeight: 20,
-    letterSpacing: -0.15,
   },
 });

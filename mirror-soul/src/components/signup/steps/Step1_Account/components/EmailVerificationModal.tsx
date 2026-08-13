@@ -84,10 +84,10 @@ export default function EmailVerificationModal({
       animationType="none"
       onRequestClose={onClose}
     >
-      <View style={[styles.overlay, { backgroundColor: colors.background.overlay || 'rgba(0, 0, 0, 0.6)' }]}>
-        <Animated.View style={[styles.modalContainer, animatedStyle, { backgroundColor: colors.background.card || 'rgba(16, 24, 40, 0.95)' }]}>
+      <View style={[styles.overlay, { backgroundColor: colors.background.overlay }]}>
+        <Animated.View style={[styles.modalContainer, animatedStyle, { borderColor: colors.border.primary, backgroundColor: colors.background.card }]}>
           {/* Header */}
-          <View style={styles.header}>
+          <View style={[styles.header, { borderBottomColor: colors.border.primary }]}>
             <View style={styles.headerRow}>
               <View style={styles.iconCircle}>
                 <LinearGradient
@@ -100,7 +100,7 @@ export default function EmailVerificationModal({
               </View>
               <View style={styles.headerTextCol}>
                 <Text style={[styles.title, { color: colors.text.primary }]}>이메일 인증</Text>
-                <Text style={styles.subtitle}>인증 코드를 확인해주세요</Text>
+                <Text style={[styles.subtitle, { color: colors.text.secondary }]}>인증 코드를 확인해주세요</Text>
               </View>
             </View>
           </View>
@@ -110,19 +110,24 @@ export default function EmailVerificationModal({
             {/* Email Info Box */}
             <View style={styles.infoBox}>
               <Text style={styles.infoEmail}>{email}</Text>
-              <Text style={styles.infoText}>위 이메일로 6자리 인증 코드를 발송했습니다.</Text>
+              <Text style={[styles.infoText, { color: colors.text.secondary }]}>위 이메일로 6자리 인증 코드를 발송했습니다.</Text>
             </View>
 
             {/* Code Input Section */}
             <View style={styles.inputSection}>
               <View style={styles.labelContainer}>
-                <Text style={styles.label}>인증 코드</Text>
+                <Text style={[styles.label, { color: colors.text.secondary }]}>인증 코드</Text>
                 <Text style={[styles.timerText, timeLeft === 0 && styles.timerTextExpired]}>
                   {formattedTime}
                 </Text>
               </View>
               <TextInput
-                style={[styles.codeTextInput, errorMessage ? styles.codeTextInputError : null, { color: colors.text.primary }]}
+                style={[
+                  styles.codeTextInput,
+                  { backgroundColor: colors.background.glass, borderColor: colors.border.primary },
+                  errorMessage ? styles.codeTextInputError : null,
+                  { color: colors.text.primary },
+                ]}
                 value={code}
                 onChangeText={(text) => {
                   setCode(text);
@@ -144,17 +149,21 @@ export default function EmailVerificationModal({
 
             {/* Buttons Row */}
             <View style={styles.buttonRow}>
-              <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
+              <TouchableOpacity style={[styles.cancelButton, { backgroundColor: colors.background.glass }]} onPress={onClose}>
                 <Text style={[styles.cancelText, { color: colors.text.primary }]}>취소</Text>
               </TouchableOpacity>
-              
+
               {timeLeft === 0 ? (
                 <TouchableOpacity style={styles.resendButton} onPress={onResend}>
                   <Text style={styles.resendText}>재발송</Text>
                 </TouchableOpacity>
               ) : (
                 <TouchableOpacity
-                  style={[styles.confirmButton, code.length === 6 && !isVerifying && styles.confirmButtonActive]}
+                  style={[
+                    styles.confirmButton,
+                    { backgroundColor: colors.background.glass },
+                    code.length === 6 && !isVerifying && { backgroundColor: colors.background.card },
+                  ]}
                   onPress={handleConfirm}
                   disabled={code.length !== 6 || isVerifying}
                 >
@@ -185,13 +194,11 @@ const styles = StyleSheet.create({
     height: 'auto',
     borderRadius: Radii.xl,
     borderWidth: 0.612,
-    borderColor: Colors.glass.white10,
     overflow: 'hidden',
   },
   header: {
     padding: 23.994,
     borderBottomWidth: 0.612,
-    borderBottomColor: Colors.glass.white10,
   },
   headerRow: {
     flexDirection: 'row',
@@ -217,7 +224,6 @@ const styles = StyleSheet.create({
     letterSpacing: -0.449,
   },
   subtitle: {
-    color: Colors.neutral.lightGray,
     fontFamily: FontFamily.sans,
     fontSize: FontSize.base,
     fontWeight: FontWeight.regular,
@@ -245,7 +251,6 @@ const styles = StyleSheet.create({
     letterSpacing: -0.15,
   },
   infoText: {
-    color: Colors.neutral.lightGrayText,
     fontFamily: FontFamily.sans,
     fontSize: FontSize.base,
     fontWeight: FontWeight.regular,
@@ -262,7 +267,6 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
   },
   label: {
-    color: Colors.neutral.lightGray,
     fontFamily: FontFamily.sans,
     fontSize: FontSize.base,
     fontWeight: FontWeight.medium,
@@ -270,10 +274,8 @@ const styles = StyleSheet.create({
   },
   codeTextInput: {
     height: 57.197,
-    backgroundColor: Colors.glass.white5,
     borderRadius: Radii.lg,
     borderWidth: 0.612,
-    borderColor: Colors.glass.white10,
     paddingHorizontal: Spacing.lg,
     textAlign: 'center',
     fontFamily: 'Menlo', // 고정 폭 폰트
@@ -288,7 +290,6 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 48,
     borderRadius: Radii.md2,
-    backgroundColor: Colors.glass.white5,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -301,12 +302,8 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 48,
     borderRadius: Radii.md2,
-    backgroundColor: Colors.glass.white5,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  confirmButtonActive: {
-    backgroundColor: Colors.glass.white10, // 살짝 밝게
   },
   confirmText: {
     fontFamily: FontFamily.sans,

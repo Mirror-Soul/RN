@@ -21,36 +21,23 @@ export default function HomeBackground() {
       {/* Base Background */}
       <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.background.primary }]} />
       
-      {/* SVG Radial Gradients */}
+      {/* SVG Radial Gradient — 미니멀 톤을 위해 하나의 은은한 글로우만 유지 */}
       <Svg height="100%" width="100%" style={StyleSheet.absoluteFill}>
         <Defs>
           <RadialGradient
             id="grad1"
-            cx="70.3%"
-            cy="46.17%"
-            rx="60%"
-            ry="40%"
-            fx="70.3%"
-            fy="46.17%"
+            cx="50%"
+            cy="38%"
+            rx="70%"
+            ry="45%"
+            fx="50%"
+            fy="38%"
           >
             <Stop offset="0" stopColor={accentColor} stopOpacity={accentOpacity} />
             <Stop offset="1" stopColor={stopColor} stopOpacity="0" />
           </RadialGradient>
-          <RadialGradient
-            id="grad2"
-            cx="29.7%"
-            cy="53.84%"
-            rx="60%"
-            ry="40%"
-            fx="29.7%"
-            fy="53.84%"
-          >
-            <Stop offset="0" stopColor={accentColor} stopOpacity={isDark ? "0.15" : "0.1"} />
-            <Stop offset="1" stopColor={stopColor} stopOpacity="0" />
-          </RadialGradient>
         </Defs>
         <Rect x="0" y="0" width="100%" height="100%" fill="url(#grad1)" />
-        <Rect x="0" y="0" width="100%" height="100%" fill="url(#grad2)" />
       </Svg>
     </View>
   );

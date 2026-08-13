@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
-import {Colors, Radii, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
+import {Radii, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface Props {
@@ -16,7 +16,7 @@ export default function SelfDescriptionInput({ value, onChangeText }: Props) {
     <View style={styles.container}>
       <Text style={[styles.title, { color: colors.text.primary }]}>자신을 소개해주세요.</Text>
 
-      <View style={styles.inputWrapper}>
+      <View style={[styles.inputWrapper, { borderColor: colors.border.primary, backgroundColor: colors.background.glass }]}>
         <TextInput
           style={[styles.input, { color: colors.text.primary }]}
           placeholder="저는 말이죠.."
@@ -52,8 +52,6 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     borderRadius: Radii.lg,
     borderWidth: 0.612,
-    borderColor: Colors.glass.white10,
-    backgroundColor: Colors.glass.white5,
   },
   input: {
     flex: 1,

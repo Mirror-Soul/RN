@@ -1,8 +1,9 @@
-import {Colors, Radii, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
+import {Radii, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import React from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { jobCategories } from './jobData';
 import SelectDropdownModal, { DropdownAnchor } from '@/src/components/signup/common/SelectDropdownModal';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface Props {
   onSelect: (category: string) => void;
@@ -11,6 +12,8 @@ interface Props {
 }
 
 export default function JobCategoryDropdown({ onSelect, onClose, anchor }: Props) {
+  const { colors } = useThemeColors();
+
   const handleSelect = (job: string) => {
     onSelect(job);
     onClose(); // 선택 완료 후 명시적으로 닫기 호출
@@ -30,7 +33,7 @@ export default function JobCategoryDropdown({ onSelect, onClose, anchor }: Props
             activeOpacity={0.6}
             onPress={() => handleSelect(job.value)}
           >
-            <Text style={styles.listItemText}>{job.label}</Text>
+            <Text style={[styles.listItemText, { color: colors.text.primary }]}>{job.label}</Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
@@ -56,7 +59,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   listItemText: {
-    color: Colors.neutral.pureWhite,
     fontSize: FontSize.lg,
     fontWeight: FontWeight.medium,
     lineHeight: 24,

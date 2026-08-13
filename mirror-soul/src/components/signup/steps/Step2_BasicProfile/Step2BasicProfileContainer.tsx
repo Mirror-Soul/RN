@@ -5,7 +5,7 @@ import {Colors, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View, Alert, ActivityIndicator, Text } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, { FadeInDown, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useLayout } from '@/src/hooks/useLayout';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 
@@ -28,7 +28,7 @@ import { jobCategories } from './Professional/jobData';
 export default function Step2BasicProfileContainer() {
   const router = useRouter();
   const { colors } = useThemeColors();
-  const { contentContainerStyle } = useLayout();
+  const { contentContainerStyle, screenPadding } = useLayout();
   const [isSaving, setIsSaving] = useState(false);
 
   const {
@@ -99,12 +99,12 @@ export default function Step2BasicProfileContainer() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          <View style={[styles.container, contentContainerStyle]}>
-            <View style={styles.headerWrapper}>
+          <View style={[styles.container, contentContainerStyle, { paddingHorizontal: screenPadding }]}>
+            <Animated.View entering={FadeInDown.delay(0).duration(400).springify()} style={styles.headerWrapper}>
               <Step2Header />
-            </View>
+            </Animated.View>
 
-            <View style={styles.formContainer}>
+            <Animated.View entering={FadeInDown.delay(100).duration(400).springify()} style={styles.formContainer}>
               <NicknameSection
                 state={state}
                 onChange={updateState}
@@ -134,11 +134,11 @@ export default function Step2BasicProfileContainer() {
                   variant="full"
                 />
               </View>
-            </View>
+            </Animated.View>
 
-            <View style={styles.footerContainer}>
+            <Animated.View entering={FadeInDown.delay(200).duration(400).springify()} style={styles.footerContainer}>
               <SecurityFooter />
-            </View>
+            </Animated.View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

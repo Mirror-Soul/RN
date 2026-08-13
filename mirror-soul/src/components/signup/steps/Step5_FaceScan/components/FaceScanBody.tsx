@@ -1,7 +1,8 @@
-import { Colors, Radii } from '@/src/constants/theme';
+import { Radii } from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { ScanPhase } from '../types/faceScan';
 
 interface FaceScanBodyProps {
@@ -18,11 +19,13 @@ interface FaceScanBodyProps {
  * - scanning/completed: children(카메라 + 가이드 오버레이) 렌더링
  */
 export default function FaceScanBody({ phase, children }: FaceScanBodyProps) {
+  const { colors } = useThemeColors();
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { borderColor: colors.border.primary }]}>
       {phase === 'idle' ? (
         <LinearGradient
-          colors={[Colors.glass.slate95, Colors.primary.soulBlack]}
+          colors={[colors.background.card, colors.background.primary]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.placeholder}
@@ -40,7 +43,6 @@ const styles = StyleSheet.create({
     height: 460,
     borderRadius: Radii.xl,
     borderWidth: 0.612,
-    borderColor: Colors.glass.white10,
     overflow: 'hidden',
   },
   placeholder: {

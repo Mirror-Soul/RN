@@ -1,8 +1,9 @@
-import {Colors, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
+import {FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import MbtiBadge from './MbtiBadge';
 import MbtiSlider from './MbtiSlider';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 export interface MbtiScores {
   ieScore: number;
@@ -19,6 +20,7 @@ interface Props {
 }
 
 export default function MbtiSelector({ onMbtiChange, onScoresChange, onDragStart, onDragEnd }: Props) {
+  const { colors } = useThemeColors();
   const [ie, setIe] = useState(50);
   const [ns, setNs] = useState(50); // sn -> ns
   const [ft, setFt] = useState(50); // tf -> ft
@@ -52,7 +54,7 @@ export default function MbtiSelector({ onMbtiChange, onScoresChange, onDragStart
   return (
     <View style={styles.container}>
       <View style={styles.headerRow}>
-        <Text style={styles.sectionTitle}>MBTI 검사 유형</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>MBTI 검사 유형</Text>
         <MbtiBadge mbti={currentMbti} />
       </View>
 
@@ -98,7 +100,6 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
   },
   sectionTitle: {
-    color: Colors.neutral.pureWhite,
     fontSize: FontSize.xl,
     fontWeight: FontWeight.medium,
     lineHeight: 28,

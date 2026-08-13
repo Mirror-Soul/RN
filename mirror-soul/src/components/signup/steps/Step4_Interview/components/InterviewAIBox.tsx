@@ -11,8 +11,8 @@ interface InterviewAIBoxProps {
 export default function InterviewAIBox({ category, question }: InterviewAIBoxProps) {
   const { colors } = useThemeColors();
   return (
-    <View style={styles.outerContainer}>
-      <View style={[styles.container, { backgroundColor: colors.background.card || 'rgba(255, 255, 255, 0.12)' }]}>
+    <View style={[styles.outerContainer, { borderColor: colors.border.primary }]}>
+      <View style={[styles.container, { backgroundColor: colors.background.card }]}>
         <View style={styles.topRow}>
           <View style={styles.aiLabelWrapper}>
             <View style={styles.aiDot} />
@@ -40,7 +40,6 @@ const styles = StyleSheet.create({
     borderRadius: Radii.xl,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: Colors.glass.white10,
   },
   container: {
     width: '100%',

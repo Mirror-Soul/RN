@@ -31,8 +31,8 @@ export default function MicPermissionModal({
       animationType="fade"
       statusBarTranslucent
     >
-      <View style={[styles.overlay, { backgroundColor: colors.background.overlay || 'rgba(0, 0, 0, 0.70)' }]}>
-        <View style={[styles.container, { backgroundColor: colors.background.card || 'rgba(20, 20, 30, 0.95)' }]}>
+      <View style={[styles.overlay, { backgroundColor: colors.background.overlay }]}>
+        <View style={[styles.container, { borderColor: colors.border.primary, backgroundColor: colors.background.card }]}>
           {/* 아이콘 영역 */}
           <View style={styles.iconCircle}>
             <Text style={styles.iconText}>🎤</Text>
@@ -56,7 +56,7 @@ export default function MicPermissionModal({
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.secondaryButton}
+              style={[styles.secondaryButton, { borderColor: colors.border.strong }]}
               activeOpacity={0.8}
               onPress={handleOpenSettings}
             >
@@ -88,7 +88,6 @@ const styles = StyleSheet.create({
     maxWidth: 340,
     borderRadius: Radii.xl,
     borderWidth: 0.612,
-    borderColor: Colors.glass.white10,
     padding: Spacing.xxxl,
     alignItems: 'center',
     gap: Spacing.lg,
@@ -141,7 +140,6 @@ const styles = StyleSheet.create({
     height: 48,
     borderRadius: Radii.md2,
     borderWidth: 1,
-    borderColor: Colors.glass.white20,
     backgroundColor: 'transparent',
     justifyContent: 'center',
     alignItems: 'center',
