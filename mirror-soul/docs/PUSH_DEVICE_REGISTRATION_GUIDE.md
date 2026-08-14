@@ -375,9 +375,9 @@ in-app 표시, 백그라운드/종료 상태일 땐 OS 네이티브 배너(자�
 - [ ] 백엔드 엔지니어에게 기존 Firebase 프로젝트 있는지 먼저 확인 (있으면 새로 만들지 말 것 —
       토큰이 백엔드가 인증하는 프로젝트와 안 맞으면 발송 자체가 실패함)
 - [ ] (없으면) Firebase Console에서 프로젝트 생성
-- [ ] Android 앱 등록 — 패키지명 `com.mirrorsoul.app` (`app.json`의 `android.package`와
+- [ ] Android 앱 등록 — 패키지명 `com.mirrorsoul64.app` (`app.json`의 `android.package`와
       정확히 일치해야 함) → `google-services.json` 다운로드
-- [ ] iOS 앱 등록 — 번들 ID `com.mirrorsoul.app` (`app.json`의 `ios.bundleIdentifier`와
+- [ ] iOS 앱 등록 — 번들 ID `com.mirrorsoul64.app` (`app.json`의 `ios.bundleIdentifier`와
       정확히 일치해야 함) → `GoogleService-Info.plist` 다운로드
 - [ ] Apple Developer 계정에서 APNs 인증키(.p8) 발급 → Firebase Console
       "Apple 앱 구성"에 업로드 (Key ID, Team ID 포함) — Apple Developer 팀 관리자급 권한 필요
