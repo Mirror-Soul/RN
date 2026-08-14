@@ -1,12 +1,29 @@
-import CancelIcon from '@/assets/images/common/Cancel.svg';
-import HeartIcon from '@/assets/images/common/main/Heart.svg';
-import LocationIcon from '@/assets/images/common/Location.svg';
-import RightNarrowIcon from '@/assets/images/common/Right_narrow.svg';
-import VerifiedIcon from '@/assets/images/common/Verification_protect_icon.svg';
+import { Feather } from '@expo/vector-icons';
 import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+
+/**
+ * 가치관 밸런스 게임(성장 탭) 답변을 축(axis)별로 집계한 성향 결과.
+ * 백엔드 UserValueAxisScore(-1~1 스코어)를 사람이 읽을 수 있는 한 줄 성향으로
+ * 요약한 값이라고 가정한 목업 — 실제 매칭 상세 API가 생기면 이 모양 그대로 교체될 예정.
+ */
+export interface ValueTendency {
+  axisLabel: string;
+  description: string;
+}
+
+/**
+ * MBTI 4개 축 성향 강도. 백엔드 MbtiProfile의 ieScore/nsScore/ftScore/pjScore를
+ * "왼쪽 글자(E/S/T/J) 쪽으로 얼마나 기울었는지"(0~100)로 정규화했다고 가정한 목업.
+ */
+export interface MbtiAxisScores {
+  E: number;
+  S: number;
+  T: number;
+  J: number;
+}
 
 export interface SoulMatch {
   id: string;
@@ -17,11 +34,14 @@ export interface SoulMatch {
   job: string;
   isJobVerified: boolean;
   mbti: string;
+  mbtiAxisScores: MbtiAxisScores;
   compatibility: number;
+  /** Clone.summary — AI가 트윈 데이터를 바탕으로 쓴 한 줄 소개 */
+  cloneSummary: string;
   bio: string;
   voiceStyle: string;
   aiAnalysisTags: string[];
-  interests: { label: string }[];
+  valueTendencies: ValueTendency[];
 }
 
 interface DiscoveryMatchCardProps {
@@ -66,7 +86,7 @@ export default function DiscoveryMatchCard({ match, onPass, onConnect, onOpenDet
           accessibilityRole="button"
           accessibilityLabel="상세 프로필 보기"
         >
-          <RightNarrowIcon width={20} height={20} />
+          <Feather name="chevron-right" size={20} color={Colors.neutral.pureWhite} />
         </TouchableOpacity>
       </View>
 
@@ -76,12 +96,29 @@ export default function DiscoveryMatchCard({ match, onPass, onConnect, onOpenDet
             {match.name}
             <Text style={styles.ageText}> {match.age}</Text>
           </Text>
-          {match.isJobVerified ? <VerifiedIcon width={20} height={20} /> : null}
+          {match.isJobVerified ? (
+            <Feather name="check-circle" size={20} color={Colors.primary.electricCyan} />
+          ) : null}
         </View>
 
         <View style={styles.locationRow}>
-          <LocationIcon width={14} height={14} />
+          <Feather name="map-pin" size={14} color={Colors.neutral.lightGray} />
           <Text style={styles.locationText}>{match.location}</Text>
+        </View>
+
+        <Text style={styles.summaryText} numberOfLines={1} ellipsizeMode="tail">
+          &quot;{match.cloneSummary}&quot;
+        </Text>
+
+        <View style={styles.tagRow}>
+          <View style={styles.mbtiChip}>
+            <Text style={styles.mbtiChipText}>{match.mbti}</Text>
+          </View>
+          {match.aiAnalysisTags.slice(0, 2).map((tag) => (
+            <View key={tag} style={styles.tagChip}>
+              <Text style={styles.tagChipText}>#{tag}</Text>
+            </View>
+          ))}
         </View>
 
         <View style={styles.actionRow}>
@@ -92,7 +129,7 @@ export default function DiscoveryMatchCard({ match, onPass, onConnect, onOpenDet
             accessibilityRole="button"
             accessibilityLabel="패스"
           >
-            <CancelIcon width={24} height={24} />
+            <Feather name="x" size={24} color={Colors.neutral.pureWhite} />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -100,10 +137,10 @@ export default function DiscoveryMatchCard({ match, onPass, onConnect, onOpenDet
             onPress={() => onConnect?.(match.id)}
             activeOpacity={0.85}
             accessibilityRole="button"
-            accessibilityLabel="Soul Connect"
+            accessibilityLabel="통화하기"
           >
-            <HeartIcon width={16} height={16} />
-            <Text style={styles.connectText}>Soul Connect</Text>
+            <Feather name="phone" size={16} color={Colors.primary.soulBlack} />
+            <Text style={styles.connectText}>통화하기</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -185,6 +222,47 @@ const styles = StyleSheet.create({
     letterSpacing: 1.2,
     textTransform: 'uppercase',
     color: Colors.neutral.lightGray,
+  },
+  summaryText: {
+    fontFamily: FontFamily.sans,
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.medium,
+    color: Colors.neutral.lightGray,
+    marginTop: -Spacing.md,
+  },
+  tagRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.xs,
+  },
+  mbtiChip: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xxs,
+    borderRadius: Radii.full,
+    backgroundColor: Colors.glass.white10,
+    borderWidth: 1,
+    borderColor: Colors.glass.white20,
+  },
+  mbtiChipText: {
+    fontFamily: FontFamily.sans,
+    fontSize: 10,
+    fontWeight: FontWeight.black,
+    letterSpacing: 0.6,
+    color: Colors.neutral.pureWhite,
+  },
+  tagChip: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xxs,
+    borderRadius: Radii.full,
+    backgroundColor: Colors.glass.cyan10_d3,
+    borderWidth: 1,
+    borderColor: Colors.glass.cyan20_d3,
+  },
+  tagChipText: {
+    fontFamily: FontFamily.sans,
+    fontSize: 10,
+    fontWeight: FontWeight.bold,
+    color: Colors.primary.electricCyan,
   },
   actionRow: {
     flexDirection: 'row',

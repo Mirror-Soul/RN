@@ -1,8 +1,4 @@
-import GrowIcon from '@/assets/images/common/bottomNavbar/Grow.svg';
-import HeartIcon from '@/assets/images/common/bottomNavbar/Heart.svg';
-import HistoryIcon from '@/assets/images/common/bottomNavbar/History_button.svg';
-import ProfileIcon from '@/assets/images/common/bottomNavbar/Profile.svg';
-import SimilarityMainIcon from '@/assets/images/common/main/Similarity.svg';
+import { Feather } from '@expo/vector-icons';
 import { Colors, FontFamily, Radii, FontSize, FontWeight, Spacing } from '@/src/constants/theme';
 import { BlurView } from 'expo-blur';
 import React, { useCallback, useEffect } from 'react';
@@ -30,15 +26,15 @@ export type BottomTabId = 'history' | 'grow' | 'discover' | 'match' | 'profile';
 interface TabItem {
   id: BottomTabId;
   label: string;
-  Icon: React.FC<{ width: number; height: number; color?: string }>;
+  iconName: keyof typeof Feather.glyphMap;
 }
 
 const TABS: TabItem[] = [
-  { id: 'history', label: '기록', Icon: HistoryIcon as React.FC<{ width: number; height: number; color?: string }> },
-  { id: 'grow', label: '성장', Icon: GrowIcon as React.FC<{ width: number; height: number; color?: string }> },
-  { id: 'discover', label: '발견', Icon: SimilarityMainIcon as React.FC<{ width: number; height: number; color?: string }> },
-  { id: 'match', label: '매칭', Icon: HeartIcon as React.FC<{ width: number; height: number; color?: string }> },
-  { id: 'profile', label: '프로필', Icon: ProfileIcon as React.FC<{ width: number; height: number; color?: string }> },
+  { id: 'history', label: '기록', iconName: 'clock' },
+  { id: 'grow', label: '성장', iconName: 'trending-up' },
+  { id: 'discover', label: '발견', iconName: 'compass' },
+  { id: 'match', label: '매칭', iconName: 'heart' },
+  { id: 'profile', label: '프로필', iconName: 'user' },
 ];
 
 interface BottomNavbarProps {
@@ -93,10 +89,10 @@ function TabItem({
       <View style={styles.iconSlot}>
         {isActive ? (
           <Animated.View style={[styles.activeBadge, badgeStyle]}>
-            <tab.Icon width={22} height={22} color={Colors.primary.soulBlack} />
+            <Feather name={tab.iconName} size={22} color={Colors.primary.soulBlack} />
           </Animated.View>
         ) : (
-          <tab.Icon width={22} height={22} color={mutedColor} />
+          <Feather name={tab.iconName} size={22} color={mutedColor} />
         )}
       </View>
       <Text style={[styles.tabLabel, { color: isActive ? Colors.primary.electricCyan : mutedColor }]}>

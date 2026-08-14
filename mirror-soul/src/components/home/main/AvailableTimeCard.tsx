@@ -1,4 +1,4 @@
-import TimerIcon from '@/assets/images/common/main/Timer.svg';
+import { Feather } from '@expo/vector-icons';
 import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -30,7 +30,7 @@ export default function AvailableTimeCard({
     <View style={[styles.container, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
       <View style={styles.left}>
         <View style={styles.iconWrapper}>
-          <TimerIcon width={20} height={20} />
+          <Feather name="clock" size={20} color={Colors.primary.electricCyan} />
         </View>
         <View>
           <Text style={[styles.label, { color: colors.text.muted }]}>Available Time</Text>
