@@ -8,6 +8,7 @@ import {
 } from '@/src/types/api/auth';
 import apiClient from './apiClient';
 import { queryClient } from './queryClient';
+import { unregisterCurrentPushDevice } from './pushDeviceService';
 import { useAuthStore } from '../store/useAuthStore';
 import { logger } from '../utils/logger';
 
@@ -63,10 +64,17 @@ export const logout = async () => {
 };
 
 /**
- * 로그아웃 공통 절차: 서버 세션 정리(실패해도 무시) → 로컬 토큰/스토어 정리 → react-query 캐시 초기화.
+ * 로그아웃 공통 절차: 푸시 기기 등록 해제 → 서버 세션 정리(실패해도 무시) →
+ * 로컬 토큰/스토어 정리 → react-query 캐시 초기화.
  * 화면들은 이 함수 호출 후 자체적으로 네비게이션(router.replace 등)만 처리하면 된다.
+ *
+ * 푸시 기기 해제가 반드시 맨 앞이어야 하는 이유: DELETE /push/devices는 인증이
+ * 필요한 API라, useAuthStore.getState().logout()으로 액세스 토큰을 지운 뒤에
+ * 호출하면 401로 조용히 실패한다.
  */
 export const performLogout = async (): Promise<void> => {
+  await unregisterCurrentPushDevice();
+
   try {
     await logout();
   } catch (error) {

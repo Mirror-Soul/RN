@@ -233,7 +233,7 @@
 ### 6.4 P1 프로덕션 하드닝 (스토어 제출 전 마무리하면 좋음)
 - [ ] Push 알림 실제 구현 (`expo-notifications` 미설치, `PUSH_NOTIFICATION_ARCHITECTURE.md`는 설계 문서만 존재)
 - [ ] `eas.json`의 build/submit 프로필을 실제 Apple/Google 개발자 계정 정보로 채우기
-- [ ] `app.json`의 `bundleIdentifier`/`package`를 `com.mirrorsoul.app`(placeholder)에서 실제 최종 확정값으로 교체 — **스토어 제출 후엔 사실상 변경 불가**하므로 최우선으로 확정 필요
+- [x] `app.json`의 `bundleIdentifier`/`package`를 `com.mirrorsoul64.app`로 최종 확정 (백엔드와 합의, 2026-08-14) — 기존 `com.mirrorsoul.app`(placeholder)에서 교체 완료
 
 ---
 
