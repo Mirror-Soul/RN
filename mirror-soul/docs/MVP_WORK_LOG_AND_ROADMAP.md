@@ -216,6 +216,7 @@
   - `UserValueAxisScore`(user_id, axis, score -1~1, sample_count) — 성장 탭 가치관 밸런스 게임(`ValueBalanceAnswer`) 답변을 축(`LOVE`/`LIFESTYLE`/`COMM`/`DECISION`/`SOCIAL`/`PRIORITY`/`TONE`/`TASTE`)별로 집계한 값. "가치관 성향" 섹션이 원래 있어야 할 자리 — 지금 모달의 "관심사"였던 걸 이걸로 교체한 이유이기도 함(가짜 취미 목록은 백엔드에 대응 필드 자체가 없었음)
   - `AiVoiceProfile.introAudio*`(bucket/objectKey/durationMs) — "목소리 미리듣기" 재생 버튼이 지금은 실제 오디오 없이 애니메이션만 있는데, 이 필드로 실제 인트로 음성을 재생할 수 있을 것으로 보임
   - **격차**: `MatchController`엔 `/twins` 목록 조회만 있고, 특정 상대의 위 정보를 한 번에 내려주는 상세 조회 엔드포인트(예: `GET /matches/{id}` 또는 `GET /twins/{id}`)가 없다. 새 엔드포인트 설계 + DTO 정의부터 필요. 이 항목은 아래 "Chat/Meeting/PushDevice API 연동"과도 연결됨(발견 화면 카드/모달의 "통화하기" 버튼이 현재 `Alert.alert`로 끝나는 이유가 Meeting API 미연동이기 때문 — 상세 조회 API가 생기면 두 작업을 같이 설계하는 게 효율적)
+  - **백엔드/AI 엔지니어에게 전달할 요청 스펙은 `docs/DISCOVERY_DETAIL_API_REQUEST.md`에 정리해둠** — 엔드포인트 제안, 필드별 DTO 매핑, 가치관 축 점수를 자연어로 가공하는 AI 서버 작업 제안, 프라이버시 주의사항(개별 답변 원본 노출 금지) 포함
 - [ ] **실제 IAP/결제 연동** (Track 2) — `react-native-iap` 또는 RevenueCat, 영수증 검증 API. `POST /my-page/buy-time`은 `feat/134-api`로 실제 연동됐지만 **결제 검증 없이 초 단위 값을 그대로 더해주는 API**다(백엔드 자체가 아직 mock에 가까움, `analysis-report.md` §5 참고) — `useAICallFlow.ts`의 `startCall()`에 사전 잔액 체크가 여전히 없어 무료로 무제한 통화가 가능한 상태임을 재확인할 것
 - [ ] 차단/신고의 서버 사이드 강제 — `feat/mvp-block-report`의 로컬 차단목록은 "내 화면에서 안 보이게"만 할 뿐, 상대가 실제로 연락 못 하게 막지는 못함. 백엔드에 차단/신고 API 자체가 없음(`backend-schema.json` 12개 컨트롤러에 없음) — 신규 백엔드 API 설계부터 필요
 - [ ] PASS 본인인증 벤더 계약 및 실제 연동 (`fix/mvp-remove-fake-pass-verification`은 가짜 UI만 제거, 실제 연동은 비즈니스 결정 대기)
@@ -264,6 +265,7 @@
 | `docs/MVP_WORK_LOG_AND_ROADMAP.md` (이 문서) | `feat/136-mypage-api-advancement` | 전체 작업 로그 + 고도화 로드맵 |
 | `mirror-soul/app/CLAUDE.md` | `feat/136-mypage-api-advancement` | 라우팅/네비게이션 도메인: `/` 경로 충돌 위험, Stack/Tabs 구조, 명시적 경로 규칙 |
 | `mirror-soul/src/features/account/CLAUDE.md` | `feat/136-mypage-api-advancement` | 인증/로그아웃 도메인: `useAuthStore.logout()` 계약, 로그아웃 진입점 3곳과 중복 현황 |
+| `docs/DISCOVERY_DETAIL_API_REQUEST.md` | `fix/158-home-ui` | 발견 화면 상세 모달용 신규 API를 백엔드/AI 엔지니어에게 요청하는 스펙 정리 |
 | `docs/DX_TYPE_LINT_BACKLOG.md` | `feat/123-dx-logic`(위치 불확실, §1) | 남은 tsc/lint 에러 그룹별 정리 |
 | `docs/TODO_BACKLOG.md` | `feat/123-dx-logic`(위치 불확실, §1) | 백엔드/제품 결정 필요한 TODO 목록 |
 | `docs/MULTI_DEVICE_CALL_CHAT_ARCHITECTURE.md` | `feat/123-dx-logic`(위치 불확실, §1) | 멀티기기 통화/채팅 설계 제안 |
