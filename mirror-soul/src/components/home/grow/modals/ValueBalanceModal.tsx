@@ -74,7 +74,15 @@ export default function ValueBalanceModal({ isOpen, onClose, onComplete }: Value
   return (
     <BottomSheet isOpen={isOpen} onClose={onClose} height={460}>
       <View style={styles.container}>
-        <View style={[styles.progressTrack, { backgroundColor: colors.background.glass }]}>
+        <View
+          style={[styles.progressTrack, { backgroundColor: colors.background.glass }]}
+          accessibilityRole="progressbar"
+          accessibilityValue={
+            lastAnswer
+              ? { min: 0, max: lastAnswer.dailyLimit, now: lastAnswer.answeredCount }
+              : { min: 0, max: 1, now: 0 }
+          }
+        >
           <View style={[styles.progressFill, { width: `${progress}%` }]} />
         </View>
 
@@ -86,12 +94,18 @@ export default function ValueBalanceModal({ isOpen, onClose, onComplete }: Value
           <TouchableOpacity
             style={styles.centerState}
             onPress={() => refetch()}
+            disabled={isFetching}
             accessibilityRole="button"
             accessibilityLabel="질문 다시 조회"
+            accessibilityState={{ busy: isFetching }}
           >
-            <Text style={[styles.errorText, { color: colors.state.danger }]}>
-              질문을 불러오지 못했습니다. 탭하여 다시 시도해주세요.
-            </Text>
+            {isFetching ? (
+              <ActivityIndicator color={colors.state.danger} />
+            ) : (
+              <Text style={[styles.errorText, { color: colors.state.danger }]}>
+                질문을 불러오지 못했습니다. 탭하여 다시 시도해주세요.
+              </Text>
+            )}
           </TouchableOpacity>
         ) : isFinished ? (
           <View style={styles.finishing}>
