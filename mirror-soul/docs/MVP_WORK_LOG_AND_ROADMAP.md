@@ -204,7 +204,9 @@
 - [ ] Sentry DSN 실제 발급받아 `.env`에 설정하고 크래시 리포팅 동작 확인 (발급 전까지는 `plugins/withSentryDisableAutoUpload.js`가 소스맵 업로드 실패를 막아주고 있음 — §4.5)
 - [ ] 남은 tsc/lint 에러 정리 (`docs/DX_TYPE_LINT_BACKLOG.md`는 §1의 이유로 위치 불확실 — 있으면 참고, 없으면 `npx tsc --noEmit`/`npm run lint`로 새로 그룹핑)
 - [ ] `docs/TODO_BACKLOG.md`의 나머지 TODO — 얼굴 스캔 라우트, 이미지 업로드 API 연동, 찜/공유 기능 스코프 확정 등 (마찬가지로 위치 불확실)
-- [ ] **Chat/Meeting/PushDevice/Evolve API 연동** — `message-room`(채팅)은 지금도 100% 로컬 mock, 매칭 수락/거절 버튼은 `onPress`조차 없음. 백엔드 API는 이미 있다(`.claude/artifacts/backend-schema.json`의 `ChatController`/`MeetingController`/`PushDeviceController`/`EvolveController`) — `feat/134-api`+`feat/136-mypage-api-advancement`에서 확립한 react-query 기반 서비스 레이어 패턴(`../CLAUDE.md`)을 그대로 적용하면 된다.
+- [ ] **Chat/Meeting/PushDevice API 연동** — `message-room`(채팅)은 지금도 100% 로컬 mock, 매칭 수락/거절 버튼은 `onPress`조차 없음. 백엔드 API는 이미 있다(`.claude/artifacts/backend-schema.json`의 `ChatController`/`MeetingController`/`PushDeviceController`) — `feat/134-api`+`feat/136-mypage-api-advancement`에서 확립한 react-query 기반 서비스 레이어 패턴(`../CLAUDE.md`)을 그대로 적용하면 된다. (Evolve는 `refactor/156-call-logic`/`feat/153-value-game-api`까지 완료됨, 아래 §6.2 참고)
+- [ ] **AI 트윈 영상통화 — 로컬 카메라 토글이 자리표시자** (`refactor/156-call-logic`) — `CallControls`의 카메라 켬/꺼짐 버튼과 `CallLocalPreview`(내 셀프뷰 PIP)는 UI만 있고 실제 로컬 카메라 캡처(`useWebRTCCall.ts`의 `getUserMedia`가 아직 `video: false`)와 연동돼 있지 않다. AI 서버가 실제 영상 트랙을 보내기 시작하는 시점(§6.2 참고)에 맞춰, 내 카메라도 같이 잡아서 상대에게 보낼지 여부를 먼저 정하고 진행할 것.
+- [ ] **통화 화면 라이트 모드 실기기 확인** (`refactor/156-call-logic`) — `CallScreenBackground`/`CallHeader`/`CallControls` 등에 `useThemeColors()`를 연동해 라이트 모드 대응 코드는 반영했으나, 실기기에서 눈으로 확인은 안 함. `colors.glow.*` 토큰이 원래 카드 섹션용으로 설계된 낮은 opacity(0.02~0.05)라 통화 화면 같은 풀블리드 히어로 연출에선 너무 옅게 보일 수 있음 — 확인 후 필요하면 라이트 모드 전용 강도 보정 검토.
 
 ### 6.2 백엔드 협업이 필요한 것 (RN 단독으로 못 끝남)
 - [ ] **실제 IAP/결제 연동** (Track 2) — `react-native-iap` 또는 RevenueCat, 영수증 검증 API. `POST /my-page/buy-time`은 `feat/134-api`로 실제 연동됐지만 **결제 검증 없이 초 단위 값을 그대로 더해주는 API**다(백엔드 자체가 아직 mock에 가까움, `analysis-report.md` §5 참고) — `useAICallFlow.ts`의 `startCall()`에 사전 잔액 체크가 여전히 없어 무료로 무제한 통화가 가능한 상태임을 재확인할 것
@@ -212,6 +214,13 @@
 - [ ] PASS 본인인증 벤더 계약 및 실제 연동 (`fix/mvp-remove-fake-pass-verification`은 가짜 UI만 제거, 실제 연동은 비즈니스 결정 대기)
 - [ ] 회원탈퇴의 "30일 후 영구 삭제" 실제 이행 여부 미확인 — `DELETE /my-page`는 상태를 `INACTIVE`로 바꿀 뿐, 30일 뒤 실제로 데이터를 지우는 배치/스케줄러가 백엔드 Service 계층에서는 발견되지 않았다(`analysis-report.md` §7). 별도 스케줄드 잡이 있는지 백엔드 쪽에 확인 필요
 - [ ] 멀티기기(여러 휴대폰) 통화/채팅 — `docs/MULTI_DEVICE_CALL_CHAT_ARCHITECTURE.md`(위치 불확실, §1 참고)에 설계만 있고 구현은 시작 안 함. 백엔드 시그널링 서버를 1:1 relay에서 room 기반 브로드캐스트로 바꿔야 함
+- [ ] **AI 트윈 영상통화(WebRTC) 성능/인프라 협업 항목** (2026-08-14, `refactor/156-call-logic`에서 조사 완료, 요청은 전달했으나 반영 여부 미확인):
+  - **연결 지연**: `mirror-soul-AI`의 `model_calling/signaling/handlers.py`(`CALL_INVITE` 처리, 라인 64-93)가 매번 커넥션 풀링 없이 새 PyMySQL 커넥션으로 클론 정보를 조회하는 것으로 보임 — AI 서버 엔지니어에게 커넥션 풀 적용 요청함.
+  - **세션 레지스트리가 인메모리 싱글턴**: 백엔드 `WebSocketSessionRegistry.java`, AI 서버 `webrtc/session.py` 둘 다 인메모리라, 멀티 인스턴스 배포 시(로드밸런서 sticky session 미설정이면) 시그널링이 에러 없이 조용히 드롭되고 `useAICallFlow.ts`의 10초 `CALL_INVITE` 타임아웃으로 이어질 수 있음 — 인프라 쪽 인스턴스 수/sticky session 설정 확인 필요(RN/백엔드 코드 조사만으론 확인 불가).
+  - **통화 중 대화 턴 지연**: `mirror-soul-AI`의 `model_calling/realtime/pipeline.py`(라인 59-175)가 매 발화마다 STT→RAG 메모리 검색→LLM→TTS를 전부 순차 `await` 체인으로 처리 — 병렬화/스트리밍(문장 단위로 TTS 먼저 시작 등) 여지가 있음을 AI 서버 엔지니어에게 전달함.
+  - **TURN 서버 부재**: `useWebRTCCall.ts`가 STUN(`stun:stun.l.google.com:19302`)만 쓰고 TURN이 없어 NAT/방화벽이 엄격한 네트워크에서 연결 자체가 실패할 수 있음 — 인프라에 TURN 서버(coturn 등) 구축 요청함. 구축되면 RN 쪽 `ICE_SERVERS` 배열에 자격증명만 추가하면 됨.
+  - **통화 텍스트 기록(transcript) 저장 미구현**: `useAICallFlow.ts`의 `_performHangUp`에 TODO로 남아있음. 방법 A(백엔드가 callId별로 저장 → `GET /calls/{callId}/transcript`) vs 방법 B(클라이언트가 통화 중 실시간 STT로 수집해 `endCall` 시 전송) 중 백엔드와 협의 필요.
+- [ ] **가치관 밸런스 게임 — `GET /evolve/value-balance` 응답에 진행 카운트 포함 요청** (`feat/153-value-game-api`) — 현재 오늘 답변 개수(`answeredCount`/`dailyLimit`)는 `POST .../answer` 응답에만 있어서, 첫 질문을 볼 때는 진행률(`ValueBalanceModal`의 "Question N of M")을 표시할 수 없음. `ValueBalanceService.getQuestion()`이 이미 quota 체크용으로 오늘 답변 수를 세고 있으니, 그 값을 `valueBalanceQuestionDTO`에 같이 실어달라고 요청함(반영 여부 미확인).
 - [ ] **인증(Auth) 백엔드 협의 항목** (§4.9에서 분석만 하고 구현은 안 함, 전부 `mirror-soul-back` 쪽 변경 필요):
   - **로그아웃 시 access token 즉시 무효화**: 현재 `/auth/logout`은 refresh token만 지우고 access token(최대 1시간)은 자연 만료까지 유효함. Redis 블랙리스트(즉시 무효화, 매 요청 조회 필요) vs. TTL 단축(인프라 추가 없음) 트레이드오프 논의 필요 — 프론트에 사전 갱신(§4.9)이 이미 들어갔으므로 TTL을 5~10분으로 줄여도 UX 저하가 크지 않음. 실제 access token TTL 값도 확인 필요(사전 갱신 마진 튜닝에 필요).
   - **로그인/이메일 인증코드 rate limiting**: `/auth/login`, `/join/send-code`에 시도 횟수 제한 없음. `/join/verify-code`의 개발용 마스터코드(`123456`) 하드코딩이 프로덕션에서 비활성화되는지도 확인 필요.

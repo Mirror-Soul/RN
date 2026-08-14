@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert } from 'react-native';
+import InCallManager from 'react-native-incall-manager';
 import type { MediaStream } from 'react-native-webrtc';
 import { AudioModule, setAudioModeAsync } from 'expo-audio';
 import { useAuthStore } from '../store/useAuthStore';
@@ -35,6 +35,9 @@ export type CallStatus =
 export function useAICallFlow() {
   const [callStatus, setCallStatus] = useState<CallStatus>('idle');
   const [error, setError] = useState<string | null>(null);
+  // 기본값 스피커 on — 화면을 보며 통화하는 영상통화 UX(한뼘통화)에 맞춘다.
+  const [isSpeakerOn, setIsSpeakerOn] = useState(true);
+  const [isMuted, setIsMuted] = useState(false);
 
   const { userUuid } = useAuthStore();
 
@@ -119,6 +122,11 @@ export function useAICallFlow() {
       logger.info('[useAICallFlow] WebRTC connected! Notifying server...');
       setCallStatus('connected');
 
+      // InCallManager가 이 시점부터 오디오 라우팅(스피커/이어피스)과 마이크 뮤트를 관장한다.
+      // media: 'audio'로 시작하되, 기본값을 스피커 on으로 강제한다(한뼘통화 UX).
+      InCallManager.start({ media: 'audio', auto: false });
+      InCallManager.setSpeakerphoneOn(isSpeakerOn);
+
       setCallInProgress(session.callId).catch((err) => {
         logger.error('[useAICallFlow] setCallInProgress failed:', err);
       });
@@ -127,7 +135,26 @@ export function useAICallFlow() {
         logger.error('[useAICallFlow] startRecording failed:', err);
       });
     }
-  }, [iceConnectionState, callStatus, startRecording]);
+  }, [iceConnectionState, callStatus, startRecording, isSpeakerOn]);
+
+  // ─────────────────────────────────────────────
+  // 스피커/음소거 토글 (공개 API)
+  // ─────────────────────────────────────────────
+  const toggleSpeaker = useCallback(() => {
+    setIsSpeakerOn((prev) => {
+      const next = !prev;
+      InCallManager.setSpeakerphoneOn(next);
+      return next;
+    });
+  }, []);
+
+  const toggleMute = useCallback(() => {
+    setIsMuted((prev) => {
+      const next = !prev;
+      InCallManager.setMicrophoneMute(next);
+      return next;
+    });
+  }, []);
 
   // ─────────────────────────────────────────────
   // WebSocket 메시지 처리
@@ -272,6 +299,9 @@ export function useAICallFlow() {
     }
 
     closeWebRTC();
+    InCallManager.stop();
+    setIsSpeakerOn(true);
+    setIsMuted(false);
     callSessionRef.current = null;
     isHangingUpRef.current = false;
 
@@ -288,7 +318,12 @@ export function useAICallFlow() {
   const _performHangUp = useCallback(async () => {
     if (isHangingUpRef.current) return;
     const session = callSessionRef.current;
-    if (!session) return;
+    if (!session) {
+      // 아직 서버에 알릴 세션(REST 응답)이 없는 시점의 취소 — 알릴 대상이 없으니 로컬 정리만 한다.
+      // 여기서 그냥 return하면 callStatus가 안 바뀌어 화면 전환(연결 취소)이 안 일어난다.
+      await _cleanup();
+      return;
+    }
 
     isHangingUpRef.current = true;
     setCallStatus('ending');
@@ -330,7 +365,9 @@ export function useAICallFlow() {
   // ─────────────────────────────────────────────
   const startCall = useCallback(async () => {
     if (!userUuid) {
-      Alert.alert('오류', '사용자 정보를 찾을 수 없습니다.');
+      // 자동 시작 구조라 idle로 되돌리기만 하면 재시도 버튼이 없어 빠져나갈 수 없다 —
+      // 에러 상태로 전이시켜 CallErrorFallback의 뒤로가기로 나갈 수 있게 한다.
+      setError('사용자 정보를 찾을 수 없습니다.');
       return;
     }
 
@@ -345,11 +382,10 @@ export function useAICallFlow() {
       const { granted } = await AudioModule.requestRecordingPermissionsAsync();
       if (!granted) {
         logger.warn('[useAICallFlow] Microphone permission denied');
-        Alert.alert(
-          '마이크 권한 필요',
-          '통화를 시작하려면 마이크 접근 권한이 필요합니다. 설정에서 권한을 허용해주세요.'
-        );
-        setCallStatus('idle');
+        // 화면 진입 시 자동으로 통화가 걸리는 구조라(수동 "다시 시작" 버튼이 없음),
+        // 여기서 idle로만 되돌리면 사용자가 나갈 방법 없는 무한 로딩 화면에 갇힌다.
+        // CallErrorFallback(뒤로가기 버튼 있음)이 뜨도록 에러 상태로 전이시킨다.
+        await _cleanup('통화를 시작하려면 마이크 접근 권한이 필요합니다. 설정에서 권한을 허용해주세요.', 'idle');
         return;
       }
       logger.debug('[useAICallFlow] Microphone permission granted');
@@ -361,19 +397,21 @@ export function useAICallFlow() {
       await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
       logger.debug('[useAICallFlow] Audio mode configured for recording');
 
-      // 1. REST API: 방 생성
-      const response = await initiateCall(userUuid, {
-        callerUserUuid: userUuid,
-        mediaType: 'VOICE',
-      });
+      // 1+2. REST API(방 생성)와 WebRTC 초기화(마이크 스트림 획득)는 서로의 결과값이
+      // 필요 없는 독립적인 작업이다(roomId 등은 WebSocket JOIN 시에만 필요) — 순차 실행 시
+      // 두 왕복시간이 그대로 더해지던 걸, 병렬 실행으로 느린 쪽 하나만 기다리면 되게 줄인다.
+      const [response] = await Promise.all([
+        initiateCall(userUuid, {
+          callerUserUuid: userUuid,
+          mediaType: 'VOICE',
+        }),
+        initWebRTC(),
+      ]);
 
       if (!response.isSuccess) throw new Error(response.message);
 
       const { callId, roomId, callerSignalId, aiSignalId } = response.result;
       callSessionRef.current = { callId, roomId, callerSignalId, aiSignalId };
-
-      // 2. WebRTC 초기화 (마이크 스트림 획득)
-      await initWebRTC();
 
       // 3. WebSocket 연결
       setCallStatus('joining');
@@ -430,5 +468,9 @@ export function useAICallFlow() {
     startCall,
     hangUp,
     error,
+    isSpeakerOn,
+    toggleSpeaker,
+    isMuted,
+    toggleMute,
   };
 }

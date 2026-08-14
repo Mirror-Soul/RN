@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, View } from 'react-native';
-import { Colors, Radii } from '@/src/constants/theme';
+import { Colors } from '@/src/constants/theme';
+import AIOrb from './AIOrb';
 import type { CallStatus } from '@/src/hooks/useAICallFlow';
 
 interface CallAIAvatarProps {
@@ -37,10 +38,7 @@ export default function CallAIAvatar({ callStatus }: CallAIAvatarProps) {
   return (
     <View style={styles.container}>
       <Animated.View style={[styles.outerRing, { transform: [{ scale: pulseAnim }] }]}>
-        <View style={styles.avatar}>
-          {/* 추후 AI 트윈 프로필 이미지로 교체 */}
-          <View style={styles.avatarInner} />
-        </View>
+        <AIOrb size={160} />
       </Animated.View>
     </View>
   );
@@ -60,20 +58,5 @@ const styles = StyleSheet.create({
     borderColor: Colors.primary.electricCyan,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  avatar: {
-    width: 160,
-    height: 160,
-    borderRadius: 80,
-    backgroundColor: Colors.glass.slate95,
-    justifyContent: 'center',
-    alignItems: 'center',
-    overflow: 'hidden',
-  },
-  avatarInner: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: Colors.glass.purple30,
   },
 });
