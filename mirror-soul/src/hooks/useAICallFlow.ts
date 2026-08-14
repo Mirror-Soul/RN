@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert } from 'react-native';
+import InCallManager from 'react-native-incall-manager';
 import type { MediaStream } from 'react-native-webrtc';
 import { AudioModule, setAudioModeAsync } from 'expo-audio';
 import { useAuthStore } from '../store/useAuthStore';
@@ -35,6 +35,9 @@ export type CallStatus =
 export function useAICallFlow() {
   const [callStatus, setCallStatus] = useState<CallStatus>('idle');
   const [error, setError] = useState<string | null>(null);
+  // 기본값 스피커 on — 화면을 보며 통화하는 영상통화 UX(한뼘통화)에 맞춘다.
+  const [isSpeakerOn, setIsSpeakerOn] = useState(true);
+  const [isMuted, setIsMuted] = useState(false);
 
   const { userUuid } = useAuthStore();
 
@@ -54,6 +57,11 @@ export function useAICallFlow() {
 
   // 종료 진행 중 여부 (중복 방지)
   const isHangingUpRef = useRef<boolean>(false);
+
+  // startCall 시도 식별자 — REST/WebRTC 병렬 초기화가 진행되는 동안 사용자가 취소하거나
+  // 화면이 언마운트되면(_cleanup이 이 값을 증가시켜 무효화) 그 시도가 뒤늦게 완료되더라도
+  // 로컬 연결을 이어가지 않고 서버에 생성된 방을 보상 종료하도록 구분하는 데 쓴다.
+  const startAttemptIdRef = useRef(0);
 
   const {
     remoteStream,
@@ -119,6 +127,11 @@ export function useAICallFlow() {
       logger.info('[useAICallFlow] WebRTC connected! Notifying server...');
       setCallStatus('connected');
 
+      // InCallManager가 이 시점부터 오디오 라우팅(스피커/이어피스)과 마이크 뮤트를 관장한다.
+      // media: 'audio'로 시작하되, 기본값을 스피커 on으로 강제한다(한뼘통화 UX).
+      InCallManager.start({ media: 'audio', auto: false });
+      InCallManager.setSpeakerphoneOn(isSpeakerOn);
+
       setCallInProgress(session.callId).catch((err) => {
         logger.error('[useAICallFlow] setCallInProgress failed:', err);
       });
@@ -127,7 +140,26 @@ export function useAICallFlow() {
         logger.error('[useAICallFlow] startRecording failed:', err);
       });
     }
-  }, [iceConnectionState, callStatus, startRecording]);
+  }, [iceConnectionState, callStatus, startRecording, isSpeakerOn]);
+
+  // ─────────────────────────────────────────────
+  // 스피커/음소거 토글 (공개 API)
+  // ─────────────────────────────────────────────
+  const toggleSpeaker = useCallback(() => {
+    setIsSpeakerOn((prev) => {
+      const next = !prev;
+      InCallManager.setSpeakerphoneOn(next);
+      return next;
+    });
+  }, []);
+
+  const toggleMute = useCallback(() => {
+    setIsMuted((prev) => {
+      const next = !prev;
+      InCallManager.setMicrophoneMute(next);
+      return next;
+    });
+  }, []);
 
   // ─────────────────────────────────────────────
   // WebSocket 메시지 처리
@@ -257,6 +289,10 @@ export function useAICallFlow() {
   const _cleanup = useCallback(async (errorMessage?: string, targetStatus: CallStatus = 'ended') => {
     logger.debug('[useAICallFlow] Cleaning up...');
 
+    // 대기 중인 startCall 시도가 있다면 여기서 무효화한다 — Promise.allSettled가 끝난 뒤
+    // 이 값이 자기 시작 시점과 달라진 걸 보고, 뒤늦게 로컬 연결을 이어가지 않는다.
+    startAttemptIdRef.current += 1;
+
     if (inviteTimeoutRef.current) {
       clearTimeout(inviteTimeoutRef.current);
       inviteTimeoutRef.current = null;
@@ -272,6 +308,9 @@ export function useAICallFlow() {
     }
 
     closeWebRTC();
+    InCallManager.stop();
+    setIsSpeakerOn(true);
+    setIsMuted(false);
     callSessionRef.current = null;
     isHangingUpRef.current = false;
 
@@ -288,7 +327,12 @@ export function useAICallFlow() {
   const _performHangUp = useCallback(async () => {
     if (isHangingUpRef.current) return;
     const session = callSessionRef.current;
-    if (!session) return;
+    if (!session) {
+      // 아직 서버에 알릴 세션(REST 응답)이 없는 시점의 취소 — 알릴 대상이 없으니 로컬 정리만 한다.
+      // 여기서 그냥 return하면 callStatus가 안 바뀌어 화면 전환(연결 취소)이 안 일어난다.
+      await _cleanup();
+      return;
+    }
 
     isHangingUpRef.current = true;
     setCallStatus('ending');
@@ -330,9 +374,13 @@ export function useAICallFlow() {
   // ─────────────────────────────────────────────
   const startCall = useCallback(async () => {
     if (!userUuid) {
-      Alert.alert('오류', '사용자 정보를 찾을 수 없습니다.');
+      // 자동 시작 구조라 idle로 되돌리기만 하면 재시도 버튼이 없어 빠져나갈 수 없다 —
+      // 에러 상태로 전이시켜 CallErrorFallback의 뒤로가기로 나갈 수 있게 한다.
+      setError('사용자 정보를 찾을 수 없습니다.');
       return;
     }
+
+    const myAttemptId = ++startAttemptIdRef.current;
 
     setError(null);
     setCallStatus('initiating');
@@ -345,11 +393,10 @@ export function useAICallFlow() {
       const { granted } = await AudioModule.requestRecordingPermissionsAsync();
       if (!granted) {
         logger.warn('[useAICallFlow] Microphone permission denied');
-        Alert.alert(
-          '마이크 권한 필요',
-          '통화를 시작하려면 마이크 접근 권한이 필요합니다. 설정에서 권한을 허용해주세요.'
-        );
-        setCallStatus('idle');
+        // 화면 진입 시 자동으로 통화가 걸리는 구조라(수동 "다시 시작" 버튼이 없음),
+        // 여기서 idle로만 되돌리면 사용자가 나갈 방법 없는 무한 로딩 화면에 갇힌다.
+        // CallErrorFallback(뒤로가기 버튼 있음)이 뜨도록 에러 상태로 전이시킨다.
+        await _cleanup('통화를 시작하려면 마이크 접근 권한이 필요합니다. 설정에서 권한을 허용해주세요.', 'idle');
         return;
       }
       logger.debug('[useAICallFlow] Microphone permission granted');
@@ -361,19 +408,54 @@ export function useAICallFlow() {
       await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
       logger.debug('[useAICallFlow] Audio mode configured for recording');
 
-      // 1. REST API: 방 생성
-      const response = await initiateCall(userUuid, {
-        callerUserUuid: userUuid,
-        mediaType: 'VOICE',
-      });
+      // 1+2. REST API(방 생성)와 WebRTC 초기화(마이크 스트림 획득)는 서로의 결과값이
+      // 필요 없는 독립적인 작업이다(roomId 등은 WebSocket JOIN 시에만 필요) — 순차 실행 시
+      // 두 왕복시간이 그대로 더해지던 걸, 병렬 실행으로 느린 쪽 하나만 기다리면 되게 줄인다.
+      // allSettled를 쓰는 이유: Promise.all은 하나만 실패해도 다른 쪽 결과(특히 REST 성공 시
+      // 생성된 callId)를 잃어버려서, REST는 성공하고 WebRTC만 실패한 경우 서버에 생성된
+      // 통화방을 정리(보상 종료)할 방법이 없어진다.
+      const [initiateResult, webrtcResult] = await Promise.allSettled([
+        initiateCall(userUuid, {
+          callerUserUuid: userUuid,
+          mediaType: 'VOICE',
+        }),
+        initWebRTC(),
+      ]);
 
+      if (initiateResult.status === 'rejected') {
+        throw initiateResult.reason;
+      }
+      const response = initiateResult.value;
       if (!response.isSuccess) throw new Error(response.message);
 
       const { callId, roomId, callerSignalId, aiSignalId } = response.result;
+
+      // 이 시도가 REST/WebRTC 초기화를 기다리는 동안 사용자가 취소했거나(hangUp) 화면이
+      // 언마운트됐다면(_cleanup이 attemptId를 무효화) 서버엔 이미 방이 생겼으니 로컬 연결을
+      // 이어가지 말고 보상 종료 요청만 보낸다.
+      if (myAttemptId !== startAttemptIdRef.current) {
+        logger.warn('[useAICallFlow] startCall attempt cancelled during setup — sending compensating hangup');
+        // 취소 시점의 _cleanup()은 initWebRTC()가 끝나기 전에 이미 지나갔으므로, 방금 막
+        // 만들어진 PeerConnection/마이크 스트림은 아무도 안 닫은 상태다 — useWebRTCCall.initialize()가
+        // pcRef.current를 먼저 세팅한 뒤 getUserMedia()를 호출하므로, webrtcResult가 fulfilled든
+        // rejected(getUserMedia 실패 등)든 pcRef가 채워져 있을 수 있다. 무조건 호출한다
+        // (closeWebRTC()는 pc가 없으면 안전하게 no-op).
+        closeWebRTC();
+        try {
+          await endCall(callId, '');
+        } catch (err) {
+          logger.error('[useAICallFlow] compensating endCall failed:', err);
+        }
+        return;
+      }
+
       callSessionRef.current = { callId, roomId, callerSignalId, aiSignalId };
 
-      // 2. WebRTC 초기화 (마이크 스트림 획득)
-      await initWebRTC();
+      if (webrtcResult.status === 'rejected') {
+        // REST 세션은 이미 만들어졌으니 로컬 정리만으론 부족하다 — catch 블록에서
+        // callSessionRef가 있는 걸 보고 정식 hangUp 경로(CALL_END + endCall)로 보낸다.
+        throw webrtcResult.reason;
+      }
 
       // 3. WebSocket 연결
       setCallStatus('joining');
@@ -406,9 +488,17 @@ export function useAICallFlow() {
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : '통화를 시작할 수 없습니다.';
       logger.error('[useAICallFlow] startCall failed:', err);
-      await _cleanup(message, 'idle');
+      if (callSessionRef.current) {
+        // REST로 서버에 통화방이 이미 생성된 상태 — 로컬 정리만으론 서버에 고아 통화가 남는다.
+        // 정식 hangUp 경로(CALL_END + endCall)로 서버도 함께 정리한다. _performHangUp이 호출하는
+        // _cleanup()엔 메시지를 안 넘기므로, 에러 문구는 먼저 세팅해서 CallErrorFallback에 남긴다.
+        setError(message);
+        await _performHangUp();
+      } else {
+        await _cleanup(message, 'idle');
+      }
     }
-  }, [userUuid, initWebRTC, handleMessage, _cleanup]);
+  }, [userUuid, initWebRTC, handleMessage, _cleanup, _performHangUp, endCall, closeWebRTC]);
 
   // ─────────────────────────────────────────────
   // 통화 종료 (공개 API)
@@ -430,5 +520,9 @@ export function useAICallFlow() {
     startCall,
     hangUp,
     error,
+    isSpeakerOn,
+    toggleSpeaker,
+    isMuted,
+    toggleMute,
   };
 }
