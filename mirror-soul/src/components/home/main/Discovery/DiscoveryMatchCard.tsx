@@ -1,8 +1,9 @@
 import { Feather } from '@expo/vector-icons';
 import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
+import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 /**
  * 가치관 밸런스 게임(성장 탭) 답변을 축(axis)별로 집계한 성향 결과.
@@ -69,7 +70,9 @@ export default function DiscoveryMatchCard({ match, onPass, onConnect, onOpenDet
         <Image
           source={{ uri: match.profileImage }}
           style={styles.image}
-          resizeMode="cover"
+          contentFit="cover"
+          cachePolicy="disk"
+          transition={150}
           onError={() => setImageFailed(true)}
         />
       )}

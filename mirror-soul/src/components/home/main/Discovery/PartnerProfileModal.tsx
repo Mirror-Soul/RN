@@ -2,12 +2,12 @@ import { Feather } from '@expo/vector-icons';
 import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { BlurView } from 'expo-blur';
+import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Easing,
-  Image,
   Modal,
   ScrollView,
   StyleSheet,
@@ -19,6 +19,7 @@ import {
 import ReAnimated, {
   Easing as ReEasing,
   FadeInUp,
+  type SharedValue,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
@@ -75,6 +76,11 @@ export default function PartnerProfileModal({ match, onClose, onConnectNow }: Pa
         }
       });
     }
+    // 부모가 이 컴포넌트를 애니메이션 도중 강제로 언마운트하는 경우, 진행 중인 타이밍을
+    // 정리하지 않으면 언마운트된 컴포넌트의 상태를 세팅하려는 콜백이 뒤늦게 실행될 수 있다.
+    return () => {
+      progress.stopAnimation();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [match, progress]);
 
@@ -105,7 +111,9 @@ export default function PartnerProfileModal({ match, onClose, onConnectNow }: Pa
               <Image
                 source={{ uri: displayedMatch.profileImage }}
                 style={styles.heroImage}
-                resizeMode="cover"
+                contentFit="cover"
+                cachePolicy="disk"
+                transition={150}
                 onError={() => setImageFailed(true)}
               />
             )}
@@ -347,35 +355,44 @@ const WAVEFORM_BAR_HEIGHTS = [
 /**
  * VoiceWaveform 컴포넌트
  * 실제 오디오 연동 전이므로 재생 상태에 따라 움직이는 시각적 피드백만 제공한다.
+ * 바마다 개별 withRepeat 애니메이션을 돌리는 대신, 위상(phase)이 계속 순환하는
+ * 공유값(progress) 하나만 UI 스레드에서 구동하고 각 바는 그 값에서 사인파로 높이만 파생시킨다 —
+ * 22개의 독립적인 애니메이션 루프 대신 1개만 돌려서 UI 스레드 부담을 줄인다.
  */
 function VoiceWaveform({ isPlaying }: { isPlaying: boolean }) {
+  const progress = useSharedValue(0);
+
+  useEffect(() => {
+    if (isPlaying) {
+      progress.value = withRepeat(withTiming(1, { duration: 1400, easing: ReEasing.linear }), -1, false);
+    } else {
+      progress.value = withTiming(0, { duration: 200 });
+    }
+  }, [isPlaying, progress]);
+
   return (
     <View style={styles.waveform} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
       {WAVEFORM_BAR_HEIGHTS.map((height, index) => (
-        <WaveformBar key={index} baseHeight={height} isPlaying={isPlaying} delay={(index % 6) * 90} />
+        <WaveformBar key={index} baseHeight={height} progress={progress} phase={index / WAVEFORM_BAR_HEIGHTS.length} />
       ))}
     </View>
   );
 }
 
-function WaveformBar({ baseHeight, isPlaying, delay }: { baseHeight: number; isPlaying: boolean; delay: number }) {
-  const scale = useSharedValue(0.4);
-
-  useEffect(() => {
-    if (isPlaying) {
-      scale.value = withRepeat(
-        withTiming(1, { duration: 420 + delay, easing: ReEasing.inOut(ReEasing.ease) }),
-        -1,
-        true,
-      );
-    } else {
-      scale.value = withTiming(0.4, { duration: 200 });
-    }
-  }, [isPlaying, delay, scale]);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scaleY: scale.value }],
-  }));
+function WaveformBar({
+  baseHeight,
+  progress,
+  phase,
+}: {
+  baseHeight: number;
+  progress: SharedValue<number>;
+  phase: number;
+}) {
+  const animatedStyle = useAnimatedStyle(() => {
+    const wave = Math.sin(2 * Math.PI * (progress.value + phase));
+    // wave(-1~1)를 0.4~1 스케일로 매핑 — 정지 상태(progress=0)일 때도 자연스러운 최소 높이를 유지한다.
+    return { transform: [{ scaleY: 0.7 + wave * 0.3 }] };
+  });
 
   return (
     <ReAnimated.View
