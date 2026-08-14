@@ -13,6 +13,7 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import ReAnimated, {
@@ -41,6 +42,9 @@ interface PartnerProfileModalProps {
 export default function PartnerProfileModal({ match, onClose, onConnectNow }: PartnerProfileModalProps) {
   const { colors, isDark } = useThemeColors();
   const insets = useSafeAreaInsets();
+  const { height: windowHeight } = useWindowDimensions();
+  // 고정 480px 대신 화면 높이 비율로 — 작은 기기에서 과도하게 크거나 큰 기기에서 작아 보이는 문제 방지
+  const heroHeight = Math.min(Math.max(windowHeight * 0.52, 380), 560);
   const progress = useRef(new Animated.Value(0)).current;
   const [isPlaying, setIsPlaying] = useState(false);
   const [imageFailed, setImageFailed] = useState(false);
@@ -51,6 +55,7 @@ export default function PartnerProfileModal({ match, onClose, onConnectNow }: Pa
     if (match) {
       setDisplayedMatch(match);
       setImageFailed(false);
+      setIsPlaying(false);
       Animated.timing(progress, {
         toValue: 1,
         duration: 300,
@@ -91,7 +96,7 @@ export default function PartnerProfileModal({ match, onClose, onConnectNow }: Pa
         ]}
       >
         <ScrollView showsVerticalScrollIndicator={false} bounces={false}>
-          <View style={styles.hero}>
+          <View style={[styles.hero, { height: heroHeight }]}>
             {imageFailed ? (
               <LinearGradient colors={Colors.gradient.avatarPlaceholder} style={styles.heroImage}>
                 <Text style={styles.heroImageFallbackText}>{displayedMatch.name.charAt(0).toUpperCase()}</Text>
@@ -110,7 +115,7 @@ export default function PartnerProfileModal({ match, onClose, onConnectNow }: Pa
             />
 
             <TouchableOpacity
-              style={[styles.closeButtonWrapper, { top: insets.top + Spacing.md }]}
+              style={[styles.closeButtonWrapper, { top: insets.top + Spacing.md, right: insets.right + Spacing.xl }]}
               onPress={onClose}
               activeOpacity={0.8}
               accessibilityRole="button"
@@ -177,7 +182,14 @@ export default function PartnerProfileModal({ match, onClose, onConnectNow }: Pa
             </Section>
 
             <Section title="성향 밸런스" index={2}>
-              <View style={[styles.balanceCard, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
+              <View
+                style={[styles.balanceCard, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
+                accessible
+                accessibilityLabel={`성향 밸런스: ${MBTI_AXES.map(
+                  ([left, right]) =>
+                    `${left} ${displayedMatch.mbtiAxisScores[left]}%, ${right} ${100 - displayedMatch.mbtiAxisScores[left]}%`,
+                ).join(', ')}`}
+              >
                 {MBTI_AXES.map(([left, right]) => (
                   <MbtiAxisBar
                     key={left}
@@ -207,6 +219,7 @@ export default function PartnerProfileModal({ match, onClose, onConnectNow }: Pa
                   <VoiceWaveform isPlaying={isPlaying} />
                 </View>
               </View>
+              <Text style={[styles.voiceHint, { color: colors.text.muted }]}>실제 목소리 미리듣기는 준비 중이에요</Text>
             </Section>
 
             <Section title="이 사람의 이야기" index={4}>
@@ -238,12 +251,13 @@ export default function PartnerProfileModal({ match, onClose, onConnectNow }: Pa
           </View>
         </ScrollView>
 
-        <BlurView
-          intensity={isDark ? 40 : 60}
-          tint={isDark ? 'dark' : 'light'}
-          style={[styles.floatingBar, { borderTopColor: colors.border.primary }]}
-        >
-          <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.background.glass }]} pointerEvents="none" />
+        <View style={styles.floatingBar} pointerEvents="box-none">
+          <LinearGradient
+            colors={['transparent', colors.background.primary, colors.background.primary]}
+            locations={[0, 0.5, 1]}
+            style={StyleSheet.absoluteFill}
+            pointerEvents="none"
+          />
           <TouchableOpacity
             onPress={() => onConnectNow?.(displayedMatch)}
             activeOpacity={0.85}
@@ -261,7 +275,7 @@ export default function PartnerProfileModal({ match, onClose, onConnectNow }: Pa
               <Text style={styles.connectNowText}>통화하기</Text>
             </LinearGradient>
           </TouchableOpacity>
-        </BlurView>
+        </View>
       </Animated.View>
     </Modal>
   );
@@ -292,19 +306,38 @@ function MbtiAxisBar({
   trackColor: string;
 }) {
   const leftDominant = value >= 50;
+  // 50%에 가까울수록(성향이 애매할수록) 글자 강조를 흐리게, 극단적일수록 진하게 표시한다.
+  // 막대 채우기 자체는 항상 또렷한 브랜드 컬러로 — 흐릿해서 안 보이는 문제를 방지한다.
+  const intensity = Math.min(Math.abs(value - 50) / 50, 1);
+  const letterActiveColor = withAlpha(Colors.primary.electricCyan, 0.6 + intensity * 0.4);
+
   return (
-    <View style={styles.axisRow}>
-      <Text style={[styles.axisLetter, leftDominant ? styles.axisLetterActive : { color: mutedColor }]}>
-        {leftLabel}
-      </Text>
+    <View
+      style={styles.axisRow}
+      accessibilityRole="progressbar"
+      accessibilityLabel={`${leftLabel} 대 ${rightLabel}`}
+      accessibilityValue={{ min: 0, max: 100, now: value }}
+    >
+      <Text style={[styles.axisLetter, { color: leftDominant ? letterActiveColor : mutedColor }]}>{leftLabel}</Text>
       <View style={[styles.axisTrack, { backgroundColor: trackColor }]}>
-        <View style={[styles.axisFill, { width: `${value}%` }]} />
+        <LinearGradient
+          colors={[Colors.primary.electricCyan, Colors.primary.vividPurple]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={[styles.axisFill, { width: `${value}%` }]}
+        />
       </View>
-      <Text style={[styles.axisLetter, !leftDominant ? styles.axisLetterActive : { color: mutedColor }]}>
-        {rightLabel}
-      </Text>
+      <Text style={[styles.axisLetter, { color: !leftDominant ? letterActiveColor : mutedColor }]}>{rightLabel}</Text>
     </View>
   );
+}
+
+/** hexColor는 반드시 `#rrggbb` 6자리 hex 형식이어야 한다(rgba 문자열 등은 지원 안 함). */
+function withAlpha(hexColor: string, alpha: number): string {
+  const r = parseInt(hexColor.slice(1, 3), 16);
+  const g = parseInt(hexColor.slice(3, 5), 16);
+  const b = parseInt(hexColor.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
 const WAVEFORM_BAR_HEIGHTS = [
@@ -317,7 +350,7 @@ const WAVEFORM_BAR_HEIGHTS = [
  */
 function VoiceWaveform({ isPlaying }: { isPlaying: boolean }) {
   return (
-    <View style={styles.waveform}>
+    <View style={styles.waveform} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
       {WAVEFORM_BAR_HEIGHTS.map((height, index) => (
         <WaveformBar key={index} baseHeight={height} isPlaying={isPlaying} delay={(index % 6) * 90} />
       ))}
@@ -355,7 +388,7 @@ function Section({ title, index, children }: { title: string; index: number; chi
   const { colors } = useThemeColors();
 
   return (
-    <ReAnimated.View entering={FadeInUp.delay(index * 60).duration(400)} style={styles.section}>
+    <ReAnimated.View entering={FadeInUp.delay(index * 60).duration(400)}>
       <Text style={[styles.sectionTitle, { color: colors.text.muted }]}>{title}</Text>
       {children}
     </ReAnimated.View>
@@ -367,8 +400,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   hero: {
-    height: 480,
     width: '100%',
+    backgroundColor: Colors.primary.cardBlack,
   },
   heroImage: {
     ...StyleSheet.absoluteFillObject,
@@ -492,7 +525,6 @@ const styles = StyleSheet.create({
     fontWeight: FontWeight.bold,
     color: Colors.neutral.darkGray,
   },
-  section: {},
   sectionTitle: {
     fontFamily: FontFamily.sans,
     fontSize: FontSize.xs,
@@ -556,6 +588,12 @@ const styles = StyleSheet.create({
     fontSize: FontSize.base,
     fontWeight: FontWeight.bold,
   },
+  voiceHint: {
+    fontFamily: FontFamily.sans,
+    fontSize: FontSize.xs,
+    fontWeight: FontWeight.medium,
+    marginTop: Spacing.sm,
+  },
   waveform: {
     flexDirection: 'row',
     alignItems: 'flex-end',
@@ -585,19 +623,15 @@ const styles = StyleSheet.create({
     width: 16,
     textAlign: 'center',
   },
-  axisLetterActive: {
-    color: Colors.primary.electricCyan,
-  },
   axisTrack: {
     flex: 1,
-    height: 4,
+    height: 6,
     borderRadius: Radii.full,
     overflow: 'hidden',
   },
   axisFill: {
     height: '100%',
     borderRadius: Radii.full,
-    backgroundColor: Colors.primary.electricCyan,
   },
   bioCard: {
     padding: Spacing.xxl,
@@ -648,10 +682,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.md,
     paddingHorizontal: Spacing.xl,
-    paddingTop: Spacing.lg,
+    paddingTop: Spacing.giant,
     paddingBottom: Spacing.xxl,
-    borderTopWidth: 1,
-    overflow: 'hidden',
   },
   connectNowWrapper: {
     flex: 1,

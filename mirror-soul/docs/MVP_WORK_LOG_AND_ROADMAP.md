@@ -209,6 +209,13 @@
 - [ ] **통화 화면 라이트 모드 실기기 확인** (`refactor/156-call-logic`) — `CallScreenBackground`/`CallHeader`/`CallControls` 등에 `useThemeColors()`를 연동해 라이트 모드 대응 코드는 반영했으나, 실기기에서 눈으로 확인은 안 함. `colors.glow.*` 토큰이 원래 카드 섹션용으로 설계된 낮은 opacity(0.02~0.05)라 통화 화면 같은 풀블리드 히어로 연출에선 너무 옅게 보일 수 있음 — 확인 후 필요하면 라이트 모드 전용 강도 보정 검토.
 
 ### 6.2 백엔드 협업이 필요한 것 (RN 단독으로 못 끝남)
+- [ ] **발견(홈) 화면 상대 프로필 상세 — 실제 Discovery 상세 API 신규 필요** (2026-08-14, `fix/158-home-ui`에서 `PartnerProfileModal.tsx`를 전면 개편하며 조사) — 지금 `DiscoveryMatchCard.tsx`/`PartnerProfileModal.tsx`가 보여주는 정보(트윈 싱크로율, AI 페르소나 태그, MBTI 축 밸런스, AI 트윈 한줄소개, 가치관 성향)는 전부 `SoulMatch` 목업 데이터다. 백엔드 소스를 직접 확인해보니 실제로 대응하는 도메인 데이터는 이미 존재한다:
+  - `Clone.syncRate`(Integer), `Clone.summary`(String) — "트윈 싱크로율"/"AI 트윈 한줄소개"에 정확히 대응
+  - `ClonePersonalityTag`(clone_id, content, display_order) — "AI 페르소나 분석" 태그에 대응
+  - `MbtiProfile`(mbti, ieScore/nsScore/ftScore/pjScore) — "성향 밸런스" 4축 바에 대응
+  - `UserValueAxisScore`(user_id, axis, score -1~1, sample_count) — 성장 탭 가치관 밸런스 게임(`ValueBalanceAnswer`) 답변을 축(`LOVE`/`LIFESTYLE`/`COMM`/`DECISION`/`SOCIAL`/`PRIORITY`/`TONE`/`TASTE`)별로 집계한 값. "가치관 성향" 섹션이 원래 있어야 할 자리 — 지금 모달의 "관심사"였던 걸 이걸로 교체한 이유이기도 함(가짜 취미 목록은 백엔드에 대응 필드 자체가 없었음)
+  - `AiVoiceProfile.introAudio*`(bucket/objectKey/durationMs) — "목소리 미리듣기" 재생 버튼이 지금은 실제 오디오 없이 애니메이션만 있는데, 이 필드로 실제 인트로 음성을 재생할 수 있을 것으로 보임
+  - **격차**: `MatchController`엔 `/twins` 목록 조회만 있고, 특정 상대의 위 정보를 한 번에 내려주는 상세 조회 엔드포인트(예: `GET /matches/{id}` 또는 `GET /twins/{id}`)가 없다. 새 엔드포인트 설계 + DTO 정의부터 필요. 이 항목은 아래 "Chat/Meeting/PushDevice API 연동"과도 연결됨(발견 화면 카드/모달의 "통화하기" 버튼이 현재 `Alert.alert`로 끝나는 이유가 Meeting API 미연동이기 때문 — 상세 조회 API가 생기면 두 작업을 같이 설계하는 게 효율적)
 - [ ] **실제 IAP/결제 연동** (Track 2) — `react-native-iap` 또는 RevenueCat, 영수증 검증 API. `POST /my-page/buy-time`은 `feat/134-api`로 실제 연동됐지만 **결제 검증 없이 초 단위 값을 그대로 더해주는 API**다(백엔드 자체가 아직 mock에 가까움, `analysis-report.md` §5 참고) — `useAICallFlow.ts`의 `startCall()`에 사전 잔액 체크가 여전히 없어 무료로 무제한 통화가 가능한 상태임을 재확인할 것
 - [ ] 차단/신고의 서버 사이드 강제 — `feat/mvp-block-report`의 로컬 차단목록은 "내 화면에서 안 보이게"만 할 뿐, 상대가 실제로 연락 못 하게 막지는 못함. 백엔드에 차단/신고 API 자체가 없음(`backend-schema.json` 12개 컨트롤러에 없음) — 신규 백엔드 API 설계부터 필요
 - [ ] PASS 본인인증 벤더 계약 및 실제 연동 (`fix/mvp-remove-fake-pass-verification`은 가짜 UI만 제거, 실제 연동은 비즈니스 결정 대기)

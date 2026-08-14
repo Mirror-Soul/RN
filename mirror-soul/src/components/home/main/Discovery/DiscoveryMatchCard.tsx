@@ -133,14 +133,21 @@ export default function DiscoveryMatchCard({ match, onPass, onConnect, onOpenDet
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.connectButton}
             onPress={() => onConnect?.(match.id)}
             activeOpacity={0.85}
             accessibilityRole="button"
             accessibilityLabel="통화하기"
+            style={styles.connectButtonWrapper}
           >
-            <Feather name="phone" size={16} color={Colors.primary.soulBlack} />
-            <Text style={styles.connectText}>통화하기</Text>
+            <LinearGradient
+              colors={[Colors.primary.electricCyan, Colors.primary.vividPurple]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.connectButton}
+            >
+              <Feather name="phone" size={16} color={Colors.neutral.pureWhite} />
+              <Text style={styles.connectText}>통화하기</Text>
+            </LinearGradient>
           </TouchableOpacity>
         </View>
       </View>
@@ -278,11 +285,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  connectButton: {
+  connectButtonWrapper: {
     flex: 1,
+  },
+  connectButton: {
     height: 56,
     borderRadius: Radii.xl,
-    backgroundColor: Colors.neutral.pureWhite,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
@@ -294,6 +302,6 @@ const styles = StyleSheet.create({
     fontWeight: FontWeight.black,
     letterSpacing: 1.16,
     textTransform: 'uppercase',
-    color: Colors.primary.soulBlack,
+    color: Colors.neutral.pureWhite,
   },
 });
