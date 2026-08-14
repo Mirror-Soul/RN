@@ -436,11 +436,11 @@ export function useAICallFlow() {
       if (myAttemptId !== startAttemptIdRef.current) {
         logger.warn('[useAICallFlow] startCall attempt cancelled during setup — sending compensating hangup');
         // 취소 시점의 _cleanup()은 initWebRTC()가 끝나기 전에 이미 지나갔으므로, 방금 막
-        // 잡힌 마이크 스트림/PeerConnection(webrtcResult가 fulfilled인 경우)은 아무도 안 닫은
-        // 상태다 — 여기서 직접 닫아야 마이크가 계속 켜진 채로 남지 않는다.
-        if (webrtcResult.status === 'fulfilled') {
-          closeWebRTC();
-        }
+        // 만들어진 PeerConnection/마이크 스트림은 아무도 안 닫은 상태다 — useWebRTCCall.initialize()가
+        // pcRef.current를 먼저 세팅한 뒤 getUserMedia()를 호출하므로, webrtcResult가 fulfilled든
+        // rejected(getUserMedia 실패 등)든 pcRef가 채워져 있을 수 있다. 무조건 호출한다
+        // (closeWebRTC()는 pc가 없으면 안전하게 no-op).
+        closeWebRTC();
         try {
           await endCall(callId, '');
         } catch (err) {
