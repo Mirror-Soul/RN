@@ -14,14 +14,19 @@ import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { performLogout } from '@/src/services/authService';
 import { useBuyTimeMutation } from '@/src/features/profile/hooks/useBuyTimeMutation';
 import { TIME_REFILL_OPTIONS } from '@/src/features/profile/constants/timeRefillOptions';
+import { usePreferredRegionsQuery } from '@/src/features/home/hooks/usePreferredRegionsQuery';
+import { useUpdatePreferredRegionsMutation } from '@/src/features/home/hooks/useUpdatePreferredRegionsMutation';
+import type { PreferredRegion } from '@/src/types/api/home';
 import { useToast } from '@/src/components/common/Toast/ToastProvider';
 import { getErrorDisplayMessage } from '@/src/utils/apiErrorCode';
 import { logger } from '@/src/utils/logger';
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { Alert, ScrollView, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { router } from 'expo-router';
+
+const EMPTY_PREFERRED_REGIONS: PreferredRegion[] = [];
 
 /**
  * 메인 홈 화면 (발견 탭)
@@ -38,11 +43,22 @@ export default function MainHomeScreen() {
 
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [showRefillModal, setShowRefillModal] = useState(false);
-  const [selectedLocations, setSelectedLocations] = useState<string[]>(['강남구']);
   const [selectedMatch, setSelectedMatch] = useState<SoulMatch | null>(null);
   const buyTimeMutation = useBuyTimeMutation();
   const purchaseInFlightRef = useRef(false);
   const { showToast } = useToast();
+
+  const {
+    data: preferredRegions,
+    isLoading: isPreferredRegionsLoading,
+    isError: isPreferredRegionsError,
+    refetch: refetchPreferredRegions,
+  } = usePreferredRegionsQuery();
+  // preferredRegions가 로딩 중(undefined)일 때 `?? []`가 매 렌더 새 배열을 만들면
+  // LocationSelectModal이 열려있는 동안 그 참조 변화만으로 재스냅샷을 유발할 수 있다.
+  const selectedRegions = useMemo(() => preferredRegions ?? EMPTY_PREFERRED_REGIONS, [preferredRegions]);
+  const updatePreferredRegionsMutation = useUpdatePreferredRegionsMutation();
+  const regionUpdateInFlightRef = useRef(false);
 
   const handleSettingPress = useCallback(() => {
     Alert.alert(
@@ -85,6 +101,27 @@ export default function MainHomeScreen() {
     Alert.alert('안내', 'Soul Connect 기능은 곧 제공될 예정입니다.');
   }, []);
 
+  // LocationSelectModal이 저장 완료까지 대기했다가 닫힘/에러 표시를 직접 처리한다.
+  // 실패 시 여기서는 rethrow만 하고 토스트를 띄우지 않는다 — 바텀시트가 아직 열려있는 동안엔
+  // 전역 토스트가 BottomSheetModal의 별도 Modal 레이어에 가려 안 보이기 때문
+  // (LocationSelectModal 내부 FloatingNotice가 그 역할을 대신한다).
+  // 성공 토스트는 모달이 onClose()로 닫힌 뒤 보이므로 여기서 그대로 띄운다.
+  const handleConfirmRegions = useCallback(async (regions: PreferredRegion[]) => {
+    if (regionUpdateInFlightRef.current) return;
+    regionUpdateInFlightRef.current = true;
+    try {
+      await updatePreferredRegionsMutation.mutateAsync(
+        regions.map((r) => ({ sidoName: r.sidoName, sigunguName: r.sigunguName }))
+      );
+      showToast('탐색 지역이 저장됐어요.', 'success');
+    } catch (error) {
+      logger.error('handleConfirmRegions: updatePreferredRegions failed', error);
+      throw error;
+    } finally {
+      regionUpdateInFlightRef.current = false;
+    }
+  }, [updatePreferredRegionsMutation, showToast]);
+
   const handleSearchPress = useCallback(() => {
     // TODO: 검색 기능이 정해지면 실제 검색 화면/모달로 교체
     logger.debug('Location search pressed');
@@ -124,7 +161,10 @@ export default function MainHomeScreen() {
         <AvailableTimeCard onRefillPress={() => setShowRefillModal(true)} />
 
         <LocationFilterBar
-          selectedLocations={selectedLocations}
+          selectedLocations={selectedRegions.map((r) => r.sigunguName)}
+          isLoading={isPreferredRegionsLoading}
+          isError={isPreferredRegionsError}
+          onRetry={() => refetchPreferredRegions()}
           onPress={() => setShowLocationModal(true)}
           onSearchPress={handleSearchPress}
         />
@@ -141,9 +181,9 @@ export default function MainHomeScreen() {
 
       <LocationSelectModal
         visible={showLocationModal}
-        initialSelected={selectedLocations}
+        initialSelected={selectedRegions}
         onClose={() => setShowLocationModal(false)}
-        onConfirm={setSelectedLocations}
+        onConfirm={handleConfirmRegions}
       />
 
       <RefillModal

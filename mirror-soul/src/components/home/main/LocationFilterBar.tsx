@@ -7,6 +7,9 @@ import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface LocationFilterBarProps {
   selectedLocations: string[];
+  isLoading?: boolean;
+  isError?: boolean;
+  onRetry?: () => void;
   onPress?: () => void;
   onSearchPress?: () => void;
 }
@@ -18,20 +21,35 @@ interface LocationFilterBarProps {
  */
 export default function LocationFilterBar({
   selectedLocations,
+  isLoading,
+  isError,
+  onRetry,
   onPress,
   onSearchPress,
 }: LocationFilterBarProps) {
   const { colors } = useThemeColors();
-  const summary = selectedLocations.length > 0 ? selectedLocations.join(', ') : '전체 지역';
+  const summary = isLoading
+    ? '조회 중...'
+    : isError
+      ? '지역 조회 실패 · 재시도'
+      : selectedLocations.length > 0
+        ? selectedLocations.join(', ')
+        : '전체 지역';
 
   return (
     <View style={styles.row}>
       <TouchableOpacity
-        style={[styles.locationButton, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
-        onPress={onPress}
+        style={[
+          styles.locationButton,
+          { backgroundColor: colors.background.glass, borderColor: colors.border.primary },
+          isLoading && styles.locationButtonDisabled,
+        ]}
+        onPress={isLoading ? undefined : isError ? onRetry : onPress}
+        disabled={isLoading}
         activeOpacity={0.7}
         accessibilityRole="button"
-        accessibilityLabel="탐색 지역 설정"
+        accessibilityLabel={isError ? '탐색 지역 다시 조회' : '탐색 지역 설정'}
+        accessibilityState={{ disabled: Boolean(isLoading) }}
       >
         <View style={styles.left}>
           {/* Location.svg는 흰색 고정 아이콘이라 항상 어두운 배경 위에서만 보이므로,
@@ -41,7 +59,15 @@ export default function LocationFilterBar({
           </View>
           <View>
             <Text style={[styles.label, { color: colors.text.muted }]}>탐색 지역</Text>
-            <Text style={[styles.value, { color: colors.text.secondary }]}>{summary}</Text>
+            <Text
+              style={[
+                styles.value,
+                { color: isError ? colors.state.danger : colors.text.secondary },
+                isError && styles.valueError,
+              ]}
+            >
+              {summary}
+            </Text>
           </View>
         </View>
         <Feather name="chevron-down" size={16} color={colors.text.muted} />
@@ -101,6 +127,12 @@ const styles = StyleSheet.create({
     fontSize: FontSize.base,
     fontWeight: FontWeight.bold,
     letterSpacing: -0.15,
+  },
+  valueError: {
+    textDecorationLine: 'underline',
+  },
+  locationButtonDisabled: {
+    opacity: 0.6,
   },
   searchButton: {
     width: 56,

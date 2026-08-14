@@ -90,7 +90,7 @@ export const ToastProvider = ({ children }: { children: React.ReactNode }) => {
           exiting={FadeOutUp.duration(180)}
           style={[
             styles.container,
-            { top: insets.top + Spacing.md, backgroundColor: colors.background.glass, borderColor: accentColor },
+            { top: insets.top + Spacing.massive, backgroundColor: colors.background.glass, borderColor: accentColor },
           ]}
           pointerEvents="box-none"
           accessible
