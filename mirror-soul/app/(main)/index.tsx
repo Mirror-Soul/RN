@@ -20,11 +20,13 @@ import type { PreferredRegion } from '@/src/types/api/home';
 import { useToast } from '@/src/components/common/Toast/ToastProvider';
 import { getErrorDisplayMessage } from '@/src/utils/apiErrorCode';
 import { logger } from '@/src/utils/logger';
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { Alert, ScrollView, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { router } from 'expo-router';
+
+const EMPTY_PREFERRED_REGIONS: PreferredRegion[] = [];
 
 /**
  * 메인 홈 화면 (발견 탭)
@@ -52,7 +54,9 @@ export default function MainHomeScreen() {
     isError: isPreferredRegionsError,
     refetch: refetchPreferredRegions,
   } = usePreferredRegionsQuery();
-  const selectedRegions = preferredRegions ?? [];
+  // preferredRegions가 로딩 중(undefined)일 때 `?? []`가 매 렌더 새 배열을 만들면
+  // LocationSelectModal이 열려있는 동안 그 참조 변화만으로 재스냅샷을 유발할 수 있다.
+  const selectedRegions = useMemo(() => preferredRegions ?? EMPTY_PREFERRED_REGIONS, [preferredRegions]);
   const updatePreferredRegionsMutation = useUpdatePreferredRegionsMutation();
   const regionUpdateInFlightRef = useRef(false);
 

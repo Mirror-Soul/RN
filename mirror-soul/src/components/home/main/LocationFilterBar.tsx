@@ -39,11 +39,17 @@ export default function LocationFilterBar({
   return (
     <View style={styles.row}>
       <TouchableOpacity
-        style={[styles.locationButton, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
-        onPress={isError ? onRetry : onPress}
+        style={[
+          styles.locationButton,
+          { backgroundColor: colors.background.glass, borderColor: colors.border.primary },
+          isLoading && styles.locationButtonDisabled,
+        ]}
+        onPress={isLoading ? undefined : isError ? onRetry : onPress}
+        disabled={isLoading}
         activeOpacity={0.7}
         accessibilityRole="button"
         accessibilityLabel={isError ? '탐색 지역 다시 조회' : '탐색 지역 설정'}
+        accessibilityState={{ disabled: Boolean(isLoading) }}
       >
         <View style={styles.left}>
           {/* Location.svg는 흰색 고정 아이콘이라 항상 어두운 배경 위에서만 보이므로,
@@ -124,6 +130,9 @@ const styles = StyleSheet.create({
   },
   valueError: {
     textDecorationLine: 'underline',
+  },
+  locationButtonDisabled: {
+    opacity: 0.6,
   },
   searchButton: {
     width: 56,

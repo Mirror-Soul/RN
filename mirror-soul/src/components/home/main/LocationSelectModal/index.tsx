@@ -42,11 +42,16 @@ export default function LocationSelectModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { message: noticeMessage, opacity: noticeOpacity, flash: flashNotice } = useFloatingNotice();
 
+  // 시트가 "닫힘 → 열림"으로 바뀌는 순간에만 initialSelected를 스냅샷한다.
+  // 열려 있는 동안 부모가 리렌더되어 initialSelected 참조가 바뀌어도(예: 백그라운드 재조회)
+  // 사용자가 시트 안에서 고르던 미저장 선택을 덮어쓰지 않는다.
+  const wasVisibleRef = React.useRef(false);
   React.useEffect(() => {
-    if (visible) {
+    if (visible && !wasVisibleRef.current) {
       setSelected(initialSelected);
       setIsSubmitting(false);
     }
+    wasVisibleRef.current = visible;
   }, [visible, initialSelected]);
 
   // 목록이 로드되면 (이미 선택된 지역이 있으면 그 시/도, 없으면 첫 시/도를) 기본 탭으로 연다.

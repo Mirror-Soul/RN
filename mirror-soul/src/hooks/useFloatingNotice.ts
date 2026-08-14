@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Easing } from 'react-native';
+import { AccessibilityInfo, Animated, Easing } from 'react-native';
 
 const SHOW_DURATION_MS = 2200;
 const FADE_IN_MS = 180;
@@ -23,7 +23,13 @@ export const useFloatingNotice = () => {
 
   const flash = (text: string) => {
     setMessage(text);
+    // 스크린리더 사용자에게도 알림을 전달한다 — 라이브 리전만으로는 동일한 메시지가
+    // 반복될 때(예: 제한 초과를 연달아 탭) 변경 감지가 안 돼 announce가 안 될 수 있다.
+    AccessibilityInfo.announceForAccessibility(text);
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    // stopAnimation()은 진행 중이던 이전 fade-out의 완료 콜백을 { finished: false }로 즉시 호출한다.
+    // finished 체크 없이 setMessage(null)을 부르면, 방금 위에서 세팅한 새 메시지가
+    // 그 자리에서 지워지는 레이스가 생긴다 — 자연스럽게 끝난 애니메이션에서만 초기화한다.
     opacity.stopAnimation();
     opacity.setValue(0);
     Animated.timing(opacity, {
@@ -38,7 +44,9 @@ export const useFloatingNotice = () => {
         duration: FADE_OUT_MS,
         easing: Easing.in(Easing.cubic),
         useNativeDriver: true,
-      }).start(() => setMessage(null));
+      }).start(({ finished }) => {
+        if (finished) setMessage(null);
+      });
     }, SHOW_DURATION_MS);
   };
 

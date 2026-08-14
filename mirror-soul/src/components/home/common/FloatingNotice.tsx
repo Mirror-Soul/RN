@@ -20,6 +20,9 @@ export default function FloatingNotice({ message, opacity, bottom = 96 }: Floati
   return (
     <Animated.View
       pointerEvents="none"
+      accessible
+      accessibilityRole="alert"
+      accessibilityLiveRegion="polite"
       style={[
         styles.notice,
         { bottom, backgroundColor: colors.background.elevated, borderColor: colors.state.danger, opacity },
