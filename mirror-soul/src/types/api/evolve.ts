@@ -39,3 +39,43 @@ export interface VoiceUpdateJobResult {
 }
 
 export type VoiceUpdateJobResponse = ApiResponse<VoiceUpdateJobResult>;
+
+// ─────────────────────────────────────────────
+// GET /evolve/value-balance
+// ─────────────────────────────────────────────
+export type ValueBalanceAxis =
+  | 'LOVE'
+  | 'LIFESTYLE'
+  | 'COMM'
+  | 'DECISION'
+  | 'SOCIAL'
+  | 'PRIORITY'
+  | 'TONE'
+  | 'TASTE';
+
+export interface ValueBalanceQuestionResult {
+  questionId: number;
+  axis: ValueBalanceAxis;
+  leftLabel: string;
+  rightLabel: string;
+}
+
+/** 오늘의 quota를 다 썼으면 result가 null(VALUE_BALANCE_DAILY_LIMIT_REACHED 성공코드)로 온다. */
+export type ValueBalanceQuestionResponse = ApiResponse<ValueBalanceQuestionResult | null>;
+
+// ─────────────────────────────────────────────
+// POST /evolve/value-balance/{questionId}/answer
+// ─────────────────────────────────────────────
+export type ValueBalanceChosenSide = 'LEFT' | 'RIGHT';
+
+export interface ValueBalanceAnswerRequest {
+  chosenSide: ValueBalanceChosenSide;
+}
+
+export interface ValueBalanceAnswerResult {
+  questionId: number;
+  answeredCount: number;
+  dailyLimit: number;
+}
+
+export type ValueBalanceAnswerResponse = ApiResponse<ValueBalanceAnswerResult>;

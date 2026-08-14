@@ -1,24 +1,16 @@
 import { BottomSheet } from '@/src/components/common/BottomSheet/BottomSheet';
+import FloatingNotice from '@/src/components/home/common/FloatingNotice';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
+import { useValueBalanceQuestionQuery } from '@/src/features/growth/hooks/useValueBalanceQuestionQuery';
+import { useSubmitValueBalanceAnswerMutation } from '@/src/features/growth/hooks/useSubmitValueBalanceAnswerMutation';
+import { useFloatingNotice } from '@/src/hooks/useFloatingNotice';
+import { getErrorDisplayMessage, getErrorCode } from '@/src/utils/apiErrorCode';
+import { VALUE_BALANCE_AXIS_LABELS } from '@/src/constants/valueBalanceAxis';
+import type { ValueBalanceAnswerResult, ValueBalanceChosenSide } from '@/src/types/api/evolve';
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
-
-interface Question {
-  id: number;
-  left: string;
-  right: string;
-  category: string;
-}
-
-// 밸런스 게임 질문 — 다른 곳에서 재사용되지 않으므로 별도 상수 파일 없이 colocate
-const QUESTIONS: Question[] = [
-  { id: 1, left: '안정적인 삶', right: '도전적인 삶', category: 'Life Style' },
-  { id: 2, left: '계획적인 휴식', right: '즉흥적인 여행', category: 'Preference' },
-  { id: 3, left: '깊고 좁은 관계', right: '넓고 얕은 관계', category: 'Social' },
-  { id: 4, left: '논리적인 판단', right: '감성적인 공감', category: 'Decision' },
-];
 
 interface ValueBalanceModalProps {
   isOpen: boolean;
@@ -28,104 +20,181 @@ interface ValueBalanceModalProps {
 
 /**
  * ValueBalanceModal 컴포넌트 (SRP)
- * 가치관 밸런스 게임(이지선다 4문항) 바텀시트입니다.
+ * 가치관 밸런스 게임 바텀시트입니다. GET /evolve/value-balance는 한 번에 질문 1개만 주므로,
+ * 연속 질문 흐름은 "답변 제출 성공 → 쿼리 무효화 → 다음 질문 자동 refetch"로 구현합니다.
+ * 진행률(N of dailyLimit)은 GET 응답엔 없고 POST 응답에만 있어, 마지막 답변 결과를 로컬에 보관해 표시합니다.
  */
 export default function ValueBalanceModal({ isOpen, onClose, onComplete }: ValueBalanceModalProps) {
   const { colors } = useThemeColors();
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isFinishing, setIsFinishing] = useState(false);
+  const { data: question, isLoading, isError, isFetching, refetch } = useValueBalanceQuestionQuery();
+  const submitMutation = useSubmitValueBalanceAnswerMutation();
+  // 재진입(닫았다 다시 열기) 시에도 마지막으로 알고 있던 진행률을 그대로 보여준다 —
+  // GET 응답엔 진행 카운트가 없어서, 답할 때마다 로컬에 쌓아둔 값이 유일한 소스다.
+  const [lastAnswer, setLastAnswer] = useState<ValueBalanceAnswerResult | null>(null);
+  // 방금 탭한 선택지를 잠깐 하이라이트해서 "내가 뭘 눌렀는지" 시각 피드백을 준다.
+  const [selectedSide, setSelectedSide] = useState<ValueBalanceChosenSide | null>(null);
+  const { message: noticeMessage, opacity: noticeOpacity, flash: flashNotice } = useFloatingNotice();
+
+  // 새 질문으로 바뀌면(답변 성공/자동 복구 refetch 등) 이전 질문에 남아있던 하이라이트를 지운다.
+  useEffect(() => {
+    setSelectedSide(null);
+  }, [question?.questionId]);
 
   useEffect(() => {
-    if (isOpen) {
-      setCurrentIndex(0);
-      setIsFinishing(false);
+    // 방금 답변해서 quota를 다 썼는지(질문이 null로 바뀌었는지) 감지되면 완료 콜백을 알린다.
+    if (isOpen && lastAnswer && question === null) {
+      onComplete();
     }
-  }, [isOpen]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, question]);
 
-  const handleSelect = () => {
-    if (currentIndex < QUESTIONS.length - 1) {
-      setTimeout(() => setCurrentIndex((prev) => prev + 1), 300);
-    } else {
-      setIsFinishing(true);
-      setTimeout(() => {
-        onComplete();
-        onClose();
-      }, 1500);
+  const isBusy = submitMutation.isPending || isFetching;
+
+  const handleSelect = async (chosenSide: ValueBalanceChosenSide) => {
+    if (!question || isBusy) return;
+    setSelectedSide(chosenSide);
+    try {
+      const response = await submitMutation.mutateAsync({ questionId: question.questionId, chosenSide });
+      setLastAnswer(response.result);
+    } catch (error) {
+      setSelectedSide(null);
+      flashNotice(getErrorDisplayMessage(error, '답변 제출에 실패했습니다. 잠시 후 다시 시도해주세요.'));
+      // 이미 답한 질문이거나(레이스) 질문이 만료된 경우, 화면엔 여전히 낡은 질문이 남아있어
+      // 사용자가 같은 버튼을 다시 눌러도 같은 에러가 반복된다 — 새 질문으로 자동 복구한다.
+      const code = getErrorCode(error);
+      if (code === 'VALUE_BALANCE_ALREADY_ANSWERED' || code === 'VALUE_BALANCE_QUESTION_NOT_FOUND') {
+        refetch();
+      }
     }
   };
 
-  const progress = ((currentIndex + 1) / QUESTIONS.length) * 100;
-  const question = QUESTIONS[currentIndex];
+  const progress = lastAnswer ? (lastAnswer.answeredCount / lastAnswer.dailyLimit) * 100 : 0;
+  const isFinished = !isLoading && !isError && question === null;
 
   return (
-    <BottomSheet isOpen={isOpen} onClose={onClose} height={620}>
+    <BottomSheet isOpen={isOpen} onClose={onClose} height={460}>
       <View style={styles.container}>
         <View style={[styles.progressTrack, { backgroundColor: colors.background.glass }]}>
           <View style={[styles.progressFill, { width: `${progress}%` }]} />
         </View>
 
-        {!isFinishing ? (
-          <>
-            <View style={styles.header}>
-              <View>
-                <Text style={styles.eyebrow}>Balance Game</Text>
-                <Text style={[styles.title, { color: colors.text.primary }]}>가치관 밸런스</Text>
-              </View>
-            </View>
-
-            <View style={styles.questionArea}>
-              <View style={styles.categoryWrapper}>
-                <View style={[styles.categoryBadge, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
-                  <Text style={[styles.categoryText, { color: colors.text.muted }]}>{question.category}</Text>
-                </View>
-                <Text style={[styles.question, { color: colors.text.primary }]}>당신은 어떤 쪽인가요?</Text>
-              </View>
-
-              <View style={styles.choices}>
-                <TouchableOpacity
-                  style={[styles.choiceButton, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
-                  onPress={handleSelect}
-                  activeOpacity={0.8}
-                  accessibilityRole="button"
-                  accessibilityLabel={question.left}
-                >
-                  <Text style={[styles.choiceText, { color: colors.text.secondary }]}>{question.left}</Text>
-                </TouchableOpacity>
-
-                <View style={styles.vsWrapper}>
-                  <View style={[styles.vsBadge, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
-                    <Text style={[styles.vsText, { color: colors.text.muted }]}>VS</Text>
-                  </View>
-                </View>
-
-                <TouchableOpacity
-                  style={[styles.choiceButton, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
-                  onPress={handleSelect}
-                  activeOpacity={0.8}
-                  accessibilityRole="button"
-                  accessibilityLabel={question.right}
-                >
-                  <Text style={[styles.choiceText, { color: colors.text.secondary }]}>{question.right}</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            <Text style={[styles.stepText, { color: colors.text.muted }]}>
-              Question {currentIndex + 1} of {QUESTIONS.length}
+        {isLoading ? (
+          <View style={styles.centerState}>
+            <ActivityIndicator color={Colors.primary.electricCyan} />
+          </View>
+        ) : isError ? (
+          <TouchableOpacity
+            style={styles.centerState}
+            onPress={() => refetch()}
+            accessibilityRole="button"
+            accessibilityLabel="질문 다시 조회"
+          >
+            <Text style={[styles.errorText, { color: colors.state.danger }]}>
+              질문을 불러오지 못했습니다. 탭하여 다시 시도해주세요.
             </Text>
-          </>
-        ) : (
+          </TouchableOpacity>
+        ) : isFinished ? (
           <View style={styles.finishing}>
             <View style={styles.finishingBadge}>
               <Ionicons name="sparkles-outline" size={40} color={Colors.primary.electricCyan} />
             </View>
             <Text style={[styles.title, { color: colors.text.primary }]}>분석 완료</Text>
             <Text style={[styles.subtitle, { color: colors.text.muted }]}>
-              트윈의 가치관 데이터가 <Text style={styles.accentText}>+1.2%</Text> 정밀해졌습니다.
+              오늘의 가치관 밸런스 질문을 모두 완료했어요. 내일 다시 만나요.
             </Text>
           </View>
+        ) : (
+          question && (
+            <>
+              <View style={styles.header}>
+                <View>
+                  <Text style={styles.eyebrow}>Balance Game</Text>
+                  <Text style={[styles.title, { color: colors.text.primary }]}>가치관 밸런스</Text>
+                </View>
+              </View>
+
+              <View style={styles.questionArea}>
+                <View style={styles.categoryWrapper}>
+                  <View style={[styles.categoryBadge, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
+                    <Text style={[styles.categoryText, { color: colors.text.muted }]}>
+                      {VALUE_BALANCE_AXIS_LABELS[question.axis]}
+                    </Text>
+                  </View>
+                  <Text style={[styles.question, { color: colors.text.primary }]}>당신은 어떤 쪽인가요?</Text>
+                </View>
+
+                <View style={styles.choices}>
+                  <TouchableOpacity
+                    style={[
+                      styles.choiceButton,
+                      { backgroundColor: colors.background.glass, borderColor: colors.border.primary },
+                      selectedSide === 'LEFT' && styles.choiceButtonSelected,
+                      isBusy && selectedSide !== 'LEFT' && styles.choiceButtonDisabled,
+                    ]}
+                    onPress={() => handleSelect('LEFT')}
+                    disabled={isBusy}
+                    activeOpacity={0.8}
+                    accessibilityRole="button"
+                    accessibilityLabel={question.leftLabel}
+                    accessibilityState={{ selected: selectedSide === 'LEFT' }}
+                  >
+                    <Text
+                      style={[
+                        styles.choiceText,
+                        { color: selectedSide === 'LEFT' ? Colors.primary.soulBlack : colors.text.secondary },
+                      ]}
+                    >
+                      {question.leftLabel}
+                    </Text>
+                  </TouchableOpacity>
+
+                  <View style={styles.vsWrapper}>
+                    {isBusy ? (
+                      <ActivityIndicator color={Colors.primary.electricCyan} />
+                    ) : (
+                      <View style={[styles.vsBadge, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
+                        <Text style={[styles.vsText, { color: colors.text.muted }]}>VS</Text>
+                      </View>
+                    )}
+                  </View>
+
+                  <TouchableOpacity
+                    style={[
+                      styles.choiceButton,
+                      { backgroundColor: colors.background.glass, borderColor: colors.border.primary },
+                      selectedSide === 'RIGHT' && styles.choiceButtonSelected,
+                      isBusy && selectedSide !== 'RIGHT' && styles.choiceButtonDisabled,
+                    ]}
+                    onPress={() => handleSelect('RIGHT')}
+                    disabled={isBusy}
+                    activeOpacity={0.8}
+                    accessibilityRole="button"
+                    accessibilityLabel={question.rightLabel}
+                    accessibilityState={{ selected: selectedSide === 'RIGHT' }}
+                  >
+                    <Text
+                      style={[
+                        styles.choiceText,
+                        { color: selectedSide === 'RIGHT' ? Colors.primary.soulBlack : colors.text.secondary },
+                      ]}
+                    >
+                      {question.rightLabel}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {lastAnswer && (
+                <Text style={[styles.stepText, { color: colors.text.muted }]}>
+                  Question {lastAnswer.answeredCount + 1} of {lastAnswer.dailyLimit}
+                </Text>
+              )}
+            </>
+          )
         )}
       </View>
+
+      <FloatingNotice message={noticeMessage} opacity={noticeOpacity} bottom={24} />
     </BottomSheet>
   );
 }
@@ -145,8 +214,20 @@ const styles = StyleSheet.create({
     height: '100%',
     backgroundColor: Colors.primary.electricCyan,
   },
+  centerState: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.xl,
+  },
+  errorText: {
+    fontFamily: FontFamily.sans,
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.bold,
+    textAlign: 'center',
+  },
   header: {
-    marginBottom: Spacing.xxl,
+    marginBottom: Spacing.lg,
   },
   eyebrow: {
     fontFamily: FontFamily.sans,
@@ -164,9 +245,8 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   questionArea: {
-    flex: 1,
-    justifyContent: 'center',
-    gap: Spacing.giant,
+    paddingTop: Spacing.xl,
+    gap: Spacing.xxxl,
   },
   categoryWrapper: {
     alignItems: 'center',
@@ -198,6 +278,13 @@ const styles = StyleSheet.create({
     borderRadius: Radii.xxl,
     borderWidth: 1,
   },
+  choiceButtonDisabled: {
+    opacity: 0.5,
+  },
+  choiceButtonSelected: {
+    backgroundColor: Colors.primary.electricCyan,
+    borderColor: Colors.primary.electricCyan,
+  },
   choiceText: {
     fontFamily: FontFamily.sans,
     fontSize: FontSize.lg,
@@ -205,6 +292,8 @@ const styles = StyleSheet.create({
   },
   vsWrapper: {
     alignItems: 'center',
+    minHeight: 32,
+    justifyContent: 'center',
   },
   vsBadge: {
     width: 32,
@@ -249,8 +338,5 @@ const styles = StyleSheet.create({
     fontSize: FontSize.base,
     fontWeight: FontWeight.medium,
     textAlign: 'center',
-  },
-  accentText: {
-    color: Colors.primary.electricCyan,
   },
 });

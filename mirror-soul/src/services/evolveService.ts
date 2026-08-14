@@ -2,6 +2,10 @@ import apiClient from './apiClient';
 import {
   CompleteVoiceUpdateRequest,
   TwinSyncResponse,
+  ValueBalanceAnswerRequest,
+  ValueBalanceAnswerResponse,
+  ValueBalanceChosenSide,
+  ValueBalanceQuestionResponse,
   VoiceTrainingSentenceResponse,
   VoiceUpdateJobResponse,
 } from '../types/api/evolve';
@@ -48,6 +52,39 @@ export const completeVoiceUpdate = async (
     return response.data;
   } catch (error: unknown) {
     logger.error('completeVoiceUpdate ERROR:', { message: error instanceof Error ? error.message : String(error) });
+    throw error;
+  }
+};
+
+/** 가치관 밸런스 게임 - 오늘의 질문 조회. 일일 quota 소진 시 result가 null로 온다(에러 아님). */
+export const getValueBalanceQuestion = async (): Promise<ValueBalanceQuestionResponse> => {
+  logger.debug('getValueBalanceQuestion');
+  try {
+    const response = await apiClient.get<ValueBalanceQuestionResponse>('/evolve/value-balance');
+    logger.info('getValueBalanceQuestion SUCCESS:', response.data);
+    return response.data;
+  } catch (error: unknown) {
+    logger.error('getValueBalanceQuestion ERROR:', { message: error instanceof Error ? error.message : String(error) });
+    throw error;
+  }
+};
+
+/** 가치관 밸런스 게임 - 답변 제출 */
+export const submitValueBalanceAnswer = async (
+  questionId: number,
+  chosenSide: ValueBalanceChosenSide
+): Promise<ValueBalanceAnswerResponse> => {
+  logger.debug('submitValueBalanceAnswer:', { questionId, chosenSide });
+  const body: ValueBalanceAnswerRequest = { chosenSide };
+  try {
+    const response = await apiClient.post<ValueBalanceAnswerResponse>(
+      `/evolve/value-balance/${questionId}/answer`,
+      body
+    );
+    logger.info('submitValueBalanceAnswer SUCCESS:', response.data);
+    return response.data;
+  } catch (error: unknown) {
+    logger.error('submitValueBalanceAnswer ERROR:', { message: error instanceof Error ? error.message : String(error) });
     throw error;
   }
 };

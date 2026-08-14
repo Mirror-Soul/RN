@@ -7,7 +7,11 @@
  * 오버라이드하는 메시지 매핑, (c) 카테고리 판별 헬퍼를 제공한다.
  */
 
-/** 백엔드 GeneralErrorCode 47개 전수 (backend-schema.json errorCodes 기준) */
+/**
+ * 백엔드 GeneralErrorCode 전수 (backend-schema.json errorCodes 기준, 스냅샷 이후 추가된 코드는 직접 보충).
+ * VALUE_BALANCE_* 4개는 backend-schema.json 스냅샷에 없어(가치관 밸런스 게임 기능 자체가 스냅샷 이후 추가됨)
+ * GeneralErrorCode.java에서 직접 확인해 추가함.
+ */
 export type BackendErrorCode =
   | 'DUPLICATE_LOGINID'
   | 'NOT_AGREED_TERM'
@@ -55,7 +59,11 @@ export type BackendErrorCode =
   | 'MEETING_RECEIVER_INACTIVE'
   | 'CHAT_ROOM_NOT_FOUND'
   | 'CHAT_MESSAGE_NOT_FOUND'
-  | 'CHAT_ROOM_ACCESS_DENIED';
+  | 'CHAT_ROOM_ACCESS_DENIED'
+  | 'VALUE_BALANCE_QUESTION_NOT_FOUND'
+  | 'VALUE_BALANCE_ALREADY_ANSWERED'
+  | 'VALUE_BALANCE_DAILY_LIMIT_REACHED'
+  | 'VALUE_BALANCE_NO_AVAILABLE_QUESTION';
 
 /** apiClient.ts 응답 인터셉터가 전송 계층 실패에 대해 자체적으로 합성하는 코드 */
 export type ClientSyntheticErrorCode = 'AUTH_FAILED' | 'TIMEOUT' | 'NETWORK_ERROR' | 'UNKNOWN_ERROR';
