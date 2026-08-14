@@ -81,9 +81,9 @@ export default function GrowScreen() {
       />
 
       {/*
-        ValueBalanceModal/EmotionLogModal은 아직 실제 백엔드 연동이 없는 목업 기능이라
-        onComplete에서 더 이상 헤드라인 유사도(twinSyncQuery, 실제 서버값)를 로컬로
-        가짜 증가시키지 않는다 — 실제 값 위에 가짜 증가분을 얹으면 서버 값과 어긋난다.
+        ValueBalanceModal은 이제 /evolve/value-balance API와 완전히 연동됐다.
+        헤드라인 유사도(twinSyncQuery)는 답변 제출 mutation이 성공할 때마다 자체적으로
+        무효화해 서버 최신값을 다시 받아오므로, onComplete에서 로컬로 값을 조작할 필요가 없다.
       */}
       <ValueBalanceModal
         isOpen={showBalanceModal}

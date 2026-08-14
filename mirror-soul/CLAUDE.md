@@ -25,7 +25,9 @@
 
 ## 아직 API가 없는 도메인 (구현 시 위 패턴 그대로 적용)
 
-`.claude/artifacts/analysis-report.md` §6 참고 — Chat, Meeting(실사용자 매칭 수락/거절), PushDevice, Evolve, Admin은 백엔드 API는 있지만 FE 서비스가 없다. 관련 화면은 전부 mock 데이터/dead-end 핸들러로 되어 있다 (`docs/MVP_WORK_LOG_AND_ROADMAP.md` §6 참고).
+`.claude/artifacts/analysis-report.md` §6 참고(스냅샷이라 최신 아님) — Chat, Meeting(실사용자 매칭 수락/거절), PushDevice, Admin은 백엔드 API는 있지만 FE 서비스가 없다. 관련 화면은 전부 mock 데이터/dead-end 핸들러로 되어 있다 (`docs/MVP_WORK_LOG_AND_ROADMAP.md` §6 참고).
+
+**Evolve 도메인은 이 목록에서 제외** — `evolveService.ts`/`types/api/evolve.ts`에 twinSync/voice 외에도 가치관 밸런스 게임(`GET /evolve/value-balance`, `POST /evolve/value-balance/{id}/answer`)까지 연동 완료됨(2026-08-14). `.claude/artifacts/backend-schema.json`엔 이 엔드포인트들이 반영 안 돼 있으니(스냅샷 이후 추가) 참고할 때 실제 코드(`EvolveController.java`)를 볼 것.
 
 ## 상태 관리
 
