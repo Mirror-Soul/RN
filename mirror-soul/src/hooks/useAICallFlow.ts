@@ -58,6 +58,11 @@ export function useAICallFlow() {
   // 종료 진행 중 여부 (중복 방지)
   const isHangingUpRef = useRef<boolean>(false);
 
+  // startCall 시도 식별자 — REST/WebRTC 병렬 초기화가 진행되는 동안 사용자가 취소하거나
+  // 화면이 언마운트되면(_cleanup이 이 값을 증가시켜 무효화) 그 시도가 뒤늦게 완료되더라도
+  // 로컬 연결을 이어가지 않고 서버에 생성된 방을 보상 종료하도록 구분하는 데 쓴다.
+  const startAttemptIdRef = useRef(0);
+
   const {
     remoteStream,
     iceConnectionState,
@@ -284,6 +289,10 @@ export function useAICallFlow() {
   const _cleanup = useCallback(async (errorMessage?: string, targetStatus: CallStatus = 'ended') => {
     logger.debug('[useAICallFlow] Cleaning up...');
 
+    // 대기 중인 startCall 시도가 있다면 여기서 무효화한다 — Promise.allSettled가 끝난 뒤
+    // 이 값이 자기 시작 시점과 달라진 걸 보고, 뒤늦게 로컬 연결을 이어가지 않는다.
+    startAttemptIdRef.current += 1;
+
     if (inviteTimeoutRef.current) {
       clearTimeout(inviteTimeoutRef.current);
       inviteTimeoutRef.current = null;
@@ -371,6 +380,8 @@ export function useAICallFlow() {
       return;
     }
 
+    const myAttemptId = ++startAttemptIdRef.current;
+
     setError(null);
     setCallStatus('initiating');
     logger.info('[useAICallFlow] Starting call...');
@@ -400,7 +411,10 @@ export function useAICallFlow() {
       // 1+2. REST API(방 생성)와 WebRTC 초기화(마이크 스트림 획득)는 서로의 결과값이
       // 필요 없는 독립적인 작업이다(roomId 등은 WebSocket JOIN 시에만 필요) — 순차 실행 시
       // 두 왕복시간이 그대로 더해지던 걸, 병렬 실행으로 느린 쪽 하나만 기다리면 되게 줄인다.
-      const [response] = await Promise.all([
+      // allSettled를 쓰는 이유: Promise.all은 하나만 실패해도 다른 쪽 결과(특히 REST 성공 시
+      // 생성된 callId)를 잃어버려서, REST는 성공하고 WebRTC만 실패한 경우 서버에 생성된
+      // 통화방을 정리(보상 종료)할 방법이 없어진다.
+      const [initiateResult, webrtcResult] = await Promise.allSettled([
         initiateCall(userUuid, {
           callerUserUuid: userUuid,
           mediaType: 'VOICE',
@@ -408,10 +422,40 @@ export function useAICallFlow() {
         initWebRTC(),
       ]);
 
+      if (initiateResult.status === 'rejected') {
+        throw initiateResult.reason;
+      }
+      const response = initiateResult.value;
       if (!response.isSuccess) throw new Error(response.message);
 
       const { callId, roomId, callerSignalId, aiSignalId } = response.result;
+
+      // 이 시도가 REST/WebRTC 초기화를 기다리는 동안 사용자가 취소했거나(hangUp) 화면이
+      // 언마운트됐다면(_cleanup이 attemptId를 무효화) 서버엔 이미 방이 생겼으니 로컬 연결을
+      // 이어가지 말고 보상 종료 요청만 보낸다.
+      if (myAttemptId !== startAttemptIdRef.current) {
+        logger.warn('[useAICallFlow] startCall attempt cancelled during setup — sending compensating hangup');
+        // 취소 시점의 _cleanup()은 initWebRTC()가 끝나기 전에 이미 지나갔으므로, 방금 막
+        // 잡힌 마이크 스트림/PeerConnection(webrtcResult가 fulfilled인 경우)은 아무도 안 닫은
+        // 상태다 — 여기서 직접 닫아야 마이크가 계속 켜진 채로 남지 않는다.
+        if (webrtcResult.status === 'fulfilled') {
+          closeWebRTC();
+        }
+        try {
+          await endCall(callId, '');
+        } catch (err) {
+          logger.error('[useAICallFlow] compensating endCall failed:', err);
+        }
+        return;
+      }
+
       callSessionRef.current = { callId, roomId, callerSignalId, aiSignalId };
+
+      if (webrtcResult.status === 'rejected') {
+        // REST 세션은 이미 만들어졌으니 로컬 정리만으론 부족하다 — catch 블록에서
+        // callSessionRef가 있는 걸 보고 정식 hangUp 경로(CALL_END + endCall)로 보낸다.
+        throw webrtcResult.reason;
+      }
 
       // 3. WebSocket 연결
       setCallStatus('joining');
@@ -444,9 +488,17 @@ export function useAICallFlow() {
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : '통화를 시작할 수 없습니다.';
       logger.error('[useAICallFlow] startCall failed:', err);
-      await _cleanup(message, 'idle');
+      if (callSessionRef.current) {
+        // REST로 서버에 통화방이 이미 생성된 상태 — 로컬 정리만으론 서버에 고아 통화가 남는다.
+        // 정식 hangUp 경로(CALL_END + endCall)로 서버도 함께 정리한다. _performHangUp이 호출하는
+        // _cleanup()엔 메시지를 안 넘기므로, 에러 문구는 먼저 세팅해서 CallErrorFallback에 남긴다.
+        setError(message);
+        await _performHangUp();
+      } else {
+        await _cleanup(message, 'idle');
+      }
     }
-  }, [userUuid, initWebRTC, handleMessage, _cleanup]);
+  }, [userUuid, initWebRTC, handleMessage, _cleanup, _performHangUp, endCall, closeWebRTC]);
 
   // ─────────────────────────────────────────────
   // 통화 종료 (공개 API)
