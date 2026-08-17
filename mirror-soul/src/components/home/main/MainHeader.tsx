@@ -1,5 +1,4 @@
-import SettingIcon from '@/assets/images/common/Setting.svg';
-import ProfileIcon from '@/assets/images/common/bottomNavbar/Profile.svg';
+import { Feather } from '@expo/vector-icons';
 import { Colors, FontFamily, FontWeight, Radii, Spacing } from '@/src/constants/theme';
 import { MAIN_ROUTES } from '@/src/constants/routes/mainRoutes';
 import { router } from 'expo-router';
@@ -28,7 +27,7 @@ export default function MainHeader({ onSettingPress }: MainHeaderProps) {
         accessibilityRole="button"
         accessibilityLabel="내 트윈으로 이동"
       >
-        <ProfileIcon width={20} height={20} />
+        <Feather name="user" size={20} color={colors.text.secondary} />
       </TouchableOpacity>
 
       <View style={styles.titleWrapper}>
@@ -46,7 +45,7 @@ export default function MainHeader({ onSettingPress }: MainHeaderProps) {
         accessibilityRole="button"
         accessibilityLabel="설정"
       >
-        <SettingIcon width={20} height={20} />
+        <Feather name="settings" size={20} color={colors.text.secondary} />
       </TouchableOpacity>
     </View>
   );

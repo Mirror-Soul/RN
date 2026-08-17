@@ -1,24 +1,32 @@
-import CancelIcon from '@/assets/images/common/Cancel.svg';
-import HeartIcon from '@/assets/images/common/main/Heart.svg';
-import LocationIcon from '@/assets/images/common/Location.svg';
-import VerifiedIcon from '@/assets/images/common/Verification_protect_icon.svg';
 import { Feather } from '@expo/vector-icons';
 import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
+import { BlurView } from 'expo-blur';
+import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Easing,
-  Image,
   Modal,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from 'react-native';
-import { SoulMatch } from './DiscoveryMatchCard';
+import ReAnimated, {
+  Easing as ReEasing,
+  FadeInUp,
+  type SharedValue,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withTiming,
+} from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { MbtiAxisScores, SoulMatch } from './DiscoveryMatchCard';
 
 interface PartnerProfileModalProps {
   match: SoulMatch | null;
@@ -33,7 +41,11 @@ interface PartnerProfileModalProps {
  * 세로 슬라이드(하단→전체 화면)로 응용합니다.
  */
 export default function PartnerProfileModal({ match, onClose, onConnectNow }: PartnerProfileModalProps) {
-  const { colors } = useThemeColors();
+  const { colors, isDark } = useThemeColors();
+  const insets = useSafeAreaInsets();
+  const { height: windowHeight } = useWindowDimensions();
+  // 고정 480px 대신 화면 높이 비율로 — 작은 기기에서 과도하게 크거나 큰 기기에서 작아 보이는 문제 방지
+  const heroHeight = Math.min(Math.max(windowHeight * 0.52, 380), 560);
   const progress = useRef(new Animated.Value(0)).current;
   const [isPlaying, setIsPlaying] = useState(false);
   const [imageFailed, setImageFailed] = useState(false);
@@ -44,6 +56,7 @@ export default function PartnerProfileModal({ match, onClose, onConnectNow }: Pa
     if (match) {
       setDisplayedMatch(match);
       setImageFailed(false);
+      setIsPlaying(false);
       Animated.timing(progress, {
         toValue: 1,
         duration: 300,
@@ -63,6 +76,11 @@ export default function PartnerProfileModal({ match, onClose, onConnectNow }: Pa
         }
       });
     }
+    // 부모가 이 컴포넌트를 애니메이션 도중 강제로 언마운트하는 경우, 진행 중인 타이밍을
+    // 정리하지 않으면 언마운트된 컴포넌트의 상태를 세팅하려는 콜백이 뒤늦게 실행될 수 있다.
+    return () => {
+      progress.stopAnimation();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [match, progress]);
 
@@ -84,7 +102,7 @@ export default function PartnerProfileModal({ match, onClose, onConnectNow }: Pa
         ]}
       >
         <ScrollView showsVerticalScrollIndicator={false} bounces={false}>
-          <View style={styles.hero}>
+          <View style={[styles.hero, { height: heroHeight }]}>
             {imageFailed ? (
               <LinearGradient colors={Colors.gradient.avatarPlaceholder} style={styles.heroImage}>
                 <Text style={styles.heroImageFallbackText}>{displayedMatch.name.charAt(0).toUpperCase()}</Text>
@@ -93,27 +111,44 @@ export default function PartnerProfileModal({ match, onClose, onConnectNow }: Pa
               <Image
                 source={{ uri: displayedMatch.profileImage }}
                 style={styles.heroImage}
-                resizeMode="cover"
+                contentFit="cover"
+                cachePolicy="disk"
+                transition={150}
                 onError={() => setImageFailed(true)}
               />
             )}
-            <LinearGradient colors={['transparent', 'rgba(5,5,5,0.4)', '#050505']} style={StyleSheet.absoluteFill} />
+            {/* heroInfo(이름/위치/직업)는 항상 흰 텍스트라 하단부는 테마와 무관하게 어둡게 유지하고,
+                아주 마지막(85~100%) 구간만 콘텐츠 영역과 이어지도록 테마색으로 옮겨 라이트 모드
+                대비를 확보한다 — 텍스트 영역까지 밝아지면 라이트 모드에서 흰 글씨가 안 보인다. */}
+            <LinearGradient
+              colors={['transparent', 'rgba(5,5,5,0.4)', 'rgba(5,5,5,0.75)', isDark ? '#141414' : '#F0EFEB']}
+              locations={[0, 0.45, 0.85, 1]}
+              style={StyleSheet.absoluteFill}
+            />
 
             <TouchableOpacity
-              style={styles.closeButton}
+              style={[styles.closeButtonWrapper, { top: insets.top + Spacing.md, right: insets.right + Spacing.xl }]}
               onPress={onClose}
               activeOpacity={0.8}
               accessibilityRole="button"
               accessibilityLabel="닫기"
             >
-              <CancelIcon width={20} height={20} />
+              <BlurView intensity={40} tint="dark" style={styles.closeButton}>
+                <Feather name="x" size={20} color={Colors.neutral.pureWhite} />
+              </BlurView>
             </TouchableOpacity>
 
             <View style={styles.heroInfo}>
               <View style={styles.badgeRow}>
-                <View style={styles.compatBadge}>
-                  <Text style={styles.compatBadgeText}>Similarity {displayedMatch.compatibility}%</Text>
-                </View>
+                <LinearGradient
+                  colors={[Colors.primary.electricCyan, Colors.primary.vividPurple]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.compatBadge}
+                >
+                  <Feather name="radio" size={10} color={Colors.neutral.pureWhite} />
+                  <Text style={styles.compatBadgeText}>트윈 싱크로율 {displayedMatch.compatibility}%</Text>
+                </LinearGradient>
                 <View style={styles.mbtiBadge}>
                   <Text style={styles.mbtiBadgeText}>{displayedMatch.mbti}</Text>
                 </View>
@@ -124,20 +159,31 @@ export default function PartnerProfileModal({ match, onClose, onConnectNow }: Pa
               </Text>
               <View style={styles.metaRow}>
                 <View style={styles.metaItem}>
-                  <LocationIcon width={14} height={14} />
+                  <Feather name="map-pin" size={14} color={Colors.neutral.lightGray} />
                   <Text style={styles.metaText}>{displayedMatch.location}</Text>
                 </View>
                 <View style={styles.metaItem}>
                   <Feather name="briefcase" size={14} color={Colors.neutral.lightGray} />
                   <Text style={styles.metaText}>{displayedMatch.job}</Text>
-                  {displayedMatch.isJobVerified ? <VerifiedIcon width={14} height={14} /> : null}
+                  {displayedMatch.isJobVerified ? (
+                    <Feather name="check-circle" size={14} color={Colors.neutral.pureWhite} />
+                  ) : null}
                 </View>
               </View>
             </View>
           </View>
 
           <View style={styles.content}>
-            <Section title="AI Persona Scan" icon="cpu">
+            <ReAnimated.View entering={FadeInUp.duration(400)} style={styles.cloneSummaryCard}>
+              <Text style={styles.cloneSummaryText}>&quot;{displayedMatch.cloneSummary}&quot;</Text>
+              <Text style={styles.cloneSummaryCaption}>AI 트윈이 스스로를 소개하는 한마디</Text>
+            </ReAnimated.View>
+
+            <Section title="AI 페르소나 분석" index={1}>
+              <Text style={[styles.insightText, { color: colors.text.secondary }]}>
+                AI 트윈이 {displayedMatch.name}님의 목소리와 성격을{' '}
+                <Text style={styles.insightHighlight}>{displayedMatch.compatibility}%</Text>까지 재현했어요. 대화에서는 이런 성향이 느껴져요.
+              </Text>
               <View style={styles.tagRow}>
                 {displayedMatch.aiAnalysisTags.map((tag) => (
                   <View key={tag} style={styles.aiTag}>
@@ -147,7 +193,29 @@ export default function PartnerProfileModal({ match, onClose, onConnectNow }: Pa
               </View>
             </Section>
 
-            <Section title="Digital Voice">
+            <Section title="성향 밸런스" index={2}>
+              <View
+                style={[styles.balanceCard, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
+                accessible
+                accessibilityLabel={`성향 밸런스: ${MBTI_AXES.map(
+                  ([left, right]) =>
+                    `${left} ${displayedMatch.mbtiAxisScores[left]}%, ${right} ${100 - displayedMatch.mbtiAxisScores[left]}%`,
+                ).join(', ')}`}
+              >
+                {MBTI_AXES.map(([left, right]) => (
+                  <MbtiAxisBar
+                    key={left}
+                    leftLabel={left}
+                    rightLabel={right}
+                    value={displayedMatch.mbtiAxisScores[left]}
+                    mutedColor={colors.text.muted}
+                    trackColor={colors.border.strong}
+                  />
+                ))}
+              </View>
+            </Section>
+
+            <Section title="목소리 미리듣기" index={3}>
               <View style={[styles.voiceCard, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
                 <TouchableOpacity
                   style={styles.playButton}
@@ -158,27 +226,36 @@ export default function PartnerProfileModal({ match, onClose, onConnectNow }: Pa
                 >
                   <Feather name={isPlaying ? 'pause' : 'play'} size={22} color={Colors.primary.soulBlack} />
                 </TouchableOpacity>
-                <Text style={[styles.voiceStyleText, { color: colors.text.primary }]}>{displayedMatch.voiceStyle}</Text>
+                <View style={styles.voiceInfo}>
+                  <Text style={[styles.voiceStyleText, { color: colors.text.primary }]}>{displayedMatch.voiceStyle}</Text>
+                  <VoiceWaveform isPlaying={isPlaying} />
+                </View>
               </View>
+              <Text style={[styles.voiceHint, { color: colors.text.muted }]}>실제 목소리 미리듣기는 준비 중이에요</Text>
             </Section>
 
-            <Section title="Soul Record">
+            <Section title="이 사람의 이야기" index={4}>
               <View style={[styles.bioCard, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
                 <Text style={[styles.bioText, { color: colors.text.secondary }]}>&quot;{displayedMatch.bio}&quot;</Text>
               </View>
             </Section>
 
-            <Section title="Interests">
-              <View style={styles.interestGrid}>
-                {displayedMatch.interests.map((item) => (
+            <Section title="가치관 성향" index={5}>
+              <Text style={[styles.insightText, { color: colors.text.muted }]}>
+                성장 가치관 게임 답변을 AI가 분석해서 뽑은 성향이에요.
+              </Text>
+              <View style={styles.tendencyList}>
+                {displayedMatch.valueTendencies.map((tendency) => (
                   <View
-                    key={item.label}
-                    style={[styles.interestItem, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
+                    key={tendency.axisLabel}
+                    style={[styles.tendencyItem, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
                   >
-                    <View style={[styles.interestIconWrapper, { backgroundColor: colors.background.card }]}>
-                      <Feather name="star" size={18} color={Colors.primary.electricCyan} />
+                    <View style={styles.tendencyAxisBadge}>
+                      <Text style={styles.tendencyAxisText}>{tendency.axisLabel}</Text>
                     </View>
-                    <Text style={[styles.interestLabel, { color: colors.text.secondary }]}>{item.label}</Text>
+                    <Text style={[styles.tendencyDescription, { color: colors.text.secondary }]}>
+                      {tendency.description}
+                    </Text>
                   </View>
                 ))}
               </View>
@@ -186,34 +263,32 @@ export default function PartnerProfileModal({ match, onClose, onConnectNow }: Pa
           </View>
         </ScrollView>
 
-        <View style={styles.floatingBar}>
+        <View
+          style={[styles.floatingBar, { paddingBottom: Math.max(insets.bottom, Spacing.xxl) }]}
+          pointerEvents="box-none"
+        >
+          <LinearGradient
+            colors={['transparent', colors.background.primary, colors.background.primary]}
+            locations={[0, 0.5, 1]}
+            style={StyleSheet.absoluteFill}
+            pointerEvents="none"
+          />
           <TouchableOpacity
-            style={[styles.iconAction, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
-            // TODO: 관심 표시(찜) 기능 범위가 정해지면 실제 핸들러로 교체
-            activeOpacity={0.8}
-            accessibilityRole="button"
-            accessibilityLabel="관심 표시"
-          >
-            <Feather name="heart" size={22} color={colors.text.muted} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.connectNowButton}
             onPress={() => onConnectNow?.(displayedMatch)}
             activeOpacity={0.85}
             accessibilityRole="button"
-            accessibilityLabel="Connect Now"
+            accessibilityLabel="통화하기"
+            style={styles.connectNowWrapper}
           >
-            <HeartIcon width={20} height={20} />
-            <Text style={styles.connectNowText}>Connect Now</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.iconAction, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
-            // TODO: 공유 기능 범위가 정해지면 실제 핸들러로 교체
-            activeOpacity={0.8}
-            accessibilityRole="button"
-            accessibilityLabel="공유"
-          >
-            <Feather name="share-2" size={22} color={colors.text.muted} />
+            <LinearGradient
+              colors={[Colors.primary.electricCyan, Colors.primary.vividPurple]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.connectNowButton}
+            >
+              <Feather name="phone" size={20} color={Colors.neutral.pureWhite} />
+              <Text style={styles.connectNowText}>통화하기</Text>
+            </LinearGradient>
           </TouchableOpacity>
         </View>
       </Animated.View>
@@ -221,17 +296,126 @@ export default function PartnerProfileModal({ match, onClose, onConnectNow }: Pa
   );
 }
 
-function Section({ title, icon, children }: { title: string; icon?: keyof typeof Feather.glyphMap; children: React.ReactNode }) {
+const MBTI_AXES: [keyof MbtiAxisScores, string][] = [
+  ['E', 'I'],
+  ['S', 'N'],
+  ['T', 'F'],
+  ['J', 'P'],
+];
+
+/**
+ * MbtiAxisBar 컴포넌트
+ * value(0~100)는 왼쪽 글자 쪽으로 얼마나 기울었는지를 나타낸다.
+ */
+function MbtiAxisBar({
+  leftLabel,
+  rightLabel,
+  value,
+  mutedColor,
+  trackColor,
+}: {
+  leftLabel: string;
+  rightLabel: string;
+  value: number;
+  mutedColor: string;
+  trackColor: string;
+}) {
+  const leftDominant = value >= 50;
+  // 50%에 가까울수록(성향이 애매할수록) 글자 강조를 흐리게, 극단적일수록 진하게 표시한다.
+  // 막대 채우기 자체는 항상 또렷한 브랜드 컬러로 — 흐릿해서 안 보이는 문제를 방지한다.
+  const intensity = Math.min(Math.abs(value - 50) / 50, 1);
+  const letterActiveColor = withAlpha(Colors.primary.electricCyan, 0.6 + intensity * 0.4);
+
+  return (
+    <View
+      style={styles.axisRow}
+      accessibilityRole="progressbar"
+      accessibilityLabel={`${leftLabel} 대 ${rightLabel}`}
+      accessibilityValue={{ min: 0, max: 100, now: value }}
+    >
+      <Text style={[styles.axisLetter, { color: leftDominant ? letterActiveColor : mutedColor }]}>{leftLabel}</Text>
+      <View style={[styles.axisTrack, { backgroundColor: trackColor }]}>
+        <LinearGradient
+          colors={[Colors.primary.electricCyan, Colors.primary.vividPurple]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={[styles.axisFill, { width: `${value}%` }]}
+        />
+      </View>
+      <Text style={[styles.axisLetter, { color: !leftDominant ? letterActiveColor : mutedColor }]}>{rightLabel}</Text>
+    </View>
+  );
+}
+
+/** hexColor는 반드시 `#rrggbb` 6자리 hex 형식이어야 한다(rgba 문자열 등은 지원 안 함). */
+function withAlpha(hexColor: string, alpha: number): string {
+  const r = parseInt(hexColor.slice(1, 3), 16);
+  const g = parseInt(hexColor.slice(3, 5), 16);
+  const b = parseInt(hexColor.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+const WAVEFORM_BAR_HEIGHTS = [
+  10, 18, 12, 26, 16, 32, 14, 24, 10, 30, 20, 36, 12, 22, 16, 28, 10, 24, 14, 20, 12, 26,
+];
+
+/**
+ * VoiceWaveform 컴포넌트
+ * 실제 오디오 연동 전이므로 재생 상태에 따라 움직이는 시각적 피드백만 제공한다.
+ * 바마다 개별 withRepeat 애니메이션을 돌리는 대신, 위상(phase)이 계속 순환하는
+ * 공유값(progress) 하나만 UI 스레드에서 구동하고 각 바는 그 값에서 사인파로 높이만 파생시킨다 —
+ * 22개의 독립적인 애니메이션 루프 대신 1개만 돌려서 UI 스레드 부담을 줄인다.
+ */
+function VoiceWaveform({ isPlaying }: { isPlaying: boolean }) {
+  const progress = useSharedValue(0);
+
+  useEffect(() => {
+    if (isPlaying) {
+      progress.value = withRepeat(withTiming(1, { duration: 1400, easing: ReEasing.linear }), -1, false);
+    } else {
+      progress.value = withTiming(0, { duration: 200 });
+    }
+  }, [isPlaying, progress]);
+
+  return (
+    <View style={styles.waveform} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+      {WAVEFORM_BAR_HEIGHTS.map((height, index) => (
+        <WaveformBar key={index} baseHeight={height} progress={progress} phase={index / WAVEFORM_BAR_HEIGHTS.length} />
+      ))}
+    </View>
+  );
+}
+
+function WaveformBar({
+  baseHeight,
+  progress,
+  phase,
+}: {
+  baseHeight: number;
+  progress: SharedValue<number>;
+  phase: number;
+}) {
+  const animatedStyle = useAnimatedStyle(() => {
+    const wave = Math.sin(2 * Math.PI * (progress.value + phase));
+    // wave(-1~1)를 0.4~1 스케일로 매핑 — 정지 상태(progress=0)일 때도 자연스러운 최소 높이를 유지한다.
+    return { transform: [{ scaleY: 0.7 + wave * 0.3 }] };
+  });
+
+  return (
+    <ReAnimated.View
+      style={[styles.waveformBar, { height: baseHeight, backgroundColor: Colors.primary.electricCyan }, animatedStyle]}
+    />
+  );
+}
+
+function Section({ title, index, children }: { title: string; index: number; children: React.ReactNode }) {
   const { colors } = useThemeColors();
 
   return (
-    <View style={styles.section}>
-      <View style={styles.sectionHeader}>
-        <Text style={[styles.sectionTitle, { color: colors.text.muted }]}>{title}</Text>
-        {icon ? <Feather name={icon} size={16} color={Colors.glass.cyan30_d3} /> : null}
-      </View>
+    <ReAnimated.View entering={FadeInUp.delay(index * 60).duration(400)}>
+      <Text style={[styles.sectionTitle, { color: colors.text.muted }]}>{title}</Text>
       {children}
-    </View>
+    </ReAnimated.View>
   );
 }
 
@@ -240,8 +424,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   hero: {
-    height: 480,
     width: '100%',
+    backgroundColor: Colors.primary.cardBlack,
   },
   heroImage: {
     ...StyleSheet.absoluteFillObject,
@@ -254,24 +438,25 @@ const styles = StyleSheet.create({
     fontWeight: FontWeight.black,
     color: Colors.neutral.pureWhite,
   },
-  closeButton: {
+  closeButtonWrapper: {
     position: 'absolute',
-    top: Spacing.xxl,
-    right: Spacing.xxl,
+    right: Spacing.xl,
+  },
+  closeButton: {
     width: 44,
     height: 44,
     borderRadius: Radii.lg,
-    backgroundColor: Colors.glass.black40,
     borderWidth: 1,
     borderColor: Colors.glass.white10,
     justifyContent: 'center',
     alignItems: 'center',
+    overflow: 'hidden',
   },
   heroInfo: {
     position: 'absolute',
-    left: Spacing.xxxl,
-    right: Spacing.xxxl,
-    bottom: Spacing.xxxl,
+    left: Spacing.xl,
+    right: Spacing.xl,
+    bottom: Spacing.lg,
   },
   badgeRow: {
     flexDirection: 'row',
@@ -279,12 +464,12 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   compatBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xxs,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.xxs,
     borderRadius: Radii.full,
-    backgroundColor: Colors.glass.cyan20_d3,
-    borderWidth: 1,
-    borderColor: Colors.glass.cyan30_d3,
   },
   compatBadgeText: {
     fontFamily: FontFamily.sans,
@@ -292,7 +477,7 @@ const styles = StyleSheet.create({
     fontWeight: FontWeight.black,
     letterSpacing: 0.8,
     textTransform: 'uppercase',
-    color: Colors.primary.electricCyan,
+    color: Colors.neutral.pureWhite,
   },
   mbtiBadge: {
     paddingHorizontal: Spacing.md,
@@ -338,18 +523,31 @@ const styles = StyleSheet.create({
     color: Colors.neutral.lightGray,
   },
   content: {
-    paddingHorizontal: Spacing.xxxl,
-    paddingBottom: 160,
-    gap: Spacing.giant,
+    paddingHorizontal: Spacing.xl,
+    paddingTop: Spacing.md,
+    paddingBottom: 140,
+    gap: Spacing.xxl,
   },
-  section: {
-    marginTop: Spacing.xxxl,
+  cloneSummaryCard: {
+    padding: Spacing.xl,
+    borderRadius: Radii.xxl,
+    borderWidth: 1,
+    borderColor: Colors.primary.electricCyan,
+    backgroundColor: Colors.glass.cyan10_d3,
   },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: Spacing.lg,
+  cloneSummaryText: {
+    fontFamily: FontFamily.sans,
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.black,
+    lineHeight: 24,
+    color: Colors.primary.electricCyan,
+    marginBottom: Spacing.xs,
+  },
+  cloneSummaryCaption: {
+    fontFamily: FontFamily.sans,
+    fontSize: FontSize.xs,
+    fontWeight: FontWeight.bold,
+    color: Colors.neutral.darkGray,
   },
   sectionTitle: {
     fontFamily: FontFamily.sans,
@@ -357,6 +555,18 @@ const styles = StyleSheet.create({
     fontWeight: FontWeight.black,
     letterSpacing: 1.5,
     textTransform: 'uppercase',
+    marginBottom: Spacing.md,
+  },
+  insightText: {
+    fontFamily: FontFamily.sans,
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.medium,
+    lineHeight: 20,
+    marginBottom: Spacing.md,
+  },
+  insightHighlight: {
+    fontWeight: FontWeight.black,
+    color: Colors.primary.electricCyan,
   },
   tagRow: {
     flexDirection: 'row',
@@ -393,10 +603,59 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  voiceInfo: {
+    flex: 1,
+    gap: Spacing.sm,
+  },
   voiceStyleText: {
     fontFamily: FontFamily.sans,
     fontSize: FontSize.base,
     fontWeight: FontWeight.bold,
+  },
+  voiceHint: {
+    fontFamily: FontFamily.sans,
+    fontSize: FontSize.xs,
+    fontWeight: FontWeight.medium,
+    marginTop: Spacing.sm,
+  },
+  waveform: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    alignSelf: 'stretch',
+    height: 36,
+  },
+  waveformBar: {
+    width: 3,
+    borderRadius: Radii.full,
+  },
+  balanceCard: {
+    padding: Spacing.xl,
+    borderRadius: Radii.xxl,
+    borderWidth: 1,
+    gap: Spacing.lg,
+  },
+  axisRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+  },
+  axisLetter: {
+    fontFamily: FontFamily.sans,
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.black,
+    width: 16,
+    textAlign: 'center',
+  },
+  axisTrack: {
+    flex: 1,
+    height: 6,
+    borderRadius: Radii.full,
+    overflow: 'hidden',
+  },
+  axisFill: {
+    height: '100%',
+    borderRadius: Radii.full,
   },
   bioCard: {
     padding: Spacing.xxl,
@@ -405,36 +664,38 @@ const styles = StyleSheet.create({
   },
   bioText: {
     fontFamily: FontFamily.sans,
-    fontStyle: 'italic',
     fontSize: FontSize.lg,
     fontWeight: FontWeight.medium,
     lineHeight: 22,
   },
-  interestGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.md,
+  tendencyList: {
+    gap: Spacing.sm,
   },
-  interestItem: {
+  tendencyItem: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.md,
-    width: '47%',
     padding: Spacing.lg,
     borderRadius: Radii.xl,
     borderWidth: 1,
   },
-  interestIconWrapper: {
-    width: 40,
-    height: 40,
-    borderRadius: Radii.xl,
-    justifyContent: 'center',
-    alignItems: 'center',
+  tendencyAxisBadge: {
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xxs,
+    borderRadius: Radii.md2,
+    backgroundColor: Colors.glass.cyan10_d3,
   },
-  interestLabel: {
+  tendencyAxisText: {
+    fontFamily: FontFamily.sans,
+    fontSize: 10,
+    fontWeight: FontWeight.black,
+    color: Colors.primary.electricCyan,
+  },
+  tendencyDescription: {
+    flex: 1,
     fontFamily: FontFamily.sans,
     fontSize: FontSize.sm,
-    fontWeight: FontWeight.bold,
+    fontWeight: FontWeight.medium,
   },
   floatingBar: {
     position: 'absolute',
@@ -443,23 +704,17 @@ const styles = StyleSheet.create({
     right: 0,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.lg,
-    padding: Spacing.xl,
-    paddingBottom: Spacing.giant,
+    gap: Spacing.md,
+    paddingHorizontal: Spacing.xl,
+    paddingTop: Spacing.giant,
+    paddingBottom: Spacing.xxl,
   },
-  iconAction: {
-    width: 64,
-    height: 64,
-    borderRadius: Radii.xxl,
-    borderWidth: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+  connectNowWrapper: {
+    flex: 1,
   },
   connectNowButton: {
-    flex: 1,
-    height: 64,
-    borderRadius: Radii.xxl,
-    backgroundColor: Colors.primary.electricCyan,
+    height: 56,
+    borderRadius: Radii.xl,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
@@ -469,6 +724,6 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.sans,
     fontSize: FontSize.lg,
     fontWeight: FontWeight.black,
-    color: Colors.primary.soulBlack,
+    color: Colors.neutral.pureWhite,
   },
 });

@@ -23,7 +23,7 @@ import { logger } from '@/src/utils/logger';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { Alert, ScrollView, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import Animated, { FadeInUp } from 'react-native-reanimated';
 import { router } from 'expo-router';
 
 const EMPTY_PREFERRED_REGIONS: PreferredRegion[] = [];
@@ -89,16 +89,16 @@ export default function MainHomeScreen() {
   }, []);
 
   const handleConnectNow = useCallback((match: SoulMatch) => {
-    // TODO: 실제 통화/채팅 연결 라우트가 정해지면 router.push로 교체
-    logger.debug('Connect Now pressed', { matchId: match.id });
-    Alert.alert('안내', 'Soul Connect 기능은 곧 제공될 예정입니다.');
+    // TODO: 실제 통화 연결 라우트가 정해지면 router.push로 교체
+    logger.debug('Call now pressed', { matchId: match.id });
+    Alert.alert('안내', '통화하기 기능은 곧 제공될 예정입니다.');
     setSelectedMatch(null);
   }, []);
 
   const handleConnectPress = useCallback((id: string) => {
-    // TODO: 실제 통화/채팅 연결 라우트가 정해지면 router.push로 교체
-    logger.debug('Soul Connect pressed', { id });
-    Alert.alert('안내', 'Soul Connect 기능은 곧 제공될 예정입니다.');
+    // TODO: 실제 통화 연결 라우트가 정해지면 router.push로 교체
+    logger.debug('Call pressed', { id });
+    Alert.alert('안내', '통화하기 기능은 곧 제공될 예정입니다.');
   }, []);
 
   // LocationSelectModal이 저장 완료까지 대기했다가 닫힘/에러 표시를 직접 처리한다.
@@ -121,12 +121,6 @@ export default function MainHomeScreen() {
       regionUpdateInFlightRef.current = false;
     }
   }, [updatePreferredRegionsMutation, showToast]);
-
-  const handleSearchPress = useCallback(() => {
-    // TODO: 검색 기능이 정해지면 실제 검색 화면/모달로 교체
-    logger.debug('Location search pressed');
-    Alert.alert('안내', '검색 기능은 곧 제공될 예정입니다.');
-  }, []);
 
   const handleSelectPackage = useCallback(async (pkgId: string) => {
     // isPending은 리렌더 이후에나 반영되므로, 연속 탭에 의한 중복 결제를 막으려면 동기 락이 필요하다.
@@ -153,7 +147,7 @@ export default function MainHomeScreen() {
       showsVerticalScrollIndicator={false}
     >
       <Animated.View
-        entering={FadeInDown.duration(400).springify().damping(18)}
+        entering={FadeInUp.duration(400)}
         style={[styles.dashboard, contentContainerStyle, { paddingTop: Math.max(insets.top + 12, Layout.SCREEN_PADDING), paddingHorizontal: screenPadding }]}
       >
         <MainHeader onSettingPress={handleSettingPress} />
@@ -166,7 +160,6 @@ export default function MainHomeScreen() {
           isError={isPreferredRegionsError}
           onRetry={() => refetchPreferredRegions()}
           onPress={() => setShowLocationModal(true)}
-          onSearchPress={handleSearchPress}
         />
 
         <AiStatusTicker />
