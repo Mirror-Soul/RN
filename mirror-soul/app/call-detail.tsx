@@ -21,7 +21,21 @@ export default function CallDetailScreen() {
   const { contentContainerStyle } = useLayout();
   const { id } = useLocalSearchParams<{ id: string }>();
   const callId = Number(id);
+  const isValidCallId = Number.isSafeInteger(callId) && callId > 0;
   const { data, isLoading, isError, refetch, updateTalkLog, isSaving } = useCallDetail(callId);
+
+  // callId 자체가 잘못된 경로면 재시도로 복구할 방법이 없으므로, 네트워크 에러(재시도 가능)와
+  // 구분해 뒤로가기만 안내한다.
+  if (!isValidCallId) {
+    return (
+      <View style={[styles.container, styles.centered, { paddingTop: insets.top }]}>
+        <Text style={styles.errorText}>잘못된 통화 기록입니다.</Text>
+        <TouchableOpacity onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="뒤로가기">
+          <Text style={[styles.errorText, styles.retryText]}>뒤로가기</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   if (isLoading) {
     return (
