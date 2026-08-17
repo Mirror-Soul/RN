@@ -14,6 +14,7 @@ export interface PartnerResult {
   name: string;
   age: number | null;
   profileImageUrl: string | null;
+  /** Clone.syncRate, 0~100 정수 백분율. 클론이 없으면 null. */
   twinSyncRate: number | null;
 }
 

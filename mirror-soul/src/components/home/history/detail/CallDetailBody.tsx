@@ -65,6 +65,9 @@ export default function CallDetailBody({
   }, [talkLogs]);
 
   const handleEditStart = (id: number, currentText: string) => {
+    // 다른 메시지가 저장 중일 때 새 편집을 시작하면, 그 저장이 끝나는 시점에 지금 막 시작한
+    // 편집이 저장도 안 된 채 함께 닫혀버린다 — 저장이 끝날 때까지 새 편집 시작을 막는다.
+    if (savingInFlightRef.current) return;
     setEditingId(id);
     setEditText(currentText);
     // 편집 대상이 화면 아래쪽에 있으면 키보드에 가려질 수 있다 — FlashList는 자체 recycler view라
@@ -91,7 +94,10 @@ export default function CallDetailBody({
     savingInFlightRef.current = true;
     try {
       await onSaveTalkLog(id, trimmed);
-      setEditingId(null);
+      // handleEditStart를 막아뒀어도, id를 클로저로 캡처한 이 함수 자체는 await 도중 editingId가
+      // 바뀌었는지 알 수 없다 — 저장이 끝난 지금 시점의 최신 editingId를 함수형 업데이트로 읽어서,
+      // 저장한 메시지가 여전히 편집 대상일 때만 닫는다.
+      setEditingId((currentId) => (currentId === id ? null : currentId));
     } catch {
       // 에러 토스트는 훅에서 이미 표시됨 — 편집 상태를 유지해 재시도할 수 있게 둔다
     } finally {

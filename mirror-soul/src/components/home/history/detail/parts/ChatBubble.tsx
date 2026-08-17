@@ -57,6 +57,9 @@ function ChatBubble({
   const isEditing = editingId === message.talkLogId;
   const timeLabel = toTimeLabel(message.startedAt);
   const accessibilityLabel = `${isMine ? '나' : partnerName}, ${timeLabel}, ${message.message}`;
+  // partnerName[0]은 빈 문자열/서로게이트 페어(이모지 등)에서 깨진 이니셜을 만들 수 있다 —
+  // Array.from은 코드 포인트 단위로 잘라 이를 피한다.
+  const partnerInitial = Array.from(partnerName.trim())[0] ?? '?';
 
   // 상대방 말풍선 (PARTNER / PARTNER_TWIN)
   if (!isMine) {
@@ -78,7 +81,7 @@ function ChatBubble({
                 end={{ x: 1, y: 1 }}
                 style={styles.avatar}
               >
-                <Text style={styles.avatarInitial}>{partnerName[0]}</Text>
+                <Text style={styles.avatarInitial}>{partnerInitial}</Text>
               </LinearGradient>
             ))}
         </View>
@@ -100,12 +103,14 @@ function ChatBubble({
   }
 
   // 내 말풍선 (ME / MY_TWIN)
+  // rowRight 전체에 accessible을 걸지 않는다 — 편집 모드일 땐 TextInput/저장/취소가, 평상시엔
+  // 수정 버튼이 자식으로 들어있는데, 부모를 accessible로 묶으면 그 자식들이 스크린리더에서
+  // 개별적으로 안 잡힌다(RN 접근성 문서: 상호작용 자식이 있는 컨테이너는 그룹핑하지 말 것).
+  // 대신 라벨이 필요한 정적 텍스트(평상시 메시지 본문)에만 직접 건다.
   return (
     <Animated.View
       entering={FadeInUp.delay(enterDelay).duration(300).springify()}
       style={styles.rowRight}
-      accessible
-      accessibilityLabel={accessibilityLabel}
     >
       {/* 왼쪽 메타 정보: [수정됨]이 [시간] 위에 오도록 세로 배치 */}
       <View style={styles.metaLeft}>
@@ -143,8 +148,10 @@ function ChatBubble({
               />
             </View>
           ) : (
-            // 일반 모드
-            <Text style={styles.sentMessageText}>{message.message}</Text>
+            // 일반 모드 — 정적 텍스트라 라벨을 직접 달아도 상호작용 자식을 가리지 않는다
+            <Text style={styles.sentMessageText} accessibilityLabel={accessibilityLabel}>
+              {message.message}
+            </Text>
           )}
         </LinearGradient>
 

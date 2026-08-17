@@ -9,7 +9,8 @@ interface CallDetailHeaderProps {
   profileImageUrl?: string | null;
   description: string;
   callNumber?: number | null;
-  onBack: () => void;
+  /** 생략하면 공용 Header의 기본 동작(canGoBack 확인 후 뒤로가기/홈 fallback)에 위임한다. */
+  onBack?: () => void;
   onCallPress: () => void;
   onMorePress: () => void;
 }

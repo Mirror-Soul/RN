@@ -28,12 +28,15 @@ export default function CallDetailHeaderLeft({
 }: CallDetailHeaderLeftProps) {
   const { colors } = useThemeColors();
   const hasCallNumber = callNumber != null;
+  // name[0]은 빈 문자열이면 undefined, 이모지 등 서로게이트 페어로 시작하면 깨진 문자를 반환한다 —
+  // Array.from은 코드 포인트 단위로 잘라 이를 피한다.
+  const initial = Array.from(name.trim())[0] ?? '?';
 
   return (
     <View style={styles.container}>
       <View style={styles.avatarWrapper}>
         {profileImageUrl ? (
-          <Image source={{ uri: profileImageUrl }} style={styles.avatar} />
+          <Image source={{ uri: profileImageUrl }} style={styles.avatar} accessible={false} />
         ) : (
           <LinearGradient
             colors={Colors.gradient.twinCallButton}
@@ -41,7 +44,7 @@ export default function CallDetailHeaderLeft({
             end={{ x: 1, y: 1 }}
             style={styles.avatar}
           >
-            <Text style={styles.avatarInitial}>{name[0]}</Text>
+            <Text style={styles.avatarInitial}>{initial}</Text>
           </LinearGradient>
         )}
       </View>
