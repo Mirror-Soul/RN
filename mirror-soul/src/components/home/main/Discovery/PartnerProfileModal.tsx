@@ -117,8 +117,12 @@ export default function PartnerProfileModal({ match, onClose, onConnectNow }: Pa
                 onError={() => setImageFailed(true)}
               />
             )}
+            {/* heroInfo(이름/위치/직업)는 항상 흰 텍스트라 하단부는 테마와 무관하게 어둡게 유지하고,
+                아주 마지막(85~100%) 구간만 콘텐츠 영역과 이어지도록 테마색으로 옮겨 라이트 모드
+                대비를 확보한다 — 텍스트 영역까지 밝아지면 라이트 모드에서 흰 글씨가 안 보인다. */}
             <LinearGradient
-              colors={['transparent', 'rgba(5,5,5,0.4)', isDark ? '#141414' : '#F0EFEB']}
+              colors={['transparent', 'rgba(5,5,5,0.4)', 'rgba(5,5,5,0.75)', isDark ? '#141414' : '#F0EFEB']}
+              locations={[0, 0.45, 0.85, 1]}
               style={StyleSheet.absoluteFill}
             />
 
@@ -259,7 +263,10 @@ export default function PartnerProfileModal({ match, onClose, onConnectNow }: Pa
           </View>
         </ScrollView>
 
-        <View style={styles.floatingBar} pointerEvents="box-none">
+        <View
+          style={[styles.floatingBar, { paddingBottom: Math.max(insets.bottom, Spacing.xxl) }]}
+          pointerEvents="box-none"
+        >
           <LinearGradient
             colors={['transparent', colors.background.primary, colors.background.primary]}
             locations={[0, 0.5, 1]}

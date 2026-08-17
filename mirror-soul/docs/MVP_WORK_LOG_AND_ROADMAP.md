@@ -209,14 +209,13 @@
 - [ ] **통화 화면 라이트 모드 실기기 확인** (`refactor/156-call-logic`) — `CallScreenBackground`/`CallHeader`/`CallControls` 등에 `useThemeColors()`를 연동해 라이트 모드 대응 코드는 반영했으나, 실기기에서 눈으로 확인은 안 함. `colors.glow.*` 토큰이 원래 카드 섹션용으로 설계된 낮은 opacity(0.02~0.05)라 통화 화면 같은 풀블리드 히어로 연출에선 너무 옅게 보일 수 있음 — 확인 후 필요하면 라이트 모드 전용 강도 보정 검토.
 
 ### 6.2 백엔드 협업이 필요한 것 (RN 단독으로 못 끝남)
-- [ ] **발견(홈) 화면 상대 프로필 상세 — 실제 Discovery 상세 API 신규 필요** (2026-08-14, `fix/158-home-ui`에서 `PartnerProfileModal.tsx`를 전면 개편하며 조사) — 지금 `DiscoveryMatchCard.tsx`/`PartnerProfileModal.tsx`가 보여주는 정보(트윈 싱크로율, AI 페르소나 태그, MBTI 축 밸런스, AI 트윈 한줄소개, 가치관 성향)는 전부 `SoulMatch` 목업 데이터다. 백엔드 소스를 직접 확인해보니 실제로 대응하는 도메인 데이터는 이미 존재한다:
-  - `Clone.syncRate`(Integer), `Clone.summary`(String) — "트윈 싱크로율"/"AI 트윈 한줄소개"에 정확히 대응
-  - `ClonePersonalityTag`(clone_id, content, display_order) — "AI 페르소나 분석" 태그에 대응
-  - `MbtiProfile`(mbti, ieScore/nsScore/ftScore/pjScore) — "성향 밸런스" 4축 바에 대응
-  - `UserValueAxisScore`(user_id, axis, score -1~1, sample_count) — 성장 탭 가치관 밸런스 게임(`ValueBalanceAnswer`) 답변을 축(`LOVE`/`LIFESTYLE`/`COMM`/`DECISION`/`SOCIAL`/`PRIORITY`/`TONE`/`TASTE`)별로 집계한 값. "가치관 성향" 섹션이 원래 있어야 할 자리 — 지금 모달의 "관심사"였던 걸 이걸로 교체한 이유이기도 함(가짜 취미 목록은 백엔드에 대응 필드 자체가 없었음)
-  - `AiVoiceProfile.introAudio*`(bucket/objectKey/durationMs) — "목소리 미리듣기" 재생 버튼이 지금은 실제 오디오 없이 애니메이션만 있는데, 이 필드로 실제 인트로 음성을 재생할 수 있을 것으로 보임
-  - **격차**: `MatchController`엔 `/twins` 목록 조회만 있고, 특정 상대의 위 정보를 한 번에 내려주는 상세 조회 엔드포인트(예: `GET /matches/{id}` 또는 `GET /twins/{id}`)가 없다. 새 엔드포인트 설계 + DTO 정의부터 필요. 이 항목은 아래 "Chat/Meeting/PushDevice API 연동"과도 연결됨(발견 화면 카드/모달의 "통화하기" 버튼이 현재 `Alert.alert`로 끝나는 이유가 Meeting API 미연동이기 때문 — 상세 조회 API가 생기면 두 작업을 같이 설계하는 게 효율적)
-  - **백엔드/AI 엔지니어에게 전달할 요청 스펙은 `docs/DISCOVERY_DETAIL_API_REQUEST.md`에 정리해둠** — 엔드포인트 제안, 필드별 DTO 매핑, 가치관 축 점수를 자연어로 가공하는 AI 서버 작업 제안, 프라이버시 주의사항(개별 답변 원본 노출 금지) 포함
+- [ ] **발견(홈) 화면 상대 프로필 상세 — 기존 추천 상세 API에 필드 추가 필요** (2026-08-14 조사, 2026-08-17 정정 — 최초 기록은 "상세 API가 없다"는 잘못된 전제였음, CodeRabbit 리뷰 검증 과정에서 발견) — 지금 `DiscoveryMatchCard.tsx`/`PartnerProfileModal.tsx`가 보여주는 정보(트윈 싱크로율, AI 페르소나 태그, MBTI 축 밸런스, AI 트윈 한줄소개, 가치관 성향)는 전부 `SoulMatch` 목업 데이터다. 백엔드 소스를 직접 확인해보니 **`HomeController`에 발견 탭용 추천 목록/상세/스와이프 API가 이미 구현돼 있다**(`GET /home/recommend`, `GET /home/recommendations/{target-user-uuid}`, `POST /home/recommendations/{target-user-uuid}/swipe` — `MatchController`의 `/match/twins`는 별개로, "이미 통화했던 트윈" 목록이라 발견 탭과 무관함). 상세 응답 `HomeResDTO.RecommendationDetailDTO`엔 `syncRate`/`selfIntroduction`/`twinStatus`/`voicePreview`(실제 재생 가능한 presigned 오디오 URL, 이미 구현됨)까지 있지만, 아래는 여전히 없다:
+  - `ClonePersonalityTag`(clone_id, content, display_order) — "AI 페르소나 분석" 태그에 대응, DTO에 없음
+  - `MbtiProfile`(mbti, ieScore/nsScore/ftScore/pjScore) — "성향 밸런스" 4축 바에 대응, DTO에 없음
+  - `UserValueAxisScore`(user_id, axis, score -1~1, sample_count) — 성장 탭 가치관 밸런스 게임(`ValueBalanceAnswer`) 답변을 축(`LOVE`/`LIFESTYLE`/`COMM`/`DECISION`/`SOCIAL`/`PRIORITY`/`TONE`/`TASTE`)별로 집계한 값. "가치관 성향" 섹션이 원래 있어야 할 자리 — 지금 모달의 "관심사"였던 걸 이걸로 교체한 이유이기도 함(가짜 취미 목록은 백엔드에 대응 필드 자체가 없었음). DTO에 없음
+  - **접근 제어 갭**: `RecommendationDetailService.getDetail()`은 대상이 ACTIVE+매칭허용인지만 확인하고, 요청자-대상자 간 추천 노출 관계는 검증하지 않는다 — UUID만 알면 임의 사용자 상세/음성 URL 조회 가능. 차단(block) 기능도 백엔드에 없음(기존에 이미 기록된 갭)
+  - 이 항목은 아래 "Chat/Meeting/PushDevice API 연동"과도 연결됨(발견 화면 카드/모달의 "통화하기" 버튼이 현재 `Alert.alert`로 끝나는 이유가 Meeting API 미연동이기 때문 — DTO 필드를 추가하는 김에 같이 설계하는 게 효율적)
+  - **백엔드/AI 엔지니어에게 전달할 요청 스펙은 `docs/DISCOVERY_DETAIL_API_REQUEST.md`에 정리해둠** — 실제 존재하는 API/DTO, 추가 요청할 필드, 접근 제어 갭, 가치관 축 점수를 자연어로 가공하는 AI 서버 작업 제안, 프라이버시/보존정책 주의사항 포함
 - [ ] **실제 IAP/결제 연동** (Track 2) — `react-native-iap` 또는 RevenueCat, 영수증 검증 API. `POST /my-page/buy-time`은 `feat/134-api`로 실제 연동됐지만 **결제 검증 없이 초 단위 값을 그대로 더해주는 API**다(백엔드 자체가 아직 mock에 가까움, `analysis-report.md` §5 참고) — `useAICallFlow.ts`의 `startCall()`에 사전 잔액 체크가 여전히 없어 무료로 무제한 통화가 가능한 상태임을 재확인할 것
 - [ ] 차단/신고의 서버 사이드 강제 — `feat/mvp-block-report`의 로컬 차단목록은 "내 화면에서 안 보이게"만 할 뿐, 상대가 실제로 연락 못 하게 막지는 못함. 백엔드에 차단/신고 API 자체가 없음(`backend-schema.json` 12개 컨트롤러에 없음) — 신규 백엔드 API 설계부터 필요
 - [ ] PASS 본인인증 벤더 계약 및 실제 연동 (`fix/mvp-remove-fake-pass-verification`은 가짜 UI만 제거, 실제 연동은 비즈니스 결정 대기)

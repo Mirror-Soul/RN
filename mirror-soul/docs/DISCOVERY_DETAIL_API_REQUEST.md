@@ -1,6 +1,11 @@
 # 발견(홈) 화면 상대 프로필 상세 — 백엔드/AI 서버 요청 정리
 
 작성일: 2026-08-14 (`fix/158-home-ui`)
+**정정: 2026-08-17** — 아래 §1의 최초 버전은 "상세 조회 API가 없다"는 잘못된 전제로
+쓰여 있었다. CodeRabbit 리뷰를 검증하는 과정에서 `mirror-soul-back` 소스를 다시 확인해보니
+`HomeController`에 이미 추천 목록/상세/스와이프 API 세트가 구현돼 있었다(§1 최신 내용 참고).
+새 엔드포인트를 만들어달라는 요청이 아니라 **기존 DTO에 필드를 추가해달라는 요청**으로
+바뀌었다는 점에 유의할 것.
 
 ## 배경
 
@@ -11,42 +16,72 @@
 정리한 것 — 프론트는 응답 모양만 맞으면 바로 갈아끼울 준비가 되어 있다(각 필드가
 현재 화면 어디에 쓰이는지는 아래 표 참고).
 
-## 1. 백엔드에 요청할 것: 상세 조회 API 신규 개발
+## 1. 백엔드에 요청할 것: 기존 추천 상세 API에 필드 추가
 
-### 왜 필요한가
-`MatchController`엔 `GET /twins`(목록) 하나만 있고, 카드를 탭했을 때 상대 한 명의
-전체 정보를 내려주는 엔드포인트가 없다. 아래 필드들은 이미 여러 테이블에 흩어져 있지만
-한 번에 조회해서 내려주는 API가 없는 상태다.
-
-### 요청 스펙 제안
+### 이미 존재하는 것 (재조사 없이 그대로 쓸 것)
+`HomeController`에 발견 탭에 필요한 API가 이미 세 개 다 구현돼 있다 — 새로 만들 필요 없음:
 
 ```
-GET /matches/{userId}/detail   (경로/이름은 백엔드 컨벤션에 맞춰 조정 가능)
+GET  /home/recommend                               → 추천 목록(페이지네이션, RecommendationSliceDTO)
+GET  /home/recommendations/{target-user-uuid}       → 상세 조회 (RecommendationDetailDTO)
+POST /home/recommendations/{target-user-uuid}/swipe → 스와이프(패스) 기록
 ```
 
-| 화면 표시 위치 | 필요 필드 | 소스 테이블/필드 |
-|---|---|---|
-| 카드 + 모달 상단 배지 "트윈 싱크로율 N%" | `syncRate` | `Clone.syncRate` |
-| 카드 한줄 미리보기 + 모달 "AI 트윈 한줄소개" | `cloneSummary` | `Clone.summary` |
-| 모달 "AI 페르소나 분석" 태그 | `personalityTags: string[]` | `ClonePersonalityTag` (clone_id 기준, `display_order` 순 정렬) |
-| 카드 + 모달 MBTI 배지 | `mbti` | `MbtiProfile.mbti` |
-| 모달 "성향 밸런스" 4축 바 | `mbtiAxisScores: { ie, ns, ft, pj }` | `MbtiProfile.ieScore/nsScore/ftScore/pjScore` |
-| 모달 "가치관 성향" | 아래 §2 참고 | `UserValueAxisScore` (AI 가공 필요) |
-| 모달 "목소리 미리듣기" | `introAudioUrl` (presigned) | `AiVoiceProfile.introAudioBucket/ObjectKey` — 기존 `FileController`의 `/files/presigned-url` 패턴 재사용 가능 |
-| 공통 프로필 | 이름/나이/지역/직업/인증여부/사진 | 기존 `/twins` 목록 응답에 이미 있는 필드 재사용 |
+`RecommendationDetailService.getDetail()`(`mirror-soul-back/.../service/RecommendationDetailService.java`)이
+실제로 반환하는 `HomeResDTO.RecommendationDetailDTO`:
+
+```java
+record RecommendationDetailDTO(
+    UUID userUuid, String name, Integer age, String profileImageUrl,
+    Integer syncRate,              // Clone.syncRate — "트윈 싱크로율" 배지
+    RegionDTO region,               // { sidoName, sigunguName }
+    String selfIntroduction,        // User.selfIntroduction — "이 사람의 이야기" 자리
+    String twinStatus,               // "AVAILABLE" | "IN_CALL"
+    VoicePreviewDTO voicePreview     // { audioUrl(presigned), contentType, durationMs } — 실제 재생 가능한 URL, 이미 구현됨
+)
+```
+
+`voicePreview.audioUrl`은 `FileService.createPresignedDownloadUrl()`로 만든 실제 S3 presigned URL이고
+만료시간도 `awsS3Properties.getPresignedUrlExpirationMinutes()`로 이미 설정 가능하다 — "목소리 미리듣기"는
+프론트가 UI만 완성하면 바로 실제 오디오를 재생할 수 있는 상태다(`PartnerProfileModal.tsx`의
+"실제 목소리 미리듣기는 준비 중이에요" 문구는 이 사실을 몰랐을 때 넣은 것 — 연동 시 제거).
+
+`GET /home/recommend`의 리스트 항목(`RecommendationDTO`)에는 `userUuid, name, age, profileImageUrl,
+region, recommendationScore`만 있다 — 지금 `DiscoveryMatchCard.tsx`가 홈 카드에 표시하는
+`cloneSummary`/`aiAnalysisTags`/`mbti` 미리보기는 상세 API에만 있는 필드라서, **카드 단계에서
+보여주려면 목록 DTO에도 같은 필드를 추가해달라고 요청하거나, 카드에서는 이 필드들을 빼야 한다.**
+
+### 요청할 것: 아래 필드를 `RecommendationDetailDTO`에 추가
+
+| 화면 표시 위치 | 필요 필드 | 소스 테이블/필드 | 현재 상태 |
+|---|---|---|---|
+| 모달 "AI 페르소나 분석" 태그 | `personalityTags: string[]` | `ClonePersonalityTag` (clone_id 기준, `display_order` 순 정렬) | 없음, 추가 요청 |
+| 카드 + 모달 MBTI 배지 | `mbti` | `MbtiProfile.mbti` | 없음, 추가 요청 |
+| 모달 "성향 밸런스" 4축 바 | `mbtiAxisScores: { ie, ns, ft, pj }` (0~100 정규화, FE는 `E`/`S`/`T`/`J` 키로 사용 중) | `MbtiProfile.ieScore/nsScore/ftScore/pjScore` | 없음, 추가 요청. **필드명이 FE(`MbtiAxisScores.E/S/T/J`)와 다르니 응답 계약을 먼저 맞출 것** |
+| 모달 "가치관 성향" | 아래 §2 참고 | `UserValueAxisScore` (AI 가공 필요) | 없음, 추가 요청 |
+| (참고) `syncRate`/`selfIntroduction`/`voicePreview` | 위 표 | 이미 있음 | **이미 존재 — 요청 불필요** |
+
+FE의 `SoulMatch.compatibility`(0~100 유사도)는 실제 필드명이 `syncRate`이므로, 연동 시 FE
+타입/변수명을 `syncRate`로 맞추거나 어댑터에서 매핑할 것 — 새 필드를 만들어달라고 요청할
+필요는 없다.
+
+### 접근 제어 — 실제로 확인한 상태와 남은 갭
+`RecommendationDetailService.getDetail()`은 대상 유저가 `status == ACTIVE`이고
+`matchingEnabled == true`인지는 확인한다(비활성/매칭거부 유저 조회는 이미 막혀 있음).
+**그러나 요청자와 대상자 사이에 실제 추천/매칭 관계가 있었는지는 검증하지 않는다** — UUID만
+알면 추천 목록에 뜬 적 없는 다른 활성 사용자의 상세 정보와 음성 URL도 그대로 조회 가능하다.
+차단(block) 기능 자체가 백엔드에 없다는 것도 재확인(`docs/MVP_WORK_LOG_AND_ROADMAP.md` §6.2에
+이미 기록된 기존 갭). "요청자에게 노출된 적 있는 대상인지" 검증 로직 추가를 요청할 것.
+
+에러 코드는 이미 `RECOMMENDATION_TARGET_NOT_FOUND`/`SWIPE_TARGET_UNAVAILABLE` 둘 다
+403이 아니라 404로 통일돼 있다 — 이건 "차단됨"과 "존재하지 않음"을 구분해서 노출하지 않는
+의도적인(그리고 올바른) 설계로 보이니, 위 관계 검증을 추가할 때도 이 컨벤션(404로 통일)을
+유지해달라고 하면 된다.
 
 ### 프라이버시 주의사항
 `ValueBalanceAnswer`(개별 질문에 대한 답변, 좌/우 선택)는 **원본 그대로 노출하지 말 것**을
 요청할 것 — 개별 답변은 너무 세밀한 개인정보다. `UserValueAxisScore`(축별 집계 점수, -1~1)까지만,
 그것도 §2처럼 AI가 사람이 읽을 수 있는 한 줄로 가공한 결과만 내려주는 게 맞다.
-
-### 보안 주의사항: 이미지/오디오 URL
-`profileImage`, `introAudioUrl`(§1 표)은 지금은 우리가 넣은 목업이라 안전하지만, 실제
-매칭 API가 붙으면 **다른 사용자가 업로드한 파일을 가리키는 URL**이 된다. 프론트는 이 URL을
-검증 없이 그대로 이미지/오디오 로더에 넘기므로, 반드시 우리 CDN/스토리지의 프리사인 URL만
-내려주도록 요청할 것(`https://`만 허용, 임의 외부 도메인/스킴 금지). 백엔드가 원본 오브젝트
-경로를 그대로 노출하지 않고 매 요청마다 프리사인 URL을 발급하는 기존 `/files/presigned-url`
-패턴을 그대로 따르면 이 문제는 자연히 해결된다.
 
 ## 2. AI 서버에 요청할 것: 가치관 축 점수 → 자연어 요약
 
@@ -66,6 +101,15 @@ GET /matches/{userId}/detail   (경로/이름은 백엔드 컨벤션에 맞춰 �
   제일 빠를 것 같다 — 신규 모델 파이프라인을 새로 만들 필요는 없어 보인다.
 - 캐싱 권장: 사용자가 가치관 게임에 새로 답할 때마다 재생성할 필요는 없고, 답변이 N개 이상
   추가되거나 하루 1회 배치로 갱신하는 정도면 충분해 보인다(실시간성이 중요한 데이터가 아님).
+
+### 보존 정책 요청 (원본 답변을 AI 파이프라인에 넘길 때)
+§2.1에서 제안하는 "축 평균 대신 원본 답변을 AI에 그대로 넘기자"는 방향은, 프론트/API 응답에
+원본을 노출하지 않는 것과는 별개로 **AI 서버 내부에 원본 답변이 로그/캐시/재학습 데이터로
+남을 위험**이 있다. AI 서버 엔지니어에게 아래를 명시해달라고 요청할 것:
+- 요청 로그에 원본 답변 텍스트를 남길 경우 마스킹 여부
+- 캐시/중간 저장소 보존 기간
+- 이 데이터를 모델 재학습에 사용하지 않는다는 확인(또는 사용한다면 별도 동의 절차 필요 여부)
+- 접근 가능한 인원/시스템 범위, 삭제 요청 시 절차
 
 ## 2.1 가치관 축 점수(-1~+1 평균) 산정 방식 재검토 (지난 회의 후속, 2026-08-14)
 
@@ -125,8 +169,8 @@ GET /matches/{userId}/detail   (경로/이름은 백엔드 컨벤션에 맞춰 �
 
 상세 모달의 "통화하기" 버튼은 지금 `Alert.alert`로 끝난다. 이건 이미
 `docs/MVP_WORK_LOG_AND_ROADMAP.md` §6.1/§6.2에 정리된 "Chat/Meeting/PushDevice API 연동"
-항목과 같은 작업이다 — 상세 조회 API를 새로 설계하는 김에 "통화 요청 보내기" 액션도
-같이 설계하면 두 번 일하지 않아도 된다. (자세한 내용은 로드맵 문서 참고)
+항목과 같은 작업이다 — §1의 `RecommendationDetailDTO` 필드를 추가하는 김에 "통화 요청 보내기"
+액션(Meeting API 연동)도 같이 설계하면 두 번 일하지 않아도 된다. (자세한 내용은 로드맵 문서 참고)
 
 ## 참고
 
