@@ -6,11 +6,12 @@ import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface CallMetaProps {
   name: string;
-  age: number;
-  consistencyPercent: number;
+  age: number | null;
+  consistencyPercent: number | null;
   timeStr: string;
   durationLabel: string;
   tags: string[];
+  isAnalyzing?: boolean;
 }
 
 /** 태그 chip 최대 표시 개수 */
@@ -28,6 +29,7 @@ export default function CallMeta({
   timeStr,
   durationLabel,
   tags,
+  isAnalyzing = false,
 }: CallMetaProps) {
   const { colors } = useThemeColors();
 
@@ -36,8 +38,8 @@ export default function CallMeta({
       {/* Row 1: 이름·나이 (좌) / 시간 (우) */}
       <View style={styles.row}>
         <Text style={[styles.nameText, { color: colors.text.primary }]} numberOfLines={1}>
-          {name},{' '}
-          <Text style={[styles.ageText, { color: colors.text.muted }]}>{age}</Text>
+          {name}
+          {age !== null && <Text style={[styles.ageText, { color: colors.text.muted }]}>, {age}</Text>}
         </Text>
         <Text style={[styles.timeText, { color: colors.text.muted }]}>{timeStr}</Text>
       </View>
@@ -46,7 +48,7 @@ export default function CallMeta({
       <View style={styles.row}>
         <View style={styles.metaItem}>
           <Feather name="zap" size={10} color={Colors.primary.electricCyan} />
-          <Text style={styles.consistencyText}>{consistencyPercent}%</Text>
+          <Text style={styles.consistencyText}>{consistencyPercent === null ? '--' : `${consistencyPercent}%`}</Text>
         </View>
         <View style={styles.metaItem}>
           <Feather name="clock" size={10} color={colors.text.muted} />
@@ -54,15 +56,22 @@ export default function CallMeta({
         </View>
       </View>
 
-      {/* Row 3: 주제 태그 chips (최대 MAX_TAGS개) */}
-      {tags.length > 0 && (
-        <View style={styles.tagsRow}>
-          {tags.slice(0, MAX_TAGS).map((tag, index) => (
-            <View key={index} style={styles.tagChip}>
-              <Text style={styles.tagText}>{tag}</Text>
-            </View>
-          ))}
+      {/* Row 3: 주제 태그 chips (최대 MAX_TAGS개), 분석 미완료 시 플레이스홀더 */}
+      {isAnalyzing ? (
+        <View style={styles.analyzingRow}>
+          <Feather name="loader" size={10} color={colors.text.muted} />
+          <Text style={[styles.analyzingText, { color: colors.text.muted }]}>대화 분석중</Text>
         </View>
+      ) : (
+        tags.length > 0 && (
+          <View style={styles.tagsRow}>
+            {tags.slice(0, MAX_TAGS).map((tag, index) => (
+              <View key={index} style={styles.tagChip}>
+                <Text style={styles.tagText}>{tag}</Text>
+              </View>
+            ))}
+          </View>
+        )
       )}
     </View>
   );
@@ -117,6 +126,18 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: Spacing.xs,
     marginTop: Spacing.xxs,
+  },
+  analyzingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xxs,
+    marginTop: Spacing.xxs,
+  },
+  analyzingText: {
+    fontFamily: FontFamily.sans,
+    fontSize: FontSize.xs,
+    fontWeight: FontWeight.regular,
+    fontStyle: 'italic',
   },
   tagChip: {
     paddingHorizontal: Spacing.sm,

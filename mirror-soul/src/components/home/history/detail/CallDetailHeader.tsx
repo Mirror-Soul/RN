@@ -5,8 +5,8 @@ import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/
 
 interface CallDetailHeaderProps {
   name: string;
-  age: number;
-  consistencyPercent: number;
+  age: number | null;
+  consistencyPercent: number | null;
   isOnline?: boolean;
   onBack: () => void;
   onCallPress?: () => void;
@@ -55,7 +55,9 @@ export default function CallDetailHeader({
         <View style={styles.textInfo}>
           <Text style={styles.nameText}>{name}의 AI 트윈</Text>
           <View style={styles.subRow}>
-            <Text style={styles.consistencyText}>유사도 {consistencyPercent}%</Text>
+            <Text style={styles.consistencyText}>
+              유사도 {consistencyPercent === null ? '--' : `${consistencyPercent}%`}
+            </Text>
             <View style={styles.dot} />
             {isOnline && (
               <Text style={styles.onlineText}>상대방이 읽음</Text>

@@ -17,7 +17,7 @@ interface HistorySearchBarProps {
 export default function HistorySearchBar({
   value,
   onChangeText,
-  placeholder = '대화 내용 검색',
+  placeholder = '이름·태그로 검색',
 }: HistorySearchBarProps) {
   const { colors } = useThemeColors();
   const [isFocused, setIsFocused] = React.useState(false);

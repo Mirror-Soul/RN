@@ -5,14 +5,16 @@ import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/
 
 /**
  * 통화 상세 하단 푸터 (SRP)
- * Twin 학습 반영 안내 문구를 pill 배지 형태로 표시합니다.
+ * 답변 수정 시 실제로 일어나는 일(저장)만 안내하는 pill 배지를 표시합니다.
+ * "Twin 학습에 반영" 같은 문구는 쓰지 않는다 — PATCH /talk-logs/{id}는 TalkLog 텍스트만
+ * 갱신할 뿐 클론 재학습 파이프라인을 트리거하지 않는다(HistoryService.updateTalkLog 확인).
  */
 export default function CallDetailFooter() {
   return (
     <View style={styles.container}>
       <View style={styles.badge}>
         <Feather name="zap" size={12} color={Colors.primary.electricCyan} />
-        <Text style={styles.text}>수정된 답변은 Twin의 학습에 반영됩니다</Text>
+        <Text style={styles.text}>수정한 답변은 이 대화 기록에 저장됩니다</Text>
       </View>
     </View>
   );

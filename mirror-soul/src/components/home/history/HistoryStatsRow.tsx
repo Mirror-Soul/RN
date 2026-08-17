@@ -1,31 +1,47 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
-
-interface WeeklyStats {
-  totalHours: number;
-  received: number;
-  sent: number;
-  weeklyGrowthPercent: number;
-}
-
-interface HistoryStatsRowProps {
-  stats: WeeklyStats;
-}
+import { useWeeklySummaryQuery } from '@/src/features/history/hooks/useWeeklySummaryQuery';
 
 /**
  * HistoryStatsRow 컴포넌트 (SRP)
- * 주간 통화 요약을 단일 통합 카드로 표시합니다.
+ * GET /history/weekly-summary를 조회해 주간 통화 요약을 단일 통합 카드로 표시합니다.
  *
  * 레이아웃:
- *   [Weekly Summary 레이블]  [+N% 증가율 배지]
+ *   [Weekly Summary 레이블]  [증감 배지 — 전주 비교 불가 시 숨김]
  *   [누적 대화 시간]  |  [받음 카운트(cyan) / 보냄 카운트(purple)]
  */
-export default function HistoryStatsRow({ stats }: HistoryStatsRowProps) {
+export default function HistoryStatsRow() {
   const { colors } = useThemeColors();
+  const { data, isLoading, isError, refetch } = useWeeklySummaryQuery();
+
+  if (isError) {
+    return (
+      <TouchableOpacity
+        style={[styles.card, styles.retryCard, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
+        onPress={() => refetch()}
+        activeOpacity={0.8}
+        accessibilityRole="button"
+        accessibilityLabel="주간 통계 다시 조회"
+      >
+        <Feather name="refresh-cw" size={14} color={colors.text.muted} />
+        <Text style={[styles.retryText, { color: colors.text.muted }]}>주간 통계 조회 실패 · 탭하여 재시도</Text>
+      </TouchableOpacity>
+    );
+  }
+
+  const totalHours = data ? Math.round((data.totalTalkTimeSec / 3600) * 10) / 10 : null;
+  const trend =
+    data && data.comparable && data.changeRate !== null && data.trend !== 'NO_DATA'
+      ? {
+          icon:
+            data.trend === 'UP' ? ('trending-up' as const) : data.trend === 'DOWN' ? ('trending-down' as const) : ('minus' as const),
+          color: data.trend === 'UP' ? Colors.primary.successGreen : data.trend === 'DOWN' ? colors.state.danger : colors.text.muted,
+          label: data.trend === 'UP' ? `+${data.changeRate}%` : `${data.changeRate}%`,
+        }
+      : null;
 
   return (
     <View style={[styles.card, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
@@ -34,10 +50,12 @@ export default function HistoryStatsRow({ stats }: HistoryStatsRowProps) {
         <Text style={[styles.sectionLabel, { color: Colors.primary.electricCyan }]}>
           WEEKLY SUMMARY
         </Text>
-        <View style={styles.growthBadge}>
-          <Feather name="trending-up" size={10} color={Colors.primary.successGreen} />
-          <Text style={styles.growthText}>+{stats.weeklyGrowthPercent}%</Text>
-        </View>
+        {trend && (
+          <View style={styles.growthBadge}>
+            <Feather name={trend.icon} size={10} color={trend.color} />
+            <Text style={[styles.growthText, { color: trend.color }]}>{trend.label}</Text>
+          </View>
+        )}
       </View>
 
       {/* 하단: 시간 + 구분선 + 카운트 */}
@@ -46,7 +64,7 @@ export default function HistoryStatsRow({ stats }: HistoryStatsRowProps) {
         <View style={styles.hoursBlock}>
           <View style={styles.hoursValueRow}>
             <Text style={[styles.hoursNumber, { color: colors.text.primary }]}>
-              {stats.totalHours}
+              {isLoading || totalHours === null ? '--' : totalHours}
             </Text>
             <Text style={[styles.hoursUnit, { color: colors.text.muted }]}>시간</Text>
           </View>
@@ -63,7 +81,7 @@ export default function HistoryStatsRow({ stats }: HistoryStatsRowProps) {
             <View style={styles.countValueRow}>
               <Feather name="arrow-down-left" size={12} color={Colors.primary.electricCyan} />
               <Text style={[styles.countNumber, { color: Colors.primary.electricCyan }]}>
-                {String(stats.received).padStart(2, '0')}
+                {isLoading || !data ? '--' : String(data.receivedCallCount).padStart(2, '0')}
               </Text>
             </View>
             <Text style={[styles.countLabel, { color: colors.text.muted }]}>받음</Text>
@@ -74,7 +92,7 @@ export default function HistoryStatsRow({ stats }: HistoryStatsRowProps) {
             <View style={styles.countValueRow}>
               <Feather name="arrow-up-right" size={12} color={Colors.primary.vividPurple} />
               <Text style={[styles.countNumber, { color: Colors.primary.vividPurple }]}>
-                {String(stats.sent).padStart(2, '0')}
+                {isLoading || !data ? '--' : String(data.sentCallCount).padStart(2, '0')}
               </Text>
             </View>
             <Text style={[styles.countLabel, { color: colors.text.muted }]}>보냄</Text>
@@ -93,6 +111,17 @@ const styles = StyleSheet.create({
     borderRadius: Radii.xxl,
     borderWidth: 0.612,
     gap: Spacing.md,
+  },
+  retryCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.xs,
+  },
+  retryText: {
+    fontFamily: FontFamily.sans,
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.medium,
   },
   topRow: {
     flexDirection: 'row',
@@ -115,7 +144,6 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.sans,
     fontSize: FontSize.xs,
     fontWeight: FontWeight.bold,
-    color: Colors.primary.successGreen,
   },
   bottomRow: {
     flexDirection: 'row',

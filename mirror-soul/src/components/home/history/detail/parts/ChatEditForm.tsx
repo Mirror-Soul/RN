@@ -8,19 +8,21 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 interface ChatEditFormProps {
   onSave: () => void;
   onCancel: () => void;
+  disabled?: boolean;
 }
 
 /**
  * 말풍선 내부용 액션 버튼 바 (SRP)
  * 제자리 수정(In-place) 모드 시 말풍선 하단에 표시됩니다.
  */
-export default function ChatEditForm({ onSave, onCancel }: ChatEditFormProps) {
+export default function ChatEditForm({ onSave, onCancel, disabled = false }: ChatEditFormProps) {
   return (
     <View style={styles.buttonRow}>
       {/* 저장 버튼 */}
       <TouchableOpacity
-        style={styles.saveButtonWrapper}
+        style={[styles.saveButtonWrapper, disabled && styles.disabled]}
         onPress={onSave}
+        disabled={disabled}
         activeOpacity={0.8}
         accessibilityRole="button"
         accessibilityLabel="저장"
@@ -63,6 +65,9 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: Radii.md,
     overflow: 'hidden',
+  },
+  disabled: {
+    opacity: 0.5,
   },
   saveButton: {
     flexDirection: 'row',
