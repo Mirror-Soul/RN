@@ -89,7 +89,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: Radii.md,
     borderWidth: 0.612,
-    borderColor: Colors.glass.white10,
-    backgroundColor: Colors.glass.white5,
+    // 말풍선 배경이 밝은 시안→블루 그라디언트(twinCallButton)라 옅은 흰색 틴트로는 잘 안 보여서
+    // white10/white5보다 한 단계 진하게 잡는다.
+    borderColor: Colors.glass.white30,
+    backgroundColor: Colors.glass.white20,
   },
 });

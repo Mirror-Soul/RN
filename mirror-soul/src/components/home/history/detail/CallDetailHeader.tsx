@@ -1,193 +1,50 @@
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Feather } from '@expo/vector-icons';
-import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
+import { Header } from '@/src/components/common/Header';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
+import CallDetailHeaderLeft from './parts/CallDetailHeaderLeft';
+import CallDetailHeaderRight from './parts/CallDetailHeaderRight';
 
 interface CallDetailHeaderProps {
   name: string;
-  age: number | null;
-  consistencyPercent: number | null;
-  isOnline?: boolean;
-  onBack: () => void;
-  onCallPress?: () => void;
-  onMorePress?: () => void;
+  profileImageUrl?: string | null;
+  description: string;
+  callNumber?: number | null;
+  /** 생략하면 공용 Header의 기본 동작(canGoBack 확인 후 뒤로가기/홈 fallback)에 위임한다. */
+  onBack?: () => void;
+  onCallPress: () => void;
+  onMorePress: () => void;
 }
 
 /**
- * 통화 상세 헤더 (SRP)
- * 채팅 헤더 스타일로 재설계:
- *   [뒤로가기] [아바타 + 이름/유사도/온라인 상태] [전화 버튼] [더보기 버튼]
+ * 통화 상세 헤더 — 공용 Header(src/components/common/Header.tsx)를 감싸는 얇은 wrapper.
+ * message-room의 MessageRoomScreen과 동일한 조립 방식(leftContent/rightElement 슬롯)을 따른다.
+ * 예전엔 이 컴포넌트가 헤더 전체를 처음부터 새로 그렸는데, 공용 Header가 이미 제공하는
+ * safe-area 처리/뒤로가기 fallback/테마 대응/진입 애니메이션을 중복 구현하고 있었다.
  */
 export default function CallDetailHeader({
   name,
-  age,
-  consistencyPercent,
-  isOnline = false,
+  profileImageUrl,
+  description,
+  callNumber,
   onBack,
   onCallPress,
   onMorePress,
 }: CallDetailHeaderProps) {
+  const { colors } = useThemeColors();
+
   return (
-    <View style={styles.container}>
-      {/* 뒤로가기 */}
-      <TouchableOpacity
-        onPress={onBack}
-        style={styles.iconButton}
-        activeOpacity={0.7}
-        accessibilityRole="button"
-        accessibilityLabel="뒤로가기"
-        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-      >
-        <Feather name="arrow-left" size={20} color={Colors.neutral.pureWhite} />
-      </TouchableOpacity>
-
-      {/* 아바타 + 이름/유사도 */}
-      <View style={styles.profileSection}>
-        {/* 아바타 */}
-        <View style={styles.avatarWrapper}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarInitial}>{name[0]}</Text>
-          </View>
-          {isOnline && <View style={styles.onlineDot} />}
-        </View>
-
-        {/* 텍스트 정보 */}
-        <View style={styles.textInfo}>
-          <Text style={styles.nameText}>{name}의 AI 트윈</Text>
-          <View style={styles.subRow}>
-            <Text style={styles.consistencyText}>
-              유사도 {consistencyPercent === null ? '--' : `${consistencyPercent}%`}
-            </Text>
-            <View style={styles.dot} />
-            {isOnline && (
-              <Text style={styles.onlineText}>상대방이 읽음</Text>
-            )}
-          </View>
-        </View>
-      </View>
-
-      {/* 우측 액션 버튼 */}
-      <View style={styles.actions}>
-        <TouchableOpacity
-          style={styles.iconButton}
-          onPress={onCallPress}
-          activeOpacity={0.7}
-          accessibilityRole="button"
-          accessibilityLabel="통화"
-        >
-          <Feather name="phone" size={16} color={Colors.neutral.pureWhite} />
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.iconButton}
-          onPress={onMorePress}
-          activeOpacity={0.7}
-          accessibilityRole="button"
-          accessibilityLabel="더보기"
-        >
-          <Feather name="more-vertical" size={16} color={Colors.neutral.pureWhite} />
-        </TouchableOpacity>
-      </View>
-    </View>
+    <Header
+      leftContent={
+        <CallDetailHeaderLeft
+          name={name}
+          profileImageUrl={profileImageUrl}
+          description={description}
+          callNumber={callNumber}
+        />
+      }
+      rightElement={<CallDetailHeaderRight onCallPress={onCallPress} onMorePress={onMorePress} />}
+      onBackPress={onBack}
+      borderBottomColor={colors.border.primary}
+    />
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    gap: Spacing.md,
-    borderBottomWidth: 0.612,
-    borderBottomColor: Colors.glass.white10,
-    backgroundColor: Colors.glass.black40,
-  },
-  profileSection: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-  },
-  avatarWrapper: {
-    position: 'relative',
-    width: 40,
-    height: 40,
-  },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: Radii.lg,
-    backgroundColor: Colors.glass.cyan20_d3,
-    borderWidth: 0.612,
-    borderColor: Colors.glass.white10,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  avatarInitial: {
-    color: Colors.primary.electricCyan,
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.lg,
-    fontWeight: FontWeight.bold,
-  },
-  onlineDot: {
-    position: 'absolute',
-    bottom: -1,
-    right: -1,
-    width: 10,
-    height: 10,
-    borderRadius: Radii.full,
-    backgroundColor: Colors.primary.successGreen,
-    borderWidth: 1.5,
-    borderColor: Colors.primary.soulBlack,
-  },
-  textInfo: {
-    flex: 1,
-    flexDirection: 'column',
-    gap: 2,
-  },
-  nameText: {
-    color: Colors.neutral.pureWhite,
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.base,
-    fontWeight: FontWeight.semibold,
-    letterSpacing: -0.15,
-  },
-  subRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-  },
-  consistencyText: {
-    color: Colors.neutral.darkGray,
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.medium,
-  },
-  dot: {
-    width: 3,
-    height: 3,
-    borderRadius: Radii.full,
-    backgroundColor: Colors.neutral.darkGray,
-  },
-  onlineText: {
-    color: Colors.primary.successGreen,
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.medium,
-  },
-  actions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  iconButton: {
-    width: 36,
-    height: 36,
-    borderRadius: Radii.full,
-    backgroundColor: Colors.glass.white10,
-    borderWidth: 0.612,
-    borderColor: Colors.glass.white10,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-});

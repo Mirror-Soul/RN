@@ -1,8 +1,9 @@
 import EditPencilIcon from '@/assets/images/common/history/call_history/call_edit_pencil.svg';
-import {Colors, Radii, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
+import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
-import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View, TextInput } from 'react-native';
+import React, { memo } from 'react';
+import { Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import Animated, { FadeInUp } from 'react-native-reanimated';
 import type { TalkLogResult } from '@/src/types/api/history';
 import { toTimeLabel } from '@/src/utils/formatHistoryDate';
 import ChatEditForm from './ChatEditForm';
@@ -10,6 +11,12 @@ import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface ChatBubbleProps {
   message: TalkLogResult;
+  partnerName: string;
+  partnerProfileImageUrl?: string | null;
+  /** 연속된 상대방 메시지에서 아바타를 반복 표시하지 않기 위한 플래그 */
+  hideAvatar: boolean;
+  /** 진입 stagger 애니메이션 딜레이(ms) */
+  enterDelay: number;
   editingId: number | null;
   editText: string;
   isSaving?: boolean;
@@ -21,13 +28,22 @@ interface ChatBubbleProps {
 
 /**
  * 단일 채팅 말풍선 컴포넌트 (SRP)
- * 레이아웃 넘침 방지(flexShrink) 및 반응형 메타 정보 배치를 지원합니다.
+ * message-room의 MessageBubble.tsx와 동일한 시각 언어(그라디언트/그림자/아바타 그룹핑)를 따른다 —
+ * 다만 이 화면은 실시간 채팅이 아니라 과거 통화 리뷰라 편집 인터랙션(연필 → 인라인 수정)은 유지한다.
  *
  * speaker(ME/MY_TWIN/PARTNER/PARTNER_TWIN) 4종은 "나(우측)/상대(좌측)" 2분법으로 축약해 표시한다
  * (4종 구분 UI는 이번 스코프 밖 — 후속 디자인 논의 필요).
+ *
+ * React.memo(커스텀 비교자)로 감싼다 — 부모(CallDetailBody)의 editText는 키 입력마다 바뀌는데,
+ * 그 값이 실제로 필요한 건 지금 편집 중인 말풍선 하나뿐이다. 비교자 없이 그냥 넘기면 타이핑할
+ * 때마다 화면에 보이는 말풍선 전체가 리렌더된다.
  */
-export default function ChatBubble({
+function ChatBubble({
   message,
+  partnerName,
+  partnerProfileImageUrl,
+  hideAvatar,
+  enterDelay,
   editingId,
   editText,
   isSaving = false,
@@ -40,32 +56,72 @@ export default function ChatBubble({
   const isMine = message.speaker === 'ME' || message.speaker === 'MY_TWIN';
   const isEditing = editingId === message.talkLogId;
   const timeLabel = toTimeLabel(message.startedAt);
+  const accessibilityLabel = `${isMine ? '나' : partnerName}, ${timeLabel}, ${message.message}`;
+  // partnerName[0]은 빈 문자열/서로게이트 페어(이모지 등)에서 깨진 이니셜을 만들 수 있다 —
+  // Array.from은 코드 포인트 단위로 잘라 이를 피한다.
+  const partnerInitial = Array.from(partnerName.trim())[0] ?? '?';
 
   // 상대방 말풍선 (PARTNER / PARTNER_TWIN)
   if (!isMine) {
     return (
-      <View style={styles.rowLeft}>
-        <View style={[styles.bubbleBase, styles.receivedBubble]}>
-          <Text style={styles.messageText}>{message.message}</Text>
+      <Animated.View
+        entering={FadeInUp.delay(enterDelay).duration(300).springify()}
+        style={styles.rowLeft}
+        accessible
+        accessibilityLabel={accessibilityLabel}
+      >
+        <View style={styles.avatarSlot}>
+          {!hideAvatar &&
+            (partnerProfileImageUrl ? (
+              <Image source={{ uri: partnerProfileImageUrl }} style={styles.avatar} />
+            ) : (
+              <LinearGradient
+                colors={Colors.gradient.avatarPlaceholder}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.avatar}
+              >
+                <Text style={styles.avatarInitial}>{partnerInitial}</Text>
+              </LinearGradient>
+            ))}
         </View>
-        <Text style={styles.timestamp}>{timeLabel}</Text>
-      </View>
+
+        <View style={styles.receivedBubbleWrapper}>
+          <View
+            style={[
+              styles.bubbleBase,
+              styles.receivedBubble,
+              { backgroundColor: colors.background.glass, borderColor: colors.border.primary },
+            ]}
+          >
+            <Text style={[styles.messageText, { color: colors.text.primary }]}>{message.message}</Text>
+          </View>
+          <Text style={[styles.timestamp, { color: colors.text.muted }]}>{timeLabel}</Text>
+        </View>
+      </Animated.View>
     );
   }
 
   // 내 말풍선 (ME / MY_TWIN)
+  // rowRight 전체에 accessible을 걸지 않는다 — 편집 모드일 땐 TextInput/저장/취소가, 평상시엔
+  // 수정 버튼이 자식으로 들어있는데, 부모를 accessible로 묶으면 그 자식들이 스크린리더에서
+  // 개별적으로 안 잡힌다(RN 접근성 문서: 상호작용 자식이 있는 컨테이너는 그룹핑하지 말 것).
+  // 대신 라벨이 필요한 정적 텍스트(평상시 메시지 본문)에만 직접 건다.
   return (
-    <View style={styles.rowRight}>
+    <Animated.View
+      entering={FadeInUp.delay(enterDelay).duration(300).springify()}
+      style={styles.rowRight}
+    >
       {/* 왼쪽 메타 정보: [수정됨]이 [시간] 위에 오도록 세로 배치 */}
       <View style={styles.metaLeft}>
-        {message.edited && <Text style={styles.editedLabel}>수정됨</Text>}
-        <Text style={styles.timestamp}>{timeLabel}</Text>
+        {message.edited && <Text style={[styles.editedLabel, { color: colors.text.muted }]}>수정됨</Text>}
+        <Text style={[styles.timestamp, { color: colors.text.muted }]}>{timeLabel}</Text>
       </View>
 
       {/* 말풍선 컨테이너 (flexShrink 적용으로 레이아웃 넘침 방지) */}
       <View style={styles.sentBubbleContainer}>
         <LinearGradient
-          colors={[Colors.glass.purple20, Colors.glass.pink20]}
+          colors={Colors.gradient.twinCallButton}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={[styles.bubbleBase, styles.sentBubble]}
@@ -81,7 +137,9 @@ export default function ChatBubble({
                 autoFocus
                 editable={!isSaving}
                 maxLength={2000}
-                placeholderTextColor={Colors.neutral.darkGray}
+                placeholderTextColor={Colors.neutral.disabledText}
+                accessibilityLabel="내 Twin 답변 수정"
+                accessibilityHint="이 메시지의 텍스트를 수정합니다"
               />
               <ChatEditForm
                 onSave={() => onEditSave(message.talkLogId)}
@@ -90,8 +148,10 @@ export default function ChatBubble({
               />
             </View>
           ) : (
-            // 일반 모드
-            <Text style={styles.messageText}>{message.message}</Text>
+            // 일반 모드 — 정적 텍스트라 라벨을 직접 달아도 상호작용 자식을 가리지 않는다
+            <Text style={styles.sentMessageText} accessibilityLabel={accessibilityLabel}>
+              {message.message}
+            </Text>
           )}
         </LinearGradient>
 
@@ -109,9 +169,24 @@ export default function ChatBubble({
           </TouchableOpacity>
         )}
       </View>
-    </View>
+    </Animated.View>
   );
 }
+
+function arePropsEqual(prev: ChatBubbleProps, next: ChatBubbleProps): boolean {
+  if (prev.message !== next.message) return false;
+  if (prev.hideAvatar !== next.hideAvatar) return false;
+  if (prev.enterDelay !== next.enterDelay) return false;
+  if (prev.editingId !== next.editingId) return false;
+  if (prev.isSaving !== next.isSaving) return false;
+  // editText는 이 말풍선이 지금 편집 대상일 때만 비교한다 — 다른 말풍선에는 어차피 안 쓰이는 값이라
+  // 매 키 입력마다 리렌더를 유발할 이유가 없다.
+  const isBeingEdited = next.editingId === next.message.talkLogId;
+  if (isBeingEdited && prev.editText !== next.editText) return false;
+  return true;
+}
+
+export default memo(ChatBubble, arePropsEqual);
 
 const styles = StyleSheet.create({
   rowLeft: {
@@ -120,6 +195,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: Spacing.sm,
     maxWidth: '85%',
+    marginTop: Spacing.sm,
   },
   rowRight: {
     alignSelf: 'flex-end',
@@ -127,6 +203,31 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: Spacing.sm,
     maxWidth: '85%', // 기기 너비에 따른 동적 대응을 위한 퍼센트 너비
+    marginTop: Spacing.sm,
+  },
+  avatarSlot: {
+    width: 28,
+    height: 28,
+    flexShrink: 0,
+  },
+  avatar: {
+    width: 28,
+    height: 28,
+    borderRadius: Radii.smmd,
+    borderWidth: 1,
+    borderColor: Colors.glass.white05,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatarInitial: {
+    fontFamily: FontFamily.sans,
+    fontWeight: FontWeight.bold,
+    fontSize: FontSize.xs,
+    color: Colors.neutral.pureWhite,
+  },
+  receivedBubbleWrapper: {
+    flex: 1,
+    flexShrink: 1,
   },
   metaLeft: {
     flexDirection: 'column',
@@ -143,14 +244,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.md,
     borderWidth: 0.612,
+    shadowColor: Colors.primary.soulBlack,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
   },
   receivedBubble: {
     borderTopLeftRadius: Radii.bubble,
     borderTopRightRadius: Radii.lg,
     borderBottomRightRadius: Radii.lg,
     borderBottomLeftRadius: Radii.lg,
-    borderColor: Colors.glass.white10,
-    backgroundColor: Colors.glass.white10,
     flexShrink: 1,
   },
   sentBubble: {
@@ -158,7 +262,6 @@ const styles = StyleSheet.create({
     borderTopRightRadius: Radii.bubble,
     borderBottomRightRadius: Radii.lg,
     borderBottomLeftRadius: Radii.lg,
-    borderColor: Colors.glass.purple30,
     alignSelf: 'flex-start', // 텍스트 길이에 맞춰 너비 조절
   },
   editingContent: {
@@ -166,7 +269,14 @@ const styles = StyleSheet.create({
     minWidth: 120, // 입력 시 최소 공간 확보
   },
   messageText: {
-    color: Colors.neutral.pureWhite,
+    fontFamily: FontFamily.sans,
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.regular,
+    lineHeight: 22,
+    letterSpacing: -0.15,
+  },
+  sentMessageText: {
+    color: Colors.primary.soulBlack,
     fontFamily: FontFamily.sans,
     fontSize: FontSize.base,
     fontWeight: FontWeight.regular,
@@ -174,7 +284,7 @@ const styles = StyleSheet.create({
     letterSpacing: -0.15,
   },
   textInput: {
-    color: Colors.neutral.pureWhite,
+    color: Colors.primary.soulBlack,
     fontFamily: FontFamily.sans,
     fontSize: FontSize.base,
     lineHeight: 22,
@@ -193,18 +303,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: Radii.full,
     borderWidth: 0.612,
-    borderColor: Colors.glass.purple50,
+    borderColor: Colors.glass.white30,
     zIndex: 10,
   },
   timestamp: {
-    color: Colors.neutral.darkGray,
     fontFamily: FontFamily.sans,
     fontSize: 11,
     fontWeight: FontWeight.regular,
     lineHeight: 14,
   },
   editedLabel: {
-    color: Colors.neutral.darkGray,
     fontFamily: FontFamily.sans,
     fontSize: 11,
     fontWeight: FontWeight.regular,
