@@ -7,39 +7,12 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import CallAvatar from './HistoryCallCard/CallProfile';
 import CallMeta from './HistoryCallCard/CallSubInfo';
-
-/**
- * 통화 내 단일 메시지 데이터 모델 (SRP)
- */
-export interface ChatMessage {
-  id: string;
-  direction: 'SENT' | 'RECEIVED'; // SENT = 나의 Twin, RECEIVED = 상대방
-  text: string;
-  timestamp: string;               // "11:15" 형식
-  isEdited?: boolean;
-}
-
-export interface HistoryCallItemData {
-  id: string;
-  name: string;
-  age: number;
-  consistencyPercent: number;
-  callSequenceNumber: number;      // N번 째 대화
-  dateStr: string;
-  timeStr: string;
-  profileImageUrl?: string;
-  direction: 'SENT' | 'RECEIVED';
-  callTypeDesc: string;
-  durationLabel: string;
-  twinMatchLabel: string;
-  tags: string[];
-  isNew?: boolean;                 // 새로운 통화 기록 여부 (읽지 않음)
-  satisfactionPercent?: number;    // 만족도 퍼센트
-  messages: ChatMessage[];         // 통화 내 메시지 목록
-}
+import type { CallHistoryResult } from '@/src/types/api/history';
+import { formatDurationLabel } from '@/src/utils/formatCallTime';
+import { toTimeLabel } from '@/src/utils/formatHistoryDate';
 
 interface HistoryCallCardProps {
-  data: HistoryCallItemData;
+  data: CallHistoryResult;
   index?: number;               // stagger 애니메이션용
   onPress?: () => void;
 }
@@ -57,6 +30,15 @@ interface HistoryCallCardProps {
 export default function HistoryCallCard({ data, index = 0, onPress }: HistoryCallCardProps) {
   const { colors } = useThemeColors();
 
+  // 목록 아이템의 type은 백엔드에서 항상 SENT/RECEIVED만 내려준다 (ALL은 쿼리 파라미터 전용)
+  const direction = data.type as 'SENT' | 'RECEIVED';
+  // matchScore가 null이면 이 통화의 CallMatchAnalysis가 아직 완료되지 않은 상태(topics도 항상 빈 배열)
+  const isAnalyzing = data.matchScore === null;
+  const durationLabel = formatDurationLabel(data.durationSec);
+  const ageLabel = data.partner.age !== null ? `${data.partner.age}세, ` : '';
+  const directionLabel = direction === 'SENT' ? '내가 건 통화' : '받은 통화';
+  const accessibilityLabel = `${data.partner.name}, ${ageLabel}${directionLabel}, ${durationLabel}${data.isNew ? ', 새 기록' : ''}`;
+
   const borderColor = data.isNew
     ? Colors.primary.electricCyan
     : colors.border.primary;
@@ -72,22 +54,24 @@ export default function HistoryCallCard({ data, index = 0, onPress }: HistoryCal
         onPress={onPress}
         activeOpacity={0.82}
         accessibilityRole="button"
+        accessibilityLabel={accessibilityLabel}
       >
         {/* 아바타 + 방향 배지 */}
         <CallAvatar
-          name={data.name}
-          profileImageUrl={data.profileImageUrl}
-          direction={data.direction}
+          name={data.partner.name}
+          profileImageUrl={data.partner.profileImageUrl ?? undefined}
+          direction={direction}
         />
 
         {/* 이름 / 일치도 / 시간 / 태그 */}
         <CallMeta
-          name={data.name}
-          age={data.age}
-          consistencyPercent={data.consistencyPercent}
-          timeStr={data.timeStr}
-          durationLabel={data.durationLabel}
-          tags={data.tags}
+          name={data.partner.name}
+          age={data.partner.age}
+          consistencyPercent={data.partner.twinSyncRate}
+          timeStr={toTimeLabel(data.startedAt)}
+          durationLabel={durationLabel}
+          tags={data.topics}
+          isAnalyzing={isAnalyzing}
         />
 
         {/* ChevronRight */}

@@ -3,16 +3,18 @@ import {Colors, Radii, FontFamily, FontSize, FontWeight, Spacing} from '@/src/co
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View, TextInput } from 'react-native';
-import { ChatMessage } from '../../parts/HistoryCallCard';
+import type { TalkLogResult } from '@/src/types/api/history';
+import { toTimeLabel } from '@/src/utils/formatHistoryDate';
 import ChatEditForm from './ChatEditForm';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface ChatBubbleProps {
-  message: ChatMessage;
-  editingId: string | null;
+  message: TalkLogResult;
+  editingId: number | null;
   editText: string;
-  onEditStart: (id: string, currentText: string) => void;
-  onEditSave: (id: string) => void;
+  isSaving?: boolean;
+  onEditStart: (id: number, currentText: string) => void;
+  onEditSave: (id: number) => void;
   onEditCancel: () => void;
   onEditTextChange: (text: string) => void;
 }
@@ -20,39 +22,44 @@ interface ChatBubbleProps {
 /**
  * 단일 채팅 말풍선 컴포넌트 (SRP)
  * 레이아웃 넘침 방지(flexShrink) 및 반응형 메타 정보 배치를 지원합니다.
+ *
+ * speaker(ME/MY_TWIN/PARTNER/PARTNER_TWIN) 4종은 "나(우측)/상대(좌측)" 2분법으로 축약해 표시한다
+ * (4종 구분 UI는 이번 스코프 밖 — 후속 디자인 논의 필요).
  */
 export default function ChatBubble({
   message,
   editingId,
   editText,
+  isSaving = false,
   onEditStart,
   onEditSave,
   onEditCancel,
   onEditTextChange,
 }: ChatBubbleProps) {
   const { colors } = useThemeColors();
-  const isSent = message.direction === 'SENT';
-  const isEditing = editingId === message.id;
+  const isMine = message.speaker === 'ME' || message.speaker === 'MY_TWIN';
+  const isEditing = editingId === message.talkLogId;
+  const timeLabel = toTimeLabel(message.startedAt);
 
-  // 상대방 말풍선 (RECEIVED)
-  if (!isSent) {
+  // 상대방 말풍선 (PARTNER / PARTNER_TWIN)
+  if (!isMine) {
     return (
       <View style={styles.rowLeft}>
         <View style={[styles.bubbleBase, styles.receivedBubble]}>
-          <Text style={styles.messageText}>{message.text}</Text>
+          <Text style={styles.messageText}>{message.message}</Text>
         </View>
-        <Text style={styles.timestamp}>{message.timestamp}</Text>
+        <Text style={styles.timestamp}>{timeLabel}</Text>
       </View>
     );
   }
 
-  // 내 말풍선 (SENT)
+  // 내 말풍선 (ME / MY_TWIN)
   return (
     <View style={styles.rowRight}>
       {/* 왼쪽 메타 정보: [수정됨]이 [시간] 위에 오도록 세로 배치 */}
       <View style={styles.metaLeft}>
-        {message.isEdited && <Text style={styles.editedLabel}>수정됨</Text>}
-        <Text style={styles.timestamp}>{message.timestamp}</Text>
+        {message.edited && <Text style={styles.editedLabel}>수정됨</Text>}
+        <Text style={styles.timestamp}>{timeLabel}</Text>
       </View>
 
       {/* 말풍선 컨테이너 (flexShrink 적용으로 레이아웃 넘침 방지) */}
@@ -72,24 +79,27 @@ export default function ChatBubble({
                 onChangeText={onEditTextChange}
                 multiline
                 autoFocus
+                editable={!isSaving}
+                maxLength={2000}
                 placeholderTextColor={Colors.neutral.darkGray}
               />
               <ChatEditForm
-                onSave={() => onEditSave(message.id)}
+                onSave={() => onEditSave(message.talkLogId)}
                 onCancel={onEditCancel}
+                disabled={isSaving}
               />
             </View>
           ) : (
             // 일반 모드
-            <Text style={styles.messageText}>{message.text}</Text>
+            <Text style={styles.messageText}>{message.message}</Text>
           )}
         </LinearGradient>
 
-        {/* 수정 버튼: 평상시에만 노출하며 우측 상단 오버랩 */}
-        {!isEditing && (
+        {/* 수정 버튼: 편집 가능한(내 Twin 답변) 말풍선에만 노출하며 우측 상단 오버랩 */}
+        {!isEditing && message.editable && (
           <TouchableOpacity
             style={[styles.editButtonAbsolute, { backgroundColor: colors.background.card }]}
-            onPress={() => onEditStart(message.id, message.text)}
+            onPress={() => onEditStart(message.talkLogId, message.message)}
             activeOpacity={0.8}
             accessibilityRole="button"
             accessibilityLabel="메시지 수정"

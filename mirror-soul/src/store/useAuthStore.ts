@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { tokenStorage } from '../utils/tokenStorage';
 import { logger } from '../utils/logger';
+import { queryClient } from '../services/queryClient';
 
 import { isTokenExpired } from '../utils/jwtUtils';
 
@@ -35,13 +36,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (accessToken && userStatus !== 'ACTIVE') {
         logger.warn(`useAuthStore: Incomplete onboarding detected (${userStatus}). Clearing session.`);
         await tokenStorage.clearAll();
+        // 이 경로는 performLogout()을 거치지 않으므로 react-query 캐시가 남아있을 수 있다 —
+        // 다음 로그인 사용자에게 이전 세션의 캐시된 데이터가 잠깐 보이는 것을 막기 위해 직접 비운다.
+        queryClient.clear();
         set({ isHydrated: true, isLoggedIn: false, accessToken: null, userUuid: null, userStatus: null });
         return;
       }
-      
+
       if (accessToken && isTokenExpired(refreshToken)) {
         logger.warn(`useAuthStore: Refresh token is expired. Clearing session.`);
         await tokenStorage.clearAll();
+        queryClient.clear();
         set({ isHydrated: true, isLoggedIn: false, accessToken: null, userUuid: null, userStatus: null });
         return;
       }
@@ -75,6 +80,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     if (!refreshTokenToSave || !userUuid || !userStatus) {
       logger.error('useAuthStore: Critical session metadata lost. Forcing logout.', { hasRefresh: !!refreshTokenToSave, userUuid, userStatus });
+      // get().logout()은 performLogout()을 거치지 않으므로 캐시를 직접 비운다 (hydrate()와 동일한 이유).
+      queryClient.clear();
       await get().logout();
       return;
     }
