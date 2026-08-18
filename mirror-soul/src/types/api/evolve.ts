@@ -10,6 +10,10 @@ import { ApiResponse } from './common';
 // ─────────────────────────────────────────────
 export interface TwinSyncResult {
   syncRate: number;
+  /** 누적 목소리 정밀 학습(음성 업데이트) 횟수 */
+  voiceTrainingCount: number;
+  /** 마지막 목소리 정밀 학습 시각. 한 번도 학습한 적 없으면 null. */
+  lastVoiceTrainingAt: string | null;
 }
 
 export type TwinSyncResponse = ApiResponse<TwinSyncResult>;
@@ -54,14 +58,18 @@ export type ValueBalanceAxis =
   | 'TASTE';
 
 export interface ValueBalanceQuestionResult {
-  questionId: number;
-  axis: ValueBalanceAxis;
-  leftLabel: string;
-  rightLabel: string;
+  /** 오늘의 quota를 다 썼으면 questionId/axis/leftLabel/rightLabel이 전부 null로 온다(VALUE_BALANCE_DAILY_LIMIT_REACHED 성공코드). answeredCount/dailyLimit은 이 경우에도 항상 채워져 온다. */
+  questionId: number | null;
+  axis: ValueBalanceAxis | null;
+  leftLabel: string | null;
+  rightLabel: string | null;
+  /** 오늘 답변한 질문 수 */
+  answeredCount: number;
+  /** 하루 최대 질문 수 */
+  dailyLimit: number;
 }
 
-/** 오늘의 quota를 다 썼으면 result가 null(VALUE_BALANCE_DAILY_LIMIT_REACHED 성공코드)로 온다. */
-export type ValueBalanceQuestionResponse = ApiResponse<ValueBalanceQuestionResult | null>;
+export type ValueBalanceQuestionResponse = ApiResponse<ValueBalanceQuestionResult>;
 
 // ─────────────────────────────────────────────
 // POST /evolve/value-balance/{questionId}/answer

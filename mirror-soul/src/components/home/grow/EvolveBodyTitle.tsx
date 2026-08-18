@@ -12,7 +12,7 @@ export default function EvolveBodyTitle() {
 
   return (
     <View style={styles.container}>
-      <Text style={[styles.label, { color: colors.text.muted }]}>Deep Learning Mission</Text>
+      <Text style={[styles.label, { color: colors.text.muted }]}>딥러닝 미션</Text>
       <View style={[styles.divider, { backgroundColor: colors.border.primary }]} />
     </View>
   );
@@ -30,7 +30,6 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xs,
     fontWeight: FontWeight.black,
     letterSpacing: 3.1,
-    textTransform: 'uppercase',
   },
   divider: {
     flex: 1,

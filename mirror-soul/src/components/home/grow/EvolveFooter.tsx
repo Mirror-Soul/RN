@@ -12,14 +12,14 @@ export default function EvolveFooter() {
   const { colors } = useThemeColors();
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
+    <View style={[styles.container, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
       <View style={styles.iconWrapper}>
         <Feather name="lock" size={16} color={Colors.glass.cyan30_d3} />
       </View>
       <View style={styles.textArea}>
-        <Text style={[styles.title, { color: colors.text.muted }]}>Safety & Privacy</Text>
+        <Text style={[styles.title, { color: colors.text.muted }]}>안전과 개인정보</Text>
         <Text style={[styles.subTitle, { color: colors.text.muted }]}>
-          모든 학습 데이터는 End-to-End 암호화로 보호되며 오직 당신의 디지털 페르소나 정교화에만 사용됩니다.
+          학습 데이터는 오직 당신의 트윈을 정교화하는 데에만 사용됩니다.
         </Text>
       </View>
     </View>
@@ -49,11 +49,8 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: FontFamily.sans,
-    fontStyle: 'italic',
     fontSize: FontSize.xs,
     fontWeight: FontWeight.black,
-    letterSpacing: 1.1,
-    textTransform: 'uppercase',
   },
   subTitle: {
     fontFamily: FontFamily.sans,

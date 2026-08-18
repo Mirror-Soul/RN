@@ -2,8 +2,8 @@ import CompleteIcon from '@/assets/images/common/evlove/voice-update/voice_updat
 import StopIcon from '@/assets/images/common/evlove/voice-update/voice_update_stop.svg';
 import VoiceIcon from '@/assets/images/common/Voice_icon_white.svg';
 import {Colors, Radii, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
+import GrowDoneActionRow from '@/src/components/home/grow/GrowDoneActionRow';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
@@ -14,7 +14,9 @@ interface VoiceUpdateButtonProps {
   status: VoiceUpdateStatus;
   elapsedTime?: string;
   onPress: () => void;
-  onRetry?: () => void;
+  onRetry: () => void;
+  /** 2분 쿨다운이 남았으면 남은 초, 아니면 undefined. idle 상태에서만 의미가 있다. */
+  cooldownRemainingSeconds?: number;
 }
 
 /**
@@ -25,11 +27,11 @@ export default function VoiceUpdateButton({
   elapsedTime,
   onPress,
   onRetry,
+  cooldownRemainingSeconds,
 }: VoiceUpdateButtonProps) {
-  const router = useRouter();
   const { width } = useWindowDimensions();
   const { colors } = useThemeColors();
-  
+
   // 기기 폭에 비례하는 동적 크기 계산 (기준 393px에서 96px은 약 24.4%)
   // 너무 작아지거나 커지는 것을 방지하기 위해 clamp 적용
   const dynamicButtonSize = Math.max(80, Math.min(width * 0.244, 112));
@@ -38,6 +40,7 @@ export default function VoiceUpdateButton({
   const isRecording = status === 'recording';
   const isAnalyzing = status === 'analyzing';
   const isDone = status === 'done';
+  const isCoolingDown = isIdle && !!cooldownRemainingSeconds && cooldownRemainingSeconds > 0;
 
   // 상태별 그라디언트 및 그림자 스타일 결정
   const gradientColors = isIdle
@@ -79,11 +82,12 @@ export default function VoiceUpdateButton({
           activeOpacity={0.8}
           onPress={onPress}
           style={[
-            styles.buttonWrapper, 
-            shadowStyle, 
-            { width: dynamicButtonSize, height: dynamicButtonSize } // 동적 사이즈 적용
+            styles.buttonWrapper,
+            shadowStyle,
+            { width: dynamicButtonSize, height: dynamicButtonSize }, // 동적 사이즈 적용
+            isCoolingDown && styles.buttonCoolingDown,
           ]}
-          disabled={isAnalyzing}
+          disabled={isAnalyzing || isCoolingDown}
         >
           <LinearGradient
             colors={gradientColors}
@@ -100,7 +104,14 @@ export default function VoiceUpdateButton({
 
       {/* 2. 하단 정보 및 액션 영역 */}
       <View style={styles.infoArea}>
-        {isIdle && (
+        {isIdle && isCoolingDown && (
+          <View style={styles.idleInfo}>
+            <Text style={[styles.statusText, { color: colors.text.primary }]}>잠시 후 다시 시도해주세요</Text>
+            <Text style={[styles.footerText, { color: colors.text.secondary }]}>{cooldownRemainingSeconds}초 후 다시 녹음할 수 있어요</Text>
+          </View>
+        )}
+
+        {isIdle && !isCoolingDown && (
           <View style={styles.idleInfo}>
             <Text style={[styles.statusText, { color: colors.text.primary }]}>녹음 시작</Text>
             <Text style={[styles.footerText, { color: colors.text.secondary }]}>마이크 버튼을 눌러 녹음을 시작하세요</Text>
@@ -127,25 +138,8 @@ export default function VoiceUpdateButton({
         )}
 
         {isDone && (
-          /* 최종 액션 유도 영역 - 미니멀 리팩토링 */
           <View style={styles.finalActionArea}>
-            <View style={styles.actionRow}>
-              <TouchableOpacity
-                activeOpacity={0.7}
-                onPress={onRetry}
-                style={[styles.actionChip, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
-              >
-                <Text style={[styles.actionChipText, { color: colors.text.secondary }]}>다른 문장 읽어보기</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                activeOpacity={0.7}
-                onPress={() => router.back()}
-                style={[styles.actionChip, styles.primaryChip]}
-              >
-                <Text style={[styles.actionChipText, styles.primaryChipText]}>완료하기</Text>
-              </TouchableOpacity>
-            </View>
+            <GrowDoneActionRow retryLabel="다른 문장 읽어보기" onRetry={onRetry} />
           </View>
         )}
       </View>
@@ -163,6 +157,9 @@ const styles = StyleSheet.create({
   buttonWrapper: {
     // width와 height는 컴포넌트 내부에서 동적으로 할당됨
     borderRadius: Radii.full,
+  },
+  buttonCoolingDown: {
+    opacity: 0.5,
   },
   button: {
     flex: 1,
@@ -226,30 +223,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingTop: 10,
-  },
-  actionRow: {
-    flexDirection: 'row',
-    gap: Spacing.md,
-    alignItems: 'center',
-  },
-  actionChip: {
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.xxl,
-    borderRadius: Radii.full,
-    borderWidth: 0.6,
-  },
-  actionChipText: {
-    fontSize: FontSize.md,
-    fontWeight: FontWeight.medium,
-    letterSpacing: -0.3,
-  },
-  primaryChip: {
-    backgroundColor: 'rgba(0, 211, 243, 0.15)',
-    borderColor: 'rgba(0, 211, 243, 0.3)',
-  },
-  primaryChipText: {
-    color: Colors.primary.electricCyan,
-    fontWeight: FontWeight.semibold,
   },
 });
 

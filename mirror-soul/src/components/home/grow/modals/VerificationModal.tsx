@@ -50,7 +50,7 @@ export default function VerificationModal({ isOpen, onClose, onVerified }: Verif
           accessibilityLabel="증명 이미지 업로드"
         >
           <Feather name="upload" size={28} color={colors.text.muted} />
-          <Text style={[styles.uploadText, { color: colors.text.muted }]}>Upload Proof Image</Text>
+          <Text style={[styles.uploadText, { color: colors.text.muted }]}>이미지 선택하기</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -124,7 +124,6 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xs,
     fontWeight: FontWeight.black,
     letterSpacing: 1.1,
-    textTransform: 'uppercase',
   },
   verifyButton: {
     height: 64,

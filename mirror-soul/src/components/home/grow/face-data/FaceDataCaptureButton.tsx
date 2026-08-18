@@ -1,10 +1,9 @@
 import { Feather } from '@expo/vector-icons';
 import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
+import GrowDoneActionRow from '@/src/components/home/grow/GrowDoneActionRow';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
 import React from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { FaceDataCapturePhase } from './types/faceData';
 
 interface FaceDataCaptureButtonProps {
@@ -20,30 +19,10 @@ interface FaceDataCaptureButtonProps {
  * done 상태만 VoiceUpdateButton과 동일한 2버튼(다시 촬영/완료) 푸터로 전환한다.
  */
 export default function FaceDataCaptureButton({ phase, onStart, onRetry }: FaceDataCaptureButtonProps) {
-  const router = useRouter();
-  const { colors } = useThemeColors();
-
   if (phase === 'done') {
     return (
       <View style={styles.doneContainer}>
-        <View style={styles.actionRow}>
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={onRetry}
-            style={[styles.actionChip, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
-          >
-            <Text style={[styles.actionChipText, { color: colors.text.secondary }]}>다시 촬영하기</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={() => router.back()}
-            style={[styles.actionChip, styles.primaryChip]}
-          >
-            <Feather name="check" size={16} color={Colors.primary.electricCyan} />
-            <Text style={[styles.actionChipText, styles.primaryChipText]}>완료하기</Text>
-          </TouchableOpacity>
-        </View>
+        <GrowDoneActionRow retryLabel="다시 촬영하기" onRetry={onRetry} showCompleteIcon />
       </View>
     );
   }
@@ -113,33 +92,5 @@ const styles = StyleSheet.create({
   doneContainer: {
     width: '100%',
     alignItems: 'center',
-  },
-  actionRow: {
-    flexDirection: 'row',
-    gap: Spacing.md,
-    alignItems: 'center',
-  },
-  actionChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.xxl,
-    borderRadius: Radii.full,
-    borderWidth: 0.6,
-  },
-  actionChipText: {
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.md,
-    fontWeight: FontWeight.medium,
-    letterSpacing: -0.3,
-  },
-  primaryChip: {
-    backgroundColor: 'rgba(0, 211, 243, 0.15)',
-    borderColor: 'rgba(0, 211, 243, 0.3)',
-  },
-  primaryChipText: {
-    color: Colors.primary.electricCyan,
-    fontWeight: FontWeight.semibold,
   },
 });

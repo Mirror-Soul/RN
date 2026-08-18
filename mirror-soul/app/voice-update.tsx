@@ -1,10 +1,12 @@
 import VoiceUpdateButton, { VoiceUpdateStatus } from '@/src/components/home/grow/voice-update/VoiceUpdateButton';
-import VoiceUpdateHeader from '@/src/components/home/grow/voice-update/VoiceUpdateHeader';
 import VoiceUpdatePrompt from '@/src/components/home/grow/voice-update/VoiceUpdatePrompt';
+import GrowSubScreenHeader from '@/src/components/home/grow/GrowSubScreenHeader';
 import VoiceUpdateTranscriptBox from '@/src/components/home/grow/voice-update/VoiceUpdateTranscriptBox';
 import { useVoiceRecording } from '@/src/components/home/grow/voice-update/hooks/useVoiceRecording';
+import { useVoiceTrainingCooldown } from '@/src/components/home/grow/voice-update/hooks/useVoiceTrainingCooldown';
 import { useCompleteVoiceTrainingMutation } from '@/src/features/growth/hooks/useCompleteVoiceTrainingMutation';
 import { useVoiceTrainingSentenceQuery } from '@/src/features/growth/hooks/useVoiceTrainingSentenceQuery';
+import { useTwinSyncQuery } from '@/src/features/growth/hooks/useTwinSyncQuery';
 import { useSTT } from '@/src/hooks/useSTT';
 import { Spacing } from '@/src/constants/theme';
 import React, { useEffect, useRef, useState } from 'react';
@@ -13,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLayout } from '@/src/hooks/useLayout';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { getErrorDisplayMessage } from '@/src/utils/apiErrorCode';
+import { logger } from '@/src/utils/logger';
 
 /**
  * 목소리 업데이트 화면
@@ -30,6 +33,12 @@ export default function VoiceUpdateScreen() {
   const sentenceQuery = useVoiceTrainingSentenceQuery();
   const voiceRecording = useVoiceRecording();
   const completeMutation = useCompleteVoiceTrainingMutation();
+
+  // 그로우 탭 미션 카드와 같은 쿼리키를 써서 캐시를 공유한다(추가 네트워크 호출 없음).
+  // 마지막 학습 시각을 기준으로 2분 쿨다운이 남았으면, 녹음+STT+업로드를 다 끝낸 뒤
+  // 백엔드 429로 실패하는 대신 녹음 시작 전에 미리 막는다.
+  const twinSyncQuery = useTwinSyncQuery();
+  const { isInCooldown, remainingSeconds } = useVoiceTrainingCooldown(twinSyncQuery.data?.lastVoiceTrainingAt);
 
   // STT 훅 연동 (실시간 자막 표시용 — 업로드용 오디오 파일은 useVoiceRecording이 별도로 녹음)
   const { transcript, startListening, stopListening, resetTranscript } = useSTT('ko-KR');
@@ -72,7 +81,7 @@ export default function VoiceUpdateScreen() {
         setElapsed((prev) => prev + 0.1);
       }, 100);
     } catch (error) {
-      console.error('녹음 시작 실패:', error);
+      logger.error('녹음 시작 실패:', error);
       setStatus('idle');
     }
   };
@@ -133,7 +142,7 @@ export default function VoiceUpdateScreen() {
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background.primary }]}>
       <View style={styles.container}>
-        <VoiceUpdateHeader />
+        <GrowSubScreenHeader title="목소리 업데이트" />
 
         <View style={[styles.main, contentContainerStyle]}>
           <VoiceUpdatePrompt sentence={sentenceQuery.data?.speechLine ?? '문장을 불러오는 중...'} />
@@ -149,6 +158,7 @@ export default function VoiceUpdateScreen() {
             elapsedTime={elapsed.toFixed(1)}
             onPress={handlePress}
             onRetry={handleRetry}
+            cooldownRemainingSeconds={isInCooldown ? remainingSeconds : undefined}
           />
         </View>
       </View>

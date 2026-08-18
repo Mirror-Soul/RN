@@ -59,13 +59,13 @@ const FaceDataCameraStage = forwardRef<Camera, FaceDataCameraStageProps>(
         )}
 
         {phase === 'processing' && (
-          <View style={styles.overlay}>
+          <View style={[styles.overlay, { backgroundColor: colors.background.overlay }]}>
             <ActivityIndicator size="large" color={Colors.primary.electricCyan} />
           </View>
         )}
 
         {phase === 'done' && (
-          <View style={[styles.overlay, styles.doneOverlay]}>
+          <View style={[styles.overlay, { backgroundColor: colors.background.overlay }]}>
             <View style={styles.checkCircle}>
               <Feather name="check" size={36} color={Colors.primary.soulBlack} />
             </View>
@@ -133,10 +133,6 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.55)',
-  },
-  doneOverlay: {
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
   },
   checkCircle: {
     width: 88,

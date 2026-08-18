@@ -4,6 +4,7 @@ export const Colors = {
   primary: {
     electricCyan: '#00D3F3', // Brand Cyan
     vividPurple: '#C27AFF', // Brand Purple
+    vividPink: '#F6339A', // Brand Pink (gradient.voiceStart 시작색과 동일 — 목소리 미션 전용 강조색)
     soulBlack: '#000000',
     successGreen: '#05DF72', // Verification Success Green
     recordingRed: '#FB2C36', // 녹음 중 버튼 및 포인트 컬러

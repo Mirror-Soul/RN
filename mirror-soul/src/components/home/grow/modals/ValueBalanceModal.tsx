@@ -7,7 +7,12 @@ import { useSubmitValueBalanceAnswerMutation } from '@/src/features/growth/hooks
 import { useFloatingNotice } from '@/src/hooks/useFloatingNotice';
 import { getErrorDisplayMessage, getErrorCode } from '@/src/utils/apiErrorCode';
 import { VALUE_BALANCE_AXIS_LABELS } from '@/src/constants/valueBalanceAxis';
-import type { ValueBalanceAnswerResult, ValueBalanceChosenSide } from '@/src/types/api/evolve';
+import type {
+  ValueBalanceAnswerResult,
+  ValueBalanceAxis,
+  ValueBalanceChosenSide,
+  ValueBalanceQuestionResult,
+} from '@/src/types/api/evolve';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
@@ -18,11 +23,27 @@ interface ValueBalanceModalProps {
   onComplete: () => void;
 }
 
+type AnswerableQuestion = ValueBalanceQuestionResult & {
+  questionId: number;
+  axis: ValueBalanceAxis;
+  leftLabel: string;
+  rightLabel: string;
+};
+
+/** quota 소진 시 questionId 등이 null인 채로 오므로, 실제로 답변 가능한 질문인지 타입 단에서 좁혀준다. */
+function isAnswerableQuestion(
+  question: ValueBalanceQuestionResult | undefined
+): question is AnswerableQuestion {
+  return question != null && question.questionId != null;
+}
+
 /**
  * ValueBalanceModal 컴포넌트 (SRP)
  * 가치관 밸런스 게임 바텀시트입니다. GET /evolve/value-balance는 한 번에 질문 1개만 주므로,
  * 연속 질문 흐름은 "답변 제출 성공 → 쿼리 무효화 → 다음 질문 자동 refetch"로 구현합니다.
- * 진행률(N of dailyLimit)은 GET 응답엔 없고 POST 응답에만 있어, 마지막 답변 결과를 로컬에 보관해 표시합니다.
+ * 진행률(N of dailyLimit)은 답변 직후엔 POST 응답을, 그 이전엔 GET 응답을 쓰고 싶지만
+ * 화면 진입 직후엔 아직 아무것도 안 답한 시점의 GET 응답이라 큰 의미가 없어, 마지막 답변
+ * 결과(POST 응답)만 로컬에 보관해 표시합니다 — 세션 내 재진입 시에도 이 값이 유지됩니다.
  */
 export default function ValueBalanceModal({ isOpen, onClose, onComplete }: ValueBalanceModalProps) {
   const { colors } = useThemeColors();
@@ -41,8 +62,8 @@ export default function ValueBalanceModal({ isOpen, onClose, onComplete }: Value
   }, [question?.questionId]);
 
   useEffect(() => {
-    // 방금 답변해서 quota를 다 썼는지(질문이 null로 바뀌었는지) 감지되면 완료 콜백을 알린다.
-    if (isOpen && lastAnswer && question === null) {
+    // 방금 답변해서 quota를 다 썼는지(questionId가 null로 바뀌었는지) 감지되면 완료 콜백을 알린다.
+    if (isOpen && lastAnswer && question?.questionId == null) {
       onComplete();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -51,10 +72,11 @@ export default function ValueBalanceModal({ isOpen, onClose, onComplete }: Value
   const isBusy = submitMutation.isPending || isFetching;
 
   const handleSelect = async (chosenSide: ValueBalanceChosenSide) => {
-    if (!question || isBusy) return;
+    const questionId = question?.questionId;
+    if (questionId == null || isBusy) return;
     setSelectedSide(chosenSide);
     try {
-      const response = await submitMutation.mutateAsync({ questionId: question.questionId, chosenSide });
+      const response = await submitMutation.mutateAsync({ questionId, chosenSide });
       setLastAnswer(response.result);
     } catch (error) {
       setSelectedSide(null);
@@ -69,7 +91,7 @@ export default function ValueBalanceModal({ isOpen, onClose, onComplete }: Value
   };
 
   const progress = lastAnswer ? (lastAnswer.answeredCount / lastAnswer.dailyLimit) * 100 : 0;
-  const isFinished = !isLoading && !isError && question === null;
+  const isFinished = !isLoading && !isError && question?.questionId == null;
 
   return (
     <BottomSheet isOpen={isOpen} onClose={onClose} height={460}>
@@ -118,11 +140,11 @@ export default function ValueBalanceModal({ isOpen, onClose, onComplete }: Value
             </Text>
           </View>
         ) : (
-          question && (
+          isAnswerableQuestion(question) && (
             <>
               <View style={styles.header}>
                 <View>
-                  <Text style={styles.eyebrow}>Balance Game</Text>
+                  <Text style={styles.eyebrow}>미니게임</Text>
                   <Text style={[styles.title, { color: colors.text.primary }]}>가치관 밸런스</Text>
                 </View>
               </View>
@@ -167,7 +189,7 @@ export default function ValueBalanceModal({ isOpen, onClose, onComplete }: Value
                       <ActivityIndicator color={Colors.primary.electricCyan} />
                     ) : (
                       <View style={[styles.vsBadge, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
-                        <Text style={[styles.vsText, { color: colors.text.muted }]}>VS</Text>
+                        <Text style={[styles.vsText, { color: colors.text.muted }]}>대</Text>
                       </View>
                     )}
                   </View>
@@ -200,7 +222,7 @@ export default function ValueBalanceModal({ isOpen, onClose, onComplete }: Value
 
               {lastAnswer && (
                 <Text style={[styles.stepText, { color: colors.text.muted }]}>
-                  Question {lastAnswer.answeredCount + 1} of {lastAnswer.dailyLimit}
+                  질문 {lastAnswer.answeredCount + 1} / {lastAnswer.dailyLimit}
                 </Text>
               )}
             </>
@@ -248,7 +270,6 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xs,
     fontWeight: FontWeight.black,
     letterSpacing: 1.5,
-    textTransform: 'uppercase',
     color: Colors.glass.cyan30_d3,
   },
   title: {
@@ -327,7 +348,6 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xs,
     fontWeight: FontWeight.black,
     letterSpacing: 1.1,
-    textTransform: 'uppercase',
     textAlign: 'center',
     marginBottom: Spacing.xxl,
   },

@@ -1,4 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Feather, Ionicons } from '@expo/vector-icons';
 import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
 import { useValueBalanceQuestionQuery } from '@/src/features/growth/hooks/useValueBalanceQuestionQuery';
 import React from 'react';
@@ -17,7 +17,18 @@ interface ValueBalanceMissionCardProps {
 export default function ValueBalanceMissionCard({ onPress }: ValueBalanceMissionCardProps) {
   const { colors } = useThemeColors();
   const { data: question, isLoading, isError, refetch } = useValueBalanceQuestionQuery();
-  const isQuotaReached = !isLoading && !isError && question === null;
+  // quota 소진 시에도 result 자체는 null이 아니라 questionId 등 필드만 null인 객체로 온다
+  // (백엔드 VALUE_BALANCE_DAILY_LIMIT_REACHED 응답도 result를 항상 채워 보낸다).
+  const isQuotaReached = !isLoading && !isError && question?.questionId == null;
+  // 에러(재조회 전 stale 데이터일 수 있음) 상태에선 진행 표시를 보여주지 않는다.
+  // "N/5" 슬래시 표기는 화살표와 나란히 있으면 페이지네이션처럼 보여서, 점(dot) 진행
+  // 표시로 대체한다(FaceDataPromptCard의 stepDots와 동일한 시각 언어).
+  const progress = question && !isError
+    ? { answered: question.answeredCount, total: question.dailyLimit }
+    : null;
+  // 실제 상태(완료/재시도)가 있을 때만 배지 텍스트로 보여주고, 그 외(진행 중)엔 "필수" 같은
+  // 지어낸 라벨 대신 화살표로 단순 이동 안내만 한다.
+  const statusLabel = isError ? '재시도' : isQuotaReached ? '완료' : null;
 
   const subtitle = isError
     ? '질문을 불러오지 못했어요. 탭하여 다시 시도해주세요.'
@@ -29,7 +40,7 @@ export default function ValueBalanceMissionCard({ onPress }: ValueBalanceMission
     <TouchableOpacity
       style={[
         styles.card,
-        { backgroundColor: colors.background.glass, borderColor: colors.border.primary },
+        { backgroundColor: colors.background.card, borderColor: colors.border.primary },
         isQuotaReached && styles.cardDisabled,
       ]}
       onPress={isError ? () => refetch() : isQuotaReached ? undefined : onPress}
@@ -57,8 +68,28 @@ export default function ValueBalanceMissionCard({ onPress }: ValueBalanceMission
         </View>
       </View>
 
-      <View style={[styles.deepBadge, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
-        <Text style={styles.deepBadgeText}>{isError ? '재시도' : isQuotaReached ? 'DONE' : 'DEEP'}</Text>
+      <View style={styles.statusArea}>
+        {progress && (
+          <View style={styles.progressDots}>
+            {Array.from({ length: progress.total }).map((_, index) => (
+              <View
+                key={index}
+                style={[
+                  styles.progressDot,
+                  { backgroundColor: colors.background.glass, borderColor: colors.border.primary },
+                  index < progress.answered && styles.progressDotFilled,
+                ]}
+              />
+            ))}
+          </View>
+        )}
+        {statusLabel ? (
+          <View style={[styles.statusBadge, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
+            <Text style={styles.statusBadgeText}>{statusLabel}</Text>
+          </View>
+        ) : (
+          <Feather name="chevron-right" size={20} color={colors.text.muted} />
+        )}
       </View>
     </TouchableOpacity>
   );
@@ -108,13 +139,31 @@ const styles = StyleSheet.create({
   subtitleError: {
     textDecorationLine: 'underline',
   },
-  deepBadge: {
+  statusArea: {
+    alignItems: 'center',
+    gap: 4,
+  },
+  progressDots: {
+    flexDirection: 'row',
+    gap: 3,
+  },
+  progressDot: {
+    width: 5,
+    height: 5,
+    borderRadius: Radii.full,
+    borderWidth: 1,
+  },
+  progressDotFilled: {
+    backgroundColor: Colors.primary.vividPurple,
+    borderColor: Colors.primary.vividPurple,
+  },
+  statusBadge: {
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.xs,
     borderRadius: Radii.full,
     borderWidth: 1,
   },
-  deepBadgeText: {
+  statusBadgeText: {
     fontFamily: FontFamily.sans,
     fontSize: 9,
     fontWeight: FontWeight.black,
