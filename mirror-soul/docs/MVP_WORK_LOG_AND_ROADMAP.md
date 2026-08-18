@@ -209,6 +209,13 @@
 - [ ] **통화 화면 라이트 모드 실기기 확인** (`refactor/156-call-logic`) — `CallScreenBackground`/`CallHeader`/`CallControls` 등에 `useThemeColors()`를 연동해 라이트 모드 대응 코드는 반영했으나, 실기기에서 눈으로 확인은 안 함. `colors.glow.*` 토큰이 원래 카드 섹션용으로 설계된 낮은 opacity(0.02~0.05)라 통화 화면 같은 풀블리드 히어로 연출에선 너무 옅게 보일 수 있음 — 확인 후 필요하면 라이트 모드 전용 강도 보정 검토.
 
 ### 6.2 백엔드 협업이 필요한 것 (RN 단독으로 못 끝남)
+- [ ] **학습 데이터(음성/얼굴 등) 보안 갭 — 인프라+AI 서버 협업 필요** (2026-08-18 조사,
+  `fix/164-evolve-ui`, Growth 탭 "안전과 개인정보" 문구 검증 중 발견) — RDS 두 개(MySQL/PostgreSQL)
+  전부 보안그룹이 DB 포트를 전 인터넷(`0.0.0.0/0`)에 열어두고 있고(코드 주석에 "임시 개발용"이라고
+  직접 적혀 있음), S3/RDS MySQL 저장 시 암호화도 미설정, AI 서버(`mirror-soul-AI`) API 전체에
+  인증/인가가 없어 URL만 알면 타인의 합성 음성 결과물에 접근 가능. 자세한 근거와 우선순위별
+  권장 조치는 `docs/TRAINING_DATA_SECURITY_FINDINGS.md` 참고 — §4/§6.3의 기존 법적/컴플라이언스
+  P0 항목들과 같은 급으로 취급할 것을 권장.
 - [ ] **발견(홈) 화면 상대 프로필 상세 — 기존 추천 상세 API에 필드 추가 필요** (2026-08-14 조사, 2026-08-17 정정 — 최초 기록은 "상세 API가 없다"는 잘못된 전제였음, CodeRabbit 리뷰 검증 과정에서 발견) — 지금 `DiscoveryMatchCard.tsx`/`PartnerProfileModal.tsx`가 보여주는 정보(트윈 싱크로율, AI 페르소나 태그, MBTI 축 밸런스, AI 트윈 한줄소개, 가치관 성향)는 전부 `SoulMatch` 목업 데이터다. 백엔드 소스를 직접 확인해보니 **`HomeController`에 발견 탭용 추천 목록/상세/스와이프 API가 이미 구현돼 있다**(`GET /home/recommend`, `GET /home/recommendations/{target-user-uuid}`, `POST /home/recommendations/{target-user-uuid}/swipe` — `MatchController`의 `/match/twins`는 별개로, "이미 통화했던 트윈" 목록이라 발견 탭과 무관함). 상세 응답 `HomeResDTO.RecommendationDetailDTO`엔 `syncRate`/`selfIntroduction`/`twinStatus`/`voicePreview`(실제 재생 가능한 presigned 오디오 URL, 이미 구현됨)까지 있지만, 아래는 여전히 없다:
   - `ClonePersonalityTag`(clone_id, content, display_order) — "AI 페르소나 분석" 태그에 대응, DTO에 없음
   - `MbtiProfile`(mbti, ieScore/nsScore/ftScore/pjScore) — "성향 밸런스" 4축 바에 대응, DTO에 없음
@@ -265,6 +272,7 @@
 | `mirror-soul/app/CLAUDE.md` | `feat/136-mypage-api-advancement` | 라우팅/네비게이션 도메인: `/` 경로 충돌 위험, Stack/Tabs 구조, 명시적 경로 규칙 |
 | `mirror-soul/src/features/account/CLAUDE.md` | `feat/136-mypage-api-advancement` | 인증/로그아웃 도메인: `useAuthStore.logout()` 계약, 로그아웃 진입점 3곳과 중복 현황 |
 | `docs/DISCOVERY_DETAIL_API_REQUEST.md` | `fix/158-home-ui` | 발견 화면 상세 모달용 신규 API를 백엔드/AI 엔지니어에게 요청하는 스펙 정리 |
+| `docs/TRAINING_DATA_SECURITY_FINDINGS.md` | `fix/164-evolve-ui` | 음성/얼굴 등 학습 데이터의 저장/전송 암호화·네트워크 접근 제어·AI 서버 인증·보존정책 실태 조사(백엔드+AI+인프라 전수) + 우선순위별 권장 조치 |
 | `docs/DX_TYPE_LINT_BACKLOG.md` | `feat/123-dx-logic`(위치 불확실, §1) | 남은 tsc/lint 에러 그룹별 정리 |
 | `docs/TODO_BACKLOG.md` | `feat/123-dx-logic`(위치 불확실, §1) | 백엔드/제품 결정 필요한 TODO 목록 |
 | `docs/MULTI_DEVICE_CALL_CHAT_ARCHITECTURE.md` | `feat/123-dx-logic`(위치 불확실, §1) | 멀티기기 통화/채팅 설계 제안 |
