@@ -104,6 +104,7 @@
         }
       ],
       "expo-secure-store",
+      "expo-notifications",
       [
         "expo-font",
         {
