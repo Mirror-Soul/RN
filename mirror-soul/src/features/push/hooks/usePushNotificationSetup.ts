@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
-import { router } from 'expo-router';
+import { router, useRootNavigationState } from 'expo-router';
 import { useAuthStore } from '@/src/store/useAuthStore';
 import { getOrCreateInstallationId } from '@/src/utils/installationIdStorage';
 import { logger } from '@/src/utils/logger';
@@ -19,6 +19,7 @@ const ANDROID_CHANNEL_ID = 'chat_messages';
 export function usePushNotificationSetup() {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const registerMutation = useRegisterPushDeviceMutation();
+  const rootNavigationState = useRootNavigationState();
 
   // 알림 채널은 로그인 여부와 무관하게 앱 시작 시 한 번만 있으면 된다.
   useEffect(() => {
@@ -90,11 +91,14 @@ export function usePushNotificationSetup() {
   // useLastNotificationResponse는 앱이 실행 중일 때의 탭뿐 아니라, 완전히 종료된 상태에서
   // 알림 탭으로 앱이 새로 실행된 경우(cold start)까지 하나로 커버한다 — 별도
   // addNotificationResponseReceivedListener 리스너로는 cold start 케이스를 놓친다.
+  // rootNavigationState.key가 준비되기 전에 router.push를 호출하면 실패할 수 있어 대기한다
+  // (_layout.tsx의 기존 인증 리다이렉트 effect와 같은 가드).
   const lastNotificationResponse = Notifications.useLastNotificationResponse();
   useEffect(() => {
+    if (!rootNavigationState?.key) return;
     const route = lastNotificationResponse?.notification.request.content.data?.route;
     if (typeof route === 'string') {
       router.push(route as any);
     }
-  }, [lastNotificationResponse]);
+  }, [lastNotificationResponse, rootNavigationState?.key]);
 }
