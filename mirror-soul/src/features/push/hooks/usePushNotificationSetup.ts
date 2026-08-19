@@ -59,7 +59,7 @@ export function usePushNotificationSetup() {
       cancelled = true;
     };
     // registerMutation은 mutateAsync 호출로 내부 상태(isPending 등)가 바뀔 때마다 새 객체가
-    //되는 react-query 훅이라, deps에 넣으면 등록 자체가 이 effect를 재실행시켜 반복 호출된다.
+    // 되는 react-query 훅이라, deps에 넣으면 등록 자체가 이 effect를 재실행시켜 반복 호출된다.
     // 로그인 상태가 바뀔 때만 실행하면 되므로 의도적으로 뺀다.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoggedIn]);
@@ -86,15 +86,15 @@ export function usePushNotificationSetup() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 알림 탭 → payload의 route로 딥링크 이동
+  // 알림 탭 → payload의 route로 딥링크 이동.
+  // useLastNotificationResponse는 앱이 실행 중일 때의 탭뿐 아니라, 완전히 종료된 상태에서
+  // 알림 탭으로 앱이 새로 실행된 경우(cold start)까지 하나로 커버한다 — 별도
+  // addNotificationResponseReceivedListener 리스너로는 cold start 케이스를 놓친다.
+  const lastNotificationResponse = Notifications.useLastNotificationResponse();
   useEffect(() => {
-    const subscription = Notifications.addNotificationResponseReceivedListener((event) => {
-      const route = event.notification.request.content.data?.route;
-      if (typeof route === 'string') {
-        router.push(route as any);
-      }
-    });
-
-    return () => subscription.remove();
-  }, []);
+    const route = lastNotificationResponse?.notification.request.content.data?.route;
+    if (typeof route === 'string') {
+      router.push(route as any);
+    }
+  }, [lastNotificationResponse]);
 }

@@ -49,7 +49,7 @@
 - 로그인 상태가 될 때: 권한 확인/요청 → `getDevicePushTokenAsync()` → `PUT /push/devices`
 - 런타임 중 토큰이 롤링되는 드문 경우: `addPushTokenListener`로 감지해 재등록
 - 로그아웃 시: `authService.performLogout()`이 인증이 살아있는 동안 `DELETE /push/devices/{installationId}`를 호출(토큰 정리 전에 해야 함 — 이후엔 Authorization 헤더가 없어 호출 자체가 실패)
-- 알림 탭 시: `addNotificationResponseReceivedListener`로 `data.route`를 읽어 `router.push`
+- 알림 탭 시: `useLastNotificationResponse()`로 `data.route`를 읽어 `router.push` — 앱이 완전히 종료된 상태에서 알림 탭으로 실행된 경우(cold start)까지 포함해서 처리된다
 
 ### iOS는 아직 처리하지 않음
 
