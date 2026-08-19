@@ -85,6 +85,7 @@ export default function VoiceUpdateScreen() {
     } catch (error) {
       logger.error('녹음 시작 실패:', error);
       setStatus('idle');
+      Alert.alert('녹음을 시작하지 못했습니다', '잠시 후 다시 시도해주세요.');
     }
   };
 
