@@ -17,6 +17,8 @@ interface VoiceUpdateButtonProps {
   onRetry: () => void;
   /** 2분 쿨다운이 남았으면 남은 초, 아니면 undefined. idle 상태에서만 의미가 있다. */
   cooldownRemainingSeconds?: number;
+  /** 쿨다운 여부를 아직 확인 못했으면(twinSync 조회 중이거나 실패) true — 확인 전까지는 녹음을 막는다. */
+  isCooldownStatusUnknown?: boolean;
 }
 
 /**
@@ -28,6 +30,7 @@ export default function VoiceUpdateButton({
   onPress,
   onRetry,
   cooldownRemainingSeconds,
+  isCooldownStatusUnknown,
 }: VoiceUpdateButtonProps) {
   const { width } = useWindowDimensions();
   const { colors } = useThemeColors();
@@ -40,7 +43,11 @@ export default function VoiceUpdateButton({
   const isRecording = status === 'recording';
   const isAnalyzing = status === 'analyzing';
   const isDone = status === 'done';
-  const isCoolingDown = isIdle && !!cooldownRemainingSeconds && cooldownRemainingSeconds > 0;
+  // 쿨다운 여부를 아직 모르는 동안(twinSync 로딩/에러)엔 "쿨다운 아님"으로 단정하지 않고
+  // 마찬가지로 막는다 — 확인 안 된 걸 확인됨으로 취급하면 쿨다운 중에도 녹음이 가능해진다.
+  const isKnownCoolingDown = isIdle && !!cooldownRemainingSeconds && cooldownRemainingSeconds > 0;
+  const isCheckingCooldown = isIdle && !!isCooldownStatusUnknown;
+  const isCoolingDown = isKnownCoolingDown || isCheckingCooldown;
 
   // 상태별 그라디언트 및 그림자 스타일 결정
   const gradientColors = isIdle
@@ -104,10 +111,17 @@ export default function VoiceUpdateButton({
 
       {/* 2. 하단 정보 및 액션 영역 */}
       <View style={styles.infoArea}>
-        {isIdle && isCoolingDown && (
+        {isIdle && isKnownCoolingDown && (
           <View style={styles.idleInfo}>
             <Text style={[styles.statusText, { color: colors.text.primary }]}>잠시 후 다시 시도해주세요</Text>
             <Text style={[styles.footerText, { color: colors.text.secondary }]}>{cooldownRemainingSeconds}초 후 다시 녹음할 수 있어요</Text>
+          </View>
+        )}
+
+        {isIdle && isCheckingCooldown && !isKnownCoolingDown && (
+          <View style={styles.idleInfo}>
+            <Text style={[styles.statusText, { color: colors.text.primary }]}>확인하는 중이에요</Text>
+            <Text style={[styles.footerText, { color: colors.text.secondary }]}>잠시만 기다려주세요</Text>
           </View>
         )}
 

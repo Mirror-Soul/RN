@@ -23,8 +23,8 @@ Growth 탭 하단에 "모든 학습 데이터는 End-to-End 암호화로 보호�
 
 | 대상 | 상태 | 근거 |
 |---|---|---|
-| S3 (음성/얼굴 데이터 저장 버킷) | ❌ 서버사이드 암호화 미설정 | `mirror-soul-infra/s3.tf` — `aws_s3_bucket_server_side_encryption_configuration` 리소스 자체가 없음, KMS 리소스도 0건 |
-| RDS MySQL (메인 DB) | ❌ 미암호화 | `mirror-soul-infra/rds-mysql.tf:69-100` (`aws_db_instance.mysql`)에 `storage_encrypted` 필드 자체가 없음 → 기본값 `false` |
+| S3 (음성/얼굴 데이터 저장 버킷) | ⚠️ 명시적 SSE 정책 없음 | `mirror-soul-infra/s3.tf` — `aws_s3_bucket_server_side_encryption_configuration` 리소스 자체가 없음, KMS 리소스도 0건. **다만 AWS는 2023년 1월부터 모든 S3 버킷에 SSE-S3를 계정 차원 기본값으로 자동 적용하므로, 신규 객체는 이 기본값으로 암호화됐을 가능성이 높다** — "미암호화"가 아니라 "KMS 등 강화된 암호화 정책은 없다"로 읽는 게 정확하다. 그 기본값 적용 이전에 올라간 기존 객체까지 소급 적용되는지는 별도 확인 필요 |
+| RDS MySQL (메인 DB) | ❌ 미암호화 | `mirror-soul-infra/rds-mysql.tf:69-100` (`aws_db_instance.mysql`)에 `storage_encrypted` 필드 자체가 없음 → 기본값 `false`. RDS는 S3와 달리 AWS가 자동으로 켜주는 기본 암호화가 없어서, 이 항목은 위 S3와 달리 "정말로 미암호화"가 맞다 |
 | RDS PostgreSQL (벡터 DB) | ✅ 암호화됨 | `mirror-soul-infra/rds-postgresql.tf:47` `storage_encrypted = true` — 유일하게 명시적으로 설정된 케이스 |
 | AI 서버 로컬 파일 | ❌ 평문 저장 | 아래 §4 참고 |
 
@@ -50,6 +50,16 @@ Growth 탭 하단에 "모든 학습 데이터는 End-to-End 암호화로 보호�
     (보안그룹, 코드 주석에 **"전체 허용. !임시 개발용!"**이라고 직접 명시돼 있음)
   - `mirror-soul-infra/rds-postgresql.tf:59` (`publicly_accessible = true`) + `rds-postgresql.tf:17-23`
     (동일하게 5432 전체 허용)
+- **AI 서버도 같은 패턴이다 — EC2가 퍼블릭 서브넷에서 고정 퍼블릭 IP로 직접 노출돼 있고,
+  보안그룹이 앱 포트를 전 인터넷에 열어둔다.**
+  - `mirror-soul-infra/ec2.tf`의 `aws_instance.ai_server` — `subnet_id = aws_subnet.public_a.id`
+  - `mirror-soul-infra/eip.tf`의 `aws_eip_association.ai_server_eip_asspc` — Elastic IP가 직접
+    연결돼 고정 퍼블릭 IP를 가짐
+  - `mirror-soul-infra/security-group.tf`의 `sg_ai_server` — FastAPI 포트(8000)가 `0.0.0.0/0`에
+    열려 있음(코드 주석: "굳이 안열어도 되지만 swagger나 그런거 사용 위해 열어둠")
+  - ALB/API Gateway/인증 프록시 없이 EC2가 바로 노출되는 구조다 — §4의 "애플리케이션
+    코드에 인증이 없다"는 사실과 합쳐지면, 실제로 외부에서 인증 없이 도달 가능하다는
+    결론이 선다(코드만으로는 이 결론이 안 나오고, 이 네트워크 근거가 있어야 성립함).
 - S3 버킷 CORS: `mirror-soul-infra/s3.tf:11-22` `allowed_origins = ["*"]` (주석: "운영 환경에서는
   프론트 도메인만 허용" 권고가 남아 있음 — 아직 반영 안 됨). 단 `s3.tf:25-31`의
   `aws_s3_bucket_public_access_block`은 4개 필드 모두 `true`로 정상 설정돼 있어 **버킷 자체의
@@ -62,12 +72,19 @@ Growth 탭 하단에 "모든 학습 데이터는 End-to-End 암호화로 보호�
 
 ## 4. AI 서버 — 인증 없음 + 평문 영구 저장
 
-`mirror-soul-AI`의 `model_calling/routers/chat.py`, `model_training/routers/training.py` 전체를
-확인했으나 **인증/인가 로직이 전무하다** — `Depends`, JWT, Authorization 헤더 검증 0건.
-요청에 실린 `user_id`/`target_user_id`를 검증 없이 그대로 신뢰한다.
+이 절의 결론은 두 근거를 합친 것이다: (1) 애플리케이션 코드 자체에 인증 로직이 없다는
+것 — 아래에서 코드 레벨로 확정적으로 검증됨, (2) §3에서 확인했듯 이 서버가 인프라
+레벨에서 실제로 인터넷에 직접 노출돼 있다는 것. (1)만으로는 "외부에서 접근 가능하다"고
+단정할 수 없다(ALB/게이트웨이 같은 중간 계층이 앞단에서 인증을 대신 처리하고 있을 수도
+있으므로) — 하지만 §3에서 그런 중간 계층이 전혀 없고 EC2가 퍼블릭 IP로 바로 노출된 걸
+확인했기 때문에, 두 사실을 합치면 실제 외부 접근이 가능하다는 결론이 선다.
 
-- `main.py:24`의 `/assets` 정적 마운트가 **무인증으로 공개**돼 있다 — URL만 알면 누구든
-  타인의 합성 음성 결과물에 접근 가능하다는 뜻이다.
+`mirror-soul-AI`의 `model_calling/routers/chat.py`, `model_training/routers/training.py` 전체를
+확인했으나 **애플리케이션 레벨 인증/인가 로직이 전무하다** — `Depends`, JWT, Authorization
+헤더 검증 0건. 요청에 실린 `user_id`/`target_user_id`를 검증 없이 그대로 신뢰한다.
+
+- `main.py:24`의 `/assets` 정적 마운트도 인증 없이 공개돼 있다. §3의 네트워크 노출 근거와
+  합쳐지면, URL만 알면 누구든 타인의 합성 음성 결과물에 접근 가능하다는 뜻이 된다.
 - 합성 음성 결과물이 평문으로 영구 저장된다: `model_calling/assets/{user_id}/result_audio.m4a`
   (`model_calling/services.py:248-253,284`).
 - 화자 유사도 검증용 참조 오디오도 평문 영구 저장: `model_calling/assets/clone_similarity/{user_uuid}/job-{job_id}-reference.mp3`
@@ -133,6 +150,7 @@ DB에서 URL 문자열을 읽어오는 필드일 뿐, 그 URL이 가리키는 �
   `mirror-soul-back/src/main/java/com/mirrorsoul/mirrorsoul_api/service/FileService.java`
 - 이번 조사에서 확인한 인프라 파일: `mirror-soul-infra/s3.tf`, `mirror-soul-infra/rds-mysql.tf`,
   `mirror-soul-infra/rds-postgresql.tf`, `mirror-soul-infra/security-group.tf`,
+  `mirror-soul-infra/ec2.tf`, `mirror-soul-infra/eip.tf`,
   `mirror-soul-infra/backend.tf`(참고: 여기 있는 `encrypt = true`는 Terraform 상태 파일 자체의
   S3 백엔드 암호화라 사용자 데이터와는 무관)
 - 이번 조사에서 확인한 AI 서버 파일: `mirror-soul-AI/main.py`,

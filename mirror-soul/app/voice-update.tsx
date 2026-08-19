@@ -39,6 +39,9 @@ export default function VoiceUpdateScreen() {
   // 백엔드 429로 실패하는 대신 녹음 시작 전에 미리 막는다.
   const twinSyncQuery = useTwinSyncQuery();
   const { isInCooldown, remainingSeconds } = useVoiceTrainingCooldown(twinSyncQuery.data?.lastVoiceTrainingAt);
+  // 쿨다운 여부를 아직 확인 못한 동안(로딩/에러) "쿨다운 아님"으로 잘못 단정하지 않도록,
+  // 확인되기 전까지는 녹음 버튼을 같이 막는다.
+  const isCooldownStatusUnknown = twinSyncQuery.isPending || twinSyncQuery.isError;
 
   // STT 훅 연동 (실시간 자막 표시용 — 업로드용 오디오 파일은 useVoiceRecording이 별도로 녹음)
   const { transcript, startListening, stopListening, resetTranscript } = useSTT('ko-KR');
@@ -159,6 +162,7 @@ export default function VoiceUpdateScreen() {
             onPress={handlePress}
             onRetry={handleRetry}
             cooldownRemainingSeconds={isInCooldown ? remainingSeconds : undefined}
+            isCooldownStatusUnknown={isCooldownStatusUnknown}
           />
         </View>
       </View>

@@ -41,16 +41,17 @@ function isAnswerableQuestion(
  * ValueBalanceModal 컴포넌트 (SRP)
  * 가치관 밸런스 게임 바텀시트입니다. GET /evolve/value-balance는 한 번에 질문 1개만 주므로,
  * 연속 질문 흐름은 "답변 제출 성공 → 쿼리 무효화 → 다음 질문 자동 refetch"로 구현합니다.
- * 진행률(N of dailyLimit)은 답변 직후엔 POST 응답을, 그 이전엔 GET 응답을 쓰고 싶지만
- * 화면 진입 직후엔 아직 아무것도 안 답한 시점의 GET 응답이라 큰 의미가 없어, 마지막 답변
- * 결과(POST 응답)만 로컬에 보관해 표시합니다 — 세션 내 재진입 시에도 이 값이 유지됩니다.
+ * 진행률(N of dailyLimit)은 GET 응답의 answeredCount/dailyLimit을 기본값으로 쓰고, 방금
+ * 답변을 제출했다면(POST 응답이 GET refetch보다 먼저 도착하는 짧은 순간) lastAnswer로
+ * 덮어써서 최신값을 보여줍니다 — 오늘 이미 답변한 뒤 모달을 다시 열어도 진행률이 0%로
+ * 보이지 않습니다.
  */
 export default function ValueBalanceModal({ isOpen, onClose, onComplete }: ValueBalanceModalProps) {
   const { colors } = useThemeColors();
   const { data: question, isLoading, isError, isFetching, refetch } = useValueBalanceQuestionQuery();
   const submitMutation = useSubmitValueBalanceAnswerMutation();
-  // 재진입(닫았다 다시 열기) 시에도 마지막으로 알고 있던 진행률을 그대로 보여준다 —
-  // GET 응답엔 진행 카운트가 없어서, 답할 때마다 로컬에 쌓아둔 값이 유일한 소스다.
+  // 방금 제출한 답변 결과를 잠깐 보관한다 — GET이 무효화→refetch로 최신 카운트를 받아오기
+  // 전까지의 짧은 틈을 메워, 진행률 표시가 답변 직후 한 박자 늦게 갱신되지 않도록 한다.
   const [lastAnswer, setLastAnswer] = useState<ValueBalanceAnswerResult | null>(null);
   // 방금 탭한 선택지를 잠깐 하이라이트해서 "내가 뭘 눌렀는지" 시각 피드백을 준다.
   const [selectedSide, setSelectedSide] = useState<ValueBalanceChosenSide | null>(null);
@@ -90,7 +91,15 @@ export default function ValueBalanceModal({ isOpen, onClose, onComplete }: Value
     }
   };
 
-  const progress = lastAnswer ? (lastAnswer.answeredCount / lastAnswer.dailyLimit) * 100 : 0;
+  // lastAnswer(방금 제출한 POST 응답)가 있으면 그걸 우선 쓰고, 없으면 GET 응답의
+  // answeredCount/dailyLimit을 기본값으로 쓴다 — 화면 진입 직후에도 오늘 이미 답변한
+  // 개수를 정확히 반영한다.
+  const progressStats = lastAnswer
+    ? { answeredCount: lastAnswer.answeredCount, dailyLimit: lastAnswer.dailyLimit }
+    : question
+      ? { answeredCount: question.answeredCount, dailyLimit: question.dailyLimit }
+      : null;
+  const progress = progressStats ? (progressStats.answeredCount / progressStats.dailyLimit) * 100 : 0;
   const isFinished = !isLoading && !isError && question?.questionId == null;
 
   return (
@@ -100,8 +109,8 @@ export default function ValueBalanceModal({ isOpen, onClose, onComplete }: Value
           style={[styles.progressTrack, { backgroundColor: colors.background.glass }]}
           accessibilityRole="progressbar"
           accessibilityValue={
-            lastAnswer
-              ? { min: 0, max: lastAnswer.dailyLimit, now: lastAnswer.answeredCount }
+            progressStats
+              ? { min: 0, max: progressStats.dailyLimit, now: progressStats.answeredCount }
               : { min: 0, max: 1, now: 0 }
           }
         >
@@ -220,9 +229,9 @@ export default function ValueBalanceModal({ isOpen, onClose, onComplete }: Value
                 </View>
               </View>
 
-              {lastAnswer && (
+              {progressStats && (
                 <Text style={[styles.stepText, { color: colors.text.muted }]}>
-                  질문 {lastAnswer.answeredCount + 1} / {lastAnswer.dailyLimit}
+                  질문 {progressStats.answeredCount + 1} / {progressStats.dailyLimit}
                 </Text>
               )}
             </>

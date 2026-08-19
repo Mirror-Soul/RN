@@ -212,10 +212,13 @@
 - [ ] **학습 데이터(음성/얼굴 등) 보안 갭 — 인프라+AI 서버 협업 필요** (2026-08-18 조사,
   `fix/164-evolve-ui`, Growth 탭 "안전과 개인정보" 문구 검증 중 발견) — RDS 두 개(MySQL/PostgreSQL)
   전부 보안그룹이 DB 포트를 전 인터넷(`0.0.0.0/0`)에 열어두고 있고(코드 주석에 "임시 개발용"이라고
-  직접 적혀 있음), S3/RDS MySQL 저장 시 암호화도 미설정, AI 서버(`mirror-soul-AI`) API 전체에
-  인증/인가가 없어 URL만 알면 타인의 합성 음성 결과물에 접근 가능. 자세한 근거와 우선순위별
-  권장 조치는 `docs/TRAINING_DATA_SECURITY_FINDINGS.md` 참고 — §4/§6.3의 기존 법적/컴플라이언스
-  P0 항목들과 같은 급으로 취급할 것을 권장.
+  직접 적혀 있음), RDS MySQL은 저장 시 암호화도 미설정(S3는 명시적 SSE 정책은 없지만 AWS
+  기본 SSE-S3가 적용됐을 가능성이 있어 RDS와 같은 "미암호화" 취급은 부정확 — 문서에서 구분함).
+  AI 서버(`mirror-soul-AI`)는 조사한 `chat.py`/`training.py`/`/assets`에서 인증·인가를 확인하지
+  못했고, 인프라 확인 결과 이 서버가 EC2 퍼블릭 서브넷+고정 퍼블릭 IP+보안그룹 전체개방으로
+  중간 계층 없이 직접 노출돼 있어 URL만 알면 실제로 외부 접근이 가능. 자세한 근거와
+  우선순위별 권장 조치는 `docs/TRAINING_DATA_SECURITY_FINDINGS.md` 참고 — §4/§6.3의 기존
+  법적/컴플라이언스 P0 항목들과 같은 급으로 취급할 것을 권장.
 - [ ] **발견(홈) 화면 상대 프로필 상세 — 기존 추천 상세 API에 필드 추가 필요** (2026-08-14 조사, 2026-08-17 정정 — 최초 기록은 "상세 API가 없다"는 잘못된 전제였음, CodeRabbit 리뷰 검증 과정에서 발견) — 지금 `DiscoveryMatchCard.tsx`/`PartnerProfileModal.tsx`가 보여주는 정보(트윈 싱크로율, AI 페르소나 태그, MBTI 축 밸런스, AI 트윈 한줄소개, 가치관 성향)는 전부 `SoulMatch` 목업 데이터다. 백엔드 소스를 직접 확인해보니 **`HomeController`에 발견 탭용 추천 목록/상세/스와이프 API가 이미 구현돼 있다**(`GET /home/recommend`, `GET /home/recommendations/{target-user-uuid}`, `POST /home/recommendations/{target-user-uuid}/swipe` — `MatchController`의 `/match/twins`는 별개로, "이미 통화했던 트윈" 목록이라 발견 탭과 무관함). 상세 응답 `HomeResDTO.RecommendationDetailDTO`엔 `syncRate`/`selfIntroduction`/`twinStatus`/`voicePreview`(실제 재생 가능한 presigned 오디오 URL, 이미 구현됨)까지 있지만, 아래는 여전히 없다:
   - `ClonePersonalityTag`(clone_id, content, display_order) — "AI 페르소나 분석" 태그에 대응, DTO에 없음
   - `MbtiProfile`(mbti, ieScore/nsScore/ftScore/pjScore) — "성향 밸런스" 4축 바에 대응, DTO에 없음
