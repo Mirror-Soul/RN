@@ -1,7 +1,7 @@
 import FaceDataCameraStage from '@/src/components/home/grow/face-data/FaceDataCameraStage';
 import FaceDataCaptureButton from '@/src/components/home/grow/face-data/FaceDataCaptureButton';
-import FaceDataHeader from '@/src/components/home/grow/face-data/FaceDataHeader';
 import FaceDataPromptCard from '@/src/components/home/grow/face-data/FaceDataPromptCard';
+import GrowSubScreenHeader from '@/src/components/home/grow/GrowSubScreenHeader';
 import { useFaceDataCapture } from '@/src/components/home/grow/face-data/hooks/useFaceDataCapture';
 import { useFaceDataProcessor } from '@/src/components/home/grow/face-data/hooks/useFaceDataProcessor';
 import { Spacing } from '@/src/constants/theme';
@@ -52,7 +52,7 @@ export default function FaceDataUpdateScreen() {
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background.primary }]}>
       <View style={styles.container}>
-        <FaceDataHeader />
+        <GrowSubScreenHeader title="얼굴 데이터 업데이트" />
 
         <ScrollView
           style={styles.scrollView}

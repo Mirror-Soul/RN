@@ -3,6 +3,7 @@ import {
   ExpoSpeechRecognitionModule,
   useSpeechRecognitionEvent,
 } from 'expo-speech-recognition';
+import { logger } from '@/src/utils/logger';
 
 type SupportedLanguage = 'ko-KR' | 'en-US';
 
@@ -47,9 +48,9 @@ export function useSTT(lang: SupportedLanguage = 'ko-KR') {
 
   useSpeechRecognitionEvent('error', (event) => {
     if (event.error === 'no-speech') {
-      console.warn('STT 정보: 음성이 감지되지 않았습니다.');
+      logger.warn('STT 정보: 음성이 감지되지 않았습니다.');
     } else {
-      console.error('STT 오류:', event.error, event.message);
+      logger.error('STT 오류:', event.error, event.message);
     }
     setIsListening(false);
     

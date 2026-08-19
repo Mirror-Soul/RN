@@ -56,7 +56,7 @@ export const completeVoiceUpdate = async (
   }
 };
 
-/** 가치관 밸런스 게임 - 오늘의 질문 조회. 일일 quota 소진 시 result가 null로 온다(에러 아님). */
+/** 가치관 밸런스 게임 - 오늘의 질문 조회. 일일 quota 소진 시에도 result는 null이 아니며, 그 안의 questionId 등 문제 필드만 null로 온다(에러 아님). */
 export const getValueBalanceQuestion = async (): Promise<ValueBalanceQuestionResponse> => {
   logger.debug('getValueBalanceQuestion');
   try {

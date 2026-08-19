@@ -1,15 +1,19 @@
 import BackIcon from '@/assets/images/common/back.svg';
-import {Colors, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
+import { FontFamily, FontSize, FontWeight, Spacing } from '@/src/constants/theme';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 
+interface GrowSubScreenHeaderProps {
+  title: string;
+}
+
 /**
- * 목소리 업데이트 헤더 (SRP)
- * 뒤로가기 버튼과 중앙 타이틀을 렌더링합니다.
+ * 성장 탭 하위 캡처 화면(목소리/얼굴 데이터 업데이트) 공통 헤더 (SRP)
+ * 뒤로가기 버튼 + 중앙 타이틀만 다르고 나머지 구조가 동일해서 화면별 헤더로 중복 두지 않는다.
  */
-export default function VoiceUpdateHeader() {
+export default function GrowSubScreenHeader({ title }: GrowSubScreenHeaderProps) {
   const router = useRouter();
   const { colors } = useThemeColors();
 
@@ -24,9 +28,9 @@ export default function VoiceUpdateHeader() {
       >
         <BackIcon width={24} height={24} />
       </TouchableOpacity>
-      
+
       <View style={styles.titleContainer}>
-        <Text style={[styles.title, { color: colors.text.primary }]}>목소리 업데이트</Text>
+        <Text style={[styles.title, { color: colors.text.primary }]}>{title}</Text>
       </View>
     </View>
   );

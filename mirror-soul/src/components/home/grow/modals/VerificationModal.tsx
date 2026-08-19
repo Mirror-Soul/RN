@@ -14,13 +14,22 @@ interface VerificationModalProps {
 /**
  * VerificationModal 컴포넌트 (SRP)
  * 프로필(직업/신원) 인증 신청 바텀시트입니다.
- * 실제 이미지 업로드/인증 심사 연동은 범위 밖 — mock 타이머로 완료 처리.
+ * 실제 이미지 피커/업로드/인증 심사 연동은 범위 밖 — mock 타이머로 완료 처리.
+ * 다만 최소한 "이미지를 선택하는 동작을 거쳐야 인증 신청이 가능하다"는 흐름의 모양은
+ * 지킨다 — hasSelectedImage 없이 인증 신청이 바로 성공 처리되는 걸 막기 위한 로컬 상태.
  */
 export default function VerificationModal({ isOpen, onClose, onVerified }: VerificationModalProps) {
   const { colors } = useThemeColors();
   const [isUploading, setIsUploading] = useState(false);
+  const [hasSelectedImage, setHasSelectedImage] = useState(false);
+
+  const handleSelectImage = () => {
+    // TODO: 실제 이미지 피커(expo-image-picker 등) 연동 시 교체 — 지금은 선택 여부만 로컬로 관리
+    setHasSelectedImage(true);
+  };
 
   const handleVerify = () => {
+    if (!hasSelectedImage) return;
     setIsUploading(true);
     // TODO: 실제 이미지 업로드 + 인증 심사 API 연동 시 교체
     setTimeout(() => {
@@ -44,22 +53,38 @@ export default function VerificationModal({ isOpen, onClose, onVerified }: Verif
         </View>
 
         <TouchableOpacity
-          style={[styles.uploadBox, { borderColor: colors.border.primary }]}
+          style={[
+            styles.uploadBox,
+            { borderColor: hasSelectedImage ? Colors.primary.electricCyan : colors.border.primary },
+          ]}
+          onPress={handleSelectImage}
           activeOpacity={0.7}
           accessibilityRole="button"
-          accessibilityLabel="증명 이미지 업로드"
+          accessibilityLabel={hasSelectedImage ? '증명 이미지 선택됨' : '증명 이미지 선택'}
+          accessibilityState={{ selected: hasSelectedImage }}
         >
-          <Feather name="upload" size={28} color={colors.text.muted} />
-          <Text style={[styles.uploadText, { color: colors.text.muted }]}>Upload Proof Image</Text>
+          <Feather
+            name={hasSelectedImage ? 'check-circle' : 'upload'}
+            size={28}
+            color={hasSelectedImage ? Colors.primary.electricCyan : colors.text.muted}
+          />
+          <Text style={[styles.uploadText, { color: hasSelectedImage ? Colors.primary.electricCyan : colors.text.muted }]}>
+            {hasSelectedImage ? '이미지가 선택됐어요' : '이미지 선택하기'}
+          </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.verifyButton, { backgroundColor: colors.text.primary }]}
+          style={[
+            styles.verifyButton,
+            { backgroundColor: colors.text.primary },
+            !hasSelectedImage && styles.verifyButtonDisabled,
+          ]}
           onPress={handleVerify}
-          disabled={isUploading}
+          disabled={isUploading || !hasSelectedImage}
           activeOpacity={0.85}
           accessibilityRole="button"
           accessibilityLabel="인증 신청하기"
+          accessibilityState={{ disabled: isUploading || !hasSelectedImage }}
         >
           {isUploading ? (
             <ActivityIndicator color={colors.background.primary} />
@@ -124,13 +149,15 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xs,
     fontWeight: FontWeight.black,
     letterSpacing: 1.1,
-    textTransform: 'uppercase',
   },
   verifyButton: {
     height: 64,
     borderRadius: Radii.xxl,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  verifyButtonDisabled: {
+    opacity: 0.5,
   },
   verifyButtonText: {
     fontFamily: FontFamily.sans,

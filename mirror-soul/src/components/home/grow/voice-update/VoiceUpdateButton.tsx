@@ -2,8 +2,11 @@ import CompleteIcon from '@/assets/images/common/evlove/voice-update/voice_updat
 import StopIcon from '@/assets/images/common/evlove/voice-update/voice_update_stop.svg';
 import VoiceIcon from '@/assets/images/common/Voice_icon_white.svg';
 import {Colors, Radii, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
+import GrowDoneActionRow from '@/src/components/home/grow/GrowDoneActionRow';
+import VoiceUpdateIdleStatus, {
+  VoiceUpdateIdleStatusVariant,
+} from '@/src/components/home/grow/voice-update/VoiceUpdateIdleStatus';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
@@ -14,7 +17,17 @@ interface VoiceUpdateButtonProps {
   status: VoiceUpdateStatus;
   elapsedTime?: string;
   onPress: () => void;
-  onRetry?: () => void;
+  onRetry: () => void;
+  /** 2분 쿨다운이 남았으면 남은 초, 아니면 undefined. idle 상태에서만 의미가 있다. */
+  cooldownRemainingSeconds?: number;
+  /** 쿨다운 여부를 확인하는 중(twinSync 최초 조회)이면 true — 곧 풀리는 상태라 안내만 한다. */
+  isCooldownStatusPending?: boolean;
+  /** 쿨다운 조회 자체가 실패했으면 true — pending과 달리 저절로 안 풀리므로 재시도 UI가 필요하다. */
+  isCooldownStatusError?: boolean;
+  /** 쿨다운 조회 재시도가 진행 중이면 true(에러 상태에서 "다시 확인"을 탭한 직후). */
+  isCooldownCheckRetrying?: boolean;
+  /** 쿨다운 조회 재시도. isCooldownStatusError일 때만 호출된다. */
+  onRetryCooldownCheck?: () => void;
 }
 
 /**
@@ -25,11 +38,15 @@ export default function VoiceUpdateButton({
   elapsedTime,
   onPress,
   onRetry,
+  cooldownRemainingSeconds,
+  isCooldownStatusPending,
+  isCooldownStatusError,
+  isCooldownCheckRetrying,
+  onRetryCooldownCheck,
 }: VoiceUpdateButtonProps) {
-  const router = useRouter();
   const { width } = useWindowDimensions();
   const { colors } = useThemeColors();
-  
+
   // 기기 폭에 비례하는 동적 크기 계산 (기준 393px에서 96px은 약 24.4%)
   // 너무 작아지거나 커지는 것을 방지하기 위해 clamp 적용
   const dynamicButtonSize = Math.max(80, Math.min(width * 0.244, 112));
@@ -38,6 +55,20 @@ export default function VoiceUpdateButton({
   const isRecording = status === 'recording';
   const isAnalyzing = status === 'analyzing';
   const isDone = status === 'done';
+  // 쿨다운 여부를 아직 모르는 동안(twinSync 로딩/에러)엔 "쿨다운 아님"으로 단정하지 않고
+  // 마찬가지로 막는다 — 확인 안 된 걸 확인됨으로 취급하면 쿨다운 중에도 녹음이 가능해진다.
+  // pending(로딩)과 error(조회 실패)는 서로 다르게 보여준다 — pending은 곧 풀리지만 error는
+  // 사용자가 직접 재시도해야 풀리므로, error만 별도로 재시도 UI를 갖는다. 배타조건 판별은
+  // 여기 한 곳에서만 하고, VoiceUpdateIdleStatus는 결과 variant만 받아 표시에만 집중한다.
+  const idleStatus: VoiceUpdateIdleStatusVariant =
+    !!cooldownRemainingSeconds && cooldownRemainingSeconds > 0
+      ? 'cooldown'
+      : isCooldownStatusError
+        ? 'checkFailed'
+        : isCooldownStatusPending
+          ? 'checking'
+          : 'ready';
+  const isCoolingDown = isIdle && idleStatus !== 'ready';
 
   // 상태별 그라디언트 및 그림자 스타일 결정
   const gradientColors = isIdle
@@ -79,11 +110,12 @@ export default function VoiceUpdateButton({
           activeOpacity={0.8}
           onPress={onPress}
           style={[
-            styles.buttonWrapper, 
-            shadowStyle, 
-            { width: dynamicButtonSize, height: dynamicButtonSize } // 동적 사이즈 적용
+            styles.buttonWrapper,
+            shadowStyle,
+            { width: dynamicButtonSize, height: dynamicButtonSize }, // 동적 사이즈 적용
+            isCoolingDown && styles.buttonCoolingDown,
           ]}
-          disabled={isAnalyzing}
+          disabled={isAnalyzing || isCoolingDown}
         >
           <LinearGradient
             colors={gradientColors}
@@ -101,10 +133,12 @@ export default function VoiceUpdateButton({
       {/* 2. 하단 정보 및 액션 영역 */}
       <View style={styles.infoArea}>
         {isIdle && (
-          <View style={styles.idleInfo}>
-            <Text style={[styles.statusText, { color: colors.text.primary }]}>녹음 시작</Text>
-            <Text style={[styles.footerText, { color: colors.text.secondary }]}>마이크 버튼을 눌러 녹음을 시작하세요</Text>
-          </View>
+          <VoiceUpdateIdleStatus
+            status={idleStatus}
+            cooldownRemainingSeconds={cooldownRemainingSeconds}
+            isRetrying={isCooldownCheckRetrying}
+            onRetryCooldownCheck={onRetryCooldownCheck}
+          />
         )}
 
         {isRecording && (
@@ -127,25 +161,8 @@ export default function VoiceUpdateButton({
         )}
 
         {isDone && (
-          /* 최종 액션 유도 영역 - 미니멀 리팩토링 */
           <View style={styles.finalActionArea}>
-            <View style={styles.actionRow}>
-              <TouchableOpacity
-                activeOpacity={0.7}
-                onPress={onRetry}
-                style={[styles.actionChip, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
-              >
-                <Text style={[styles.actionChipText, { color: colors.text.secondary }]}>다른 문장 읽어보기</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                activeOpacity={0.7}
-                onPress={() => router.back()}
-                style={[styles.actionChip, styles.primaryChip]}
-              >
-                <Text style={[styles.actionChipText, styles.primaryChipText]}>완료하기</Text>
-              </TouchableOpacity>
-            </View>
+            <GrowDoneActionRow retryLabel="다른 문장 읽어보기" onRetry={onRetry} />
           </View>
         )}
       </View>
@@ -164,6 +181,9 @@ const styles = StyleSheet.create({
     // width와 height는 컴포넌트 내부에서 동적으로 할당됨
     borderRadius: Radii.full,
   },
+  buttonCoolingDown: {
+    opacity: 0.5,
+  },
   button: {
     flex: 1,
     borderRadius: Radii.full,
@@ -173,10 +193,6 @@ const styles = StyleSheet.create({
   infoArea: {
     alignItems: 'center',
     height: 80,
-  },
-  idleInfo: {
-    alignItems: 'center',
-    gap: Spacing.lg,
   },
   recordingInfo: {
     alignItems: 'center',
@@ -226,30 +242,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingTop: 10,
-  },
-  actionRow: {
-    flexDirection: 'row',
-    gap: Spacing.md,
-    alignItems: 'center',
-  },
-  actionChip: {
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.xxl,
-    borderRadius: Radii.full,
-    borderWidth: 0.6,
-  },
-  actionChipText: {
-    fontSize: FontSize.md,
-    fontWeight: FontWeight.medium,
-    letterSpacing: -0.3,
-  },
-  primaryChip: {
-    backgroundColor: 'rgba(0, 211, 243, 0.15)',
-    borderColor: 'rgba(0, 211, 243, 0.3)',
-  },
-  primaryChipText: {
-    color: Colors.primary.electricCyan,
-    fontWeight: FontWeight.semibold,
   },
 });
 

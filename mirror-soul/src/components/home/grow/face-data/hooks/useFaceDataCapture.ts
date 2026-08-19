@@ -179,7 +179,7 @@ export function useFaceDataCapture() {
           cameraRef.current.stopRecording();
         }
       } catch (error) {
-        console.error('클린업 중 녹화 중단 에러 (무시됨):', error);
+        logger.error('클린업 중 녹화 중단 에러 (무시됨):', error);
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

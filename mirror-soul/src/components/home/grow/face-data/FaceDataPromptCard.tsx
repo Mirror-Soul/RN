@@ -53,7 +53,7 @@ export default function FaceDataPromptCard({
   return (
     <View style={styles.container}>
       <View style={styles.head}>
-        <Text style={styles.eyebrow}>STEP {stepIndex + 1} / {totalSteps}</Text>
+        <Text style={styles.eyebrow}>단계 {stepIndex + 1} / {totalSteps}</Text>
         <Text style={[styles.title, { color: colors.text.primary }]}>{prompt.guideMessage}</Text>
         <Text style={[styles.subTitle, { color: colors.text.secondary }]}>{subTitle}</Text>
       </View>
@@ -113,7 +113,6 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xs,
     fontWeight: FontWeight.black,
     letterSpacing: 1.5,
-    textTransform: 'uppercase',
     color: Colors.primary.electricCyan,
   },
   title: {

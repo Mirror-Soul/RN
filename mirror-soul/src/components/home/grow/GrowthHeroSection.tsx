@@ -22,8 +22,8 @@ interface GrowthHeroSectionProps {
  * 인증 모달 오픈 상태와 GET /evolve 조회는 부모(grow.tsx)가 소유하고, 이 컴포넌트는
  * 로딩/에러/성공 상태에 따른 표시만 담당한다 (AvailableTimeCard와 동일한 원칙).
  *
- * 실제 % 숫자는 진행바 라벨(Similarity Sync N% Complete) 한 곳에서만 보여준다 —
- * 예전엔 헤드라인에 "거리 100%"(=100-싱크율), 아래엔 "0% Complete"(=싱크율)로
+ * 실제 % 숫자는 진행바 라벨(유사도 동기화 N% 완료) 한 곳에서만 보여준다 —
+ * 예전엔 헤드라인에 "거리 100%"(=100-싱크율), 아래엔 "0% 완료"(=싱크율)로
  * 같은 값을 반대로 두 번 보여줘서 계산이 틀린 것처럼 보였다. 헤드라인은 구간별
  * 자연스러운 문구(growthSyncCopy)로 대체해 숫자 중복 없이 뉘앙스만 전달한다.
  */
@@ -40,7 +40,7 @@ export default function GrowthHeroSection({
   const safePercent = hasValue ? Math.min(100, Math.max(0, similarityPercent)) : 0;
   const syncCopy = hasValue ? getSyncCopy(safePercent) : null;
 
-  const progressValueText = isLoading ? '측정 중...' : isError ? '조회 실패' : `${safePercent}% Complete`;
+  const progressValueText = isLoading ? '측정 중...' : isError ? '조회 실패' : `${safePercent}% 완료`;
 
   return (
     <View style={styles.container}>
@@ -65,17 +65,18 @@ export default function GrowthHeroSection({
         {isVerified ? (
           <View style={styles.verifiedBadge}>
             <Ionicons name="shield-checkmark-outline" size={14} color={Colors.primary.electricCyan} />
-            <Text style={styles.verifiedText}>Verified</Text>
+            <Text style={styles.verifiedText}>인증됨</Text>
           </View>
         ) : (
           <TouchableOpacity
-            style={[styles.verifyButton, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
+            style={[styles.verifyButton, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}
             onPress={onVerifyPress}
             activeOpacity={0.7}
             accessibilityRole="button"
             accessibilityLabel="프로필 인증하기"
           >
-            <Ionicons name="shield-checkmark-outline" size={20} color={colors.text.muted} />
+            <Ionicons name="shield-checkmark-outline" size={14} color={colors.text.secondary} />
+            <Text style={[styles.verifyButtonText, { color: colors.text.secondary }]}>프로필 인증</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -95,7 +96,7 @@ export default function GrowthHeroSection({
         />
       </View>
       <View style={styles.progressLabelRow}>
-        <Text style={[styles.progressLabel, { color: colors.text.muted }]}>Similarity Sync</Text>
+        <Text style={[styles.progressLabel, { color: colors.text.muted }]}>유사도 동기화</Text>
         <Text style={styles.progressLabelAccent}>{progressValueText}</Text>
       </View>
     </View>
@@ -139,16 +140,22 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontWeight: FontWeight.black,
     letterSpacing: -0.1,
-    textTransform: 'uppercase',
     color: Colors.primary.electricCyan,
   },
   verifyButton: {
-    width: 40,
-    height: 40,
-    borderRadius: Radii.lg,
-    borderWidth: 1,
-    justifyContent: 'center',
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: Spacing.xs,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: Radii.full,
+    borderWidth: 1,
+  },
+  verifyButtonText: {
+    fontFamily: FontFamily.sans,
+    fontSize: 9,
+    fontWeight: FontWeight.black,
+    letterSpacing: -0.1,
   },
   subCopy: {
     fontFamily: FontFamily.sans,
@@ -174,14 +181,12 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontWeight: FontWeight.black,
     letterSpacing: 1.1,
-    textTransform: 'uppercase',
   },
   progressLabelAccent: {
     fontFamily: FontFamily.sans,
     fontSize: 9,
     fontWeight: FontWeight.black,
     letterSpacing: 1.1,
-    textTransform: 'uppercase',
     color: Colors.primary.electricCyan,
   },
 });
