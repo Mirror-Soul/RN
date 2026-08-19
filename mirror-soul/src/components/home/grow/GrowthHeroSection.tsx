@@ -69,13 +69,14 @@ export default function GrowthHeroSection({
           </View>
         ) : (
           <TouchableOpacity
-            style={[styles.verifyButton, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
+            style={[styles.verifyButton, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}
             onPress={onVerifyPress}
             activeOpacity={0.7}
             accessibilityRole="button"
             accessibilityLabel="프로필 인증하기"
           >
-            <Ionicons name="shield-checkmark-outline" size={20} color={colors.text.muted} />
+            <Ionicons name="shield-checkmark-outline" size={14} color={colors.text.secondary} />
+            <Text style={[styles.verifyButtonText, { color: colors.text.secondary }]}>프로필 인증</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -142,12 +143,19 @@ const styles = StyleSheet.create({
     color: Colors.primary.electricCyan,
   },
   verifyButton: {
-    width: 40,
-    height: 40,
-    borderRadius: Radii.lg,
-    borderWidth: 1,
-    justifyContent: 'center',
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: Spacing.xs,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: Radii.full,
+    borderWidth: 1,
+  },
+  verifyButtonText: {
+    fontFamily: FontFamily.sans,
+    fontSize: 9,
+    fontWeight: FontWeight.black,
+    letterSpacing: -0.1,
   },
   subCopy: {
     fontFamily: FontFamily.sans,
