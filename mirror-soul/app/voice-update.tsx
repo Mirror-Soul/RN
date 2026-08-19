@@ -134,13 +134,16 @@ export default function VoiceUpdateScreen() {
     sentenceQuery.refetch();
   };
 
-  // 컴포넌트 언마운트 시 모든 타이머 정리
+  // 컴포넌트 언마운트 시 타이머 정리.
+  // stopListening은 isListening/transcript가 바뀔 때마다(녹음 중 거의 매 순간) 참조가
+  // 바뀌는 콜백이라, 의존성 배열에 넣으면 언마운트가 아니라 녹음 중 자막이 갱신될 때마다
+  // cleanup이 재실행되어 네이티브 STT의 stop()이 반복 호출된다. STT 쪽 정리는 useSTT
+  // 내부의 자체 언마운트 effect가 이미 담당하므로 여기서는 타이머만 정리한다.
   useEffect(() => {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
-      stopListening();
     };
-  }, [stopListening]);
+  }, []);
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background.primary }]}>

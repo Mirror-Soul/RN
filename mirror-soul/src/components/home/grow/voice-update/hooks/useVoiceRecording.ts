@@ -34,13 +34,19 @@ export function useVoiceRecording() {
     return status.granted;
   }, []);
 
+  // hasPermission(리액트 state)이 아니라 네이티브 모듈에서 매번 새로 조회한다.
+  // 호출부(voice-update.tsx)는 requestPermission() 직후 같은 함수 실행 안에서 바로
+  // startRecording()을 호출하는데, 그 시점엔 setHasPermission이 아직 리렌더로
+  // 반영되기 전이라 이 콜백이 여전히 권한 요청 전(hasPermission=false)의 클로저를
+  // 참조한다 — state로 체크하면 방금 허용한 권한인데도 거부로 오판해 던진다.
   const startRecording = useCallback(async () => {
-    if (!hasPermission) {
+    const status = await AudioModule.getRecordingPermissionsAsync();
+    if (!status.granted) {
       throw new Error('마이크 권한이 필요합니다.');
     }
     await audioRecorder.prepareToRecordAsync();
     audioRecorder.record();
-  }, [hasPermission, audioRecorder]);
+  }, [audioRecorder]);
 
   /** 녹음을 멈추고 파일 URI + 녹음 길이(초)를 반환한다. */
   const stopRecording = useCallback(async () => {
