@@ -37,11 +37,10 @@ export default function VoiceUpdateScreen() {
   // 그로우 탭 미션 카드와 같은 쿼리키를 써서 캐시를 공유한다(추가 네트워크 호출 없음).
   // 마지막 학습 시각을 기준으로 2분 쿨다운이 남았으면, 녹음+STT+업로드를 다 끝낸 뒤
   // 백엔드 429로 실패하는 대신 녹음 시작 전에 미리 막는다.
+  // pending(최초 로딩)과 error(조회 실패)를 하나로 합치면, 조회가 실패했을 때 이 화면
+  // 안에서 다시 시도할 방법이 없어 버튼이 영구적으로 막힌 채 남는다 — 별도로 넘긴다.
   const twinSyncQuery = useTwinSyncQuery();
   const { isInCooldown, remainingSeconds } = useVoiceTrainingCooldown(twinSyncQuery.data?.lastVoiceTrainingAt);
-  // 쿨다운 여부를 아직 확인 못한 동안(로딩/에러) "쿨다운 아님"으로 잘못 단정하지 않도록,
-  // 확인되기 전까지는 녹음 버튼을 같이 막는다.
-  const isCooldownStatusUnknown = twinSyncQuery.isPending || twinSyncQuery.isError;
 
   // STT 훅 연동 (실시간 자막 표시용 — 업로드용 오디오 파일은 useVoiceRecording이 별도로 녹음)
   const { transcript, startListening, stopListening, resetTranscript } = useSTT('ko-KR');
@@ -162,7 +161,10 @@ export default function VoiceUpdateScreen() {
             onPress={handlePress}
             onRetry={handleRetry}
             cooldownRemainingSeconds={isInCooldown ? remainingSeconds : undefined}
-            isCooldownStatusUnknown={isCooldownStatusUnknown}
+            isCooldownStatusPending={twinSyncQuery.isPending}
+            isCooldownStatusError={twinSyncQuery.isError}
+            isCooldownCheckRetrying={twinSyncQuery.isError && twinSyncQuery.isFetching}
+            onRetryCooldownCheck={() => twinSyncQuery.refetch()}
           />
         </View>
       </View>

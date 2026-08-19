@@ -5,7 +5,7 @@ import {Colors, Radii, FontFamily, FontSize, FontWeight, Spacing} from '@/src/co
 import GrowDoneActionRow from '@/src/components/home/grow/GrowDoneActionRow';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 export type VoiceUpdateStatus = 'idle' | 'recording' | 'analyzing' | 'done';
@@ -17,8 +17,14 @@ interface VoiceUpdateButtonProps {
   onRetry: () => void;
   /** 2분 쿨다운이 남았으면 남은 초, 아니면 undefined. idle 상태에서만 의미가 있다. */
   cooldownRemainingSeconds?: number;
-  /** 쿨다운 여부를 아직 확인 못했으면(twinSync 조회 중이거나 실패) true — 확인 전까지는 녹음을 막는다. */
-  isCooldownStatusUnknown?: boolean;
+  /** 쿨다운 여부를 확인하는 중(twinSync 최초 조회)이면 true — 곧 풀리는 상태라 안내만 한다. */
+  isCooldownStatusPending?: boolean;
+  /** 쿨다운 조회 자체가 실패했으면 true — pending과 달리 저절로 안 풀리므로 재시도 UI가 필요하다. */
+  isCooldownStatusError?: boolean;
+  /** 쿨다운 조회 재시도가 진행 중이면 true(에러 상태에서 "다시 확인"을 탭한 직후). */
+  isCooldownCheckRetrying?: boolean;
+  /** 쿨다운 조회 재시도. isCooldownStatusError일 때만 호출된다. */
+  onRetryCooldownCheck?: () => void;
 }
 
 /**
@@ -30,7 +36,10 @@ export default function VoiceUpdateButton({
   onPress,
   onRetry,
   cooldownRemainingSeconds,
-  isCooldownStatusUnknown,
+  isCooldownStatusPending,
+  isCooldownStatusError,
+  isCooldownCheckRetrying,
+  onRetryCooldownCheck,
 }: VoiceUpdateButtonProps) {
   const { width } = useWindowDimensions();
   const { colors } = useThemeColors();
@@ -45,9 +54,12 @@ export default function VoiceUpdateButton({
   const isDone = status === 'done';
   // 쿨다운 여부를 아직 모르는 동안(twinSync 로딩/에러)엔 "쿨다운 아님"으로 단정하지 않고
   // 마찬가지로 막는다 — 확인 안 된 걸 확인됨으로 취급하면 쿨다운 중에도 녹음이 가능해진다.
+  // pending(로딩)과 error(조회 실패)는 서로 다르게 보여준다 — pending은 곧 풀리지만 error는
+  // 사용자가 직접 재시도해야 풀리므로, error만 별도로 재시도 UI를 갖는다.
   const isKnownCoolingDown = isIdle && !!cooldownRemainingSeconds && cooldownRemainingSeconds > 0;
-  const isCheckingCooldown = isIdle && !!isCooldownStatusUnknown;
-  const isCoolingDown = isKnownCoolingDown || isCheckingCooldown;
+  const isCooldownCheckFailed = isIdle && !!isCooldownStatusError && !isKnownCoolingDown;
+  const isCheckingCooldown = isIdle && !!isCooldownStatusPending && !isKnownCoolingDown && !isCooldownCheckFailed;
+  const isCoolingDown = isKnownCoolingDown || isCheckingCooldown || isCooldownCheckFailed;
 
   // 상태별 그라디언트 및 그림자 스타일 결정
   const gradientColors = isIdle
@@ -118,7 +130,27 @@ export default function VoiceUpdateButton({
           </View>
         )}
 
-        {isIdle && isCheckingCooldown && !isKnownCoolingDown && (
+        {isIdle && isCooldownCheckFailed && (
+          <TouchableOpacity
+            style={styles.idleInfo}
+            onPress={onRetryCooldownCheck}
+            disabled={isCooldownCheckRetrying}
+            accessibilityRole="button"
+            accessibilityLabel="쿨다운 확인 다시 시도"
+            accessibilityState={{ busy: isCooldownCheckRetrying }}
+          >
+            {isCooldownCheckRetrying ? (
+              <ActivityIndicator color={colors.state.danger} />
+            ) : (
+              <>
+                <Text style={[styles.statusText, { color: colors.state.danger }]}>녹음 가능 여부를 확인하지 못했어요</Text>
+                <Text style={[styles.footerText, { color: colors.text.secondary }]}>탭하여 다시 확인하기</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        )}
+
+        {isIdle && isCheckingCooldown && (
           <View style={styles.idleInfo}>
             <Text style={[styles.statusText, { color: colors.text.primary }]}>확인하는 중이에요</Text>
             <Text style={[styles.footerText, { color: colors.text.secondary }]}>잠시만 기다려주세요</Text>
