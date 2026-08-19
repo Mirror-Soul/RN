@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "358631051240",
+    "project_id": "mirror-soul-64",
+    "storage_bucket": "mirror-soul-64.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:358631051240:android:928890ced2627a5ff3de5d",
+        "android_client_info": {
+          "package_name": "com.mirrorsoul64.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDVLHgNwMYlgXBxoPO51-KyUS6pQ2ae3ak"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
