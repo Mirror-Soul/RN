@@ -3,9 +3,12 @@ import StopIcon from '@/assets/images/common/evlove/voice-update/voice_update_st
 import VoiceIcon from '@/assets/images/common/Voice_icon_white.svg';
 import {Colors, Radii, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import GrowDoneActionRow from '@/src/components/home/grow/GrowDoneActionRow';
+import VoiceUpdateIdleStatus, {
+  VoiceUpdateIdleStatusVariant,
+} from '@/src/components/home/grow/voice-update/VoiceUpdateIdleStatus';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
-import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 export type VoiceUpdateStatus = 'idle' | 'recording' | 'analyzing' | 'done';
@@ -55,11 +58,17 @@ export default function VoiceUpdateButton({
   // 쿨다운 여부를 아직 모르는 동안(twinSync 로딩/에러)엔 "쿨다운 아님"으로 단정하지 않고
   // 마찬가지로 막는다 — 확인 안 된 걸 확인됨으로 취급하면 쿨다운 중에도 녹음이 가능해진다.
   // pending(로딩)과 error(조회 실패)는 서로 다르게 보여준다 — pending은 곧 풀리지만 error는
-  // 사용자가 직접 재시도해야 풀리므로, error만 별도로 재시도 UI를 갖는다.
-  const isKnownCoolingDown = isIdle && !!cooldownRemainingSeconds && cooldownRemainingSeconds > 0;
-  const isCooldownCheckFailed = isIdle && !!isCooldownStatusError && !isKnownCoolingDown;
-  const isCheckingCooldown = isIdle && !!isCooldownStatusPending && !isKnownCoolingDown && !isCooldownCheckFailed;
-  const isCoolingDown = isKnownCoolingDown || isCheckingCooldown || isCooldownCheckFailed;
+  // 사용자가 직접 재시도해야 풀리므로, error만 별도로 재시도 UI를 갖는다. 배타조건 판별은
+  // 여기 한 곳에서만 하고, VoiceUpdateIdleStatus는 결과 variant만 받아 표시에만 집중한다.
+  const idleStatus: VoiceUpdateIdleStatusVariant =
+    !!cooldownRemainingSeconds && cooldownRemainingSeconds > 0
+      ? 'cooldown'
+      : isCooldownStatusError
+        ? 'checkFailed'
+        : isCooldownStatusPending
+          ? 'checking'
+          : 'ready';
+  const isCoolingDown = isIdle && idleStatus !== 'ready';
 
   // 상태별 그라디언트 및 그림자 스타일 결정
   const gradientColors = isIdle
@@ -123,45 +132,13 @@ export default function VoiceUpdateButton({
 
       {/* 2. 하단 정보 및 액션 영역 */}
       <View style={styles.infoArea}>
-        {isIdle && isKnownCoolingDown && (
-          <View style={styles.idleInfo}>
-            <Text style={[styles.statusText, { color: colors.text.primary }]}>잠시 후 다시 시도해주세요</Text>
-            <Text style={[styles.footerText, { color: colors.text.secondary }]}>{cooldownRemainingSeconds}초 후 다시 녹음할 수 있어요</Text>
-          </View>
-        )}
-
-        {isIdle && isCooldownCheckFailed && (
-          <TouchableOpacity
-            style={styles.idleInfo}
-            onPress={onRetryCooldownCheck}
-            disabled={isCooldownCheckRetrying}
-            accessibilityRole="button"
-            accessibilityLabel="쿨다운 확인 다시 시도"
-            accessibilityState={{ busy: isCooldownCheckRetrying }}
-          >
-            {isCooldownCheckRetrying ? (
-              <ActivityIndicator color={colors.state.danger} />
-            ) : (
-              <>
-                <Text style={[styles.statusText, { color: colors.state.danger }]}>녹음 가능 여부를 확인하지 못했어요</Text>
-                <Text style={[styles.footerText, { color: colors.text.secondary }]}>탭하여 다시 확인하기</Text>
-              </>
-            )}
-          </TouchableOpacity>
-        )}
-
-        {isIdle && isCheckingCooldown && (
-          <View style={styles.idleInfo}>
-            <Text style={[styles.statusText, { color: colors.text.primary }]}>확인하는 중이에요</Text>
-            <Text style={[styles.footerText, { color: colors.text.secondary }]}>잠시만 기다려주세요</Text>
-          </View>
-        )}
-
-        {isIdle && !isCoolingDown && (
-          <View style={styles.idleInfo}>
-            <Text style={[styles.statusText, { color: colors.text.primary }]}>녹음 시작</Text>
-            <Text style={[styles.footerText, { color: colors.text.secondary }]}>마이크 버튼을 눌러 녹음을 시작하세요</Text>
-          </View>
+        {isIdle && (
+          <VoiceUpdateIdleStatus
+            status={idleStatus}
+            cooldownRemainingSeconds={cooldownRemainingSeconds}
+            isRetrying={isCooldownCheckRetrying}
+            onRetryCooldownCheck={onRetryCooldownCheck}
+          />
         )}
 
         {isRecording && (
@@ -216,10 +193,6 @@ const styles = StyleSheet.create({
   infoArea: {
     alignItems: 'center',
     height: 80,
-  },
-  idleInfo: {
-    alignItems: 'center',
-    gap: Spacing.lg,
   },
   recordingInfo: {
     alignItems: 'center',
