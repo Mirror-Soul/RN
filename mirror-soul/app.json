@@ -105,8 +105,8 @@
         }
       ],
       "expo-secure-store",
-      "expo-notifications",
       "./plugins/withDisableIOSPushEntitlement",
+      "expo-notifications",
       [
         "expo-font",
         {
