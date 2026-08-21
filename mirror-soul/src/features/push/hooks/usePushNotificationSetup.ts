@@ -10,6 +10,20 @@ import { useRegisterPushDeviceMutation } from './useRegisterPushDeviceMutation';
 /** 백엔드 FIREBASE_ANDROID_CHANNEL_ID 기본값(chat_messages)과 반드시 일치해야 한다. */
 const ANDROID_CHANNEL_ID = 'chat_messages';
 
+// expo-notifications는 이 핸들러를 설정하지 않으면 "앱이 포그라운드에 떠 있을 때 수신한
+// 알림은 기본적으로 보여주지 않는다"(공식 문서 명시) — 백그라운드/종료 상태는 OS가 알아서
+// 배너를 띄우므로 무관하지만, 포그라운드 중 도착한 채팅 알림은 이게 없으면 조용히 버려진다.
+// 컴포넌트 렌더와 무관한 전역 1회성 등록이라 SplashScreen.preventAutoHideAsync()와 같은
+// 방식으로 모듈 최상단에서 호출한다.
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowBanner: true,
+    shouldShowList: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
+
 /**
  * 푸시 알림 설정 훅. 앱 루트(_layout.tsx)에서 1회만 호출한다.
  *
