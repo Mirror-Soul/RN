@@ -20,7 +20,6 @@ import { useThemeColors } from '@/src/hooks/useThemeColors';
 interface ValueBalanceModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onComplete: () => void;
 }
 
 type AnswerableQuestion = ValueBalanceQuestionResult & {
@@ -46,7 +45,7 @@ function isAnswerableQuestion(
  * 덮어써서 최신값을 보여줍니다 — 오늘 이미 답변한 뒤 모달을 다시 열어도 진행률이 0%로
  * 보이지 않습니다.
  */
-export default function ValueBalanceModal({ isOpen, onClose, onComplete }: ValueBalanceModalProps) {
+export default function ValueBalanceModal({ isOpen, onClose }: ValueBalanceModalProps) {
   const { colors } = useThemeColors();
   const { data: question, isLoading, isError, isFetching, refetch } = useValueBalanceQuestionQuery();
   const submitMutation = useSubmitValueBalanceAnswerMutation();
@@ -61,14 +60,6 @@ export default function ValueBalanceModal({ isOpen, onClose, onComplete }: Value
   useEffect(() => {
     setSelectedSide(null);
   }, [question?.questionId]);
-
-  useEffect(() => {
-    // 방금 답변해서 quota를 다 썼는지(questionId가 null로 바뀌었는지) 감지되면 완료 콜백을 알린다.
-    if (isOpen && lastAnswer && question?.questionId == null) {
-      onComplete();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, question]);
 
   const isBusy = submitMutation.isPending || isFetching;
 

@@ -50,4 +50,4 @@ npx jest                   # 유닛 테스트 (jest-expo 프리셋, package.json
 
 - `docs/MVP_WORK_LOG_AND_ROADMAP.md` — 전체 작업 이력 + 남은 고도화 로드맵. 새 작업 시작 전에 먼저 확인.
 - `PUSH_NOTIFICATION_ARCHITECTURE.md`, `REANIMATED_ACCORDION_ARCHITECTURE.md`, `ANDROID_PORTING_NOTES.md`, `VOICE_AUDIO_TODOS.md` — 특정 기능 설계/이슈 메모. `PUSH_NOTIFICATION_ARCHITECTURE.md`는 실제 백엔드 `PushDeviceController`(`/push/devices`)와 다른 URL 스킴(`/notifications/*`)을 제안하고 있으니 실제 구현 시 `backend-schema.json` 기준으로 맞출 것.
-- **도메인별 하위 `CLAUDE.md`** — 그 디렉터리에서 작업 중이면 이 파일과 함께 자동으로 로드된다: `app/CLAUDE.md`(라우팅 — `/` 경로 충돌 위험), `src/features/account/CLAUDE.md`(인증/로그아웃 계약, 진입점 중복 현황). 새 도메인 작업 중 반복되는 함정을 발견하면 관련 디렉터리에 새 `CLAUDE.md`를 추가할 것 — 이 파일 하나에 계속 이어 붙이지 말 것.
+- **도메인별 하위 `CLAUDE.md`** — 그 디렉터리에서 작업 중이면 이 파일과 함께 자동으로 로드된다: `app/CLAUDE.md`(라우팅 — `/` 경로 충돌 위험), `src/features/account/CLAUDE.md`(인증/로그아웃 계약, 진입점 중복 현황), `src/features/push/CLAUDE.md`(Android 알림 채널 생성 순서, cold-start 딥링크와 인증 리다이렉트 레이스, 로그아웃 시 기기 해제 직렬화). 새 도메인 작업 중 반복되는 함정을 발견하면 관련 디렉터리에 새 `CLAUDE.md`를 추가할 것 — 이 파일 하나에 계속 이어 붙이지 말 것.

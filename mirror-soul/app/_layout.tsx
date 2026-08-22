@@ -11,6 +11,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import * as Sentry from '@sentry/react-native';
 import { ToastProvider } from '@/src/components/common/Toast/ToastProvider';
 import { useProactiveTokenRefresh } from '@/src/hooks/useProactiveTokenRefresh';
+import { usePushNotificationSetup } from '@/src/features/push/hooks/usePushNotificationSetup';
 
 /**
  * hydration 완료 전까지 스플래시 화면 유지.
@@ -26,6 +27,17 @@ if (process.env.EXPO_PUBLIC_SENTRY_DSN) {
     sendDefaultPii: false,
     tracesSampleRate: __DEV__ ? 1.0 : 0.2,
   });
+}
+
+/**
+ * usePushNotificationSetup은 react-query의 useMutation을 쓰므로 QueryClientProvider 하위에서
+ * 호출돼야 한다 — RootLayout 최상단(useProactiveTokenRefresh와 같은 자리)은 Provider보다
+ * 먼저 실행되는 컴포넌트 자신의 렌더 단계라 컨텍스트가 아직 없다. UI가 필요 없는 훅이라
+ * null만 반환하는 이 컴포넌트로 감싸 Provider 하위에 배치한다.
+ */
+function PushNotificationSetup() {
+  usePushNotificationSetup();
+  return null;
 }
 
 // 백엔드 확정 전 임시 온보딩 라우트 매핑
@@ -88,6 +100,7 @@ function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <QueryClientProvider client={queryClient}>
+        <PushNotificationSetup />
         <SafeAreaProvider>
           <ToastProvider>
             <Stack

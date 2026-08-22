@@ -25,7 +25,7 @@ export const DeleteWarningSection = () => {
       <View style={[styles.warningBox, { backgroundColor: 'rgba(251, 44, 54, 0.05)', borderColor: 'rgba(251, 44, 54, 0.15)' }]}>
         <Text style={[styles.warningText, { color: 'rgba(248, 113, 113, 0.9)' }]}>
           탈퇴를 진행하시면 계정이 즉시 <Text style={styles.boldText}>비활성화(Soft Delete)</Text>되며, <Text style={styles.boldText}>30일의 유예 기간</Text>이 주어집니다.{'\n\n'}
-          유예 기간 내에는 로그인하여 계정을 복구할 수 있으나, <Text style={styles.boldText}>30일이 경과하면 Mirror Soul과 함께한 모든 대화 기록과 개인 정보가 영구적으로 삭제</Text>됩니다.
+          유예 기간 내에는 로그인하여 계정을 복구할 수 있으나, <Text style={styles.boldText}>30일이 경과하면 이름, 이메일 등 개인 정보가 비식별 처리되어 더 이상 본인 확인이 불가능</Text>해집니다.
         </Text>
       </View>
     </Animated.View>

@@ -21,7 +21,7 @@
         "NSMicrophoneUsageDescription": "Mirror Soul에서 음성 인터뷰를 위해 마이크 접근이 필요합니다.",
         "NSCameraUsageDescription": "Mirror Soul에서 3D 얼굴 스캔을 위해 카메라 접근이 필요합니다."
       },
-      "bundleIdentifier": "com.mirrorsoul.app",
+      "bundleIdentifier": "com.mirrorsoul64.app",
       "privacyManifests": {
         "NSPrivacyCollectedDataTypes": [
           {
@@ -58,7 +58,8 @@
         "android.permission.MODIFY_AUDIO_SETTINGS",
         "android.permission.CAMERA"
       ],
-      "package": "com.mirrorsoul.app"
+      "package": "com.mirrorsoul64.app",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "output": "static",
@@ -104,6 +105,8 @@
         }
       ],
       "expo-secure-store",
+      "./plugins/withDisableIOSPushEntitlement",
+      "expo-notifications",
       [
         "expo-font",
         {

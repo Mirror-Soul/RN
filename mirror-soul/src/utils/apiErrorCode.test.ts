@@ -1,8 +1,23 @@
 import { getErrorCode, getErrorDisplayMessage, isAuthError, isConflictError } from './apiErrorCode';
 
 describe('getErrorCode', () => {
-  it('extracts the code field from an error-like object', () => {
-    expect(getErrorCode({ code: 'USER_NOT_FOUND', message: '존재하지 않는 사용자입니다.' })).toBe('USER_NOT_FOUND');
+  it('translates a backend wire code ("PREFIX_NNNN") to its BackendErrorCode name', () => {
+    // apiClient.ts가 실제로 넘기는 값은 GeneralErrorCode.getCode()의 wire 형식이지,
+    // Java enum 이름 자체가 아니다 — 이 번역이 getErrorCode의 핵심 책임이다.
+    expect(getErrorCode({ code: 'USER_4040', message: '존재하지 않는 사용자입니다.' })).toBe('USER_NOT_FOUND');
+    expect(getErrorCode({ code: 'AUTH_4012' })).toBe('INVALID_TOKEN');
+    expect(getErrorCode({ code: 'VALUE_BALANCE_4090' })).toBe('VALUE_BALANCE_ALREADY_ANSWERED');
+    expect(getErrorCode({ code: 'VOICE_TRAINING_4290' })).toBe('VOICE_TRAINING_TOO_FREQUENT');
+  });
+
+  it('passes client-synthesized codes through unchanged (already final form)', () => {
+    expect(getErrorCode({ code: 'TIMEOUT' })).toBe('TIMEOUT');
+    expect(getErrorCode({ code: 'NETWORK_ERROR' })).toBe('NETWORK_ERROR');
+    expect(getErrorCode({ code: 'AUTH_FAILED' })).toBe('AUTH_FAILED');
+  });
+
+  it('returns undefined for a wire code with no known mapping', () => {
+    expect(getErrorCode({ code: 'SOME_FUTURE_BACKEND_CODE' })).toBeUndefined();
   });
 
   it('returns undefined for non-object or code-less errors', () => {
@@ -22,8 +37,17 @@ describe('getErrorDisplayMessage', () => {
     );
   });
 
+  it('overrides English backend messages (value-balance/voice-training) with Korean', () => {
+    expect(
+      getErrorDisplayMessage({ code: 'VOICE_TRAINING_4290', message: 'Voice training can be submitted once every 2 minutes.' })
+    ).toBe('목소리 학습은 2분에 한 번만 가능합니다.');
+    expect(
+      getErrorDisplayMessage({ code: 'VALUE_BALANCE_4090', message: 'This question was already answered today.' })
+    ).toBe('오늘 이미 답변한 질문입니다.');
+  });
+
   it('falls back to the backend-provided message when no override exists', () => {
-    expect(getErrorDisplayMessage({ code: 'DUPLICATE_NICKNAME', message: '이미 사용 중인 닉네임입니다.' })).toBe(
+    expect(getErrorDisplayMessage({ code: 'USER_4091', message: '이미 사용 중인 닉네임입니다.' })).toBe(
       '이미 사용 중인 닉네임입니다.'
     );
   });
@@ -39,28 +63,28 @@ describe('getErrorDisplayMessage', () => {
 });
 
 describe('isConflictError', () => {
-  it('returns true for duplicate/conflict codes', () => {
-    expect(isConflictError({ code: 'DUPLICATE_NICKNAME' })).toBe(true);
-    expect(isConflictError({ code: 'DUPLICATE_EMAIL' })).toBe(true);
-    expect(isConflictError({ code: 'DUPLICATE_LOGINID' })).toBe(true);
+  it('returns true for duplicate/conflict wire codes', () => {
+    expect(isConflictError({ code: 'USER_4091' })).toBe(true); // DUPLICATE_NICKNAME
+    expect(isConflictError({ code: 'USER_4090' })).toBe(true); // DUPLICATE_EMAIL
+    expect(isConflictError({ code: 'AUTH_4000' })).toBe(true); // DUPLICATE_LOGINID
   });
 
   it('returns false for unrelated codes', () => {
-    expect(isConflictError({ code: 'USER_NOT_FOUND' })).toBe(false);
+    expect(isConflictError({ code: 'USER_4040' })).toBe(false); // USER_NOT_FOUND
     expect(isConflictError(undefined)).toBe(false);
   });
 });
 
 describe('isAuthError', () => {
-  it('returns true for auth-related codes', () => {
-    expect(isAuthError({ code: 'INVALID_TOKEN' })).toBe(true);
-    expect(isAuthError({ code: 'TOKEN_EXPIRED' })).toBe(true);
-    expect(isAuthError({ code: 'MISSING_AUTH_INFO' })).toBe(true);
+  it('returns true for auth-related wire codes', () => {
+    expect(isAuthError({ code: 'AUTH_4012' })).toBe(true); // INVALID_TOKEN
+    expect(isAuthError({ code: 'AUTH_4013' })).toBe(true); // TOKEN_EXPIRED
+    expect(isAuthError({ code: 'AUTH_4010' })).toBe(true); // MISSING_AUTH_INFO
     expect(isAuthError({ code: 'AUTH_FAILED' })).toBe(true);
   });
 
   it('returns false for unrelated codes', () => {
-    expect(isAuthError({ code: 'DUPLICATE_NICKNAME' })).toBe(false);
+    expect(isAuthError({ code: 'USER_4091' })).toBe(false); // DUPLICATE_NICKNAME
     expect(isAuthError(undefined)).toBe(false);
   });
 });
