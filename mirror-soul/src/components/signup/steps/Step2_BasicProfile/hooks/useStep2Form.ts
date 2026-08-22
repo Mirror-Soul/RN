@@ -46,11 +46,13 @@ export function useStep2Form() {
     try {
       updateState({ isNicknameChecking: true });
       const response = await checkNicknameDuplicate({ nickname: state.nickname.trim() });
-      
-      if (response.isSuccess) {
+
+      // 백엔드는 사용 가능/중복 두 경우 모두 isSuccess: true로 응답한다(실패는 네트워크/서버
+      // 에러 때만) — 실제 사용 가능 여부는 response.result.available로 판단해야 한다.
+      if (response.result?.available) {
         updateState({ isNicknameVerified: true });
       } else {
-        Alert.alert('닉네임 중복', response.message || '이미 사용 중인 닉네임입니다.');
+        Alert.alert('닉네임 중복', '이미 사용 중인 닉네임입니다.');
       }
     } catch (error: any) {
       Alert.alert('오류', error?.message || '닉네임 확인 중 오류가 발생했습니다.');

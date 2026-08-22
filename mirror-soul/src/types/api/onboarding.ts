@@ -10,7 +10,10 @@ import { ApiResponse } from './common';
 export interface CheckNicknameRequest {
   nickname: string;
 }
-export type CheckNicknameResponse = ApiResponse<string>;
+export interface CheckNicknameResult {
+  available: boolean;
+}
+export type CheckNicknameResponse = ApiResponse<CheckNicknameResult>;
 
 // ─────────────────────────────────────────────
 // 지역 조회 API (Sido / Sigungu / Eupmyeondong)
