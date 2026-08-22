@@ -257,16 +257,23 @@
 - [ ] 미성년자 보호 정책의 법적 충분성 검토 — 지금은 자가 선언 체크박스뿐, 실제 PASS 연동 전까지 이 정도로 충분한지는 비즈니스/법무 판단 필요
 
 ### 6.4 P1 프로덕션 하드닝 (스토어 제출 전 마무리하면 좋음)
-- [ ] **Push 알림 실제 구현 — Android FCM 백엔드는 이미 구현/테스트까지 완료, FE는 미착수** (2026-08-19 조사).
-  백엔드(`FirebaseConfig`/`PushNotificationService`/`PushDeviceController` 등, `mirror-soul-back`)는 Firebase
-  Admin SDK로 완성돼 있고 단위 테스트도 있다. 다만 `push.firebase.enabled`가 기본 false이고
-  `mirror-soul-back/.github/workflows/deploy.yml`의 배포 시크릿 목록에 `FIREBASE_PUSH_ENABLED`/
-  `FIREBASE_PROJECT_ID`/`GOOGLE_APPLICATION_CREDENTIALS`가 전혀 없어 실제 배포에선 꺼져 있다.
-  FE는 의존성 설치조차 안 된 상태(`expo-notifications` 미설치, `google-services.json` 없음).
-  **`PUSH_NOTIFICATION_ARCHITECTURE.md`는 실제 구현과 다른 설계(Expo Push Token 전제, 다른
-  URL 스킴)를 제안하고 있어 그대로 따르면 안 됨** — 실제는 순수 FCM 토큰 + `PUT /push/devices`
-  (`installationId`/`pushToken`/`platform`). iOS는 APNs 인증키 발급에 Apple Developer Program
-  유료 등록이 필요해 후순위, Android는 전 구간 무료.
+- [x] ~~Push 알림 Android FE 구현~~ — 2026-08-22 완료 (`feat/android-push-notifications`).
+  `src/features/push/hooks/usePushNotificationSetup.ts`에 권한 요청 → `getDevicePushTokenAsync()` →
+  `PUT /push/devices` 등록, 토큰 롤링 시 재등록(`addPushTokenListener`), 알림 탭 딥링크(cold start
+  포함, `useLastNotificationResponse()`)까지 구현됨. 최신 아키텍처는
+  `PUSH_NOTIFICATION_ARCHITECTURE.md` 참고(순수 FCM 토큰 + `/push/devices`, Expo Push Token 아님).
+  백엔드(`FirebaseConfig`/`PushNotificationService`/`PushDeviceController`, `mirror-soul-back`)도
+  Firebase Admin SDK로 이미 구현/테스트 완료.
+- [ ] **남은 작업**:
+  - 배포 시크릿 — `push.firebase.enabled`가 기본 false이고 `mirror-soul-back/.github/workflows/deploy.yml`의
+    배포 시크릿 목록에 `FIREBASE_PUSH_ENABLED`/`FIREBASE_PROJECT_ID`/`GOOGLE_APPLICATION_CREDENTIALS`가
+    없어 실제 배포에선 꺼져 있음 — 백엔드 배포 파이프라인에 추가 필요.
+  - `google-services.json` 로컬/CI 환경 배치 — 저장소엔 의도적으로 포함하지 않음(시크릿), 새로
+    설정하는 개발 환경/CI에서 Firebase 콘솔에서 재다운로드해 `mirror-soul/google-services.json`에
+    배치하는 절차가 별도로 필요.
+  - 실기기 테스트 — 이 세션에선 iOS 시뮬레이터가 구조적으로 막혀있고 웹 프리뷰도 불가해(루트
+    CLAUDE.md 참고) 실제 기기로 등록/수신/딥링크 흐름 검증이 아직 안 됨.
+  - iOS는 APNs 인증키 발급에 Apple Developer Program 유료 등록이 필요해 후순위, Android는 전 구간 무료.
 - [ ] `eas.json`의 build/submit 프로필을 실제 Apple/Google 개발자 계정 정보로 채우기
 - [x] ~~`app.json`의 `bundleIdentifier`/`package`를 `com.mirrorsoul.app`(placeholder)에서 실제 최종
   확정값으로 교체~~ — 2026-08-19, Firebase 콘솔에 등록된 값(`com.mirrorsoul64.app`)로 통일함. 로컬

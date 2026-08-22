@@ -15,7 +15,7 @@
 
 ## 2. 전체 흐름
 
-```
+```text
 [RN 앱]                          [백엔드]                      [FCM]
    |  ① 알림 권한 요청               |                              |
    |  ② getDevicePushTokenAsync()   |                              |

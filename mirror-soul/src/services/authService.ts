@@ -65,27 +65,25 @@ export const logout = async () => {
 };
 
 /**
- * 로그아웃 공통 절차: 서버 세션 정리 + 푸시 기기 해제(둘 다 실패해도 무시) → 로컬 토큰/스토어
+ * 로그아웃 공통 절차: 푸시 기기 해제 → 서버 세션 정리(둘 다 실패해도 무시) → 로컬 토큰/스토어
  * 정리 → react-query 캐시 초기화. 화면들은 이 함수 호출 후 자체적으로 네비게이션
  * (router.replace 등)만 처리하면 된다.
  *
- * 푸시 기기 해제는 인증 토큰이 있어야 하는 API라 로컬 스토어를 지우기 전(try 블록)에
- * 처리해야 한다 — useAuthStore.getState().logout() 이후로 미루면 apiClient가 더 이상
- * Authorization 헤더를 붙이지 못해 항상 실패한다.
+ * 푸시 기기 해제와 /auth/logout을 병렬로 보내지 않고 반드시 이 순서로 직렬 실행한다 —
+ * 둘 다 인증 토큰이 필요한 API인데, 서버가 /auth/logout을 먼저 처리해 토큰을 무효화하면
+ * 뒤따르는 기기 해제 요청이 인증 실패로 무시될 수 있다(로그아웃한 사용자의 기기에 알림 등록이
+ * 그대로 남는 결과). 같은 이유로 둘 다 useAuthStore.getState().logout() 이전(로컬 토큰이
+ * 아직 살아있을 때)에 끝내야 한다.
  */
 export const performLogout = async (): Promise<void> => {
   try {
     const installationId = await getOrCreateInstallationId();
-    const [logoutResult, unregisterResult] = await Promise.allSettled([
-      logout(),
-      unregisterPushDevice(installationId),
-    ]);
-    if (logoutResult.status === 'rejected') {
-      logger.warn('authService: /auth/logout failed, proceeding with local logout', logoutResult.reason);
+    try {
+      await unregisterPushDevice(installationId);
+    } catch (error) {
+      logger.warn('authService: push device unregister failed, proceeding with logout', error);
     }
-    if (unregisterResult.status === 'rejected') {
-      logger.warn('authService: push device unregister failed, proceeding with local logout', unregisterResult.reason);
-    }
+    await logout();
   } catch (error) {
     logger.warn('authService: logout 사전 정리 중 오류, 로컬 로그아웃은 계속 진행', error);
   } finally {

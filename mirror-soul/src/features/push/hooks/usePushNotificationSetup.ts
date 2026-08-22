@@ -30,6 +30,20 @@ Notifications.setNotificationHandler({
  * iOS는 APNs 인증키가 아직 발급되지 않아(Apple Developer Program 등록 전) 백엔드에 등록해도
  * 실제 발송은 안 되므로 지금은 Android만 처리한다 — iOS 준비되면 Platform.OS 가드만 풀면 된다.
  */
+/**
+ * Android 알림 채널 생성. Expo 공식 문서상 getDevicePushTokenAsync/getExpoPushTokenAsync보다
+ * 반드시 먼저 호출되어야 한다(Android 13+ 알림 권한 프롬프트도 채널이 있어야 뜬다) —
+ * setNotificationChannelAsync 자체는 upsert라 여러 번 호출해도 안전하다.
+ */
+async function ensureNotificationChannel() {
+  if (Platform.OS !== 'android') return;
+  await Notifications.setNotificationChannelAsync(ANDROID_CHANNEL_ID, {
+    name: '채팅 메시지',
+    importance: Notifications.AndroidImportance.HIGH,
+    sound: 'default',
+  });
+}
+
 export function usePushNotificationSetup() {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const registerMutation = useRegisterPushDeviceMutation();
@@ -37,12 +51,7 @@ export function usePushNotificationSetup() {
 
   // 알림 채널은 로그인 여부와 무관하게 앱 시작 시 한 번만 있으면 된다.
   useEffect(() => {
-    if (Platform.OS !== 'android') return;
-    Notifications.setNotificationChannelAsync(ANDROID_CHANNEL_ID, {
-      name: '채팅 메시지',
-      importance: Notifications.AndroidImportance.HIGH,
-      sound: 'default',
-    }).catch((error) => logger.warn('푸시 알림 채널 생성 실패', error));
+    ensureNotificationChannel().catch((error) => logger.warn('푸시 알림 채널 생성 실패', error));
   }, []);
 
   // 로그인 상태에서 권한 요청 → 기기 푸시 토큰 발급 → 서버 등록
@@ -52,6 +61,10 @@ export function usePushNotificationSetup() {
 
     (async () => {
       try {
+        // 위 mount-time effect와 별개로, 이 effect가 먼저 실행될 수도 있어 다시 await한다 —
+        // 채널 생성이 토큰 발급보다 항상 먼저 완료되도록 보장(순서가 뒤바뀌면 안 됨).
+        await ensureNotificationChannel();
+
         const current = await Notifications.getPermissionsAsync();
         const granted = current.granted || (await Notifications.requestPermissionsAsync()).granted;
         if (!granted || cancelled) return;
@@ -111,8 +124,16 @@ export function usePushNotificationSetup() {
   useEffect(() => {
     if (!rootNavigationState?.key) return;
     const route = lastNotificationResponse?.notification.request.content.data?.route;
-    if (typeof route === 'string') {
+    if (typeof route !== 'string') return;
+
+    // _layout.tsx의 인증 리다이렉트 effect가 같은 rootNavigationState.key 준비 시점에
+    // setTimeout(fn, 0)으로 router.replace('/(main)' 또는 '/login')을 예약한다. 이 effect가
+    // 먼저 동기 실행되어 router.push를 호출해도, 뒤이어 실행되는 그 replace가 곧바로
+    // 덮어써버린다 — 그래서 딜레이를 그 setTimeout(0)보다 길게 줘서 인증 리다이렉트가 먼저
+    // 끝난 뒤에 딥링크를 push하도록 순서를 보장한다.
+    const timer = setTimeout(() => {
       router.push(route as any);
-    }
+    }, 100);
+    return () => clearTimeout(timer);
   }, [lastNotificationResponse, rootNavigationState?.key]);
 }
