@@ -1,55 +1,17 @@
 import { Feather } from '@expo/vector-icons';
 import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
+import { formatRegion } from '@/src/utils/formatRegion';
+import type { Recommendation } from '@/src/types/api/home';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-/**
- * 가치관 밸런스 게임(성장 탭) 답변을 축(axis)별로 집계한 성향 결과.
- * 백엔드 UserValueAxisScore(-1~1 스코어)를 사람이 읽을 수 있는 한 줄 성향으로
- * 요약한 값이라고 가정한 목업 — 실제 매칭 상세 API가 생기면 이 모양 그대로 교체될 예정.
- */
-export interface ValueTendency {
-  axisLabel: string;
-  description: string;
-}
-
-/**
- * MBTI 4개 축 성향 강도. 백엔드 MbtiProfile의 ieScore/nsScore/ftScore/pjScore를
- * "왼쪽 글자(E/S/T/J) 쪽으로 얼마나 기울었는지"(0~100)로 정규화했다고 가정한 목업.
- */
-export interface MbtiAxisScores {
-  E: number;
-  S: number;
-  T: number;
-  J: number;
-}
-
-export interface SoulMatch {
-  id: string;
-  name: string;
-  age: number;
-  location: string;
-  profileImage: string;
-  job: string;
-  isJobVerified: boolean;
-  mbti: string;
-  mbtiAxisScores: MbtiAxisScores;
-  compatibility: number;
-  /** Clone.summary — AI가 트윈 데이터를 바탕으로 쓴 한 줄 소개 */
-  cloneSummary: string;
-  bio: string;
-  voiceStyle: string;
-  aiAnalysisTags: string[];
-  valueTendencies: ValueTendency[];
-}
-
 interface DiscoveryMatchCardProps {
-  match: SoulMatch;
-  onPass?: (id: string) => void;
-  onConnect?: (id: string) => void;
-  onOpenDetail?: (match: SoulMatch) => void;
+  match: Recommendation;
+  onPass?: (userUuid: string) => void;
+  onConnect?: (userUuid: string) => void;
+  onOpenDetail?: (match: Recommendation) => void;
 }
 
 /**
@@ -68,7 +30,7 @@ export default function DiscoveryMatchCard({ match, onPass, onConnect, onOpenDet
         </LinearGradient>
       ) : (
         <Image
-          source={{ uri: match.profileImage }}
+          source={{ uri: match.profileImageUrl }}
           style={styles.image}
           contentFit="cover"
           cachePolicy="disk"
@@ -99,25 +61,25 @@ export default function DiscoveryMatchCard({ match, onPass, onConnect, onOpenDet
             {match.name}
             <Text style={styles.ageText}> {match.age}</Text>
           </Text>
-          {match.isJobVerified ? (
+          {match.jobCertificationSubmitted ? (
             <Feather name="check-circle" size={20} color={Colors.primary.electricCyan} />
           ) : null}
         </View>
 
         <View style={styles.locationRow}>
           <Feather name="map-pin" size={14} color={Colors.neutral.lightGray} />
-          <Text style={styles.locationText}>{match.location}</Text>
+          <Text style={styles.locationText}>{formatRegion(match.residence)}</Text>
         </View>
 
         <Text style={styles.summaryText} numberOfLines={1} ellipsizeMode="tail">
-          &quot;{match.cloneSummary}&quot;
+          &quot;{match.selfIntroduction}&quot;
         </Text>
 
         <View style={styles.tagRow}>
           <View style={styles.mbtiChip}>
             <Text style={styles.mbtiChipText}>{match.mbti}</Text>
           </View>
-          {match.aiAnalysisTags.slice(0, 2).map((tag) => (
+          {match.hashtags.slice(0, 2).map((tag) => (
             <View key={tag} style={styles.tagChip}>
               <Text style={styles.tagChipText}>#{tag}</Text>
             </View>
@@ -127,7 +89,7 @@ export default function DiscoveryMatchCard({ match, onPass, onConnect, onOpenDet
         <View style={styles.actionRow}>
           <TouchableOpacity
             style={styles.passButton}
-            onPress={() => onPass?.(match.id)}
+            onPress={() => onPass?.(match.userUuid)}
             activeOpacity={0.8}
             accessibilityRole="button"
             accessibilityLabel="패스"
@@ -136,7 +98,7 @@ export default function DiscoveryMatchCard({ match, onPass, onConnect, onOpenDet
           </TouchableOpacity>
 
           <TouchableOpacity
-            onPress={() => onConnect?.(match.id)}
+            onPress={() => onConnect?.(match.userUuid)}
             activeOpacity={0.85}
             accessibilityRole="button"
             accessibilityLabel="통화하기"
