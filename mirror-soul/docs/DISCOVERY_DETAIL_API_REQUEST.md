@@ -51,27 +51,34 @@ region, recommendationScore`만 있다 — 지금 `DiscoveryMatchCard.tsx`가 �
 `cloneSummary`/`aiAnalysisTags`/`mbti` 미리보기는 상세 API에만 있는 필드라서, **카드 단계에서
 보여주려면 목록 DTO에도 같은 필드를 추가해달라고 요청하거나, 카드에서는 이 필드들을 빼야 한다.**
 
-### 요청할 것: 아래 필드를 `RecommendationDetailDTO`에 추가
+### 이제 충족된 것 (백엔드 `d9ec3c1`, "8월 17일 회의록 내용 반영", 2026-08-20)
 
-| 화면 표시 위치 | 필요 필드 | 소스 테이블/필드 | 현재 상태 |
-|---|---|---|---|
-| 모달 "AI 페르소나 분석" 태그 | `personalityTags: string[]` | `ClonePersonalityTag` (clone_id 기준, `display_order` 순 정렬) | 없음, 추가 요청 |
-| 카드 + 모달 MBTI 배지 | `mbti` | `MbtiProfile.mbti` | 없음, 추가 요청 |
-| 모달 "성향 밸런스" 4축 바 | `mbtiAxisScores: { ie, ns, ft, pj }` (0~100 정규화, FE는 `E`/`S`/`T`/`J` 키로 사용 중) | `MbtiProfile.ieScore/nsScore/ftScore/pjScore` | 없음, 추가 요청. **필드명이 FE(`MbtiAxisScores.E/S/T/J`)와 다르니 응답 계약을 먼저 맞출 것** |
-| 모달 "가치관 성향" | 아래 §2 참고 | `UserValueAxisScore` (AI 가공 필요) | 없음, 추가 요청 |
-| (참고) `syncRate`/`selfIntroduction`/`voicePreview` | 위 표 | 이미 있음 | **이미 존재 — 요청 불필요** |
+아래 표에서 요청했던 것 중 `personalityTags`/`mbti`/`mbtiAxisScores`는 이미 충족되어 FE 연동
+완료됐다(`feat/discovery-real-data` 브랜치). 실제 필드명은 요청 당시 예상과 다른 부분이 있으니
+연동 시 유의:
 
-FE의 `SoulMatch.compatibility`(0~100 유사도)는 실제 필드명이 `syncRate`이므로, 연동 시 FE
-타입/변수명을 `syncRate`로 맞추거나 어댑터에서 매핑할 것 — 새 필드를 만들어달라고 요청할
-필요는 없다.
+| 요청했던 것 | 실제 필드명 | 비고 |
+|---|---|---|
+| `personalityTags: string[]` | `hashtags: string[]` | 다른 이름으로 왔지만 소스는 동일 — `RecommendService.loadHashtagsByUserId()`가 여전히 `ClonePersonalityTag.content`에서 가져옴. 개념은 요청한 것과 같음. |
+| `mbti` | `mbti` | 요청한 그대로 추가됨 |
+| `mbtiAxisScores: { ie, ns, ft, pj }` | `mbtiIndicators: { ieScore, nsScore, ftScore, pjScore }` | 필드명이 요청과 다르게 왔지만 FE 타입에 그대로 반영함(`src/types/api/home.ts`의 `MbtiIndicators`) |
+| `syncRate`/`selfIntroduction`/`voicePreview` | 동일 | 원래부터 있었음 |
 
-### 접근 제어 — 실제로 확인한 상태와 남은 갭
+**여전히 미충족**: §2("가치관 성향" 자연어 요약)는 AI 서버 파이프라인 신규 작업이 필요해서
+그대로 열려있는 요청으로 남아있다 — FE가 자체적으로 연동할 수 있는 부분이 아니다.
+
+### 접근 제어 — 갱신된 상태 (2026-08-22 재확인)
 `RecommendationDetailService.getDetail()`은 대상 유저가 `status == ACTIVE`이고
-`matchingEnabled == true`인지는 확인한다(비활성/매칭거부 유저 조회는 이미 막혀 있음).
-**그러나 요청자와 대상자 사이에 실제 추천/매칭 관계가 있었는지는 검증하지 않는다** — UUID만
-알면 추천 목록에 뜬 적 없는 다른 활성 사용자의 상세 정보와 음성 URL도 그대로 조회 가능하다.
-차단(block) 기능 자체가 백엔드에 없다는 것도 재확인(`docs/MVP_WORK_LOG_AND_ROADMAP.md` §6.2에
-이미 기록된 기존 갭). "요청자에게 노출된 적 있는 대상인지" 검증 로직 추가를 요청할 것.
+`matchingEnabled == true`인지는 확인한다(비활성/매칭거부 유저 조회는 막혀 있음).
+차단(block) 기능은 이후 커밋(`c4e06fb`)에서 추가되어 현재 추천 목록/상세 조회 양쪽에서
+이미 검사된다 — 이 문서 최초 작성 시점의 "차단 기능 자체가 백엔드에 없다"는 서술은 stale하니
+참고하지 말 것.
+
+**여전히 남아있는 좁은 갭**: **요청자와 대상자 사이에 실제 추천 관계가 있었는지는 여전히
+검증하지 않는다** — UUID만 알면 추천 목록에 뜬 적 없는 다른 활성 사용자의 상세 정보와 음성
+URL도 그대로 조회 가능하다. 가장 최근 백엔드 커밋(`d9ec3c1`)도 이 파일(`getDetail`)을
+건드렸지만(파라미터를 `(requesterUuid, targetUserUuid)` 2개로 바꾸는 등) 이 갭은 다루지
+않았다 — "요청자에게 실제로 노출된 적 있는 대상인지" 검증 로직 추가를 여전히 요청할 것.
 
 에러 코드는 이미 `RECOMMENDATION_TARGET_NOT_FOUND`/`SWIPE_TARGET_UNAVAILABLE` 둘 다
 403이 아니라 404로 통일돼 있다 — 이건 "차단됨"과 "존재하지 않음"을 구분해서 노출하지 않는
@@ -175,4 +182,4 @@ FE의 `SoulMatch.compatibility`(0~100 유사도)는 실제 필드명이 `syncRat
 ## 참고
 
 - 이 문서에서 언급한 백엔드 도메인 클래스 위치: `mirror-soul-back/src/main/java/com/mirrorsoul/mirrorsoul_api/domain/{Clone,ClonePersonalityTag,MbtiProfile,UserValueAxisScore,AiVoiceProfile}.java`
-- 프론트 목업 데이터 모양(그대로 갈아끼우면 되는 타입): `mirror-soul/src/components/home/main/Discovery/DiscoveryMatchCard.tsx`의 `SoulMatch`/`MbtiAxisScores`/`ValueTendency` 인터페이스
+- 프론트 목업 데이터 모양: ~~`SoulMatch`/`MbtiAxisScores`/`ValueTendency`~~ → 이 문서 작성 이후 실연동 완료(`feat/discovery-real-data`), 해당 목업 인터페이스는 삭제됨. 실제 타입은 `mirror-soul/src/types/api/home.ts`의 `Recommendation`/`RecommendationDetailResult` 참고.

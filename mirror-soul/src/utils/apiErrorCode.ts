@@ -63,7 +63,12 @@ export type BackendErrorCode =
   | 'VALUE_BALANCE_QUESTION_NOT_FOUND'
   | 'VALUE_BALANCE_ALREADY_ANSWERED'
   | 'VALUE_BALANCE_DAILY_LIMIT_REACHED'
-  | 'VALUE_BALANCE_NO_AVAILABLE_QUESTION';
+  | 'VALUE_BALANCE_NO_AVAILABLE_QUESTION'
+  // 아래 3개도 VALUE_BALANCE_*와 같은 이유로 스냅샷엔 없음(발견 탭 추천/스와이프 기능 자체가
+  // 스냅샷 이후 추가) — RecommendationDetailService/SwipeService 소스에서 직접 확인해 추가함.
+  | 'RECOMMENDATION_TARGET_NOT_FOUND'
+  | 'SWIPE_SELF_NOT_ALLOWED'
+  | 'SWIPE_TARGET_UNAVAILABLE';
 
 /** apiClient.ts 응답 인터셉터가 전송 계층 실패에 대해 자체적으로 합성하는 코드 */
 export type ClientSyntheticErrorCode = 'AUTH_FAILED' | 'TIMEOUT' | 'NETWORK_ERROR' | 'UNKNOWN_ERROR';
