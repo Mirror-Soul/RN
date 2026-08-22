@@ -257,9 +257,21 @@
 - [ ] 미성년자 보호 정책의 법적 충분성 검토 — 지금은 자가 선언 체크박스뿐, 실제 PASS 연동 전까지 이 정도로 충분한지는 비즈니스/법무 판단 필요
 
 ### 6.4 P1 프로덕션 하드닝 (스토어 제출 전 마무리하면 좋음)
-- [ ] Push 알림 실제 구현 (`expo-notifications` 미설치, `PUSH_NOTIFICATION_ARCHITECTURE.md`는 설계 문서만 존재)
+- [ ] **Push 알림 실제 구현 — Android FCM 백엔드는 이미 구현/테스트까지 완료, FE는 미착수** (2026-08-19 조사).
+  백엔드(`FirebaseConfig`/`PushNotificationService`/`PushDeviceController` 등, `mirror-soul-back`)는 Firebase
+  Admin SDK로 완성돼 있고 단위 테스트도 있다. 다만 `push.firebase.enabled`가 기본 false이고
+  `mirror-soul-back/.github/workflows/deploy.yml`의 배포 시크릿 목록에 `FIREBASE_PUSH_ENABLED`/
+  `FIREBASE_PROJECT_ID`/`GOOGLE_APPLICATION_CREDENTIALS`가 전혀 없어 실제 배포에선 꺼져 있다.
+  FE는 의존성 설치조차 안 된 상태(`expo-notifications` 미설치, `google-services.json` 없음).
+  **`PUSH_NOTIFICATION_ARCHITECTURE.md`는 실제 구현과 다른 설계(Expo Push Token 전제, 다른
+  URL 스킴)를 제안하고 있어 그대로 따르면 안 됨** — 실제는 순수 FCM 토큰 + `PUT /push/devices`
+  (`installationId`/`pushToken`/`platform`). iOS는 APNs 인증키 발급에 Apple Developer Program
+  유료 등록이 필요해 후순위, Android는 전 구간 무료.
 - [ ] `eas.json`의 build/submit 프로필을 실제 Apple/Google 개발자 계정 정보로 채우기
-- [ ] `app.json`의 `bundleIdentifier`/`package`를 `com.mirrorsoul.app`(placeholder)에서 실제 최종 확정값으로 교체 — **스토어 제출 후엔 사실상 변경 불가**하므로 최우선으로 확정 필요
+- [x] ~~`app.json`의 `bundleIdentifier`/`package`를 `com.mirrorsoul.app`(placeholder)에서 실제 최종
+  확정값으로 교체~~ — 2026-08-19, Firebase 콘솔에 등록된 값(`com.mirrorsoul64.app`)로 통일함. 로컬
+  `android/`·`ios/`(둘 다 gitignored) 네이티브 프로젝트는 이미 이 값으로 생성돼 있었고 `app.json`만
+  구값으로 남아있던 상태였음.
 
 ---
 
