@@ -7,7 +7,7 @@ import { initiateCall, setCallInProgress, endCall } from '../services/callServic
 import { useWebRTCCall } from './useWebRTCCall';
 import { useCallRecording } from './useCallRecording';
 import { logger } from '../utils/logger';
-import type { SignalingMessage, CallAcceptData, AnswerData, IceData, OfferData } from '../types/signaling';
+import type { SignalingMessage, AnswerData, IceData, OfferData, CallRejectData, SignalingErrorData } from '../types/signaling';
 
 const WS_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL?.replace('https://', 'wss://').replace('http://', 'ws://');
 const INVITE_TIMEOUT_MS = 10000; // 10초 AI 응답 대기
@@ -269,9 +269,42 @@ export function useAICallFlow() {
         break;
       }
 
-      case 'CALL_REJECT':
-        await _cleanup('AI 트윈이 통화를 거절했습니다.');
+      case 'CALL_REJECT': {
+        const rejectData = msg.data as CallRejectData | null;
+        if (rejectData) {
+          logger.warn('[useAICallFlow] CALL_REJECT reason:', rejectData.reason, rejectData.detail);
+        }
+        // AI_SERVER_UNAVAILABLE(백엔드가 CALL_INVITE를 AI 서버로 릴레이 자체를 못 한 경우)만
+        // 별도 문구로 구분한다 — 그 외 기존 4개 사유는 이미 있던 동작(고정 문구) 그대로 유지.
+        const message =
+          rejectData?.reason === 'AI_SERVER_UNAVAILABLE'
+            ? 'AI 트윈 서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.'
+            : 'AI 트윈이 통화를 거절했습니다.';
+        await _cleanup(message);
         break;
+      }
+
+      case 'SIGNALING_ERROR': {
+        const signalingErrorData = msg.data as SignalingErrorData | null;
+        logger.warn(
+          '[useAICallFlow] SIGNALING_ERROR reason:',
+          signalingErrorData?.reason,
+          signalingErrorData?.detail
+        );
+
+        // 이미 hangUp()으로 종료 중이면(예: 방금 보낸 CALL_END 자체가 전달 실패) 상대는 어차피
+        // 곧 정리될 예정이니 에러 화면을 띄우지 않는다. _performHangUp이 CALL_END 발송 직후
+        // isHangingUpRef를 true로 세운 채 stopAndUpload/endCall(둘 다 시간이 걸림)을 기다리는
+        // 동안 이 메시지가 도착할 수 있는데, 가드가 없으면 여기서 _cleanup(message)이 error를
+        // 먼저 세팅해버리고, 뒤이어 _performHangUp 자신의 _cleanup()은 메시지 없이 호출되어
+        // (errorMessage가 falsy면 setError를 안 함) 그 error를 못 지운다 — 정상적으로 전화를
+        // 끊었는데도 ai-call.tsx의 "callStatus==='ended' && !error" 자동 뒤로가기 조건이
+        // 깨지면서 에러 화면이 잘못 뜬다.
+        if (isHangingUpRef.current) break;
+
+        await _cleanup('AI 트윈과의 연결이 끊어졌습니다. 잠시 후 다시 시도해주세요.');
+        break;
+      }
 
       case 'CALL_END':
         logger.info('[useAICallFlow] CALL_END received from AI');
