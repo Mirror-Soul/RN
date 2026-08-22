@@ -127,7 +127,30 @@ DB에서 URL 문자열을 읽어오는 필드일 뿐, 그 URL이 가리키는 �
 이건 보안 문제라기보다 **기능 자체가 어느 단계까지 구현됐는지 불명확하다는 뜻**이다 —
 얼굴 데이터가 실제로 AI 학습에 반영되고 있는지부터 재확인이 필요하다.
 
-## 7. 우선순위별 권장 조치
+## 7. 업로드 파일 검증 — 얼굴 영상만 크기/형식 확인, 음성은 없음
+
+`FileService.java`(`verifyUploadedObjectAndBuildFileUrl`)는 objectKey가 업로더 본인 UUID
+프리픽스로 시작하는지(소유권), S3에 실제로 존재하는지(`HeadObject`)는 업로드 종류 관계없이
+항상 검증한다. 여기까지는 세 종류(`INTERVIEW_AUDIO`/`VOICE_UPDATE_AUDIO`/`FACE_VIDEO`) 모두
+동일하게 잘 되어 있다.
+
+다만 `UploadFileType.validateMetadata()`가 content-type/크기 검증을 **`FACE_VIDEO`에만**
+적용한다(`video/mp4`·`quicktime`·`webm` 형식 + 100MB 상한). `VOICE_UPDATE_AUDIO`/
+`INTERVIEW_AUDIO`는 이 메서드에서 즉시 `return`해 아무 검증도 받지 않는다
+(`FileService.java`의 `UploadFileType.validateMetadata` 앞부분 `if (this != FACE_VIDEO) return;`).
+
+S3 presigned PUT은 백엔드를 거치지 않고 클라이언트→S3 직행이라 Spring 쪽 multipart 크기
+제한도 적용되지 않는다 — 즉 음성 업로드 경로엔 크기/형식을 막는 지점이 어디에도 없다.
+
+실제 앱 UI는 항상 짧은 wav/m4a만 보내므로 정상 사용 흐름에서는 드러나지 않지만, 유효한
+로그인 토큰만 있으면 presigned URL을 받아 임의로 큰 파일(또는 오디오가 아닌 파일)을
+`voice-updates/`·`interviews/` 아래 업로드하고 `/evolve/voice`(또는 인터뷰 완료 API)로 job
+등록까지 시킬 수 있다. §4/§3에서 확인한 것과 달리 이건 인증 부재가 아니라 **인증된
+사용자의 리소스 남용(S3 저장 비용, AI 서버 처리 낭비) 방지 갭**이라 심각도는 낮다 — 2분
+쿨다운(`VoiceTrainingJobService.VOICE_UPDATE_COOLDOWN_MINUTES`)이 반복 남용 속도는 이미
+제한한다.
+
+## 8. 우선순위별 권장 조치
 
 1. **(즉시, 코드 변경 없이 인프라 설정만으로 가능)** RDS 보안그룹에서 `0.0.0.0/0` 제거,
    VPC 내부(백엔드 서버가 있는 서브넷)에서만 접근 가능하도록 제한. 지금 이 순간에도 인터넷
@@ -140,14 +163,18 @@ DB에서 URL 문자열을 읽어오는 필드일 뿐, 그 URL이 가리키는 �
 4. AI 서버 산출물(합성 음성, 참조 오디오, persona.json) 삭제 정책 수립 — 회원탈퇴 플로우와
    연동.
 5. 얼굴 스캔 데이터가 실제로 어느 단계까지 구현됐는지 확인 (§6).
-6. 위 조치들이 실제로 반영된 뒤, Growth 탭 안내 문구를 지금의 완화된 버전에서 좀 더 구체적인
+6. `UploadFileType.validateMetadata()`를 `VOICE_UPDATE_AUDIO`/`INTERVIEW_AUDIO`에도 적용 —
+   `FACE_VIDEO`와 같은 패턴으로 content-type(`audio/wav`, `audio/mp4`, `audio/m4a` 등)과 합리적인
+   크기 상한을 추가 (§7). 우선순위는 낮음(1~2번과 달리 급하지 않음).
+7. 위 조치들이 실제로 반영된 뒤, Growth 탭 안내 문구를 지금의 완화된 버전에서 좀 더 구체적인
    보호 내용으로 다시 강화할지 검토 — 이때도 법무 검토를 병행할 것.
 
 ## 참고
 
 - 문구가 수정된 위치: `mirror-soul/src/components/home/grow/EvolveFooter.tsx`
 - 이번 조사에서 확인한 백엔드 파일: `mirror-soul-back/src/main/resources/application.yaml`,
-  `mirror-soul-back/src/main/java/com/mirrorsoul/mirrorsoul_api/service/FileService.java`
+  `mirror-soul-back/src/main/java/com/mirrorsoul/mirrorsoul_api/service/FileService.java`,
+  `mirror-soul-back/src/main/java/com/mirrorsoul/mirrorsoul_api/service/VoiceTrainingJobService.java`(§7)
 - 이번 조사에서 확인한 인프라 파일: `mirror-soul-infra/s3.tf`, `mirror-soul-infra/rds-mysql.tf`,
   `mirror-soul-infra/rds-postgresql.tf`, `mirror-soul-infra/security-group.tf`,
   `mirror-soul-infra/ec2.tf`, `mirror-soul-infra/eip.tf`,

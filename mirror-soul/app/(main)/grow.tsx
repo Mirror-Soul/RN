@@ -81,14 +81,13 @@ export default function GrowScreen() {
       />
 
       {/*
-        ValueBalanceModal은 이제 /evolve/value-balance API와 완전히 연동됐다.
-        헤드라인 유사도(twinSyncQuery)는 답변 제출 mutation이 성공할 때마다 자체적으로
-        무효화해 서버 최신값을 다시 받아오므로, onComplete에서 로컬로 값을 조작할 필요가 없다.
+        ValueBalanceModal은 /evolve/value-balance API와 완전히 연동됐다. 헤드라인 유사도
+        (twinSyncQuery)는 답변 제출 mutation이 성공할 때마다 자체적으로 무효화해 서버
+        최신값을 다시 받아오므로, 이 화면이 별도로 값을 조작할 필요가 없다.
       */}
       <ValueBalanceModal
         isOpen={showBalanceModal}
         onClose={() => setShowBalanceModal(false)}
-        onComplete={() => {}}
       />
     </ScrollView>
   );
