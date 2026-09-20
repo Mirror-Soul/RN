@@ -15,7 +15,16 @@ export const useChatMessagesQuery = (roomId: number) => {
     queryFn: async ({ pageParam }) =>
       (await getChatMessages(roomId, { beforeMessageId: pageParam, size: MESSAGES_PAGE_SIZE })).result,
     initialPageParam: undefined as number | undefined,
-    getNextPageParam: (lastPage) => (lastPage.hasNext ? (lastPage.nextCursor ?? undefined) : undefined),
+    getNextPageParam: (lastPage, _pages, lastPageParam) => {
+      if (!lastPage.hasNext) return undefined;
+      const { nextCursor } = lastPage;
+      // hasNext가 true인데 커서가 없거나(백엔드 계약 위반) 이전 요청보다 과거로 가지 않으면
+      // (beforeMessageId는 갈수록 작아져야 함) 조용히 페이지네이션을 멈추는 대신 바로 드러낸다.
+      if (nextCursor == null || (lastPageParam != null && nextCursor >= lastPageParam)) {
+        throw new Error('Invalid message pagination cursor');
+      }
+      return nextCursor;
+    },
   });
 
   const messages = useMemo(
