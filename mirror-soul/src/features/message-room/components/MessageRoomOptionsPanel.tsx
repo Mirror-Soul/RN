@@ -106,7 +106,7 @@ export default function MessageRoomOptionsPanel({
         ]}
       >
         <OptionsProfileSection room={room} />
-        <OptionsSettingsSection />
+        <OptionsSettingsSection roomId={room.chatRoomId} />
         <OptionsDangerSection room={room} onBlocked={onBlocked} />
 
         {/* ─ 닫기 버튼 (하단 고정) ─ */}

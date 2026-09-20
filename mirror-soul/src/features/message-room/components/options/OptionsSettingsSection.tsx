@@ -1,15 +1,22 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet, Pressable, Alert } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { Colors, FontFamily, FontSize, FontWeight, Spacing } from '@/src/constants/theme';
 import { AnimatedSwitch } from '@/src/components/common/AnimatedSwitch';
+import { useChatNotificationSettings } from '@/src/features/chat/hooks/useChatNotificationSettings';
 
-export function OptionsSettingsSection() {
-  const [notifEnabled, setNotifEnabled] = useState(true);
+interface OptionsSettingsSectionProps {
+  roomId: number;
+}
+
+const showComingSoon = () => Alert.alert('준비 중인 기능이에요', '조금만 기다려 주세요.');
+
+export function OptionsSettingsSection({ roomId }: OptionsSettingsSectionProps) {
+  const { enabled, handleToggle, isLoading } = useChatNotificationSettings(roomId);
 
   return (
     <View style={styles.menuSection}>
-      <Text style={styles.sectionLabel}>SETTINGS</Text>
+      <Text style={styles.sectionLabel}>설정</Text>
 
       {/* 알림 설정 */}
       <View style={styles.menuItemMargin}>
@@ -19,14 +26,14 @@ export function OptionsSettingsSection() {
             <Text style={styles.menuItemText}>알림 설정</Text>
           </View>
           <View style={styles.toggleWrapper}>
-            <AnimatedSwitch value={notifEnabled} onToggle={() => setNotifEnabled((v) => !v)} />
+            <AnimatedSwitch value={enabled} onToggle={handleToggle} disabled={isLoading} />
           </View>
         </View>
       </View>
 
-      {/* 시간 채우기 (선물) */}
+      {/* 시간 채우기 (선물) — 아직 백엔드에 대응 기능 없음 */}
       <View style={styles.menuItemMarginSm}>
-        <Pressable style={styles.menuItem}>
+        <Pressable style={styles.menuItem} onPress={showComingSoon}>
           <View style={styles.menuItemLeft}>
             <Feather name="gift" size={16} color={Colors.neutral.lightGray} />
             <Text style={styles.menuItemText}>시간 채우기 (선물)</Text>
@@ -34,9 +41,9 @@ export function OptionsSettingsSection() {
         </Pressable>
       </View>
 
-      {/* 프로필 상세보기 */}
+      {/* 프로필 상세보기 — 채팅 상대 전용 프로필 조회 API 미확인, 이번 범위 제외 */}
       <View style={styles.menuItemMarginSm}>
-        <Pressable style={styles.menuItem}>
+        <Pressable style={styles.menuItem} onPress={showComingSoon}>
           <View style={styles.menuItemLeft}>
             <Feather name="user" size={16} color={Colors.neutral.lightGray} />
             <Text style={styles.menuItemText}>프로필 상세보기</Text>

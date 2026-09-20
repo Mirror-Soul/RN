@@ -1,35 +1,31 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import {Colors, FontFamily, Radii, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Image } from 'expo-image';
 import { Ionicons, Feather } from '@expo/vector-icons';
-import { Badge } from '@/src/components/common/Badge';
 import Animated, { SharedValue } from 'react-native-reanimated';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { useCarousel } from '@/src/animations/scroll/useCarousel';
-import MatchingFooter from '@/src/components/home/match/parts/MatchingFooter';
+import { formatRelativeTime } from '@/src/utils/formatRelativeTime';
+import type { MeetingRequestItem } from '@/src/types/api/meeting';
 
 interface MatchingProfileCardProps {
-  data: {
-    id: string;
-    name: string;
-    age: number;
-    timeAgo: string;
-    satisfaction: number;
-    tags: string[];
-    message: string;
-    summaries: string[];
-  };
+  data: MeetingRequestItem;
   index: number;
   scrollX: SharedValue<number>;
   itemWidth: number;
 }
 
 export default function MatchingProfileCard({ data, index, scrollX, itemWidth }: MatchingProfileCardProps) {
-  const { colors, isDark } = useThemeColors();
-  
+  const { colors } = useThemeColors();
+  const [imageFailed, setImageFailed] = useState(false);
+
   // 중앙화된 애니메이션 훅 사용 (로직 깔끔하게 분리)
   const { animatedStyle } = useCarousel({ scrollX, index, itemWidth });
+
+  // CallMatchAnalysis가 아직 COMPLETED 전이면 twinSimilarity/summaryPoints가 비어있다.
+  const isAnalysisReady = data.twinSimilarity !== null;
 
   return (
     <Animated.View style={[{ width: '100%' }, animatedStyle]}>
@@ -44,38 +40,41 @@ export default function MatchingProfileCard({ data, index, scrollX, itemWidth }:
         <View style={[styles.topSection, { borderBottomColor: colors.border.primary }]}>
           <View style={styles.profileRow}>
             <View style={styles.profileLeft}>
-              {/* 이미지 플레이스홀더 */}
-              <LinearGradient
-                colors={Colors.gradient.avatarPlaceholder}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={[styles.avatarPlaceholder, { borderColor: colors.border.primary }]}
-              >
-                <Text style={styles.avatarText}>{data.name.charAt(0).toUpperCase()}</Text>
-              </LinearGradient>
-              
+              {!imageFailed && data.profileImageUrl ? (
+                <Image
+                  source={{ uri: data.profileImageUrl }}
+                  style={[styles.avatarPlaceholder, { borderColor: colors.border.primary }]}
+                  contentFit="cover"
+                  cachePolicy="disk"
+                  transition={150}
+                  onError={() => setImageFailed(true)}
+                />
+              ) : (
+                <LinearGradient
+                  colors={Colors.gradient.avatarPlaceholder}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={[styles.avatarPlaceholder, { borderColor: colors.border.primary }]}
+                >
+                  <Text style={styles.avatarText}>{data.name.charAt(0).toUpperCase()}</Text>
+                </LinearGradient>
+              )}
+
               <View style={styles.profileInfo}>
                 <Text style={[styles.nameText, { color: colors.text.primary }]} numberOfLines={1}>
-                  {data.name}, {data.age}
+                  {data.name}{data.age !== null ? `, ${data.age}` : ''}
                 </Text>
                 <View style={styles.timeRow}>
                   <Feather name="clock" size={12} color={Colors.primary.electricCyan} />
-                  <Text style={styles.timeText}>{data.timeAgo}</Text>
+                  <Text style={styles.timeText}>{formatRelativeTime(data.requestedAt)}</Text>
                 </View>
               </View>
             </View>
 
             <View style={styles.satisfactionBox}>
-              <Text style={styles.satisfactionLabel} numberOfLines={1} adjustsFontSizeToFit>MIRROR SATISFACTION</Text>
-              <Text style={styles.satisfactionValue}>{data.satisfaction}%</Text>
+              <Text style={styles.satisfactionLabel} numberOfLines={1} adjustsFontSizeToFit>미러 만족도</Text>
+              <Text style={styles.satisfactionValue}>{isAnalysisReady ? `${data.twinSimilarity}%` : '분석 중'}</Text>
             </View>
-          </View>
-
-          {/* 태그 리스트 */}
-          <View style={styles.tagRow}>
-            {data.tags.map((tag, i) => (
-              <Badge key={i} label={`# ${tag}`} variant="glass" colorScheme="gray" size="sm" textStyle={styles.tagText} />
-            ))}
           </View>
         </View>
 
@@ -86,24 +85,28 @@ export default function MatchingProfileCard({ data, index, scrollX, itemWidth }:
 
           <View style={styles.sectionHeader}>
             <Ionicons name="chatbubbles-outline" size={14} color={colors.text.muted} />
-            <Text style={[styles.sectionTitle, { color: colors.text.muted }]}>Invitation Message</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text.muted }]}>초대 메시지</Text>
           </View>
           <Text style={[styles.italicMessage, { color: colors.text.primary }]}>
             "{data.message}"
           </Text>
 
-          <View style={[styles.sectionHeader, { marginTop: Spacing.xxxl }]}>
-            <Ionicons name="options-outline" size={14} color={colors.text.muted} />
-            <Text style={[styles.sectionTitle, { color: colors.text.muted }]}>Twin Resonance Summary</Text>
-          </View>
-          <View style={styles.resonanceList}>
-            {data.summaries.map((item, i) => (
-              <View key={i} style={[styles.resonanceItem, { borderColor: colors.border.primary, backgroundColor: colors.background.glass }]}>
-                <View style={styles.cyanDot} />
-                <Text style={[styles.resonanceText, { color: colors.text.secondary }]}>{item}</Text>
+          {isAnalysisReady && data.summaryPoints.length > 0 && (
+            <>
+              <View style={[styles.sectionHeader, { marginTop: Spacing.xxxl }]}>
+                <Ionicons name="options-outline" size={14} color={colors.text.muted} />
+                <Text style={[styles.sectionTitle, { color: colors.text.muted }]}>트윈 공감 요약</Text>
               </View>
-            ))}
-          </View>
+              <View style={styles.resonanceList}>
+                {data.summaryPoints.map((item, i) => (
+                  <View key={i} style={[styles.resonanceItem, { borderColor: colors.border.primary, backgroundColor: colors.background.glass }]}>
+                    <View style={styles.cyanDot} />
+                    <Text style={[styles.resonanceText, { color: colors.text.secondary }]}>{item}</Text>
+                  </View>
+                ))}
+              </View>
+            </>
+          )}
 
           <View style={[styles.infoBox, { borderColor: colors.border.primary, backgroundColor: colors.background.glass }]}>
             <Ionicons name="information-circle-outline" size={16} color={Colors.primary.electricCyan} style={{ marginTop: Spacing.xxs }} />
@@ -114,9 +117,6 @@ export default function MatchingProfileCard({ data, index, scrollX, itemWidth }:
         </View>
       </LinearGradient>
       </View>
-      
-      {/* 푸터(액션 버튼)를 카드 컨테이너 내부에 배치하여 카드 길이에 동적으로 붙게 함 */}
-      <MatchingFooter />
     </Animated.View>
   );
 }
@@ -204,17 +204,6 @@ const styles = StyleSheet.create({
     fontWeight: FontWeight.black,
     fontSize: 30,
     color: Colors.primary.electricCyan,
-  },
-  tagRow: {
-    flexDirection: 'row',
-    gap: Spacing.sm,
-    marginTop: Spacing.xxl,
-    flexWrap: 'wrap',
-  },
-  tagText: {
-    fontSize: FontSize.xs,
-    letterSpacing: 1.1,
-    textTransform: 'uppercase',
   },
   bottomSection: {
     padding: Spacing.xxl, 

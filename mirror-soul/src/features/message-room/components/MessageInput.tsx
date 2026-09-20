@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Pressable,
   Platform,
+  Alert,
 } from 'react-native';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInUp } from 'react-native-reanimated';
@@ -34,6 +35,8 @@ const MAX_INPUT_HEIGHT = 128;
  *   React Native가 내부적으로 높이를 안정적으로 관리합니다.
  *   maxHeight 초과 시 scrollEnabled로 스크롤 처리.
  */
+const showComingSoon = () => Alert.alert('준비 중인 기능이에요', '조금만 기다려 주세요.');
+
 export default function MessageInput({ onSend }: MessageInputProps) {
   const insets = useSafeAreaInsets();
   const {
@@ -62,9 +65,10 @@ export default function MessageInput({ onSend }: MessageInputProps) {
     >
       {/* ── 입력 행 ── */}
       <View style={styles.inputRow}>
-        {/* 이미지 첨부 버튼 */}
+        {/* 이미지 첨부 버튼 — 백엔드 ChatMessageType이 TEXT뿐이라 아직 준비 중 안내만 */}
         <Pressable
           style={styles.iconButton}
+          onPress={showComingSoon}
           accessibilityLabel="이미지 첨부"
           accessibilityRole="button"
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -98,6 +102,7 @@ export default function MessageInput({ onSend }: MessageInputProps) {
           {/* 이모지 버튼 내부 우측 — absolute 제거하고 View로 포지셔닝 */}
           <View style={styles.inputIconRight} pointerEvents="box-none">
             <Pressable
+              onPress={showComingSoon}
               accessibilityLabel="이모지"
               accessibilityRole="button"
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
