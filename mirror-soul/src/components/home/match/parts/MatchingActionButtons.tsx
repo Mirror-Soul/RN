@@ -9,9 +9,11 @@ export type MatchingTab = 'meet' | 'chat';
 interface MatchingActionButtonsProps {
   activeTab: MatchingTab;
   onChangeTab: (tab: MatchingTab) => void;
+  /** 전체 대화방 안 읽은 메시지 총합 — 0이면 배지를 숨긴다 */
+  unreadCount?: number;
 }
 
-export default function MatchingActionButtons({ activeTab, onChangeTab }: MatchingActionButtonsProps) {
+export default function MatchingActionButtons({ activeTab, onChangeTab, unreadCount = 0 }: MatchingActionButtonsProps) {
   const { colors } = useThemeColors();
 
   return (
@@ -52,9 +54,11 @@ export default function MatchingActionButtons({ activeTab, onChangeTab }: Matchi
             메시지방
           </Text>
           {/* 배지 */}
-          <View style={[styles.badge, { backgroundColor: activeTab === 'chat' ? Colors.primary.vividPurple : Colors.primary.electricCyan }]}>
-            <Text style={[styles.badgeText, { color: Colors.primary.soulBlack }]}>2</Text>
-          </View>
+          {unreadCount > 0 && (
+            <View style={[styles.badge, { backgroundColor: activeTab === 'chat' ? Colors.primary.vividPurple : Colors.primary.electricCyan }]}>
+              <Text style={[styles.badgeText, { color: Colors.primary.soulBlack }]}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
+            </View>
+          )}
         </View>
       </Pressable>
     </View>

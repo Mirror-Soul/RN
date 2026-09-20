@@ -32,7 +32,12 @@ export type CallStatus =
  * - hangUp(): 통화 종료
  * - error: 에러 메시지
  */
-export function useAICallFlow() {
+/**
+ * @param targetUserUuid 통화할 상대(클론 소유자)의 uuid — Clone이 User와 1:1이라
+ * clone-user-uuid엔 그 사람 본인의 uuid를 그대로 쓴다(CloneRepository.findByUserUuid 참고).
+ * 생략하면 로그인한 본인의 클론에 건다(Grow 탭 셀프 시뮬레이션, 기존 동작 그대로 유지).
+ */
+export function useAICallFlow(targetUserUuid?: string) {
   const [callStatus, setCallStatus] = useState<CallStatus>('idle');
   const [error, setError] = useState<string | null>(null);
   // 기본값 스피커 on — 화면을 보며 통화하는 영상통화 UX(한뼘통화)에 맞춘다.
@@ -40,6 +45,9 @@ export function useAICallFlow() {
   const [isMuted, setIsMuted] = useState(false);
 
   const { userUuid } = useAuthStore();
+  // 실제로 전화를 거는 대상(피호출자) — REST 방 생성과 WS CALL_INVITE 양쪽 다 이 값을 써야
+  // AI 서버가 올바른 사람의 클론 인격을 로드한다. userUuid(발신자 본인)와 혼동하지 말 것.
+  const calleeUuid = targetUserUuid ?? userUuid ?? '';
 
   // 세션 정보 (REST API 응답으로 채워짐)
   const callSessionRef = useRef<{
@@ -187,7 +195,7 @@ export function useAICallFlow() {
           roomId: session.roomId,
           from: session.callerSignalId,
           to: session.aiSignalId,
-          data: { callId: session.callId, cloneUserUuid: userUuid ?? '', mediaType: 'VOICE' },
+          data: { callId: session.callId, cloneUserUuid: calleeUuid, mediaType: 'VOICE' },
         });
 
         inviteTimeoutRef.current = setTimeout(() => {
@@ -314,7 +322,7 @@ export function useAICallFlow() {
       default:
         logger.debug('[useAICallFlow] Unhandled message type:', msg.type);
     }
-  }, [createOffer, createAnswer, applyAnswer, applyOffer, applyIceCandidate, sendMessage, userUuid]);
+  }, [createOffer, createAnswer, applyAnswer, applyOffer, applyIceCandidate, sendMessage, calleeUuid]);
 
   // ─────────────────────────────────────────────
   // 내부 정리 함수
@@ -448,7 +456,7 @@ export function useAICallFlow() {
       // 생성된 callId)를 잃어버려서, REST는 성공하고 WebRTC만 실패한 경우 서버에 생성된
       // 통화방을 정리(보상 종료)할 방법이 없어진다.
       const [initiateResult, webrtcResult] = await Promise.allSettled([
-        initiateCall(userUuid, {
+        initiateCall(calleeUuid, {
           callerUserUuid: userUuid,
           mediaType: 'VOICE',
         }),
@@ -531,7 +539,7 @@ export function useAICallFlow() {
         await _cleanup(message, 'idle');
       }
     }
-  }, [userUuid, initWebRTC, handleMessage, _cleanup, _performHangUp, endCall, closeWebRTC]);
+  }, [userUuid, calleeUuid, initWebRTC, handleMessage, _cleanup, _performHangUp, endCall, closeWebRTC]);
 
   // ─────────────────────────────────────────────
   // 통화 종료 (공개 API)

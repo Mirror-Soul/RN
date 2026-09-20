@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Image } from 'expo-image';
 import { Colors, FontFamily, FontSize, FontWeight, Spacing } from '@/src/constants/theme';
 import { ChatRoom } from '../../types';
 
@@ -9,21 +10,37 @@ interface OptionsProfileSectionProps {
 }
 
 export function OptionsProfileSection({ room }: OptionsProfileSectionProps) {
+  const { partner } = room;
+  const [imageFailed, setImageFailed] = useState(false);
+
   return (
     <View style={styles.profileSection}>
       <View style={styles.avatarMargin}>
-        <LinearGradient
-          colors={Colors.gradient.twinCallButton}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.largeAvatar}
-        >
-          <Text style={styles.largeAvatarText}>{room.avatarLetter}</Text>
-        </LinearGradient>
+        {!imageFailed && partner.profileImageUrl ? (
+          <Image
+            source={{ uri: partner.profileImageUrl }}
+            style={styles.largeAvatar}
+            contentFit="cover"
+            cachePolicy="disk"
+            transition={150}
+            onError={() => setImageFailed(true)}
+          />
+        ) : (
+          <LinearGradient
+            colors={Colors.gradient.twinCallButton}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.largeAvatar}
+          >
+            <Text style={styles.largeAvatarText}>{partner.name.charAt(0).toUpperCase()}</Text>
+          </LinearGradient>
+        )}
       </View>
-      <Text style={styles.profileName}>{room.name}</Text>
+      <Text style={styles.profileName}>{partner.name}</Text>
       <View style={styles.profileMetaRow}>
-        <Text style={styles.profileMeta}>유사도 {room.resonance}%</Text>
+        <Text style={styles.profileMeta}>
+          {partner.twinSimilarity !== null ? `유사도 ${partner.twinSimilarity}%` : '유사도 분석 중'}
+        </Text>
       </View>
     </View>
   );

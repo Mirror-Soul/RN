@@ -43,8 +43,9 @@ export default function MessageBubble({
         entering={FadeInUp.delay(enterDelay).duration(300).springify()}
         style={styles.sentRow}
       >
-        {/* 시간 텍스트 */}
+        {/* 시간 텍스트 (+ 상대방이 읽었으면 읽음 표시) */}
         <View style={styles.timePad}>
+          {message.isReadByPartner && <Text style={styles.readLabel}>읽음</Text>}
           <Text style={styles.timeText}>{message.timestamp}</Text>
         </View>
 
@@ -191,6 +192,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   timePad: {
+    alignItems: 'flex-end',
     paddingBottom: Spacing.xs,
     paddingRight: Spacing.xs,
   },
@@ -205,5 +207,13 @@ const styles = StyleSheet.create({
     lineHeight: 15,
     letterSpacing: 0.12,
     color: Colors.neutral.disabledText,
+  },
+  readLabel: {
+    fontFamily: FontFamily.sans,
+    fontWeight: FontWeight.medium,
+    fontSize: FontSize.xs,
+    lineHeight: 15,
+    letterSpacing: 0.12,
+    color: Colors.primary.electricCyan,
   },
 });

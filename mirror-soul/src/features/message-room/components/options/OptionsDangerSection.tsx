@@ -2,7 +2,8 @@ import React from 'react';
 import { View, Text, StyleSheet, Pressable, Alert, Linking } from 'react-native';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { Colors, FontFamily, FontSize, FontWeight, Spacing } from '@/src/constants/theme';
-import { blockRoom } from '@/src/utils/blockList';
+import { useBlockUserMutation } from '@/src/features/chat/hooks/useBlockUserMutation';
+import { getErrorDisplayMessage } from '@/src/utils/apiErrorCode';
 import { SUPPORT_EMAIL } from '@/src/features/customer-center/constants/faqData';
 import { logger } from '@/src/utils/logger';
 import { ChatRoom } from '../../types';
@@ -15,23 +16,28 @@ interface OptionsDangerSectionProps {
 
 /**
  * 실시간 통화가 있는 앱은 차단/신고 수단이 필수다 (App Store Guideline 1.2).
- * 서버에 차단/신고 API가 아직 없으므로:
- * - 차단: 로컬 차단 목록(blockList.ts)에 추가 — 이 기기에서는 다시 이 대화방에 들어갈 수 없음
- * - 신고: 이메일로 고객센터에 신고 내용 전송 (customer-center의 SUPPORT_EMAIL 재사용)
+ * - 차단: 실제 POST /blocks/{uuid} 호출(blockService.ts). 성공하면 백엔드 쿼리 자체가 두 사람의
+ *   채팅방을 앞으로 제외하므로(useBlockUserMutation.ts 참고) 별도 로컬 숨김 목록이 필요 없다.
+ * - 신고: 서버에 신고 도메인 자체가 없어 이메일로 고객센터에 전송(customer-center의
+ *   SUPPORT_EMAIL 재사용) — 이건 확정된 방향이라 API가 생겨도 안 바뀐다.
  */
 export function OptionsDangerSection({ room, onBlocked }: OptionsDangerSectionProps) {
+  const blockMutation = useBlockUserMutation();
+
   const handleBlock = () => {
     Alert.alert(
       '차단하시겠습니까?',
-      `${room.name}님을 차단하면 더 이상 대화를 주고받을 수 없습니다.`,
+      `${room.partner.name}님을 차단하면 더 이상 대화를 주고받을 수 없습니다.`,
       [
         { text: '취소', style: 'cancel' },
         {
           text: '차단',
           style: 'destructive',
-          onPress: async () => {
-            await blockRoom(room.id);
-            onBlocked();
+          onPress: () => {
+            blockMutation.mutate(room.partner.userUuid, {
+              onSuccess: onBlocked,
+              onError: (error) => Alert.alert('차단 실패', getErrorDisplayMessage(error, '차단하지 못했습니다.')),
+            });
           },
         },
       ]
@@ -43,7 +49,7 @@ export function OptionsDangerSection({ room, onBlocked }: OptionsDangerSectionPr
     const bodyTemplate = `아래 양식에 맞춰 신고 내용을 작성해 주시면 더욱 빠른 확인이 가능합니다.
 
 ---
-■ 신고 대상: ${room.name} (대화방 ID: ${room.id})
+■ 신고 대상: ${room.partner.name} (대화방 ID: ${room.chatRoomId})
 ■ 신고 사유:
 (예: 부적절한 발언, 사기 의심, 불쾌한 대화 내용 등)
 ■ 상세 내용:
@@ -69,20 +75,10 @@ export function OptionsDangerSection({ room, onBlocked }: OptionsDangerSectionPr
 
   return (
     <View style={[styles.menuSection, styles.dangerSection]}>
-      <Text style={styles.sectionLabel}>DANGER ZONE</Text>
-
-      {/* 대화 내용 삭제 */}
-      <View style={styles.menuItemMargin}>
-        <Pressable style={styles.menuItem}>
-          <View style={styles.menuItemLeft}>
-            <Feather name="trash-2" size={16} color={Colors.neutral.darkGray} />
-            <Text style={styles.dangerItemText}>대화 내용 삭제</Text>
-          </View>
-        </Pressable>
-      </View>
+      <Text style={styles.sectionLabel}>위험 구역</Text>
 
       {/* 신고하기 */}
-      <View style={styles.menuItemMarginSm}>
+      <View style={styles.menuItemMargin}>
         <Pressable style={styles.menuItem} onPress={handleReport}>
           <View style={styles.menuItemLeft}>
             <Feather name="flag" size={16} color={Colors.neutral.darkGray} />
@@ -93,7 +89,7 @@ export function OptionsDangerSection({ room, onBlocked }: OptionsDangerSectionPr
 
       {/* 차단하기 */}
       <View style={styles.menuItemMarginSm}>
-        <Pressable style={styles.menuItem} onPress={handleBlock}>
+        <Pressable style={styles.menuItem} onPress={handleBlock} disabled={blockMutation.isPending}>
           <View style={styles.menuItemLeft}>
             <Ionicons name="ban-outline" size={16} color={Colors.neutral.darkGray} />
             <Text style={styles.dangerItemText}>차단하기</Text>

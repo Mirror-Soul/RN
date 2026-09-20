@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Spacing } from '@/src/constants/theme';
 import { useAICallFlow } from '@/src/hooks/useAICallFlow';
 import CallHeader from '@/src/components/call/CallHeader';
@@ -15,7 +15,9 @@ import CallScreenBackground from '@/src/components/call/CallScreenBackground';
 /**
  * AI 트윈 영상통화 화면
  *
- * 진입 경로: Grow 탭 → 트윈 시뮬레이션 카드 클릭
+ * 진입 경로:
+ * - Grow 탭 → 트윈 시뮬레이션 카드 클릭 (파라미터 없음 → 본인 클론에 통화)
+ * - Matching 탭 → 만남 신청 카드의 TWIN CALL (`targetUuid` 파라미터로 상대방 uuid 전달)
  * 화면 진입 시 사용자 조작 없이 바로 통화가 걸린다("탭해서 시작" 단계를 거치지 않음).
  * 연결 완료 전(idle~connecting)에는 CallConnectingView(펄스 오브 + 스텝 인디케이터)를,
  * 연결된 이후에는 실제 영상통화 레이아웃을 보여준다.
@@ -37,6 +39,7 @@ import CallScreenBackground from '@/src/components/call/CallScreenBackground';
 export default function AICallScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { targetUuid } = useLocalSearchParams<{ targetUuid?: string }>();
   const {
     callStatus,
     remoteStream,
@@ -47,7 +50,7 @@ export default function AICallScreen() {
     toggleSpeaker,
     isMuted,
     toggleMute,
-  } = useAICallFlow();
+  } = useAICallFlow(targetUuid);
 
   // 카메라는 아직 로컬 캡처 연동 전이라 순수 UI 자리표시자 state로 남겨둔다.
   const [isCameraOn, setIsCameraOn] = useState(false);

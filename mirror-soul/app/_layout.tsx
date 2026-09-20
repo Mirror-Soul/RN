@@ -1,7 +1,7 @@
 import { useAuthStore } from '@/src/store/useAuthStore';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from '@/src/services/queryClient';
-import { Stack, router, useRootNavigationState } from 'expo-router';
+import { Stack, router, useRootNavigationState, usePathname } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
@@ -12,6 +12,7 @@ import * as Sentry from '@sentry/react-native';
 import { ToastProvider } from '@/src/components/common/Toast/ToastProvider';
 import { useProactiveTokenRefresh } from '@/src/hooks/useProactiveTokenRefresh';
 import { usePushNotificationSetup } from '@/src/features/push/hooks/usePushNotificationSetup';
+import { useChatRealtimeConnection } from '@/src/features/chat/hooks/useChatRealtimeConnection';
 
 /**
  * hydration 완료 전까지 스플래시 화면 유지.
@@ -40,6 +41,12 @@ function PushNotificationSetup() {
   return null;
 }
 
+/** useChatRealtimeConnection도 react-query(queryClient.invalidateQueries 등)를 쓰므로 같은 이유로 Provider 하위에 둔다. */
+function ChatRealtimeSetup() {
+  useChatRealtimeConnection();
+  return null;
+}
+
 // 백엔드 확정 전 임시 온보딩 라우트 매핑
 const getOnboardingRoute = (status: string | null) => {
   switch (status) {
@@ -53,6 +60,7 @@ const getOnboardingRoute = (status: string | null) => {
 
 function RootLayout() {
   const rootNavigationState = useRootNavigationState();
+  const pathname = usePathname();
   const { isHydrated, isLoggedIn, userStatus, hydrate } = useAuthStore();
 
   // 앱 첫 실행 시 SecureStore에서 토큰 복구
@@ -79,7 +87,14 @@ function RootLayout() {
     const timer = setTimeout(() => {
       if (isLoggedIn) {
         if (userStatus === 'ACTIVE') {
-          router.replace('/(main)');
+          // 로그인 화면(인증 전 전용 경로)에 남아있을 때만 메인으로 옮긴다 — 그렇지 않으면
+          // 예: 알림 없이 /chat/{id}로 직접 들어온 콜드 스타트(딥링크)를 이 effect가 매번
+          // /(main)으로 덮어써버린다. usePushNotificationSetup의 100ms 보정은 알림 응답이
+          // 있을 때만 동작하므로, 일반 딥링크는 여기서 직접 현재 경로를 지켜줘야 한다.
+          const isOnPreAuthScreen = pathname === '/login' || pathname.startsWith('/signup');
+          if (isOnPreAuthScreen) {
+            router.replace('/(main)');
+          }
         } else if (userStatus?.startsWith('ONBOARD_')) {
           router.replace(getOnboardingRoute(userStatus));
         }
@@ -92,7 +107,7 @@ function RootLayout() {
     }, 0);
 
     return () => clearTimeout(timer);
-  }, [isHydrated, isLoggedIn, userStatus, rootNavigationState?.key]);
+  }, [isHydrated, isLoggedIn, userStatus, rootNavigationState?.key, pathname]);
 
   // hydration 전: null 반환 (SplashScreen이 화면을 가림)
   if (!isHydrated) return null;
@@ -101,6 +116,7 @@ function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <QueryClientProvider client={queryClient}>
         <PushNotificationSetup />
+        <ChatRealtimeSetup />
         <SafeAreaProvider>
           <ToastProvider>
             <Stack
@@ -118,7 +134,7 @@ function RootLayout() {
               <Stack.Screen name="voice-update" />
               <Stack.Screen name="forgot-password" />
               <Stack.Screen
-                name="message-room/[id]"
+                name="chat/[id]"
                 options={{ animation: 'slide_from_right' }}
               />
             </Stack>

@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Image } from 'expo-image';
 import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
+import { formatRelativeTime } from '@/src/utils/formatRelativeTime';
 import { ChatRoom } from '../types';
 
 interface MessageRoomHeaderLeftProps {
@@ -9,31 +11,46 @@ interface MessageRoomHeaderLeftProps {
 }
 
 export function MessageRoomHeaderLeft({ room }: MessageRoomHeaderLeftProps) {
+  const { partner } = room;
+  const [imageFailed, setImageFailed] = useState(false);
+
   return (
     <View style={styles.headerLeft}>
-      {/* 아바타 + 온라인 닷 */}
+      {/* 아바타 */}
       <View style={styles.avatarWrapper}>
-        <LinearGradient
-          colors={Colors.gradient.twinCallButton}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.headerAvatar}
-        >
-          <Text style={styles.headerAvatarText}>{room.avatarLetter}</Text>
-        </LinearGradient>
-        {room.isOnline && <View style={styles.onlineDot} />}
+        {!imageFailed && partner.profileImageUrl ? (
+          <Image
+            source={{ uri: partner.profileImageUrl }}
+            style={styles.headerAvatar}
+            contentFit="cover"
+            cachePolicy="disk"
+            transition={150}
+            onError={() => setImageFailed(true)}
+          />
+        ) : (
+          <LinearGradient
+            colors={Colors.gradient.twinCallButton}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.headerAvatar}
+          >
+            <Text style={styles.headerAvatarText}>{partner.name.charAt(0).toUpperCase()}</Text>
+          </LinearGradient>
+        )}
       </View>
 
       {/* 이름 + 메타 */}
       <View style={styles.headerInfo}>
         <Text style={styles.headerName} numberOfLines={1}>
-          {room.name}
+          {partner.name}
         </Text>
         <View style={styles.headerMeta}>
-          <Text style={styles.headerMetaText}>유사도 {room.resonance}%</Text>
+          <Text style={styles.headerMetaText}>
+            {partner.twinSimilarity !== null ? `유사도 ${partner.twinSimilarity}%` : '유사도 분석 중'}
+          </Text>
           <View style={styles.metaDot} />
-          <Text style={[styles.headerMetaText, styles.readText]}>
-            {room.isRead ? '상대방이 읽음' : '읽지 않음'}
+          <Text style={styles.headerMetaText}>
+            {partner.lastActiveAt ? formatRelativeTime(partner.lastActiveAt) : '활동 정보 없음'}
           </Text>
         </View>
       </View>
@@ -76,17 +93,6 @@ const styles = StyleSheet.create({
     letterSpacing: -0.31,
     color: Colors.neutral.pureWhite,
   },
-  onlineDot: {
-    position: 'absolute',
-    width: 12,
-    height: 12,
-    borderRadius: Radii.full,
-    backgroundColor: '#00C950',
-    borderWidth: 2,
-    borderColor: '#000000',
-    right: -2,
-    bottom: -2,
-  },
   headerInfo: {
     flex: 1,
     gap: Spacing.xxs,
@@ -111,10 +117,6 @@ const styles = StyleSheet.create({
     lineHeight: 15,
     letterSpacing: 0.12,
     color: Colors.neutral.darkGray,
-  },
-  readText: {
-    color: '#00C950',
-    opacity: 0.51,
   },
   metaDot: {
     width: 4,
