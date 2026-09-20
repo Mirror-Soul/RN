@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import GradientButton from '@/src/components/common/GradientButton';
 import { Header } from '@/src/components/common/Header';
 import { ScreenLayout } from '@/src/components/common/ScreenLayout';
@@ -9,9 +9,7 @@ import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { useForgotPasswordFlow } from '../hooks/useForgotPasswordFlow';
 
 /**
- * 비밀번호 찾기 화면 (UI/훅 스캐폴딩)
- * 백엔드에 비밀번호 재설정 엔드포인트가 아직 없어 실제 API 연동 없이
- * 이메일 → 인증코드 → 새 비밀번호 3단계 흐름만 제공한다.
+ * 비밀번호 찾기 화면 — 이메일 → 인증코드 → 새 비밀번호 3단계 흐름.
  */
 export default function ForgotPasswordScreen() {
   const { colors } = useThemeColors();
@@ -22,6 +20,7 @@ export default function ForgotPasswordScreen() {
     setNewPassword,
     setNewPasswordConfirm,
     handleSendCode,
+    handleResendCode,
     handleVerifyCode,
     handleResetPassword,
     isTimerActive,
@@ -101,6 +100,11 @@ export default function ForgotPasswordScreen() {
               variant="full"
               style={styles.actionButton}
             />
+            <Pressable onPress={handleResendCode} disabled={state.isLoading} hitSlop={8}>
+              <Text style={[styles.resendText, { color: colors.text.secondary }]}>
+                인증번호를 못 받으셨나요? <Text style={styles.resendTextEmphasis}>다시 보내기</Text>
+              </Text>
+            </Pressable>
           </View>
         )}
 
@@ -134,6 +138,8 @@ export default function ForgotPasswordScreen() {
             <GradientButton
               title="비밀번호 재설정"
               onPress={handleResetPassword}
+              disabled={state.isLoading}
+              isLoading={state.isLoading}
               variant="full"
               style={styles.actionButton}
             />
@@ -180,5 +186,17 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     marginTop: Spacing.md,
+  },
+  resendText: {
+    fontFamily: FontFamily.sans,
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.regular,
+    textAlign: 'center',
+    marginTop: Spacing.lg,
+  },
+  resendTextEmphasis: {
+    fontFamily: FontFamily.sans,
+    fontWeight: FontWeight.bold,
+    color: Colors.primary.electricCyan,
   },
 });

@@ -5,6 +5,12 @@ import {
   VerifyCodeResponse,
   BasicProfileRequest,
   BasicProfileResponse,
+  SendPasswordResetCodeRequest,
+  SendPasswordResetCodeResponse,
+  VerifyPasswordResetCodeRequest,
+  VerifyPasswordResetCodeResponse,
+  ResetPasswordRequest,
+  ResetPasswordResponse,
 } from '@/src/types/api/auth';
 import apiClient from './apiClient';
 import { queryClient } from './queryClient';
@@ -61,6 +67,32 @@ export const login = async (email: string, password: string): Promise<LoginRespo
 export const logout = async () => {
   logger.info('authService: Attempting logout');
   const response = await apiClient.post('/auth/logout');
+  return response.data;
+};
+
+// ─────────────────────────────────────────────
+// 비밀번호 재설정
+// ─────────────────────────────────────────────
+
+export const sendPasswordResetCode = async (
+  data: SendPasswordResetCodeRequest
+): Promise<SendPasswordResetCodeResponse> => {
+  logger.debug('authService: Sending password reset code');
+  const response = await apiClient.post<SendPasswordResetCodeResponse>('/auth/password-reset/send-code', data);
+  return response.data;
+};
+
+export const verifyPasswordResetCode = async (
+  data: VerifyPasswordResetCodeRequest
+): Promise<VerifyPasswordResetCodeResponse> => {
+  logger.debug('authService: Verifying password reset code');
+  const response = await apiClient.post<VerifyPasswordResetCodeResponse>('/auth/password-reset/verify-code', data);
+  return response.data;
+};
+
+export const resetPassword = async (data: ResetPasswordRequest): Promise<ResetPasswordResponse> => {
+  logger.info('authService: Resetting password');
+  const response = await apiClient.post<ResetPasswordResponse>('/auth/password-reset/reset', data);
   return response.data;
 };
 
