@@ -2,7 +2,6 @@ import AiStatusTicker from '@/src/components/home/main/AiStatusTicker';
 import AvailableTimeCard from '@/src/components/home/main/AvailableTimeCard';
 import DiscoveryMatchSection from '@/src/components/home/main/Discovery/DiscoveryMatchSection';
 import PartnerProfileModal from '@/src/components/home/main/Discovery/PartnerProfileModal';
-import { SoulMatch } from '@/src/components/home/main/Discovery/DiscoveryMatchCard';
 import LocationFilterBar from '@/src/components/home/main/LocationFilterBar';
 import LocationSelectModal from '@/src/components/home/main/LocationSelectModal';
 import MainHeader from '@/src/components/home/main/MainHeader';
@@ -16,7 +15,7 @@ import { useBuyTimeMutation } from '@/src/features/profile/hooks/useBuyTimeMutat
 import { TIME_REFILL_OPTIONS } from '@/src/features/profile/constants/timeRefillOptions';
 import { usePreferredRegionsQuery } from '@/src/features/home/hooks/usePreferredRegionsQuery';
 import { useUpdatePreferredRegionsMutation } from '@/src/features/home/hooks/useUpdatePreferredRegionsMutation';
-import type { PreferredRegion } from '@/src/types/api/home';
+import type { PreferredRegion, Recommendation } from '@/src/types/api/home';
 import { useToast } from '@/src/components/common/Toast/ToastProvider';
 import { getErrorDisplayMessage } from '@/src/utils/apiErrorCode';
 import { logger } from '@/src/utils/logger';
@@ -43,7 +42,7 @@ export default function MainHomeScreen() {
 
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [showRefillModal, setShowRefillModal] = useState(false);
-  const [selectedMatch, setSelectedMatch] = useState<SoulMatch | null>(null);
+  const [selectedMatch, setSelectedMatch] = useState<Recommendation | null>(null);
   const buyTimeMutation = useBuyTimeMutation();
   const purchaseInFlightRef = useRef(false);
   const { showToast } = useToast();
@@ -88,9 +87,9 @@ export default function MainHomeScreen() {
     );
   }, []);
 
-  const handleConnectNow = useCallback((match: SoulMatch) => {
+  const handleConnectNow = useCallback((match: Recommendation) => {
     // TODO: 실제 통화 연결 라우트가 정해지면 router.push로 교체
-    logger.debug('Call now pressed', { matchId: match.id });
+    logger.debug('Call now pressed', { matchId: match.userUuid });
     Alert.alert('안내', '통화하기 기능은 곧 제공될 예정입니다.');
     setSelectedMatch(null);
   }, []);
