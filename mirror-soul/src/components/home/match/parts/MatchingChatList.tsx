@@ -19,7 +19,8 @@ export default function MatchingChatList() {
 
       {isLoading ? (
         <MatchingTabStatus isLoading message="불러오는 중" />
-      ) : isError ? (
+      ) : isError && !data ? (
+        // 캐시된 방 목록이 있으면 백그라운드 재조회 실패 정도로 전체 화면을 덮지 않는다.
         <MatchingTabStatus message="대화 목록을 불러오지 못했습니다" onRetry={refetch} />
       ) : rooms.length === 0 ? (
         <MatchingTabStatus message="아직 진행 중인 대화가 없어요" />

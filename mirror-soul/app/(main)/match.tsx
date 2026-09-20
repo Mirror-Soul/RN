@@ -132,7 +132,9 @@ export default function MatchScreen() {
                 <View style={{ paddingHorizontal: horizontalPadding }}>
                   <MatchingTabStatus isLoading message="불러오는 중" />
                 </View>
-              ) : isError ? (
+              ) : isError && !data ? (
+                // isError만 보면 캐시된 데이터가 있어도 백그라운드 재조회 실패(포커스 복귀 등)
+                // 때마다 전체 오류 화면으로 덮인다 — 데이터가 없을 때만 전체 오류로 처리한다.
                 <View style={{ paddingHorizontal: horizontalPadding }}>
                   <MatchingTabStatus message="만남 신청 목록을 불러오지 못했습니다" onRetry={refetch} />
                 </View>

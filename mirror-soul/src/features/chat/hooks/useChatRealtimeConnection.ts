@@ -1,9 +1,9 @@
 import { useEffect, useRef } from 'react';
-import { QueryClient, useQueryClient } from '@tanstack/react-query';
+import { InfiniteData, QueryClient, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/src/store/useAuthStore';
 import { logger } from '@/src/utils/logger';
 import type { ChatRealtimeEvent, MessageCreatedData, MessageReadData } from '@/src/types/chatRealtime';
-import type { ChatRoomListResult } from '@/src/types/api/chat';
+import type { ChatRoomListResult, MessageListResult } from '@/src/types/api/chat';
 
 const WS_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL?.replace('https://', 'wss://').replace('http://', 'ws://');
 
@@ -59,8 +59,10 @@ export function useChatRealtimeConnection() {
       ws.onopen = () => {
         logger.debug('[useChatRealtimeConnection] connected');
         retryDelayRef.current = INITIAL_RETRY_DELAY_MS;
-        // 끊겨 있던 동안 놓쳤을 수 있는 변화를 REST 재조회로 보정한다.
+        // 끊겨 있던 동안 놓쳤을 수 있는 변화를 REST 재조회로 보정한다 — 방 목록뿐 아니라,
+        // 현재 열려 있는 대화방의 메시지 목록도 끊긴 동안 온 메시지를 놓칠 수 있으므로 함께 보정한다.
         queryClient.invalidateQueries({ queryKey: ['chat', 'rooms'] });
+        queryClient.invalidateQueries({ queryKey: ['chat', 'messages'] });
       };
 
       ws.onmessage = (event) => {
@@ -113,12 +115,25 @@ function handleRealtimeEvent(queryClient: QueryClient, event: ChatRealtimeEvent)
           ),
         };
       });
-      // 메시지 상세 목록(useChatMessagesQuery) 캐시 갱신은 그 쿼리가 생기는 Phase 3-D에서 추가한다.
+      // 그 방의 메시지 상세 화면이 열려 있어도 실시간으로 반영되도록 첫 페이지(최신 묶음)에
+      // 이어붙인다 — 캐시가 아직 없으면(방을 연 적 없음) 손댈 데이터 자체가 없으므로 그대로 둔다.
+      // 같은 메시지가 중복 수신될 가능성에 대비해 messageId 기준으로 한 번 걸러낸다.
+      queryClient.setQueryData<InfiniteData<MessageListResult>>(
+        ['chat', 'messages', event.chatRoomId],
+        (old) => {
+          if (!old) return old;
+          const pages = [...old.pages];
+          const firstPage = pages[0];
+          if (firstPage.messages.some((m) => m.messageId === message.messageId)) return old;
+          pages[0] = { ...firstPage, messages: [...firstPage.messages, message] };
+          return { ...old, pages };
+        }
+      );
       break;
     }
     case 'MESSAGE_READ': {
       // 방 목록 REST 응답엔 상대방의 읽음 커서가 아예 안 내려오므로, 이 이벤트가 유일한 정보원이다.
-      // 아직 이 캐시를 구독하는 화면이 없다 — 메시지 상세 화면(Phase 3-D)이 읽어서 쓸 슬롯만 미리 채워둔다.
+      // useChatReadReceipt가 구독해서 메시지 버블의 "읽음" 표시에 쓴다.
       const readData = event.data as MessageReadData;
       queryClient.setQueryData(['chat', 'readReceipts', event.chatRoomId], readData);
       break;

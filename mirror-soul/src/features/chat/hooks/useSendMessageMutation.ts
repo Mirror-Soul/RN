@@ -18,12 +18,21 @@ export const useSendMessageMutation = (roomId: number) => {
     onSuccess: (response) => {
       const message = response.result;
 
-      queryClient.setQueryData<InfiniteData<MessageListResult>>(['chat', 'messages', roomId], (old) => {
-        if (!old) return old;
-        const pages = [...old.pages];
-        pages[0] = { ...pages[0], messages: [...pages[0].messages, message] };
-        return { ...old, pages };
-      });
+      const patched = queryClient.setQueryData<InfiniteData<MessageListResult>>(
+        ['chat', 'messages', roomId],
+        (old) => {
+          if (!old) return old;
+          const pages = [...old.pages];
+          pages[0] = { ...pages[0], messages: [...pages[0].messages, message] };
+          return { ...old, pages };
+        }
+      );
+      // 메시지 목록 캐시가 아직 없으면(최초 조회 진행 중이거나 이전 조회가 실패한 상태) 위
+      // setQueryData가 조용히 아무 일도 하지 않는다 — 전송은 성공했는데 화면엔 영영 안 나타나
+      // 사용자가 같은 메시지를 다시 보낼 수 있다. 이 경우 즉시 무효화해서 새로 조회하게 한다.
+      if (!patched) {
+        queryClient.invalidateQueries({ queryKey: ['chat', 'messages', roomId] });
+      }
 
       queryClient.setQueryData<ChatRoomListResult>(['chat', 'rooms'], (old) => {
         if (!old) return old;

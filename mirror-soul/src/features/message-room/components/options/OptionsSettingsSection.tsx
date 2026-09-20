@@ -12,7 +12,7 @@ interface OptionsSettingsSectionProps {
 const showComingSoon = () => Alert.alert('준비 중인 기능이에요', '조금만 기다려 주세요.');
 
 export function OptionsSettingsSection({ roomId }: OptionsSettingsSectionProps) {
-  const { enabled, handleToggle, isLoading } = useChatNotificationSettings(roomId);
+  const { enabled, handleToggle, isLoading, isError, refetch } = useChatNotificationSettings(roomId);
 
   return (
     <View style={styles.menuSection}>
@@ -25,9 +25,15 @@ export function OptionsSettingsSection({ roomId }: OptionsSettingsSectionProps) 
             <Feather name="bell" size={16} color={Colors.neutral.lightGray} />
             <Text style={styles.menuItemText}>알림 설정</Text>
           </View>
-          <View style={styles.toggleWrapper}>
-            <AnimatedSwitch value={enabled} onToggle={handleToggle} disabled={isLoading} />
-          </View>
+          {isError ? (
+            <Pressable onPress={() => refetch()} accessibilityRole="button" accessibilityLabel="알림 설정 다시 불러오기">
+              <Text style={styles.retryText}>불러오기 실패 · 재시도</Text>
+            </Pressable>
+          ) : (
+            <View style={styles.toggleWrapper}>
+              <AnimatedSwitch value={enabled} onToggle={handleToggle} disabled={isLoading} />
+            </View>
+          )}
         </View>
       </View>
 
@@ -104,5 +110,11 @@ const styles = StyleSheet.create({
   toggleWrapper: {
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  retryText: {
+    fontFamily: FontFamily.sans,
+    fontWeight: FontWeight.bold,
+    fontSize: FontSize.xs,
+    color: Colors.primary.electricCyan,
   },
 });

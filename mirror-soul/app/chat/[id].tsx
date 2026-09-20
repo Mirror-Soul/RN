@@ -45,6 +45,11 @@ export default function MessageRoomDetailScreen() {
     return (
       <View style={[styles.errorContainer, { paddingTop: insets.top }]}>
         <Text style={styles.errorText}>대화방을 찾을 수 없습니다.</Text>
+        {/* 만남 신청 수락 직후처럼, 방금 생겨서 목록 캐시가 아직 따라잡지 못했을 수 있다 —
+            재시도 없이는 뒤로 가는 것 외엔 복구 방법이 없어 재시도 버튼을 둔다. */}
+        <Pressable onPress={() => refetch()} accessibilityRole="button" accessibilityLabel="다시 시도">
+          <Text style={styles.retryText}>다시 시도</Text>
+        </Pressable>
       </View>
     );
   }

@@ -31,6 +31,10 @@ export const useChatNotificationSettings = (roomId: number) => {
   return {
     enabled: query.data?.enabled ?? false,
     handleToggle,
-    isLoading: query.isLoading || !query.data,
+    // query.isLoading || !query.data로 두면 조회가 실패했을 때도(data가 계속 없으므로)
+    // 영원히 로딩 상태로 보여 스위치가 원인 표시 없이 계속 비활성화된 채로 남는다.
+    isLoading: query.isLoading,
+    isError: query.isError,
+    refetch: query.refetch,
   };
 };
