@@ -15,7 +15,11 @@ interface AnimatedSwitchProps {
   onToggle: () => void;
   disabled?: boolean;
   accessibilityLabel?: string;
+  /** ON 상태 그라디언트 색상 오버라이드. 생략 시 기본 시안-퍼플 조합을 그대로 쓴다. */
+  activeGradientColors?: [string, string];
 }
+
+const DEFAULT_ACTIVE_GRADIENT: [string, string] = ['rgba(0, 255, 255, 0.6)', 'rgba(168, 85, 247, 0.6)'];
 
 // CSS 명세에서 추출한 정확한 수치
 const TRACK_WIDTH = 48;
@@ -39,7 +43,7 @@ const SPRING_CONFIG = {
  * - 배경 크로스페이드: ON 배경(그라디언트)과 OFF 배경을 겹쳐두고
  *   opacity를 보간하는 방식으로 색상 전환 → interpolateColor보다 성능 우수
  */
-export const AnimatedSwitch = ({ value, onToggle, disabled = false, accessibilityLabel }: AnimatedSwitchProps) => {
+export const AnimatedSwitch = ({ value, onToggle, disabled = false, accessibilityLabel, activeGradientColors }: AnimatedSwitchProps) => {
   const { colors } = useThemeColors();
   
   // 0 = OFF, 1 = ON
@@ -84,7 +88,7 @@ export const AnimatedSwitch = ({ value, onToggle, disabled = false, accessibilit
         {/* ON 배경 레이어 (그라디언트, 위에 겹침) */}
         <Animated.View style={[StyleSheet.absoluteFill, styles.gradientWrapper, onBgStyle]}>
           <LinearGradient
-            colors={['rgba(0, 255, 255, 0.6)', 'rgba(168, 85, 247, 0.6)']}
+            colors={activeGradientColors ?? DEFAULT_ACTIVE_GRADIENT}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={StyleSheet.absoluteFill}

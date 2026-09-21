@@ -12,15 +12,17 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 interface DiscoveryMatchCardProps {
   match: Recommendation;
   onOpenDetail?: (match: Recommendation) => void;
+  onPass: () => void;
+  onConnect: () => void;
 }
 
 /**
  * DiscoveryMatchCard 컴포넌트 (SRP)
- * 발견 탭 추천 카드 UI만 담당하는 순수 프레젠테이션 컴포넌트입니다.
- * 패스/통화하기 액션은 DiscoveryActionFooter(카드 밖)로 분리되어 있다 — 이 카드는
- * 정보 표시 + 상세 모달 진입(더보기)만 책임진다.
+ * 발견 탭 추천 카드 UI를 담당하는 프레젠테이션 컴포넌트입니다.
+ * 패스/통화하기 액션은 별도 푸터가 아니라 카드 하단에 통합되어 있다 — 얇은
+ * 구분선만 두어 "하나의 카드"로 읽히면서도 정보 영역과 액션 영역이 구분되게 한다.
  */
-export default function DiscoveryMatchCard({ match, onOpenDetail }: DiscoveryMatchCardProps) {
+export default function DiscoveryMatchCard({ match, onOpenDetail, onPass, onConnect }: DiscoveryMatchCardProps) {
   const { colors } = useThemeColors();
   const [imageFailed, setImageFailed] = useState(false);
   const isScoreKnown = Number.isFinite(match.recommendationScore);
@@ -86,7 +88,7 @@ export default function DiscoveryMatchCard({ match, onOpenDetail }: DiscoveryMat
           </Text>
         </View>
 
-        <Text style={[styles.summaryText, { color: colors.text.secondary }]} numberOfLines={2} ellipsizeMode="tail">
+        <Text style={[styles.summaryText, { color: colors.text.secondary }]} numberOfLines={1} ellipsizeMode="tail">
           &quot;{match.selfIntroduction}&quot;
         </Text>
 
@@ -101,6 +103,32 @@ export default function DiscoveryMatchCard({ match, onOpenDetail }: DiscoveryMat
           ))}
         </View>
       </View>
+
+      {/* 카드 안으로 통합된 액션 영역 — 얇은 구분선만으로 정보 영역과 나눠 하나의 카드처럼 보이게 한다 */}
+      <View style={[styles.buttonRow, { borderTopColor: colors.border.primary }]}>
+        <TouchableOpacity
+          style={[styles.passButton, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
+          onPress={onPass}
+          activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel="패스"
+        >
+          <Feather name="x" size={16} color={colors.text.secondary} />
+          <Text style={[styles.buttonText, { color: colors.text.secondary }]}>패스</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.connectButtonWrapper} onPress={onConnect} activeOpacity={0.85} accessibilityRole="button" accessibilityLabel="통화하기">
+          <LinearGradient
+            colors={[Colors.primary.electricCyan, Colors.primary.vividPurple]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.connectButton}
+          >
+            <Feather name="phone" size={14} color={Colors.primary.soulBlack} />
+            <Text style={[styles.buttonText, styles.connectButtonText]}>통화하기</Text>
+          </LinearGradient>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -108,13 +136,13 @@ export default function DiscoveryMatchCard({ match, onOpenDetail }: DiscoveryMat
 const styles = StyleSheet.create({
   card: {
     width: '100%',
-    borderRadius: Radii.xxl,
+    borderRadius: Radii.xl,
     overflow: 'hidden',
     borderWidth: 1,
   },
   photoBox: {
     width: '100%',
-    aspectRatio: 4 / 5,
+    aspectRatio: 4 / 3,
   },
   photo: {
     ...StyleSheet.absoluteFillObject,
@@ -160,8 +188,10 @@ const styles = StyleSheet.create({
     color: Colors.primary.soulBlack,
   },
   content: {
-    padding: Spacing.xl,
-    gap: Spacing.sm,
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.sm,
+    gap: Spacing.xs,
   },
   nameRow: {
     flexDirection: 'row',
@@ -171,7 +201,7 @@ const styles = StyleSheet.create({
   nameText: {
     flex: 1,
     fontFamily: FontFamily.sans,
-    fontSize: FontSize.xxl,
+    fontSize: FontSize.xl,
     fontWeight: FontWeight.black,
     letterSpacing: -0.5,
   },
@@ -233,5 +263,50 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.sans,
     fontSize: 10,
     fontWeight: FontWeight.bold,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    borderTopWidth: 1,
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.sm,
+    paddingBottom: Spacing.md,
+  },
+  passButton: {
+    width: 52,
+    height: 52,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.xxs,
+    borderWidth: 1,
+    borderRadius: Radii.lg2,
+  },
+  connectButtonWrapper: {
+    flex: 1,
+    height: 52,
+    borderRadius: Radii.lg2,
+    shadowColor: Colors.primary.electricCyan,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    elevation: 2,
+  },
+  connectButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.xs,
+    borderRadius: Radii.lg2,
+  },
+  buttonText: {
+    fontFamily: FontFamily.sans,
+    fontWeight: FontWeight.black,
+    fontSize: FontSize.sm,
+    letterSpacing: 0.3,
+  },
+  connectButtonText: {
+    color: Colors.primary.soulBlack,
   },
 });

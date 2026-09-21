@@ -7,7 +7,6 @@ import type { Recommendation } from '@/src/types/api/home';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
-import DiscoveryActionFooter from './DiscoveryActionFooter';
 import DiscoveryMatchCard from './DiscoveryMatchCard';
 import { shouldPrefetchNextPage } from './discoveryPagination';
 import { MOCK_RECOMMENDATIONS } from './mockRecommendations';
@@ -134,14 +133,13 @@ export default function DiscoveryMatchSection({ onPass, onConnect, onOpenDetail 
     <View style={styles.container}>
       {refreshHeader}
       <Animated.View key={currentMatch.userUuid} entering={FadeIn.duration(300)} exiting={FadeOut.duration(200)}>
-        <DiscoveryMatchCard match={currentMatch} onOpenDetail={onOpenDetail} />
+        <DiscoveryMatchCard
+          match={currentMatch}
+          onOpenDetail={onOpenDetail}
+          onPass={() => handlePass(currentMatch.userUuid)}
+          onConnect={() => onConnect?.(currentMatch.userUuid)}
+        />
       </Animated.View>
-
-      {/* 카드 밖으로 분리된 액션 푸터 — 매칭 탭과 동일한 패턴, currentMatch를 대상으로 동작 */}
-      <DiscoveryActionFooter
-        onPass={() => handlePass(currentMatch.userUuid)}
-        onConnect={() => onConnect?.(currentMatch.userUuid)}
-      />
     </View>
   );
 }
