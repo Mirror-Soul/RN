@@ -8,13 +8,12 @@ export const isValidEmail = (email: string): boolean => {
   return emailRegex.test(email);
 };
 /**
- * 비밀번호 정규식
+ * 비밀번호 정규식 — 백엔드(JoinReqDTO/PasswordResetReqDTO)와 동일한 규칙.
  * - 8~20자
- * - 영문자(대소문자) 1개 이상
- * - 숫자 1개 이상
- * - 허용 특수문자: !@#$%^&*()_+=-
+ * - 영문자(대소문자) 1개 이상 + 숫자 1개 이상 필수
+ * - 특수문자(!@#$%^&*()_+=-)는 허용되지만 필수는 아님
  */
-export const PASSWORD_REGEX = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_+=-])[A-Za-z\d!@#$%^&*()_+=-]{8,20}$/;
+export const PASSWORD_REGEX = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d!@#$%^&*()_+=-]{8,20}$/;
 
 /**
  * 비밀번호 유효성 검사

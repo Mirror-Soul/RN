@@ -1,14 +1,18 @@
 import { useCallback, useState } from 'react';
 import { Alert } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useCountdown } from '@/src/hooks/useCountdown';
 import { isValidEmail, isValidPassword } from '@/src/utils/validation';
+import { sendPasswordResetCode, verifyPasswordResetCode, resetPassword } from '@/src/services/authService';
+import { getErrorCode, getErrorDisplayMessage } from '@/src/utils/apiErrorCode';
 
 /**
- * 비밀번호 찾기 단계. 백엔드에 관련 엔드포인트가 아직 없어(로그인/회원가입/refresh/logout뿐)
- * 이 훅은 UI 흐름만 제공하고 실제 API 호출은 하지 않는다.
- * TODO: 백엔드에 /auth/password/send-code, /auth/password/verify-code, /auth/password/reset 엔드포인트가
- * 추가되면 아래 스텁들을 실제 authService 호출로 교체한다.
+ * 비밀번호 찾기 단계 — 이메일 인증(send-code/verify-code)은 회원가입(useStep1Form.ts)과
+ * 동일한 세션 기반 백엔드(HttpSession)를 쓰므로 같은 패턴(react-query 아닌 순수 async + 로컬
+ * state)을 따른다. reset은 토큰을 발급하지 않아 useAuthStore 연동이 필요 없다.
  */
+const MAX_VERIFY_ATTEMPTS = 5; // 백엔드 PasswordResetService.VERIFY_MAX_COUNT와 동일
+
 type ForgotPasswordStep = 'email' | 'code' | 'reset';
 
 interface ForgotPasswordState {
@@ -35,11 +39,10 @@ const INITIAL_STATE: ForgotPasswordState = {
   isLoading: false,
 };
 
-/** 백엔드 연동 전까지 UX만 흉내내기 위한 가짜 네트워크 지연 */
-const STUB_DELAY_MS = 600;
-
 export function useForgotPasswordFlow() {
+  const router = useRouter();
   const [state, setState] = useState<ForgotPasswordState>(INITIAL_STATE);
+  const [verifyAttemptCount, setVerifyAttemptCount] = useState(0);
   const { timeLeft, isActive: isTimerActive, start: startTimer, reset: resetTimer, formattedTime } = useCountdown(180);
 
   const updateState = useCallback((updates: Partial<ForgotPasswordState>) => {
@@ -75,13 +78,19 @@ export function useForgotPasswordFlow() {
     }
 
     updateState({ isLoading: true });
-    // TODO: authService.sendPasswordResetCode({ email: state.email }) 로 교체
-    await new Promise((resolve) => setTimeout(resolve, STUB_DELAY_MS));
-
-    resetTimer();
-    startTimer();
-    updateState({ isLoading: false, step: 'code' });
+    try {
+      await sendPasswordResetCode({ email: state.email });
+      setVerifyAttemptCount(0); // 재전송 시 시도 횟수 초기화(백엔드도 send-code 재호출 시 리셋)
+      resetTimer();
+      startTimer();
+      updateState({ isLoading: false, step: 'code', code: '', codeError: '' });
+    } catch (error) {
+      updateState({ isLoading: false, emailError: getErrorDisplayMessage(error, '인증 코드 발송에 실패했습니다.') });
+    }
   }, [state.isLoading, state.email, updateState, resetTimer, startTimer]);
+
+  /** "다시 보내기" — 백엔드가 send-code 재호출 시 이전 코드/시도횟수/차단상태를 전부 리셋하므로 재전송과 동일하다. */
+  const handleResendCode = handleSendCode;
 
   const handleVerifyCode = useCallback(async () => {
     if (state.isLoading) return;
@@ -91,15 +100,34 @@ export function useForgotPasswordFlow() {
       return;
     }
 
+    if (verifyAttemptCount >= MAX_VERIFY_ATTEMPTS) {
+      Alert.alert('인증 시도 횟수 초과', '인증 시도 횟수를 초과했습니다. 인증 코드를 다시 보내주세요.');
+      return;
+    }
+
     updateState({ isLoading: true });
-    // TODO: authService.verifyPasswordResetCode({ email: state.email, code: state.code }) 로 교체
-    await new Promise((resolve) => setTimeout(resolve, STUB_DELAY_MS));
+    try {
+      await verifyPasswordResetCode({ code: state.code });
+      resetTimer();
+      updateState({ isLoading: false, step: 'reset' });
+    } catch (error) {
+      if (getErrorCode(error) === 'EMAIL_CODE_ATTEMPT_EXCEEDED') {
+        updateState({ isLoading: false });
+        Alert.alert('인증 시도 횟수 초과', '인증 시도 횟수를 초과했습니다. 인증 코드를 다시 보내주세요.');
+        return;
+      }
+      // 네트워크 타임아웃/서버 오류 등 실제 불일치가 아닌 실패까지 시도 횟수로 세면
+      // 코드가 맞았는데도 네트워크 문제만으로 잠길 수 있다 — 실제 불일치일 때만 소진한다.
+      if (getErrorCode(error) === 'EMAIL_CODE_MISMATCH') {
+        setVerifyAttemptCount((prev) => prev + 1);
+      }
+      updateState({ isLoading: false, codeError: getErrorDisplayMessage(error, '인증번호가 일치하지 않습니다.') });
+    }
+  }, [state.isLoading, state.code, verifyAttemptCount, updateState, resetTimer]);
 
-    resetTimer();
-    updateState({ isLoading: false, step: 'reset' });
-  }, [state.isLoading, state.code, updateState, resetTimer]);
+  const handleResetPassword = useCallback(async () => {
+    if (state.isLoading) return;
 
-  const handleResetPassword = useCallback(() => {
     if (!isValidPassword(state.newPassword)) {
       updateState({ passwordError: '영문+숫자 포함 8~20자로 입력해주세요.' });
       return;
@@ -109,9 +137,17 @@ export function useForgotPasswordFlow() {
       return;
     }
 
-    // 백엔드에 비밀번호 재설정 엔드포인트가 아직 없어 여기서 더 진행하지 않는다.
-    Alert.alert('준비 중', '비밀번호 재설정 기능을 준비 중입니다.');
-  }, [state.newPassword, state.newPasswordConfirm, updateState]);
+    updateState({ isLoading: true });
+    try {
+      await resetPassword({ newPassword: state.newPassword, newPasswordConfirm: state.newPasswordConfirm });
+      // reset 응답엔 토큰이 없어 자동 로그인은 불가 — 로그인 화면으로 돌려보낸다.
+      Alert.alert('비밀번호 재설정 완료', '새 비밀번호로 로그인해주세요.', [
+        { text: '확인', onPress: () => router.replace('/login') },
+      ]);
+    } catch (error) {
+      updateState({ isLoading: false, passwordError: getErrorDisplayMessage(error, '비밀번호 재설정에 실패했습니다.') });
+    }
+  }, [state.isLoading, state.newPassword, state.newPasswordConfirm, updateState, router]);
 
   return {
     state,
@@ -120,6 +156,7 @@ export function useForgotPasswordFlow() {
     setNewPassword,
     setNewPasswordConfirm,
     handleSendCode,
+    handleResendCode,
     handleVerifyCode,
     handleResetPassword,
     timeLeft,

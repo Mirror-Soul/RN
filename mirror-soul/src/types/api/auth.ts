@@ -36,3 +36,28 @@ export interface BasicProfileResult {
   userStatus: string;
 }
 export type BasicProfileResponse = ApiResponse<BasicProfileResult>;
+
+// ─────────────────────────────────────────────
+// POST /auth/password-reset/send-code
+// ─────────────────────────────────────────────
+export interface SendPasswordResetCodeRequest {
+  email: string;
+}
+export type SendPasswordResetCodeResponse = ApiResponse<null>;
+
+// ─────────────────────────────────────────────
+// POST /auth/password-reset/verify-code
+// ─────────────────────────────────────────────
+export interface VerifyPasswordResetCodeRequest {
+  code: string;
+}
+export type VerifyPasswordResetCodeResponse = ApiResponse<null>;
+
+// ─────────────────────────────────────────────
+// POST /auth/password-reset/reset
+// ─────────────────────────────────────────────
+export interface ResetPasswordRequest {
+  newPassword: string;
+  newPasswordConfirm: string;
+}
+export type ResetPasswordResponse = ApiResponse<null>;
