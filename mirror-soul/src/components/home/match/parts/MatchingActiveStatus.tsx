@@ -1,20 +1,19 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Animated from 'react-native-reanimated';
 import {Colors, FontFamily, Radii, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { usePulse } from '@/src/animations/core/usePulse';
+import { useMatchingStatus } from '@/src/features/home/hooks/useMatchingStatus';
 
 export default function MatchingActiveStatus() {
   const { colors } = useThemeColors();
-  const [isMatching, setIsMatching] = useState(true);
-  
+  const { matchingEnabled, handleToggle, isLoading, isToggling } = useMatchingStatus();
+  // 조회 전(null)에는 켜진 것도 꺼진 것도 아닌 "확인 중" 상태로 보여준다(임의 기본값으로 단정하지 않음).
+  const isMatching = matchingEnabled ?? false;
+
   // 중앙화된 애니메이션 훅 사용 (매칭 중일 때만 동작)
   const { animatedStyle: animatedPulseStyle } = usePulse(1000);
-
-  const toggleMatching = () => {
-    setIsMatching(prev => !prev);
-  };
 
   return (
     <View style={[styles.outerContainer, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
@@ -33,18 +32,22 @@ export default function MatchingActiveStatus() {
             )}
           </View>
           <Text style={[styles.statusText, { color: isMatching ? colors.text.secondary : Colors.neutral.lightGrayText }]}>
-            {isMatching ? "디지털 자아 매칭 중" : "매칭 일시 중단됨"}
+            {matchingEnabled === null ? "매칭 상태 확인 중" : isMatching ? "디지털 자아 매칭 중" : "매칭 일시 중단됨"}
           </Text>
         </View>
 
         {/* STOP / START 버튼 */}
-        <Pressable 
-          onPress={toggleMatching}
+        <Pressable
+          onPress={handleToggle}
+          disabled={isLoading || isToggling}
+          accessibilityRole="button"
+          accessibilityLabel={isMatching ? "매칭 중단" : "매칭 시작"}
           style={[
-            styles.actionButton, 
-            isMatching 
+            styles.actionButton,
+            isMatching
               ? { backgroundColor: colors.background.glass, borderColor: colors.border.primary, borderWidth: 1 }
-              : { backgroundColor: Colors.primary.electricCyan, borderWidth: 0, shadowColor: Colors.primary.electricCyan, shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.2, shadowRadius: 15, elevation: 5 }
+              : { backgroundColor: Colors.primary.electricCyan, borderWidth: 0, shadowColor: Colors.primary.electricCyan, shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.2, shadowRadius: 15, elevation: 5 },
+            (isLoading || isToggling) && styles.actionButtonDisabled,
           ]}
         >
           <Text style={[styles.actionText, { color: isMatching ? colors.text.muted : Colors.primary.soulBlack }]}>
@@ -111,6 +114,9 @@ const styles = StyleSheet.create({
     borderRadius: Radii.lg,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  actionButtonDisabled: {
+    opacity: 0.6,
   },
   actionText: {
     fontFamily: FontFamily.sans,

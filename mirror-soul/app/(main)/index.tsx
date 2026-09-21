@@ -5,9 +5,11 @@ import PartnerProfileModal from '@/src/components/home/main/Discovery/PartnerPro
 import LocationFilterBar from '@/src/components/home/main/LocationFilterBar';
 import LocationSelectModal from '@/src/components/home/main/LocationSelectModal';
 import MainHeader from '@/src/components/home/main/MainHeader';
+import ProfileQuickActionSheet from '@/src/components/home/main/ProfileQuickActionSheet';
 import RefillModal from '@/src/components/home/main/RefillModal';
 import SoulConnectTip from '@/src/components/home/main/SoulConnectTip';
-import { Layout } from '@/src/constants/theme';
+import { Layout, Spacing } from '@/src/constants/theme';
+import { MAIN_ROUTES } from '@/src/constants/routes/mainRoutes';
 import { useLayout } from '@/src/hooks/useLayout';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { performLogout } from '@/src/services/authService';
@@ -15,12 +17,13 @@ import { useBuyTimeMutation } from '@/src/features/profile/hooks/useBuyTimeMutat
 import { TIME_REFILL_OPTIONS } from '@/src/features/profile/constants/timeRefillOptions';
 import { usePreferredRegionsQuery } from '@/src/features/home/hooks/usePreferredRegionsQuery';
 import { useUpdatePreferredRegionsMutation } from '@/src/features/home/hooks/useUpdatePreferredRegionsMutation';
+import { useMatchingStatus } from '@/src/features/home/hooks/useMatchingStatus';
 import type { PreferredRegion, Recommendation } from '@/src/types/api/home';
 import { useToast } from '@/src/components/common/Toast/ToastProvider';
 import { getErrorDisplayMessage } from '@/src/utils/apiErrorCode';
 import { logger } from '@/src/utils/logger';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
-import { Alert, ScrollView, StyleSheet } from 'react-native';
+import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { router } from 'expo-router';
@@ -42,10 +45,14 @@ export default function MainHomeScreen() {
 
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [showRefillModal, setShowRefillModal] = useState(false);
+  const [showQuickActions, setShowQuickActions] = useState(false);
   const [selectedMatch, setSelectedMatch] = useState<Recommendation | null>(null);
   const buyTimeMutation = useBuyTimeMutation();
   const purchaseInFlightRef = useRef(false);
   const { showToast } = useToast();
+  // MainHeader가 배지 자체 조회를 이미 하지만, AiStatusTicker도 같은 상태가 필요해 여기서도
+  // 구독한다 — react-query가 쿼리키(['match','status'])를 공유하므로 중복 요청은 없다.
+  const { matchingEnabled } = useMatchingStatus();
 
   const {
     data: preferredRegions,
@@ -59,10 +66,10 @@ export default function MainHomeScreen() {
   const updatePreferredRegionsMutation = useUpdatePreferredRegionsMutation();
   const regionUpdateInFlightRef = useRef(false);
 
-  const handleSettingPress = useCallback(() => {
+  const handleLogout = useCallback(() => {
     Alert.alert(
       '로그아웃',
-      '현재 기기에서 로그아웃 하시겠습니까?\n(테스트용 임시 버튼입니다)',
+      '현재 기기에서 로그아웃 하시겠습니까?',
       [
         { text: '취소', style: 'cancel' },
         {
@@ -71,7 +78,7 @@ export default function MainHomeScreen() {
           onPress: () => {
             // iOS Alert 애니메이션이 끝난 후 실행 (씹히는 현상 방지)
             setTimeout(async () => {
-              logger.debug('User clicked logout from Home Settings');
+              logger.debug('User clicked logout from Home quick actions');
               // performLogout이 예상치 못한 이유로 실패하더라도 로그인 화면 이동은 항상 보장한다
               try {
                 await performLogout();
@@ -85,6 +92,14 @@ export default function MainHomeScreen() {
         },
       ],
     );
+  }, []);
+
+  const handleViewProfile = useCallback(() => {
+    router.push(MAIN_ROUTES.PROFILE);
+  }, []);
+
+  const handleOpenSettings = useCallback(() => {
+    router.push('/(main)/profile-settings');
   }, []);
 
   const handleConnectNow = useCallback((match: Recommendation) => {
@@ -149,25 +164,33 @@ export default function MainHomeScreen() {
         entering={FadeInUp.duration(400)}
         style={[styles.dashboard, contentContainerStyle, { paddingTop: Math.max(insets.top + 12, Layout.SCREEN_PADDING), paddingHorizontal: screenPadding }]}
       >
-        <MainHeader onSettingPress={handleSettingPress} />
+        {/* 그룹 1: 헤더(매칭 상태 배지 포함) */}
+        <MainHeader onAvatarPress={() => setShowQuickActions(true)} />
 
-        <AvailableTimeCard onRefillPress={() => setShowRefillModal(true)} />
+        {/* 그룹 2: 내 계정/탐색 설정 — 시간충전 + 지역설정 */}
+        <View style={styles.group}>
+          <AvailableTimeCard onRefillPress={() => setShowRefillModal(true)} />
 
-        <LocationFilterBar
-          selectedLocations={selectedRegions.map((r) => r.sigunguName)}
-          isLoading={isPreferredRegionsLoading}
-          isError={isPreferredRegionsError}
-          onRetry={() => refetchPreferredRegions()}
-          onPress={() => setShowLocationModal(true)}
-        />
+          <LocationFilterBar
+            selectedLocations={selectedRegions.map((r) => r.sigunguName)}
+            isLoading={isPreferredRegionsLoading}
+            isError={isPreferredRegionsError}
+            onRetry={() => refetchPreferredRegions()}
+            onPress={() => setShowLocationModal(true)}
+          />
+        </View>
 
-        <AiStatusTicker />
+        {/* 그룹 3: 추천 카드 + 액션 푸터(DiscoveryMatchSection 내부에서 함께 렌더링) */}
+        <View style={styles.group}>
+          <AiStatusTicker isMatchingEnabled={matchingEnabled} />
 
-        <DiscoveryMatchSection
-          onConnect={handleConnectPress}
-          onOpenDetail={setSelectedMatch}
-        />
+          <DiscoveryMatchSection
+            onConnect={handleConnectPress}
+            onOpenDetail={setSelectedMatch}
+          />
+        </View>
 
+        {/* 그룹 4: 하단 정보 카드 */}
         <SoulConnectTip />
       </Animated.View>
 
@@ -182,6 +205,14 @@ export default function MainHomeScreen() {
         visible={showRefillModal}
         onClose={() => setShowRefillModal(false)}
         onSelectPackage={handleSelectPackage}
+      />
+
+      <ProfileQuickActionSheet
+        visible={showQuickActions}
+        onClose={() => setShowQuickActions(false)}
+        onViewProfile={handleViewProfile}
+        onOpenSettings={handleOpenSettings}
+        onLogout={handleLogout}
       />
 
       <PartnerProfileModal
@@ -204,5 +235,11 @@ const styles = StyleSheet.create({
   },
   dashboard: {
     gap: Layout.SCREEN_PADDING,
+  },
+  // 그룹 내부는 좁게(12px) 붙여서 하나의 덩어리로 읽히게 하고, 그룹 사이는
+  // 위 dashboard.gap(24px)이 그대로 유지되어 전체적으로 리듬감을 준다.
+  group: {
+    alignSelf: 'stretch',
+    gap: Spacing.md,
   },
 });
