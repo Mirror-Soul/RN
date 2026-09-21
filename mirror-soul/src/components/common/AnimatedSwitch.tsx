@@ -4,6 +4,7 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
+  WithSpringConfig,
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
@@ -17,6 +18,8 @@ interface AnimatedSwitchProps {
   accessibilityLabel?: string;
   /** ON 상태 그라디언트 색상 오버라이드. 생략 시 기본 시안-퍼플 조합을 그대로 쓴다. */
   activeGradientColors?: [string, string];
+  /** thumb 이동 스프링 설정 오버라이드. 생략 시 기본값(스냅감 있는 편)을 그대로 쓴다. */
+  springConfig?: WithSpringConfig;
 }
 
 const DEFAULT_ACTIVE_GRADIENT: [string, string] = ['rgba(0, 255, 255, 0.6)', 'rgba(168, 85, 247, 0.6)'];
@@ -28,7 +31,7 @@ const THUMB_SIZE = 20;
 const THUMB_OFFSET = 2.61; // OFF 상태 thumb의 left 위치
 const THUMB_ON_X = 25.38;  // ON 상태 thumb의 left 위치
 
-const SPRING_CONFIG = {
+const DEFAULT_SPRING_CONFIG: WithSpringConfig = {
   damping: 15,
   stiffness: 120,
   mass: 0.8,
@@ -43,15 +46,15 @@ const SPRING_CONFIG = {
  * - 배경 크로스페이드: ON 배경(그라디언트)과 OFF 배경을 겹쳐두고
  *   opacity를 보간하는 방식으로 색상 전환 → interpolateColor보다 성능 우수
  */
-export const AnimatedSwitch = ({ value, onToggle, disabled = false, accessibilityLabel, activeGradientColors }: AnimatedSwitchProps) => {
+export const AnimatedSwitch = ({ value, onToggle, disabled = false, accessibilityLabel, activeGradientColors, springConfig }: AnimatedSwitchProps) => {
   const { colors } = useThemeColors();
-  
+
   // 0 = OFF, 1 = ON
   const progress = useSharedValue(value ? 1 : 0);
 
   useEffect(() => {
-    progress.value = withSpring(value ? 1 : 0, SPRING_CONFIG);
-  }, [value]);
+    progress.value = withSpring(value ? 1 : 0, springConfig ?? DEFAULT_SPRING_CONFIG);
+  }, [value, springConfig]);
 
   // Thumb 위치 애니메이션
   const thumbStyle = useAnimatedStyle(() => ({

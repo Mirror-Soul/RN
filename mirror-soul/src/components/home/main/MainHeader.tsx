@@ -1,15 +1,28 @@
 import { Feather } from '@expo/vector-icons';
-import { Colors } from '@/src/constants/theme';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { tabHeaderStyles } from '@/src/components/home/common/tabHeaderStyles';
 import { useMatchingStatus } from '@/src/features/home/hooks/useMatchingStatus';
 import { AnimatedSwitch } from '@/src/components/common/AnimatedSwitch';
+import type { WithSpringConfig } from 'react-native-reanimated';
 
 interface MainHeaderProps {
   onAvatarPress?: () => void;
 }
+
+// 매칭 스위치 ON 색상 — 기본 시안-퍼플(60%)보다 옅게, 지난 조정(30%)보다는 살짝 진하게.
+// 모듈 레벨 상수로 둬야 매 렌더 새 배열이 만들어지지 않아 AnimatedSwitch의 애니메이션
+// useEffect가 불필요하게 재실행되지 않는다.
+const MATCHING_SWITCH_GRADIENT: [string, string] = ['rgba(0, 211, 243, 0.4)', 'rgba(194, 122, 255, 0.4)'];
+
+// 기본 스프링(damping 15/stiffness 120)보다 감쇠를 늘리고 강성을 낮춰 덜 튕기고 더 유연하게 움직이게 한다.
+const MATCHING_SWITCH_SPRING: WithSpringConfig = {
+  damping: 20,
+  stiffness: 100,
+  mass: 1,
+  overshootClamping: false,
+};
 
 /**
  * MainHeader 컴포넌트 (SRP)
@@ -31,7 +44,8 @@ export default function MainHeader({ onAvatarPress }: MainHeaderProps) {
           onToggle={handleToggle}
           disabled={isLoading || isToggling || matchingEnabled === null}
           accessibilityLabel={isMatching ? '매칭 중단하기' : '매칭 시작하기'}
-          activeGradientColors={[Colors.glass.cyan30_d3, Colors.glass.purple30]}
+          activeGradientColors={MATCHING_SWITCH_GRADIENT}
+          springConfig={MATCHING_SWITCH_SPRING}
         />
       </View>
 

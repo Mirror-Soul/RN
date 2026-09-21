@@ -88,7 +88,7 @@ export default function DiscoveryMatchCard({ match, onOpenDetail, onPass, onConn
           </Text>
         </View>
 
-        <Text style={[styles.summaryText, { color: colors.text.secondary }]} numberOfLines={1} ellipsizeMode="tail">
+        <Text style={[styles.summaryText, { color: colors.text.secondary }]} numberOfLines={2} ellipsizeMode="tail">
           &quot;{match.selfIntroduction}&quot;
         </Text>
 
@@ -136,7 +136,7 @@ export default function DiscoveryMatchCard({ match, onOpenDetail, onPass, onConn
 const styles = StyleSheet.create({
   card: {
     width: '100%',
-    borderRadius: Radii.xl,
+    borderRadius: Radii.xxl,
     overflow: 'hidden',
     borderWidth: 1,
   },
@@ -190,8 +190,8 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.md,
-    paddingBottom: Spacing.sm,
-    gap: Spacing.xs,
+    paddingBottom: Spacing.md,
+    gap: Spacing.sm,
   },
   nameRow: {
     flexDirection: 'row',
@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.sans,
     fontSize: FontSize.xl,
     fontWeight: FontWeight.black,
-    letterSpacing: -0.5,
+    letterSpacing: -0.3,
   },
   ageText: {
     fontWeight: FontWeight.regular,
@@ -229,14 +229,12 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.sans,
     fontSize: FontSize.sm,
     fontWeight: FontWeight.medium,
-    lineHeight: 19,
-    marginTop: Spacing.xxs,
+    lineHeight: 20,
   },
   tagRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: Spacing.xs,
-    marginTop: Spacing.xxs,
   },
   mbtiChip: {
     paddingHorizontal: Spacing.md,
@@ -249,8 +247,8 @@ const styles = StyleSheet.create({
   mbtiChipText: {
     fontFamily: FontFamily.sans,
     fontSize: 10,
-    fontWeight: FontWeight.black,
-    letterSpacing: 0.6,
+    fontWeight: FontWeight.bold,
+    letterSpacing: 0.3,
     color: Colors.neutral.pureWhite,
   },
   tagChip: {
@@ -269,23 +267,23 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
     borderTopWidth: 1,
     paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.sm,
-    paddingBottom: Spacing.md,
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.lg,
   },
   passButton: {
-    width: 52,
-    height: 52,
+    width: 56,
+    height: 56,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.xxs,
     borderWidth: 1,
-    borderRadius: Radii.lg2,
+    borderRadius: Radii.xl,
   },
   connectButtonWrapper: {
     flex: 1,
-    height: 52,
-    borderRadius: Radii.lg2,
+    height: 56,
+    borderRadius: Radii.xl,
     shadowColor: Colors.primary.electricCyan,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
@@ -298,13 +296,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.xs,
-    borderRadius: Radii.lg2,
+    borderRadius: Radii.xl,
   },
   buttonText: {
     fontFamily: FontFamily.sans,
-    fontWeight: FontWeight.black,
+    fontWeight: FontWeight.bold,
     fontSize: FontSize.sm,
-    letterSpacing: 0.3,
+    letterSpacing: 0.2,
   },
   connectButtonText: {
     color: Colors.primary.soulBlack,
