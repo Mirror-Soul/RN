@@ -4,7 +4,7 @@ const path = require('path');
 
 // 아직 실제 Sentry organization/project가 없는 로컬 개발 빌드에서
 // sentry-cli 소스맵·디버그심볼 자동 업로드가 실패해 전체 빌드가 막히는 것을 방지합니다.
-// 실제 Sentry 프로젝트를 연동하면 이 플러그인은 app.json plugins 배열에서 제거하세요.
+// 실제 Sentry 프로젝트를 연동하면 이 플러그인은 app.config.js plugins 배열에서 제거하세요.
 const withSentryDisableAutoUpload = (config) => {
   return withDangerousMod(config, [
     'ios',

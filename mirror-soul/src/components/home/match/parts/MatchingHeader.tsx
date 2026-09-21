@@ -13,7 +13,7 @@ export default function MatchingHeader() {
       <View style={{ width: 44 }} />
 
       {/* 타이틀 */}
-      <Text style={[styles.title, { color: colors.text.primary }]}>Matching</Text>
+      <Text style={[styles.title, { color: colors.text.primary }]}>매칭</Text>
 
       {/* 오른쪽 아이콘 버튼 (ex. 필터 또는 설정) */}
       <Pressable style={[styles.iconButton, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>

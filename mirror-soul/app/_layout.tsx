@@ -12,6 +12,7 @@ import * as Sentry from '@sentry/react-native';
 import { ToastProvider } from '@/src/components/common/Toast/ToastProvider';
 import { useProactiveTokenRefresh } from '@/src/hooks/useProactiveTokenRefresh';
 import { usePushNotificationSetup } from '@/src/features/push/hooks/usePushNotificationSetup';
+import { useChatRealtimeConnection } from '@/src/features/chat/hooks/useChatRealtimeConnection';
 
 /**
  * hydration 완료 전까지 스플래시 화면 유지.
@@ -37,6 +38,12 @@ if (process.env.EXPO_PUBLIC_SENTRY_DSN) {
  */
 function PushNotificationSetup() {
   usePushNotificationSetup();
+  return null;
+}
+
+/** useChatRealtimeConnection도 react-query(queryClient.invalidateQueries 등)를 쓰므로 같은 이유로 Provider 하위에 둔다. */
+function ChatRealtimeSetup() {
+  useChatRealtimeConnection();
   return null;
 }
 
@@ -101,6 +108,7 @@ function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <QueryClientProvider client={queryClient}>
         <PushNotificationSetup />
+        <ChatRealtimeSetup />
         <SafeAreaProvider>
           <ToastProvider>
             <Stack
@@ -116,9 +124,10 @@ function RootLayout() {
               <Stack.Screen name="(main)" options={{ animation: 'fade' }} />
               <Stack.Screen name="call-detail" />
               <Stack.Screen name="voice-update" />
+              <Stack.Screen name="discovery-region-settings" />
               <Stack.Screen name="forgot-password" />
               <Stack.Screen
-                name="message-room/[id]"
+                name="chat/[id]"
                 options={{ animation: 'slide_from_right' }}
               />
             </Stack>

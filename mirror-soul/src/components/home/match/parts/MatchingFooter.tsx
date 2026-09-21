@@ -5,25 +5,41 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 
-export default function MatchingFooter() {
+interface MatchingFooterProps {
+  onSkip: () => void;
+  onChat: () => void;
+  onCall: () => void;
+  /** 수락/거절 응답 처리 중 — 중복 탭 방지를 위해 SKIP/CHAT을 비활성화한다 */
+  isResponding?: boolean;
+}
+
+export default function MatchingFooter({ onSkip, onChat, onCall, isResponding }: MatchingFooterProps) {
   const { colors } = useThemeColors();
 
   return (
     <View style={styles.container}>
       {/* SKIP 버튼 */}
-      <Pressable style={[styles.buttonSecondary, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
-        <Ionicons name="close-outline" size={24} color={colors.text.muted} style={styles.iconMargin} />
-        <Text style={[styles.textSecondary, { color: colors.text.muted }]}>SKIP</Text>
+      <Pressable
+        onPress={onSkip}
+        disabled={isResponding}
+        style={[styles.buttonSecondary, { backgroundColor: colors.background.glass, borderColor: colors.border.primary, opacity: isResponding ? 0.5 : 1 }]}
+      >
+        <Ionicons name="close-outline" size={24} color={colors.text.secondary} style={styles.iconMargin} />
+        <Text style={[styles.textSecondary, { color: colors.text.secondary }]}>스킵</Text>
       </Pressable>
 
       {/* CHAT 버튼 */}
-      <Pressable style={[styles.buttonSecondary, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
-        <Ionicons name="chatbubble-outline" size={20} color={colors.text.muted} style={styles.iconMargin} />
-        <Text style={[styles.textSecondary, { color: colors.text.muted }]}>CHAT</Text>
+      <Pressable
+        onPress={onChat}
+        disabled={isResponding}
+        style={[styles.buttonSecondary, { backgroundColor: colors.background.glass, borderColor: colors.border.primary, opacity: isResponding ? 0.5 : 1 }]}
+      >
+        <Ionicons name="chatbubble-outline" size={20} color={colors.text.secondary} style={styles.iconMargin} />
+        <Text style={[styles.textSecondary, { color: colors.text.secondary }]}>채팅</Text>
       </Pressable>
 
       {/* TWIN CALL 버튼 */}
-      <Pressable style={styles.buttonPrimaryContainer}>
+      <Pressable style={styles.buttonPrimaryContainer} onPress={onCall}>
         <LinearGradient
           colors={Colors.gradient.twinCallButton}
           start={{ x: 0, y: 0 }}
@@ -31,7 +47,7 @@ export default function MatchingFooter() {
           style={styles.buttonPrimary}
         >
           <Ionicons name="call-outline" size={20} color={Colors.primary.soulBlack} style={styles.iconMargin} />
-          <Text style={styles.textPrimary}>TWIN CALL</Text>
+          <Text style={styles.textPrimary}>트윈 통화</Text>
         </LinearGradient>
       </Pressable>
     </View>

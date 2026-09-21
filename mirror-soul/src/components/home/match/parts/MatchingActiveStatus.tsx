@@ -48,7 +48,7 @@ export default function MatchingActiveStatus() {
           ]}
         >
           <Text style={[styles.actionText, { color: isMatching ? colors.text.muted : Colors.primary.soulBlack }]}>
-            {isMatching ? "STOP" : "START"}
+            {isMatching ? "중단" : "시작"}
           </Text>
         </Pressable>
       </View>

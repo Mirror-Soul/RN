@@ -13,7 +13,7 @@ interface BottomSheetModalProps {
 /**
  * 하단에서 슬라이드업되는 바텀시트 공통 래퍼 (SRP).
  * 백드롭 + 슬라이드업 애니메이션 + 상단 핸들바만 담당하며,
- * 내부 콘텐츠(children)는 사용처(LocationSelectModal, RefillModal 등)가 구성합니다.
+ * 내부 콘텐츠(children)는 사용처(RefillModal 등)가 구성합니다.
  */
 export default function BottomSheetModal({ visible, onClose, children, sheetStyle }: BottomSheetModalProps) {
   const { colors } = useThemeColors();

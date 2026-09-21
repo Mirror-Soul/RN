@@ -16,12 +16,12 @@ JAVA_HOME="<JDK_17_HOME>" ANDROID_HOME="<ANDROID_SDK_ROOT>" npx expo run:android
 
 ### Phase 1 (환경 구성) — 완료
 - Android Studio + SDK, JAVA_HOME(JDK17)/ANDROID_HOME 환경변수, 실기기 연결
-- `android/gradle.properties`, `app.json`(expo-build-properties)에 `minSdkVersion: 26`
+- `android/gradle.properties`, `app.config.js`(expo-build-properties)에 `minSdkVersion: 26`
 - 첫 빌드 및 기기 실행 성공
 
 ### Phase 2 (폰트) — 완료, 커밋 `4bc7fba`
 - `@expo-google-fonts/inter` 설치, weight별(400/500/600/700/900) TTF를 `assets/fonts/`에 배치
-- `app.json`의 `expo-font` config plugin으로 "Inter" 네이티브 폰트 패밀리 등록 (useFonts() 불필요, 234곳 기존 코드 무수정)
+- `app.config.js`의 `expo-font` config plugin으로 "Inter" 네이티브 폰트 패밀리 등록 (useFonts() 불필요, 234곳 기존 코드 무수정)
 - 기기에서 Inter 폰트/굵기 정상 렌더링 확인됨
 
 ### Phase 3 (레이아웃) — 완료, 커밋 `d2df487`
@@ -35,7 +35,7 @@ JAVA_HOME="<JDK_17_HOME>" ANDROID_HOME="<ANDROID_SDK_ROOT>" npx expo run:android
 4. 음성/STT는 정상 확인됨 (수정 불필요).
 
 ### Phase 5 (코드 정리) — 완료, 커밋 `3532d3d`
-- `app.json`의 `android.permissions` 배열 중복 항목 3개(RECORD_AUDIO, MODIFY_AUDIO_SETTINGS, CAMERA 각 2번씩) 제거
+- `app.config.js`의 `android.permissions` 배열 중복 항목 3개(RECORD_AUDIO, MODIFY_AUDIO_SETTINGS, CAMERA 각 2번씩) 제거
 - `InterviewAIBox.tsx`의 미사용 `import { BlurView } from 'expo-blur';` 제거
 
 ### Phase 6 (기기 실사용 버그 수정) — 완료, 커밋 `6d81ed1`, `8d50800`
@@ -51,11 +51,11 @@ JAVA_HOME="<JDK_17_HOME>" ANDROID_HOME="<ANDROID_SDK_ROOT>" npx expo run:android
 ## 남은 작업
 
 ### 검토했으나 반영하지 않은 리뷰 항목
-- **`app.json`의 `expo-font` 설정을 `android.fonts`로 중첩하라는 제안**: 현재 설치된 `expo-font@14.0.12` 플러그인 소스(`plugin/build/withFonts.js`)를 직접 확인한 결과, 최상위 `fonts`와 `android.fonts`를 병합(`[...props.fonts, ...props.android?.fonts]`)해서 동일하게 처리함 — 즉 최상위 `fonts`만으로도 Android에 정상 반영되며 실제로 Phase 2에서 기기 확인까지 끝남. 이 버전 기준으로는 잘못된 지적이라 판단해 반영하지 않음. 추후 `expo-font` 메이저 업데이트 시 재확인 권장.
+- **`app.config.js`의 `expo-font` 설정을 `android.fonts`로 중첩하라는 제안**: 현재 설치된 `expo-font@14.0.12` 플러그인 소스(`plugin/build/withFonts.js`)를 직접 확인한 결과, 최상위 `fonts`와 `android.fonts`를 병합(`[...props.fonts, ...props.android?.fonts]`)해서 동일하게 처리함 — 즉 최상위 `fonts`만으로도 Android에 정상 반영되며 실제로 Phase 2에서 기기 확인까지 끝남. 이 버전 기준으로는 잘못된 지적이라 판단해 반영하지 않음. 추후 `expo-font` 메이저 업데이트 시 재확인 권장.
 
 ### 추가로 나온 미검증 리스크 (아직 문제 재현 안 됐지만 참고, 액션 불필요)
 - WebRTC 통화 중 오디오 라우팅(스피커폰/이어피스 전환) 코드가 없음 — Android에서 소리 방향 이상하면 이 부분 확인
-- `react-native-vision-camera-face-detector`, `react-native-webrtc`는 Expo config plugin을 제공하지 않는 패키지라 `app.json` plugins 등록 자체가 불필요함을 확인함 (autolinking만으로 정상, 빌드 성공 확인됨)
+- `react-native-vision-camera-face-detector`, `react-native-webrtc`는 Expo config plugin을 제공하지 않는 패키지라 `app.config.js` plugins 등록 자체가 불필요함을 확인함 (autolinking만으로 정상, 빌드 성공 확인됨)
 
 ## 다음 세션 시작 프롬프트 예시
 
