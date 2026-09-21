@@ -116,7 +116,11 @@ export function useForgotPasswordFlow() {
         Alert.alert('인증 시도 횟수 초과', '인증 시도 횟수를 초과했습니다. 인증 코드를 다시 보내주세요.');
         return;
       }
-      setVerifyAttemptCount((prev) => prev + 1);
+      // 네트워크 타임아웃/서버 오류 등 실제 불일치가 아닌 실패까지 시도 횟수로 세면
+      // 코드가 맞았는데도 네트워크 문제만으로 잠길 수 있다 — 실제 불일치일 때만 소진한다.
+      if (getErrorCode(error) === 'EMAIL_CODE_MISMATCH') {
+        setVerifyAttemptCount((prev) => prev + 1);
+      }
       updateState({ isLoading: false, codeError: getErrorDisplayMessage(error, '인증번호가 일치하지 않습니다.') });
     }
   }, [state.isLoading, state.code, verifyAttemptCount, updateState, resetTimer]);

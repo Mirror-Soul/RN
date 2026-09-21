@@ -100,7 +100,13 @@ export default function ForgotPasswordScreen() {
               variant="full"
               style={styles.actionButton}
             />
-            <Pressable onPress={handleResendCode} disabled={state.isLoading} hitSlop={8}>
+            <Pressable
+              onPress={handleResendCode}
+              disabled={state.isLoading}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="인증 코드 다시 보내기"
+            >
               <Text style={[styles.resendText, { color: colors.text.secondary }]}>
                 인증번호를 못 받으셨나요? <Text style={styles.resendTextEmphasis}>다시 보내기</Text>
               </Text>
