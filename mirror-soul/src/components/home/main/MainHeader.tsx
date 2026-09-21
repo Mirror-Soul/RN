@@ -1,10 +1,11 @@
 import { Feather } from '@expo/vector-icons';
-import { Colors, FontFamily, FontWeight, Radii, Spacing } from '@/src/constants/theme';
+import { Colors, FontFamily, FontWeight, Spacing } from '@/src/constants/theme';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { tabHeaderStyles } from '@/src/components/home/common/tabHeaderStyles';
 import { useMatchingStatus } from '@/src/features/home/hooks/useMatchingStatus';
+import { AnimatedSwitch } from '@/src/components/common/AnimatedSwitch';
 
 interface MainHeaderProps {
   onAvatarPress?: () => void;
@@ -12,16 +13,41 @@ interface MainHeaderProps {
 
 /**
  * MainHeader 컴포넌트 (SRP)
- * 좌측 아바타(퀵액션시트 진입) 버튼, "Discovery" 타이틀 + 매칭 상태 배지를 렌더링합니다.
- * 우측은 History/Grow 헤더와 동일하게 44px 빈 슬롯으로 남겨 타이틀 중앙정렬을 유지합니다.
+ * 좌측은 History/Grow 헤더와 동일한 44px 빈 슬롯, 중앙은 "Discovery" 타이틀 + 매칭
+ * On/Off 스위치, 우측은 아바타(퀵액션시트 진입) 버튼을 렌더링합니다.
+ * 매칭 스위치는 공용 AnimatedSwitch(알림 설정 등에서 이미 쓰는 컴포넌트)를 재사용해
+ * "탭 가능한 토글"이라는 것이 형태만으로 바로 읽히게 한다.
  */
 export default function MainHeader({ onAvatarPress }: MainHeaderProps) {
   const { colors } = useThemeColors();
   const { matchingEnabled, handleToggle, isLoading, isToggling } = useMatchingStatus();
   const isMatching = matchingEnabled ?? false;
+  const statusLabel = matchingEnabled === null ? '확인 중' : isMatching ? '매칭 켜짐' : '매칭 꺼짐';
 
   return (
     <View style={styles.container}>
+      <View style={styles.iconSlot} />
+
+      <View style={styles.titleWrapper}>
+        <Text style={[styles.title, { color: colors.text.primary }]}>Discovery</Text>
+        <View style={styles.matchingRow}>
+          <Text
+            style={[
+              styles.matchingLabel,
+              { color: isMatching ? Colors.primary.electricCyan : colors.text.muted },
+            ]}
+          >
+            {statusLabel}
+          </Text>
+          <AnimatedSwitch
+            value={isMatching}
+            onToggle={handleToggle}
+            disabled={isLoading || isToggling || matchingEnabled === null}
+            accessibilityLabel={isMatching ? '매칭 중단하기' : '매칭 시작하기'}
+          />
+        </View>
+      </View>
+
       <TouchableOpacity
         style={[styles.iconButton, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
         onPress={onAvatarPress}
@@ -31,28 +57,6 @@ export default function MainHeader({ onAvatarPress }: MainHeaderProps) {
       >
         <Feather name="user" size={20} color={colors.text.secondary} />
       </TouchableOpacity>
-
-      <View style={styles.titleWrapper}>
-        <Text style={[styles.title, { color: colors.text.primary }]}>Discovery</Text>
-        <TouchableOpacity
-          style={[
-            styles.liveBadge,
-            matchingEnabled === false && styles.liveBadgeOff,
-          ]}
-          onPress={handleToggle}
-          disabled={isLoading || isToggling}
-          activeOpacity={0.7}
-          accessibilityRole="button"
-          accessibilityLabel={isMatching ? '매칭 중단하기' : '매칭 시작하기'}
-        >
-          <View style={[styles.liveDot, !isMatching && styles.liveDotOff]} />
-          <Text style={[styles.liveText, matchingEnabled === false && styles.liveTextOff]}>
-            {matchingEnabled === null ? '확인 중' : isMatching ? 'Live Sync' : '매칭 중단됨'}
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.iconSlot} />
     </View>
   );
 }
@@ -70,40 +74,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: tabHeaderStyles.title,
-  liveBadge: {
+  matchingRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    marginTop: 6,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 2,
-    borderRadius: Radii.full,
-    backgroundColor: Colors.glass.cyan10_d3,
-    borderWidth: 1,
-    borderColor: Colors.glass.cyan20_d3,
+    gap: Spacing.sm,
+    marginTop: Spacing.xs,
   },
-  liveBadgeOff: {
-    backgroundColor: Colors.glass.white5,
-    borderColor: Colors.glass.white10,
-  },
-  liveDot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: Colors.primary.electricCyan,
-  },
-  liveDotOff: {
-    backgroundColor: Colors.neutral.darkGray,
-  },
-  liveText: {
+  matchingLabel: {
     fontFamily: FontFamily.sans,
-    fontSize: 8,
-    fontWeight: FontWeight.black,
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
-    color: Colors.primary.electricCyan,
-  },
-  liveTextOff: {
-    color: Colors.neutral.lightGrayText,
+    fontSize: 11,
+    fontWeight: FontWeight.bold,
+    letterSpacing: 0.2,
   },
 });

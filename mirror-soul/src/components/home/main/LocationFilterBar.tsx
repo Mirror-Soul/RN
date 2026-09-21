@@ -2,6 +2,7 @@ import { Feather } from '@expo/vector-icons';
 import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface LocationFilterBarProps {
@@ -36,11 +37,7 @@ export default function LocationFilterBar({
   return (
     <View style={styles.row}>
       <TouchableOpacity
-        style={[
-          styles.locationButton,
-          { backgroundColor: colors.background.glass, borderColor: colors.border.primary },
-          isLoading && styles.locationButtonDisabled,
-        ]}
+        style={[styles.touchableWrapper, isLoading && styles.locationButtonDisabled]}
         onPress={isLoading ? undefined : isError ? onRetry : onPress}
         disabled={isLoading}
         activeOpacity={0.7}
@@ -48,24 +45,31 @@ export default function LocationFilterBar({
         accessibilityLabel={isError ? '탐색 지역 다시 조회' : '탐색 지역 설정'}
         accessibilityState={{ disabled: Boolean(isLoading) }}
       >
-        <View style={styles.left}>
-          <View style={[styles.iconWrapper, { backgroundColor: Colors.glass.cyan10_d3 }]}>
-            <Feather name="map-pin" size={16} color={Colors.primary.electricCyan} />
+        <LinearGradient
+          colors={Colors.gradient.twinCardHeader}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={[styles.locationButton, { borderColor: Colors.glass.cyan20_d3 }]}
+        >
+          <View style={styles.left}>
+            <View style={[styles.iconWrapper, { backgroundColor: Colors.glass.cyan10_d3 }]}>
+              <Feather name="map-pin" size={16} color={Colors.primary.electricCyan} />
+            </View>
+            <View>
+              <Text style={[styles.label, { color: colors.text.muted }]}>탐색 지역</Text>
+              <Text
+                style={[
+                  styles.value,
+                  { color: isError ? colors.state.danger : colors.text.secondary },
+                  isError && styles.valueError,
+                ]}
+              >
+                {summary}
+              </Text>
+            </View>
           </View>
-          <View>
-            <Text style={[styles.label, { color: colors.text.muted }]}>탐색 지역</Text>
-            <Text
-              style={[
-                styles.value,
-                { color: isError ? colors.state.danger : colors.text.secondary },
-                isError && styles.valueError,
-              ]}
-            >
-              {summary}
-            </Text>
-          </View>
-        </View>
-        <Feather name="chevron-down" size={16} color={colors.text.muted} />
+          <Feather name="chevron-down" size={16} color={colors.text.muted} />
+        </LinearGradient>
       </TouchableOpacity>
     </View>
   );
@@ -77,8 +81,10 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
     alignSelf: 'stretch',
   },
-  locationButton: {
+  touchableWrapper: {
     flex: 1,
+  },
+  locationButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',

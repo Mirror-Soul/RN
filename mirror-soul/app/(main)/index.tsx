@@ -115,6 +115,15 @@ export default function MainHomeScreen() {
     Alert.alert('안내', '통화하기 기능은 곧 제공될 예정입니다.');
   }, []);
 
+  // 목업 카드(userUuid가 'mock-'로 시작)는 상세 조회 API가 없으므로 모달을 열지 않고 안내만 한다.
+  const handleOpenDetail = useCallback((match: Recommendation) => {
+    if (match.userUuid.startsWith('mock-')) {
+      showToast('목업 데이터에는 상세 정보가 없어요.', 'info');
+      return;
+    }
+    setSelectedMatch(match);
+  }, [showToast]);
+
   // LocationSelectModal이 저장 완료까지 대기했다가 닫힘/에러 표시를 직접 처리한다.
   // 실패 시 여기서는 rethrow만 하고 토스트를 띄우지 않는다 — 바텀시트가 아직 열려있는 동안엔
   // 전역 토스트가 BottomSheetModal의 별도 Modal 레이어에 가려 안 보이기 때문
@@ -165,10 +174,13 @@ export default function MainHomeScreen() {
         style={[styles.dashboard, contentContainerStyle, { paddingTop: Math.max(insets.top + 12, Layout.SCREEN_PADDING), paddingHorizontal: screenPadding }]}
       >
         {/* 그룹 1: 헤더(매칭 상태 배지 포함) */}
-        <MainHeader onAvatarPress={() => setShowQuickActions(true)} />
+        <View style={styles.groupSpacer}>
+          <MainHeader onAvatarPress={() => setShowQuickActions(true)} />
+        </View>
 
-        {/* 그룹 2: 내 계정/탐색 설정 — 시간충전 + 지역설정 */}
-        <View style={styles.group}>
+        {/* 그룹 2: 내 계정/탐색 설정 — 시간충전 + 지역설정. 바로 아래(그룹3과의 경계)만
+            다른 그룹 경계보다 조금 좁게 둬서 "탐색 지역 아래 간격이 넓다"는 지적을 반영한다. */}
+        <View style={[styles.group, styles.groupAccountSpacer]}>
           <AvailableTimeCard onRefillPress={() => setShowRefillModal(true)} />
 
           <LocationFilterBar
@@ -181,12 +193,12 @@ export default function MainHomeScreen() {
         </View>
 
         {/* 그룹 3: 추천 카드 + 액션 푸터(DiscoveryMatchSection 내부에서 함께 렌더링) */}
-        <View style={styles.group}>
+        <View style={[styles.group, styles.groupSpacer]}>
           <AiStatusTicker isMatchingEnabled={matchingEnabled} />
 
           <DiscoveryMatchSection
             onConnect={handleConnectPress}
-            onOpenDetail={setSelectedMatch}
+            onOpenDetail={handleOpenDetail}
           />
         </View>
 
@@ -233,13 +245,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingBottom: 140, // Floating BottomNavbar 높이만큼 여유 공간 확보
   },
-  dashboard: {
-    gap: Layout.SCREEN_PADDING,
-  },
-  // 그룹 내부는 좁게(12px) 붙여서 하나의 덩어리로 읽히게 하고, 그룹 사이는
-  // 위 dashboard.gap(24px)이 그대로 유지되어 전체적으로 리듬감을 준다.
+  // 그룹별로 아래쪽 간격이 서로 달라(그룹2만 더 좁게) 균일 gap 대신 그룹마다
+  // marginBottom을 개별로 준다 — 마지막 그룹(SoulConnectTip)은 여백이 필요 없다.
+  dashboard: {},
+  // 그룹 내부는 좁게(12px) 붙여서 하나의 덩어리로 읽히게 한다.
   group: {
     alignSelf: 'stretch',
     gap: Spacing.md,
+  },
+  groupSpacer: {
+    marginBottom: Layout.SCREEN_PADDING,
+  },
+  // 탐색 지역 바로 아래(그룹2→그룹3 경계)만 기본 간격(24px)보다 조금 좁게(20px).
+  groupAccountSpacer: {
+    marginBottom: Spacing.xl,
   },
 });

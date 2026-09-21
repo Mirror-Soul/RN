@@ -10,6 +10,7 @@ import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import DiscoveryActionFooter from './DiscoveryActionFooter';
 import DiscoveryMatchCard from './DiscoveryMatchCard';
 import { shouldPrefetchNextPage } from './discoveryPagination';
+import { MOCK_RECOMMENDATIONS } from './mockRecommendations';
 
 interface DiscoveryMatchSectionProps {
   onPass?: (userUuid: string) => void;
@@ -24,11 +25,16 @@ interface DiscoveryMatchSectionProps {
  */
 export default function DiscoveryMatchSection({ onPass, onConnect, onOpenDetail }: DiscoveryMatchSectionProps) {
   const { colors } = useThemeColors();
-  const { recommendations, isLoading, isError, hasNextPage, isFetchingNextPage, fetchNextPage, refetch } =
+  const { recommendations, isLoading, isFetching, isError, hasNextPage, isFetchingNextPage, fetchNextPage, refetch } =
     useRecommendationsQuery();
   const swipeMutation = useSwipeMutation();
   const [currentIndex, setCurrentIndex] = useState(0);
-  const currentMatch = recommendations[currentIndex];
+
+  // 실제 추천이 0건일 때만(개발 빌드 한정) 카드 디자인을 눈으로 확인할 수 있도록 목업으로 대체한다.
+  // 페이지네이션(다음 페이지 당겨오기)은 항상 실제 recommendations 기준으로만 판단한다.
+  const usingMockData = __DEV__ && !isLoading && !isError && recommendations.length === 0;
+  const displayRecommendations = usingMockData ? MOCK_RECOMMENDATIONS : recommendations;
+  const currentMatch = displayRecommendations[currentIndex];
 
   // 남은 카드가 얼마 없으면 다 소진되기 전에 다음 페이지를 미리 당겨온다
   useEffect(() => {
@@ -38,11 +44,40 @@ export default function DiscoveryMatchSection({ onPass, onConnect, onOpenDetail 
   }, [currentIndex, recommendations.length, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const handlePass = (userUuid: string) => {
+    if (userUuid.startsWith('mock-')) {
+      setCurrentIndex((prev) => prev + 1);
+      return;
+    }
     onPass?.(userUuid);
     // 낙관적 진행 — 스와이프 응답을 기다리지 않고 바로 다음 카드로 넘어간다
     swipeMutation.mutate(userUuid);
     setCurrentIndex((prev) => prev + 1);
   };
+
+  const refreshHeader = (
+    <View style={styles.sectionHeader}>
+      {usingMockData ? (
+        <Text style={[styles.mockLabel, { color: colors.text.muted }]}>목업 데이터</Text>
+      ) : (
+        <View />
+      )}
+      <TouchableOpacity
+        style={styles.refreshButton}
+        onPress={() => refetch()}
+        disabled={isFetching}
+        activeOpacity={0.7}
+        accessibilityRole="button"
+        accessibilityLabel="추천 목록 새로고침"
+      >
+        {isFetching ? (
+          <ActivityIndicator size="small" color={colors.text.muted} />
+        ) : (
+          <Feather name="refresh-cw" size={13} color={colors.text.muted} />
+        )}
+        <Text style={[styles.refreshText, { color: colors.text.muted }]}>새로고침</Text>
+      </TouchableOpacity>
+    </View>
+  );
 
   if (isLoading) {
     return (
@@ -80,20 +115,24 @@ export default function DiscoveryMatchSection({ onPass, onConnect, onOpenDetail 
   // 추천 대상이 실제로 더 없는 경우 — 빈 배열이 실제로 올 수 있다
   if (!currentMatch) {
     return (
-      <View
-        style={[styles.statusBox, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
-      >
-        <Feather name="users" size={28} color={colors.text.muted} />
-        <Text style={[styles.emptyTitle, { color: colors.text.primary }]}>추천할 상대가 아직 없어요</Text>
-        <Text style={[styles.emptySubtitle, { color: colors.text.muted }]}>
-          탐색 지역을 넓혀보거나 잠시 후 다시 확인해주세요.
-        </Text>
+      <View style={styles.container}>
+        {refreshHeader}
+        <View
+          style={[styles.statusBox, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
+        >
+          <Feather name="users" size={28} color={colors.text.muted} />
+          <Text style={[styles.emptyTitle, { color: colors.text.primary }]}>추천할 상대가 아직 없어요</Text>
+          <Text style={[styles.emptySubtitle, { color: colors.text.muted }]}>
+            탐색 지역을 넓혀보거나 잠시 후 다시 확인해주세요.
+          </Text>
+        </View>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
+      {refreshHeader}
       <Animated.View key={currentMatch.userUuid} entering={FadeIn.duration(300)} exiting={FadeOut.duration(200)}>
         <DiscoveryMatchCard match={currentMatch} onOpenDetail={onOpenDetail} />
       </Animated.View>
@@ -131,5 +170,28 @@ const styles = StyleSheet.create({
     fontSize: FontSize.sm,
     fontWeight: FontWeight.bold,
     textAlign: 'center',
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: Spacing.sm,
+  },
+  mockLabel: {
+    fontFamily: FontFamily.sans,
+    fontSize: FontSize.xs,
+    fontWeight: FontWeight.bold,
+  },
+  refreshButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xxs,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xxs,
+  },
+  refreshText: {
+    fontFamily: FontFamily.sans,
+    fontSize: FontSize.xs,
+    fontWeight: FontWeight.bold,
   },
 });
