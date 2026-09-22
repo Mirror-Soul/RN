@@ -10,11 +10,19 @@ import * as Haptics from 'expo-haptics';
 import React, { useState } from 'react';
 import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, runOnJS, WithSpringConfig } from 'react-native-reanimated';
+import Animated, {
+  useAnimatedStyle,
+  withSpring,
+  withTiming,
+  runOnJS,
+  WithSpringConfig,
+  SharedValue,
+} from 'react-native-reanimated';
 import PhotoLightbox from './PhotoLightbox';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const SWIPE_DISTANCE_THRESHOLD = SCREEN_WIDTH * 0.3;
+// DiscoveryStackPeek도 같은 값을 기준으로 "드래그가 얼마나 진행됐는지"를 계산하므로 export한다.
+export const SWIPE_DISTANCE_THRESHOLD = SCREEN_WIDTH * 0.3;
 const SWIPE_VELOCITY_THRESHOLD = 500;
 
 // 헤더 매칭 스위치(MainHeader.tsx)와 동일한 톤 — 기본 스프링보다 감쇠를 늘리고
@@ -35,6 +43,9 @@ interface DiscoveryMatchCardProps {
   /** false면 이미 첫 번째 후보라 더 되돌아갈 곳이 없다는 뜻 — 왼쪽 스와이프를 커밋하지 않는다. */
   canGoBack: boolean;
   onConnect: () => void;
+  /** 부모(DiscoveryMatchSection)가 소유 — DiscoveryStackPeek도 같은 값을 봐야 드래그
+      진행 정도에 맞춰 뒤 카드가 반응할 수 있어서, 이 카드 안에서 만들지 않고 받는다. */
+  translateX: SharedValue<number>;
 }
 
 /**
@@ -46,15 +57,13 @@ interface DiscoveryMatchCardProps {
  * 한줄소개 "더보기"는 모달이 아니라 카드 안에서 텍스트를 펼치는 인라인 확장으로
  * 각각 분리되어 있다. 통화하기만 남은 명시적 버튼이다.
  */
-export default function DiscoveryMatchCard({ match, onOpenDetail, onPass, onGoBack, canGoBack, onConnect }: DiscoveryMatchCardProps) {
+export default function DiscoveryMatchCard({ match, onOpenDetail, onPass, onGoBack, canGoBack, onConnect, translateX }: DiscoveryMatchCardProps) {
   const { colors } = useThemeColors();
   const [imageFailed, setImageFailed] = useState(false);
   const [isSummaryTruncated, setIsSummaryTruncated] = useState(false);
   const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
   const [isLightboxVisible, setIsLightboxVisible] = useState(false);
   const isScoreKnown = Number.isFinite(match.recommendationScore);
-
-  const translateX = useSharedValue(0);
 
   const triggerSwipeHaptic = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);

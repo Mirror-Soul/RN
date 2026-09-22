@@ -6,8 +6,8 @@ import { useSwipeMutation } from '@/src/features/home/hooks/useSwipeMutation';
 import type { Recommendation } from '@/src/types/api/home';
 import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
-import DiscoveryMatchCard from './DiscoveryMatchCard';
+import Animated, { FadeIn, FadeOut, useSharedValue } from 'react-native-reanimated';
+import DiscoveryMatchCard, { SWIPE_DISTANCE_THRESHOLD } from './DiscoveryMatchCard';
 import DiscoveryStackPeek from './DiscoveryStackPeek';
 import { shouldPrefetchNextPage } from './discoveryPagination';
 import { MOCK_RECOMMENDATIONS } from './mockRecommendations';
@@ -33,6 +33,9 @@ export default function DiscoveryMatchSection({ onPass, onConnect, onOpenDetail 
   // 백엔드가 멱등하게 처리해 중복 호출 비용이 없지만(useSwipeMutation.ts 참고), currentIndex는
   // 함수형 업데이터라 중복 호출 시 그대로 2 증가해 카드 한 장을 건너뛴다. 그걸 막기 위한 락이다.
   const passInFlightUuidRef = useRef<string | null>(null);
+  // DiscoveryMatchCard(위 카드)와 DiscoveryStackPeek(뒤 카드)이 공유하는 드래그 값 —
+  // 여기서 만들어야 다음 카드가 "위 카드를 얼마나 드래그했는지"에 실시간으로 반응할 수 있다.
+  const translateX = useSharedValue(0);
 
   // 실제 추천이 0건일 때만(개발 빌드 한정) 카드 디자인을 눈으로 확인할 수 있도록 목업으로 대체한다.
   // 페이지네이션(다음 페이지 당겨오기)은 항상 실제 recommendations 기준으로만 판단한다.
@@ -50,10 +53,12 @@ export default function DiscoveryMatchSection({ onPass, onConnect, onOpenDetail 
   }, [currentIndex, recommendations.length, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   // 카드가 바뀌면(패스로 넘어갔든, 새로고침으로 인덱스가 리셋됐든) 다음 카드의 패스는
-  // 다시 눌릴 수 있어야 하므로 락을 해제한다.
+  // 다시 눌릴 수 있어야 하므로 락을 해제한다. translateX도 같이 0으로 되돌려야 한다 —
+  // 안 그러면 새로 마운트되는 카드가 이전 카드가 날아간 위치(화면 밖)에서 시작해버린다.
   useEffect(() => {
     passInFlightUuidRef.current = null;
-  }, [currentMatch?.userUuid]);
+    translateX.value = 0;
+  }, [currentMatch?.userUuid, translateX]);
 
   const handlePass = (userUuid: string) => {
     if (passInFlightUuidRef.current === userUuid) return; // 같은 카드에 대한 중복 탭 무시
@@ -168,7 +173,9 @@ export default function DiscoveryMatchSection({ onPass, onConnect, onOpenDetail 
     <View style={styles.container}>
       {refreshHeader}
       <View style={styles.stack}>
-        {nextMatch && <DiscoveryStackPeek match={nextMatch} />}
+        {nextMatch && (
+          <DiscoveryStackPeek match={nextMatch} translateX={translateX} swipeThreshold={SWIPE_DISTANCE_THRESHOLD} />
+        )}
         <Animated.View key={currentMatch.userUuid} entering={FadeIn.duration(300)} exiting={FadeOut.duration(200)}>
           <DiscoveryMatchCard
             match={currentMatch}
@@ -177,6 +184,7 @@ export default function DiscoveryMatchSection({ onPass, onConnect, onOpenDetail 
             onGoBack={handleGoBack}
             canGoBack={currentIndex > 0}
             onConnect={() => onConnect?.(currentMatch.userUuid)}
+            translateX={translateX}
           />
         </Animated.View>
       </View>
