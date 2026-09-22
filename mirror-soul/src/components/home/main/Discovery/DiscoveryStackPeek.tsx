@@ -1,10 +1,10 @@
-import { Colors, Radii } from '@/src/constants/theme';
+import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import type { Recommendation } from '@/src/types/api/home';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, SharedValue } from 'react-native-reanimated';
 
 interface DiscoveryStackPeekProps {
@@ -19,7 +19,9 @@ interface DiscoveryStackPeekProps {
  * DiscoveryStackPeek 컴포넌트 (SRP)
  * 다음 후보 카드 — 평소(드래그 안 할 때)엔 뒤에 숨어 거의 안 보이다가, 위 카드를
  * 옆으로 미는 만큼만 살짝 드러난다(항상 뚜렷하게 보이는 정적 스택이 아님).
- * 인터랙션 없음(pointerEvents="none") — 스와이프 대상은 항상 맨 위 카드뿐이다.
+ * DiscoveryMatchCard와 같은 뼈대(사진 박스 + 이름)를 아주 가볍게만 재현해 "다음
+ * 사람의 카드"라는 게 실제로 보이게 한다 — 어차피 일부만 살짝 드러나므로 메타/소개/
+ * 태그/버튼처럼 무거운 내용까지 넣진 않는다. 인터랙션 없음(pointerEvents="none").
  */
 export default function DiscoveryStackPeek({ match, translateX, swipeThreshold }: DiscoveryStackPeekProps) {
   const { colors } = useThemeColors();
@@ -39,17 +41,28 @@ export default function DiscoveryStackPeek({ match, translateX, swipeThreshold }
       pointerEvents="none"
       style={[styles.card, animatedStyle, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
     >
-      {imageFailed ? (
-        <LinearGradient colors={Colors.gradient.avatarPlaceholder} style={StyleSheet.absoluteFillObject} />
-      ) : (
-        <Image
-          source={{ uri: match.profileImageUrl }}
-          style={StyleSheet.absoluteFillObject}
-          contentFit="cover"
-          cachePolicy="disk"
-          onError={() => setImageFailed(true)}
-        />
-      )}
+      <View style={styles.photoBox}>
+        {imageFailed ? (
+          <LinearGradient colors={Colors.gradient.avatarPlaceholder} style={styles.photo}>
+            <Text style={styles.photoFallbackText}>{match.name.charAt(0).toUpperCase()}</Text>
+          </LinearGradient>
+        ) : (
+          <Image
+            source={{ uri: match.profileImageUrl }}
+            style={styles.photo}
+            contentFit="cover"
+            cachePolicy="disk"
+            onError={() => setImageFailed(true)}
+          />
+        )}
+      </View>
+
+      <View style={styles.infoStrip}>
+        <Text style={[styles.nameText, { color: colors.text.primary }]} numberOfLines={1}>
+          {match.name}
+          {match.age !== null ? <Text style={styles.ageText}> {match.age}</Text> : null}
+        </Text>
+      </View>
     </Animated.View>
   );
 }
@@ -60,5 +73,34 @@ const styles = StyleSheet.create({
     borderRadius: Radii.xxl,
     overflow: 'hidden',
     borderWidth: 1,
+  },
+  photoBox: {
+    width: '100%',
+    aspectRatio: 4 / 3,
+  },
+  photo: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  photoFallbackText: {
+    fontFamily: FontFamily.sans,
+    fontSize: 64,
+    fontWeight: FontWeight.black,
+    color: Colors.neutral.pureWhite,
+  },
+  infoStrip: {
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+  },
+  nameText: {
+    fontFamily: FontFamily.sans,
+    fontSize: FontSize.xl,
+    fontWeight: FontWeight.black,
+    letterSpacing: -0.3,
+  },
+  ageText: {
+    fontWeight: FontWeight.regular,
+    color: Colors.neutral.darkGray,
   },
 });
