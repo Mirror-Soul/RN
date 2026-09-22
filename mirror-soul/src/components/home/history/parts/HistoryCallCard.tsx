@@ -45,7 +45,7 @@ export default function HistoryCallCard({ data, index = 0, onPress }: HistoryCal
 
   const backgroundColor = data.isNew
     ? Colors.glass.cyan10_d3
-    : colors.background.glass;
+    : colors.background.card;
 
   return (
     <Animated.View entering={FadeInDown.delay(index * 60).duration(350).springify()}>

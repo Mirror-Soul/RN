@@ -26,7 +26,7 @@ export default function HistorySearchBar({
     <View
       style={[
         styles.container,
-        { backgroundColor: colors.background.glass, borderColor: isFocused ? Colors.primary.electricCyan : colors.border.primary },
+        { backgroundColor: colors.background.card, borderColor: isFocused ? Colors.primary.electricCyan : colors.border.primary },
       ]}
     >
       <Feather

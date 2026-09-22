@@ -120,7 +120,7 @@ export default function DiscoveryMatchSection({ onPass, onConnect, onOpenDetail 
 
   if (isLoading) {
     return (
-      <View style={[styles.statusBox, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
+      <View style={[styles.statusBox, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
         <ActivityIndicator color={colors.text.muted} />
       </View>
     );
@@ -129,7 +129,7 @@ export default function DiscoveryMatchSection({ onPass, onConnect, onOpenDetail 
   if (isError && recommendations.length === 0) {
     return (
       <TouchableOpacity
-        style={[styles.statusBox, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
+        style={[styles.statusBox, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}
         onPress={() => refetch()}
         activeOpacity={0.8}
         accessibilityRole="button"
@@ -145,7 +145,7 @@ export default function DiscoveryMatchSection({ onPass, onConnect, onOpenDetail 
   // 인덱스는 다 소진했지만 다음 페이지가 아직 도착하지 않은 짧은 구간 — 빈 상태가 아니라 로딩 상태
   if (!currentMatch && isFetchingNextPage) {
     return (
-      <View style={[styles.statusBox, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
+      <View style={[styles.statusBox, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
         <ActivityIndicator color={colors.text.muted} />
       </View>
     );
@@ -157,7 +157,7 @@ export default function DiscoveryMatchSection({ onPass, onConnect, onOpenDetail 
       <View style={styles.container}>
         {refreshHeader}
         <View
-          style={[styles.statusBox, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
+          style={[styles.statusBox, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}
         >
           <Feather name="users" size={28} color={colors.text.muted} />
           <Text style={[styles.emptyTitle, { color: colors.text.primary }]}>추천할 상대가 아직 없어요</Text>

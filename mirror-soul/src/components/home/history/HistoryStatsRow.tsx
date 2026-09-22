@@ -20,7 +20,7 @@ export default function HistoryStatsRow() {
   if (isError) {
     return (
       <TouchableOpacity
-        style={[styles.card, styles.retryCard, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
+        style={[styles.card, styles.retryCard, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}
         onPress={() => refetch()}
         activeOpacity={0.8}
         accessibilityRole="button"
@@ -44,7 +44,7 @@ export default function HistoryStatsRow() {
       : null;
 
   return (
-    <View style={[styles.card, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
+    <View style={[styles.card, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
       {/* 상단: 레이블 + 증가율 */}
       <View style={styles.topRow}>
         <Text style={[styles.sectionLabel, { color: Colors.primary.electricCyan }]}>
