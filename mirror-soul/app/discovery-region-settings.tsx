@@ -179,19 +179,20 @@ export default function DiscoveryRegionSettingsScreen() {
             <Circle
               center={{ latitude: anchor.latitude, longitude: anchor.longitude }}
               radius={radiusMeters}
-              fillColor="rgba(255, 137, 4, 0.12)"
-              strokeColor="rgba(255, 137, 4, 0.6)"
+              fillColor="rgba(21, 93, 252, 0.12)"
+              strokeColor="rgba(21, 93, 252, 0.6)"
               strokeWidth={1.5}
             />
-            {/* 기본 마커(Google 빨간 핀)는 브랜드 컬러와 충돌해서 커스텀 도트 마커로 교체 */}
+            {/* 기본 마커(Google 빨간 핀)는 브랜드 컬러와 충돌해서 커스텀 마커로 교체 —
+                점 하나만으로는 "핀"으로 안 읽혀서 실제 map-pin 아이콘을 흰 배지 위에 올린다. */}
             <Marker
               coordinate={{ latitude: anchor.latitude, longitude: anchor.longitude }}
               draggable
               onDragEnd={handleMarkerDragEnd}
               anchor={{ x: 0.5, y: 0.5 }}
             >
-              <View style={styles.markerOuter}>
-                <View style={styles.markerInner} />
+              <View style={styles.markerBadge}>
+                <Feather name="map-pin" size={18} color={Colors.primary.mapMarkerBlue} />
               </View>
             </Marker>
           </>
@@ -265,7 +266,7 @@ export default function DiscoveryRegionSettingsScreen() {
           <>
             <View style={styles.anchorHeader}>
               <View style={styles.anchorIconWrapper}>
-                <Feather name="map-pin" size={16} color={Colors.primary.mirrorOrange} />
+                <Feather name="map-pin" size={16} color={Colors.primary.mapMarkerBlue} />
               </View>
               <View style={styles.anchorTextGroup}>
                 <Text style={styles.anchorName}>{anchor.eupmyeondongName}</Text>
@@ -439,7 +440,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255, 137, 4, 0.12)',
+    backgroundColor: 'rgba(21, 93, 252, 0.12)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -457,7 +458,7 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.sans,
     fontSize: FontSize.sm,
     fontWeight: FontWeight.medium,
-    color: Colors.primary.mirrorOrange,
+    color: Colors.primary.mapMarkerBlue,
     marginTop: 2,
   },
   divider: {
@@ -485,7 +486,7 @@ const styles = StyleSheet.create({
     color: 'rgba(0,0,0,0.4)',
   },
   stepLabelTextActive: {
-    color: Colors.primary.mirrorOrange,
+    color: Colors.primary.mapMarkerBlue,
     fontWeight: FontWeight.bold,
   },
   confirmButton: {
@@ -504,13 +505,11 @@ const styles = StyleSheet.create({
     fontWeight: FontWeight.black,
     color: Colors.primary.soulBlack,
   },
-  markerOuter: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+  markerBadge: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: '#ffffff',
-    borderWidth: 3,
-    borderColor: Colors.primary.mirrorOrange,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
@@ -518,11 +517,5 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3,
     elevation: 4,
-  },
-  markerInner: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: Colors.primary.mirrorOrange,
   },
 });

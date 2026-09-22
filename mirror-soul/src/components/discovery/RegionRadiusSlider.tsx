@@ -2,7 +2,7 @@ import { Colors } from '@/src/constants/theme';
 import React, { useCallback, useEffect, useMemo } from 'react';
 import { LayoutChangeEvent, StyleSheet, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 interface RegionRadiusSliderProps {
   /** 왼쪽(가까운 동네)부터 오른쪽(먼 동네) 순으로 나열한 고정 단계 값. 예: [1, 10, 30, 50] */
@@ -12,7 +12,9 @@ interface RegionRadiusSliderProps {
 }
 
 const THUMB_SIZE = 24;
-const TICK_SIZE = 6;
+const TRACK_HEIGHT = 4;
+const TICK_WIDTH = 2;
+const TICK_HEIGHT = 10;
 
 /**
  * "가까운 동네 ↔ 먼 동네" 반경 슬라이더 — 연속값이 아니라 steps 배열의 고정 지점에만 멈추는
@@ -48,10 +50,13 @@ export default function RegionRadiusSlider({ steps, value, onValueChange }: Regi
     [currentIndex, indexToX, trackWidth, thumbX]
   );
 
-  // 슬라이더 밖(초기 로드, 검색으로 앵커 변경 등)에서 value가 바뀌면 썸 위치도 따라간다.
+  // 슬라이더 밖(초기 로드, 검색으로 앵커 변경, 탭으로 단계 선택 등)에서 value가 바뀌면
+  // 썸 위치도 따라간다 — 스프링이 아니라 timing을 쓴다: 스프링은 도착 지점을 지나쳤다가
+  // 되돌아오는 오버슈트가 보여서 "튕기는" 느낌을 준다는 피드백이 있었다. 드래그 중
+  // updateFromX가 이미 스프링 없이 즉시 스냅하는 것과도 느낌을 맞춘다.
   useEffect(() => {
     if (trackWidth.value > 0) {
-      thumbX.value = withSpring(indexToX(currentIndex, trackWidth.value), { damping: 20, stiffness: 220 });
+      thumbX.value = withTiming(indexToX(currentIndex, trackWidth.value), { duration: 200 });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentIndex]);
@@ -110,7 +115,7 @@ export default function RegionRadiusSlider({ steps, value, onValueChange }: Regi
               styles.tick,
               {
                 left: stepCount > 1 ? `${(index / (stepCount - 1)) * 100}%` : 0,
-                marginLeft: stepCount > 1 ? -TICK_SIZE / 2 : (THUMB_SIZE - TICK_SIZE) / 2,
+                marginLeft: stepCount > 1 ? -TICK_WIDTH / 2 : (THUMB_SIZE - TICK_WIDTH) / 2,
               },
             ]}
           />
@@ -122,25 +127,31 @@ export default function RegionRadiusSlider({ steps, value, onValueChange }: Regi
 }
 
 const styles = StyleSheet.create({
+  // 이 트랙은 discovery-region-settings.tsx의 흰 bottomPanel 위에서만 쓰인다 — 반투명
+  // 흰색(원래 값)은 흰 배경 위에서 사실상 안 보여서, 회색으로 바꿔 4단계 트랙 자체가
+  // 눈에 들어오게 한다.
   track: {
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: 'rgba(255,255,255,0.25)',
+    height: TRACK_HEIGHT,
+    borderRadius: TRACK_HEIGHT / 2,
+    backgroundColor: 'rgba(0,0,0,0.08)',
     justifyContent: 'center',
   },
   fill: {
     position: 'absolute',
     left: 0,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: Colors.primary.mirrorOrange,
+    height: TRACK_HEIGHT,
+    borderRadius: TRACK_HEIGHT / 2,
+    backgroundColor: Colors.primary.mapMarkerBlue,
   },
+  // 회색 세로선 — 트랙과 마찬가지로 흰 배경에서 안 보이던 흰 점 대신, 4개 정지 지점을
+  // 명확히 표시하는 회색 선으로 교체.
   tick: {
     position: 'absolute',
-    width: TICK_SIZE,
-    height: TICK_SIZE,
-    borderRadius: TICK_SIZE / 2,
-    backgroundColor: '#ffffff',
+    top: -(TICK_HEIGHT - TRACK_HEIGHT) / 2,
+    width: TICK_WIDTH,
+    height: TICK_HEIGHT,
+    borderRadius: TICK_WIDTH / 2,
+    backgroundColor: 'rgba(0,0,0,0.2)',
   },
   thumb: {
     position: 'absolute',
@@ -149,7 +160,7 @@ const styles = StyleSheet.create({
     borderRadius: THUMB_SIZE / 2,
     backgroundColor: '#ffffff',
     borderWidth: 2,
-    borderColor: Colors.primary.mirrorOrange,
+    borderColor: Colors.primary.mapMarkerBlue,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
