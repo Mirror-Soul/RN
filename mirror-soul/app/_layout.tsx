@@ -130,6 +130,7 @@ function RootLayout() {
               <Stack.Screen name="login" />
               <Stack.Screen name="signup" options={{ animation: 'slide_from_right' }} />
               <Stack.Screen name="(main)" options={{ animation: 'fade' }} />
+              <Stack.Screen name="discovery-region-settings" />
               <Stack.Screen name="call-detail" />
               <Stack.Screen name="voice-update" />
               <Stack.Screen name="forgot-password" />

@@ -6,12 +6,6 @@ import type { JobEnum, MbtiEnum } from './onboarding';
  * 백엔드 HomeController(`/home`) 기준
  */
 
-export interface PreferredRegion {
-  sigunguId: number;
-  sidoName: string;
-  sigunguName: string;
-}
-
 export interface TalkTime {
   hours: number;
   minutes: number;
@@ -20,40 +14,35 @@ export interface TalkTime {
 
 // ─────────────────────────────────────────────
 // GET /home
+// (2026-09-19: preferredRegions(배열) → preferredRegion(단일, 미설정 시 null)로 백엔드 변경됨.
+//  기존 "구 최대 3개 선택"을 "동 앵커 1개 + 반경"으로 대체하는 개편의 일부 — 아래 PreferredRegionSetting 참고)
 // ─────────────────────────────────────────────
+export interface PreferredRegionSetting {
+  anchorRegionId: number;
+  sidoName: string;
+  sigunguName: string;
+  eupmyeondongName: string;
+  nearbyCount: number;
+  /** 앵커 자신 포함, 실제로 추천 하드 필터에 쓰이는 최종 지역 ID 목록 */
+  includedRegionIds: number[];
+}
+
 export interface HomeResult {
   remainingTalkTime: TalkTime;
-  preferredRegions: PreferredRegion[];
+  preferredRegion: PreferredRegionSetting | null;
 }
 
 export type HomeResponse = ApiResponse<HomeResult>;
 
 // ─────────────────────────────────────────────
-// PUT /home/preferred-regions
+// PUT /home/preferred-region (신규 — 동 앵커+반경 설정)
 // ─────────────────────────────────────────────
-export interface PreferredRegionInput {
-  sidoName: string;
-  sigunguName: string;
+export interface UpdatePreferredRegionRequest {
+  anchorRegionId: number;
+  nearbyCount: number;
 }
 
-export interface UpdatePreferredRegionsRequest {
-  regions: PreferredRegionInput[];
-}
-
-export interface PreferredRegionsResult {
-  preferredRegions: PreferredRegion[];
-}
-
-export type PreferredRegionsResponse = ApiResponse<PreferredRegionsResult>;
-
-// ─────────────────────────────────────────────
-// GET /home/preferred-regions/options
-// ─────────────────────────────────────────────
-export interface SigunguOptionsResult {
-  regions: PreferredRegion[];
-}
-
-export type SigunguOptionsResponse = ApiResponse<SigunguOptionsResult>;
+export type UpdatePreferredRegionResponse = ApiResponse<PreferredRegionSetting>;
 
 // ─────────────────────────────────────────────
 // GET /home/recommend?page=&size=
