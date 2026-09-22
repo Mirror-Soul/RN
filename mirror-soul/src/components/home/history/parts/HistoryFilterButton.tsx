@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, TouchableOpacity, Text } from 'react-native';
-import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
+import { FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 export interface HistoryFilterButtonProps {
@@ -25,7 +25,7 @@ export default function HistoryFilterButton({
       style={[
         styles.container,
         isActive
-          ? { backgroundColor: Colors.glass.cyan10_d3, borderColor: Colors.primary.electricCyan }
+          ? { backgroundColor: colors.background.card, borderColor: colors.border.primary }
           : { backgroundColor: 'transparent', borderColor: 'transparent' },
       ]}
       onPress={onPress}
@@ -36,7 +36,7 @@ export default function HistoryFilterButton({
       <Text
         style={[
           styles.label,
-          isActive ? { color: Colors.primary.electricCyan } : { color: colors.text.muted },
+          isActive ? { color: colors.text.primary } : { color: colors.text.muted },
         ]}
       >
         {label}
