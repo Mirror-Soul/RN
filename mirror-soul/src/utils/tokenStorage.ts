@@ -34,6 +34,9 @@ export const tokenStorage = {
   async getRefreshToken() { return SecureStore.getItemAsync(KEYS.REFRESH_TOKEN); },
   async getUserUuid() { return SecureStore.getItemAsync(KEYS.USER_UUID); },
   async getUserStatus() { return SecureStore.getItemAsync(KEYS.USER_STATUS); },
+  async saveUserStatus(userStatus: string) {
+    await SecureStore.setItemAsync(KEYS.USER_STATUS, userStatus);
+  },
 
   async clearAll() {
     try {

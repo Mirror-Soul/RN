@@ -71,7 +71,7 @@ function RootLayout() {
   // 앱 첫 실행 시 SecureStore에서 토큰 복구
   useEffect(() => {
     hydrate();
-  }, []);
+  }, [hydrate]);
 
   // access token 만료 전 사전 갱신 (hydration 이후에만 의미 있음 — 훅 내부에서 isLoggedIn/accessToken 가드)
   useProactiveTokenRefresh();
@@ -100,7 +100,12 @@ function RootLayout() {
             router.replace('/(main)');
           }
         } else if (userStatus?.startsWith('ONBOARD_')) {
-          router.replace(getOnboardingRoute(userStatus));
+          const onboardingRoute = getOnboardingRoute(userStatus);
+          // 현재 상태가 허용하는 단계에 이미 있다면 재진입시키지 않는다. 재진입은
+          // 화면의 로컬 폼 상태를 초기화하고, 입력 중이던 값을 잃게 만든다.
+          if (pathname !== onboardingRoute) {
+            router.replace(onboardingRoute);
+          }
         }
       } else {
         // (main) 그룹의 홈 탭도 파일명이 index라 로그인 화면을 "/"에 두면 두 화면이

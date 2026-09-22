@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { Alert } from 'react-native';
 import { savePersonality } from '@/src/services/onboardingService';
+import { useAuthStore } from '@/src/store/useAuthStore';
 
 import { MbtiScores } from '../Mbti/MbtiSelector';
 import { MbtiEnum } from '@/src/types/api/onboarding';
@@ -38,6 +39,9 @@ export function useStep3Form(initialMbti: string = 'ENFJ', initialDescription: s
       });
 
       if (response.isSuccess) {
+        // 성격 유형 저장 성공 시 백엔드 상태는 ONBOARD_C가 된다. 화면 이동 전에
+        // 앱 상태를 동기화해 전역 라우팅 가드와 일치시킨다.
+        await useAuthStore.getState().updateUserStatus('ONBOARD_C');
         onSuccess();
       } else {
         const errorDetail = response.code ? `\n[Error Code: ${response.code}]` : '';

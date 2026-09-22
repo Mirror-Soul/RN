@@ -14,6 +14,7 @@ interface AuthState {
   
   hydrate: () => Promise<void>;
   login: (data: { accessToken: string, refreshToken: string, userUuid: string, userStatus: string }) => Promise<void>;
+  updateUserStatus: (userStatus: string) => Promise<void>;
   updateToken: (newAccessToken: string, newRefreshToken?: string) => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -69,6 +70,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     logger.info('useAuthStore: Logging in...', { userUuid: data.userUuid, userStatus: data.userStatus });
     await tokenStorage.saveTokens(data.accessToken, data.refreshToken, data.userUuid, data.userStatus);
     set({ isLoggedIn: true, ...data });
+  },
+
+  updateUserStatus: async (userStatus) => {
+    // 다음 화면으로 이동하기 전에 메모리 상태를 먼저 갱신해야 전역 라우팅 가드가
+    // 이전 단계로 되돌리는 레이스가 생기지 않는다.
+    set({ userStatus });
+    try {
+      await tokenStorage.saveUserStatus(userStatus);
+    } catch (error) {
+      // 서버 저장은 이미 성공한 상태다. 현재 세션의 진행은 유지하고, 저장소 갱신 실패는
+      // 다음 앱 실행 시 로그인으로 복구할 수 있도록 로그만 남긴다.
+      logger.error('useAuthStore: Failed to persist user status', error);
+    }
   },
 
   updateToken: async (newAccessToken, newRefreshToken) => {
