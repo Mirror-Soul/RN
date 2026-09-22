@@ -9,8 +9,10 @@ import { TERMS_LINKS } from './constants/termsLinks';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { Header } from '@/src/components/common/Header';
 import { ScreenLayout } from '@/src/components/common/ScreenLayout';
+import { useRouter } from 'expo-router';
 
 export const TermsPolicyScreen = () => {
+  const router = useRouter();
   const { colors } = useThemeColors();
 
   return (
@@ -19,7 +21,7 @@ export const TermsPolicyScreen = () => {
         <View style={styles.gradientOverlay} />
       </View>
 
-      <Header title="약관 및 정책" delay={0} />
+      <Header title="약관 및 정책" delay={0} onBackPress={() => router.replace('/(main)/profile')} />
 
       <Animated.View 
         entering={FadeInDown.delay(120).duration(550).springify()}
@@ -78,4 +80,3 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
-

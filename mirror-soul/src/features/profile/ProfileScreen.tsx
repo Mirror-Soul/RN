@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -66,6 +66,7 @@ const SettingLink = ({
  */
 export const ProfileScreen = () => {
   const router = useRouter();
+  const { width: windowWidth } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const { colors, isDark } = useThemeColors();
   const { data: profile, isLoading: isProfileLoading, isError: isProfileError, refetch: refetchProfile } = useProfileQuery();
@@ -75,6 +76,9 @@ export const ProfileScreen = () => {
   const displayName = profile?.name?.trim() || '내 프로필';
   const avatarInitial = useMemo(() => displayName.charAt(0).toUpperCase(), [displayName]);
   const remainingTime = formatCallTime(timeStatus?.remainingTalkTime ?? 0);
+  // 작은 기기에서는 기존 크기를 유지해, 한 줄 시간 카드가 줄바꿈·겹침 없이 유지된다.
+  const timeValueFontSize = windowWidth < 370 ? FontSize.xl : FontSize.xxl;
+  const timeValueLineHeight = windowWidth < 370 ? 25 : 28;
 
   const handleOpenAccount = useCallback(() => router.push('/(main)/account'), [router]);
   const handleOpenIntroduction = useCallback(() => router.push('/(main)/profile-introduction'), [router]);
@@ -158,7 +162,7 @@ export const ProfileScreen = () => {
                   <Text style={[styles.timeError, { color: colors.state.danger }]}>재시도</Text>
                 </Pressable>
               ) : (
-                <Text style={[styles.timeValue, { color: colors.text.primary }]}>{remainingTime}</Text>
+                <Text style={[styles.timeValue, { color: colors.text.primary, fontSize: timeValueFontSize, lineHeight: timeValueLineHeight }]}>{remainingTime}</Text>
               )}
               <Pressable
                 accessibilityRole="button"

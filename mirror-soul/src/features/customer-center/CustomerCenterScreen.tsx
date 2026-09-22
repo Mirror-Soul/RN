@@ -9,16 +9,17 @@ import { EmailContactButton } from './components/EmailContactButton';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { Header } from '@/src/components/common/Header';
 import { ScreenLayout } from '@/src/components/common/ScreenLayout';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import type { SupportInquiryTopic } from './components/EmailContactButton';
 
 export const CustomerCenterScreen = () => {
+  const router = useRouter();
   const { colors } = useThemeColors();
   const { topic } = useLocalSearchParams<{ topic?: SupportInquiryTopic }>();
 
   return (
     <ScreenLayout withScroll={true}>
-      <Header title="고객센터" delay={0} />
+      <Header title="고객센터" delay={0} onBackPress={() => router.replace('/(main)/profile')} />
 
       <View style={styles.contentPadding}>
         <Animated.View

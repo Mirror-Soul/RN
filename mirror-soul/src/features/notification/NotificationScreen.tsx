@@ -8,15 +8,17 @@ import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { Header } from '@/src/components/common/Header';
 import { ScreenLayout } from '@/src/components/common/ScreenLayout';
 import {Radii, Spacing} from '@/src/constants/theme';
+import { useRouter } from 'expo-router';
 
 
 export const NotificationScreen = () => {
+  const router = useRouter();
   const { timeLimitAlert, eventAlert, handleToggleTimeLimit, handleToggleEvent, isTimeLimitLoading } = useNotificationSettings();
   const { colors } = useThemeColors();
 
   return (
     <ScreenLayout withScroll={true}>
-      <Header title="알림 설정" delay={0} />
+      <Header title="알림 설정" delay={0} onBackPress={() => router.replace('/(main)/profile')} />
 
       <View style={styles.contentPadding}>
         <Animated.View
