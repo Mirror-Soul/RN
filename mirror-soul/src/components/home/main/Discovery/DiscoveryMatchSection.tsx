@@ -4,7 +4,7 @@ import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { useRecommendationsQuery } from '@/src/features/home/hooks/useRecommendationsQuery';
 import { useSwipeMutation } from '@/src/features/home/hooks/useSwipeMutation';
 import type { Recommendation } from '@/src/types/api/home';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import DiscoveryMatchCard from './DiscoveryMatchCard';
@@ -28,6 +28,10 @@ export default function DiscoveryMatchSection({ onPass, onConnect, onOpenDetail 
     useRecommendationsQuery();
   const swipeMutation = useSwipeMutation();
   const [currentIndex, setCurrentIndex] = useState(0);
+  // 같은 카드에 대한 패스 중복 실행(빠른 연속 탭)을 막는 동기 락 — swipeMutation 자체는
+  // 백엔드가 멱등하게 처리해 중복 호출 비용이 없지만(useSwipeMutation.ts 참고), currentIndex는
+  // 함수형 업데이터라 중복 호출 시 그대로 2 증가해 카드 한 장을 건너뛴다. 그걸 막기 위한 락이다.
+  const passInFlightUuidRef = useRef<string | null>(null);
 
   // 실제 추천이 0건일 때만(개발 빌드 한정) 카드 디자인을 눈으로 확인할 수 있도록 목업으로 대체한다.
   // 페이지네이션(다음 페이지 당겨오기)은 항상 실제 recommendations 기준으로만 판단한다.
@@ -42,7 +46,16 @@ export default function DiscoveryMatchSection({ onPass, onConnect, onOpenDetail 
     }
   }, [currentIndex, recommendations.length, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
+  // 카드가 바뀌면(패스로 넘어갔든, 새로고침으로 인덱스가 리셋됐든) 다음 카드의 패스는
+  // 다시 눌릴 수 있어야 하므로 락을 해제한다.
+  useEffect(() => {
+    passInFlightUuidRef.current = null;
+  }, [currentMatch?.userUuid]);
+
   const handlePass = (userUuid: string) => {
+    if (passInFlightUuidRef.current === userUuid) return; // 같은 카드에 대한 중복 탭 무시
+    passInFlightUuidRef.current = userUuid;
+
     if (userUuid.startsWith('mock-')) {
       setCurrentIndex((prev) => prev + 1);
       return;
@@ -51,6 +64,16 @@ export default function DiscoveryMatchSection({ onPass, onConnect, onOpenDetail 
     // 낙관적 진행 — 스와이프 응답을 기다리지 않고 바로 다음 카드로 넘어간다
     swipeMutation.mutate(userUuid);
     setCurrentIndex((prev) => prev + 1);
+  };
+
+  const handleRefresh = async () => {
+    // useInfiniteQuery의 refetch()는 쿼리 데이터만 갱신하고 currentIndex는 그대로 둔다.
+    // 모든 카드를 소진한 뒤 새로고침하면(currentIndex가 새 배열 길이 이상) currentMatch가
+    // 계속 undefined가 되어 새 추천이 와도 빈 상태에 갇히므로, 성공했을 때만 리셋한다.
+    const result = await refetch();
+    if (result.isSuccess) {
+      setCurrentIndex(0);
+    }
   };
 
   const refreshHeader = (
@@ -62,7 +85,7 @@ export default function DiscoveryMatchSection({ onPass, onConnect, onOpenDetail 
       )}
       <TouchableOpacity
         style={styles.refreshButton}
-        onPress={() => refetch()}
+        onPress={handleRefresh}
         disabled={isFetching}
         activeOpacity={0.7}
         accessibilityRole="button"

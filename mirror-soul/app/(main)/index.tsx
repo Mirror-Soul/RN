@@ -52,7 +52,7 @@ export default function MainHomeScreen() {
   const { showToast } = useToast();
   // MainHeader가 배지 자체 조회를 이미 하지만, AiStatusTicker도 같은 상태가 필요해 여기서도
   // 구독한다 — react-query가 쿼리키(['match','status'])를 공유하므로 중복 요청은 없다.
-  const { matchingEnabled } = useMatchingStatus();
+  const { matchingEnabled, isError: isMatchingStatusError } = useMatchingStatus();
 
   const {
     data: preferredRegions,
@@ -194,7 +194,7 @@ export default function MainHomeScreen() {
 
         {/* 그룹 3: 추천 카드 + 액션 푸터(DiscoveryMatchSection 내부에서 함께 렌더링) */}
         <View style={[styles.group, styles.groupSpacer]}>
-          <AiStatusTicker isMatchingEnabled={matchingEnabled} />
+          <AiStatusTicker isMatchingEnabled={matchingEnabled} isError={isMatchingStatusError} />
 
           <DiscoveryMatchSection
             onConnect={handleConnectPress}
