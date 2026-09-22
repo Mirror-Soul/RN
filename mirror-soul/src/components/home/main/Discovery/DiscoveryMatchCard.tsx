@@ -69,8 +69,12 @@ export default function DiscoveryMatchCard({ match, onOpenDetail, onPass, onConn
         <View style={styles.nameRow}>
           <Text style={[styles.nameText, { color: colors.text.primary }]} numberOfLines={1}>
             {match.name}
-            {match.age !== null ? <Text style={styles.ageText}> {match.age}</Text> : null}
           </Text>
+          {match.age !== null && (
+            <View style={[styles.chip, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
+              <Text style={[styles.chipText, { color: colors.text.secondary }]}>{match.age}세</Text>
+            </View>
+          )}
           {match.jobCertificationSubmitted ? (
             <Feather name="check-circle" size={18} color={Colors.primary.electricCyan} />
           ) : null}
@@ -93,12 +97,12 @@ export default function DiscoveryMatchCard({ match, onOpenDetail, onPass, onConn
         </Text>
 
         <View style={styles.tagRow}>
-          <View style={styles.mbtiChip}>
-            <Text style={styles.mbtiChipText}>{match.mbti}</Text>
+          <View style={[styles.chip, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
+            <Text style={[styles.chipText, { color: Colors.primary.electricCyan }]}>{match.mbti}</Text>
           </View>
           {match.hashtags.slice(0, 2).map((tag) => (
-            <View key={tag} style={[styles.tagChip, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
-              <Text style={[styles.tagChipText, { color: colors.text.secondary }]}>#{tag}</Text>
+            <View key={tag} style={[styles.chip, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
+              <Text style={[styles.chipText, { color: colors.text.secondary }]}>#{tag}</Text>
             </View>
           ))}
         </View>
@@ -196,7 +200,7 @@ const styles = StyleSheet.create({
   nameRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.sm,
+    gap: Spacing.xs,
   },
   nameText: {
     flex: 1,
@@ -205,10 +209,6 @@ const styles = StyleSheet.create({
     fontWeight: FontWeight.black,
     letterSpacing: -0.3,
   },
-  ageText: {
-    fontWeight: FontWeight.regular,
-    color: Colors.neutral.darkGray,
-  },
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -216,8 +216,8 @@ const styles = StyleSheet.create({
   },
   metaText: {
     fontFamily: FontFamily.sans,
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.bold,
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.semibold,
     flexShrink: 1,
   },
   metaDivider: {
@@ -236,31 +236,19 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: Spacing.xs,
   },
-  mbtiChip: {
+  // 나이 배지/MBTI/해시태그가 전부 이 하나의 chip 스타일을 공유한다 — 색만
+  // 텍스트에서 다르게 줘서(MBTI만 accent) "같은 모양 가족, 다른 의미"로 통일한다.
+  chip: {
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.xxs,
     borderRadius: Radii.full,
-    backgroundColor: Colors.glass.white10,
     borderWidth: 1,
-    borderColor: Colors.glass.white20,
   },
-  mbtiChipText: {
+  chipText: {
     fontFamily: FontFamily.sans,
     fontSize: 10,
     fontWeight: FontWeight.bold,
     letterSpacing: 0.3,
-    color: Colors.neutral.pureWhite,
-  },
-  tagChip: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xxs,
-    borderRadius: Radii.full,
-    borderWidth: 1,
-  },
-  tagChipText: {
-    fontFamily: FontFamily.sans,
-    fontSize: 10,
-    fontWeight: FontWeight.bold,
   },
   buttonRow: {
     flexDirection: 'row',
