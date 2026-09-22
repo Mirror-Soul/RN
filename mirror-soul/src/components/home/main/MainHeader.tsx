@@ -5,6 +5,7 @@ import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { tabHeaderStyles } from '@/src/components/home/common/tabHeaderStyles';
 import { useMatchingStatus } from '@/src/features/home/hooks/useMatchingStatus';
 import { AnimatedSwitch } from '@/src/components/common/AnimatedSwitch';
+import { FontFamily, FontWeight, Spacing } from '@/src/constants/theme';
 import type { WithSpringConfig } from 'react-native-reanimated';
 
 interface MainHeaderProps {
@@ -35,6 +36,7 @@ export default function MainHeader({ onAvatarPress }: MainHeaderProps) {
   const { colors } = useThemeColors();
   const { matchingEnabled, handleToggle, isLoading, isToggling } = useMatchingStatus();
   const isMatching = matchingEnabled ?? false;
+  const statusLabel = matchingEnabled === null ? '확인 중' : isMatching ? '매칭 켜짐' : '매칭 꺼짐';
 
   return (
     <View style={styles.container}>
@@ -47,6 +49,7 @@ export default function MainHeader({ onAvatarPress }: MainHeaderProps) {
           activeGradientColors={MATCHING_SWITCH_GRADIENT}
           springConfig={MATCHING_SWITCH_SPRING}
         />
+        <Text style={[styles.statusLabel, { color: colors.text.muted }]}>{statusLabel}</Text>
       </View>
 
       <View style={styles.titleWrapper}>
@@ -69,11 +72,19 @@ export default function MainHeader({ onAvatarPress }: MainHeaderProps) {
 const styles = StyleSheet.create({
   container: tabHeaderStyles.container,
   iconButton: tabHeaderStyles.iconButton,
-  // 우측 iconButton(44px)과 폭을 맞춰 타이틀이 계속 중앙에 오도록 한다.
+  // 우측 iconButton(44px)과 폭을 맞춰 타이틀이 계속 중앙에 오도록 한다. 스위치 + 상태
+  // 라벨 두 줄을 담으므로 높이는 고정하지 않고 내용에 맞춰 늘어나게 둔다(대략 38~40px로
+  // 우측 44px 고정 버튼보다 살짝 낮음 — container의 alignItems:'center'가 각 슬롯을
+  // 세로 중앙정렬해 시각적 차이는 미미할 것으로 예상하나 실기기 확인 필요).
   switchSlot: {
     width: 44,
-    height: 44,
-    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  statusLabel: {
+    fontFamily: FontFamily.sans,
+    fontSize: 8,
+    fontWeight: FontWeight.medium,
+    marginTop: Spacing.xxs,
   },
   titleWrapper: {
     alignItems: 'center',
