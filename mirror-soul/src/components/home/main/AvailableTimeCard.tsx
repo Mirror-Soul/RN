@@ -39,7 +39,7 @@ export default function AvailableTimeCard({
           <Feather name="clock" size={20} color={Colors.primary.electricCyan} />
         </View>
         <View>
-          <Text style={[styles.label, { color: colors.text.muted }]}>Available Time</Text>
+          <Text style={[styles.label, { color: colors.text.muted }]}>남은 시간</Text>
           {isError && !timeDisplay ? (
             <TouchableOpacity onPress={() => refetch()} accessibilityRole="button" accessibilityLabel="남은 시간 다시 조회">
               <Text style={[styles.value, styles.valueError, { color: colors.state.danger }]}>{displayValue}</Text>
@@ -57,7 +57,7 @@ export default function AvailableTimeCard({
         accessibilityRole="button"
         accessibilityLabel="시간 충전하기"
       >
-        <Text style={styles.refillText}>Refill</Text>
+        <Text style={styles.refillText}>충전</Text>
       </TouchableOpacity>
     </LinearGradient>
   );
@@ -91,8 +91,6 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.sans,
     fontSize: FontSize.xs,
     fontWeight: FontWeight.black,
-    letterSpacing: 1.1,
-    textTransform: 'uppercase',
     marginBottom: 6,
   },
   value: {
@@ -115,8 +113,6 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.sans,
     fontSize: FontSize.xs,
     fontWeight: FontWeight.black,
-    letterSpacing: 1.1,
-    textTransform: 'uppercase',
     color: Colors.primary.soulBlack,
   },
 });
