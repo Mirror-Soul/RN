@@ -151,6 +151,21 @@ export const ProfileScreen = () => {
                 </View>
                 <Text style={[styles.timeLabel, { color: colors.text.secondary }]}>남은 대화 시간</Text>
               </View>
+              {isTimeLoading ? (
+                <ActivityIndicator style={styles.timeLoading} color={colors.brand.accent} />
+              ) : isTimeError ? (
+                <Pressable onPress={() => refetchTime()} accessibilityRole="button" accessibilityLabel="남은 대화 시간 다시 조회" style={styles.timeErrorWrapper}>
+                  <Text style={[styles.timeError, { color: colors.state.danger }]}>재시도</Text>
+                </Pressable>
+              ) : (
+                <Text style={[styles.timeValue, { color: colors.text.primary }]}>{remainingTime}</Text>
+              )}
+            </View>
+            <View style={styles.timeActionRow}>
+              <View style={styles.availabilityCopy}>
+                <Feather name="zap" size={14} color={colors.brand.accent} />
+                <Text style={[styles.availabilityText, { color: colors.text.secondary }]}>충전 후 바로 사용 가능</Text>
+              </View>
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel="대화 시간 채우기"
@@ -160,17 +175,6 @@ export const ProfileScreen = () => {
                 <Feather name="plus" size={16} color={colors.brand.accent} />
                 <Text style={[styles.refillButtonText, { color: colors.brand.accent }]}>시간 채우기</Text>
               </Pressable>
-            </View>
-            <View style={styles.timeContentRow}>
-              {isTimeLoading ? (
-                <ActivityIndicator style={styles.timeLoading} color={colors.brand.accent} />
-              ) : isTimeError ? (
-                <Pressable onPress={() => refetchTime()} accessibilityRole="button" accessibilityLabel="남은 대화 시간 다시 조회" style={styles.timeErrorWrapper}>
-                  <Text style={[styles.timeError, { color: colors.state.danger }]}>시간을 불러오지 못했습니다 · 다시 시도</Text>
-                </Pressable>
-              ) : (
-                <Text style={[styles.timeValue, { color: colors.text.primary }]}>{remainingTime}</Text>
-              )}
             </View>
           </Animated.View>
 
@@ -260,11 +264,13 @@ const styles = StyleSheet.create({
   timeLabelGroup: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
   timeIcon: { width: 30, height: 30, borderRadius: Radii.md, alignItems: 'center', justifyContent: 'center' },
   timeLabel: { fontFamily: FontFamily.sans, fontWeight: FontWeight.medium, fontSize: FontSize.sm },
-  timeContentRow: { marginTop: Spacing.md },
-  timeValue: { fontFamily: FontFamily.mono, fontWeight: FontWeight.bold, fontSize: 32, lineHeight: 40, letterSpacing: -1.2 },
-  timeLoading: { height: 40, alignItems: 'flex-start' },
+  timeValue: { fontFamily: FontFamily.mono, fontWeight: FontWeight.bold, fontSize: 28, lineHeight: 36, letterSpacing: -1.1 },
+  timeLoading: { height: 36, alignItems: 'flex-end' },
   timeErrorWrapper: {},
   timeError: { fontFamily: FontFamily.sans, fontWeight: FontWeight.medium, fontSize: FontSize.sm, textDecorationLine: 'underline' },
+  timeActionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.md, marginTop: Spacing.md },
+  availabilityCopy: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs, flex: 1 },
+  availabilityText: { fontFamily: FontFamily.sans, fontWeight: FontWeight.medium, fontSize: FontSize.sm },
   refillButton: {
     minWidth: 108, minHeight: 38, borderRadius: Radii.md, borderWidth: 1, paddingHorizontal: Spacing.md,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.xs,
