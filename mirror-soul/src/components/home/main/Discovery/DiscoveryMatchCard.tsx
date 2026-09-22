@@ -6,8 +6,24 @@ import { JOB_LABEL } from '@/src/constants/jobLabels';
 import type { Recommendation } from '@/src/types/api/home';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as Haptics from 'expo-haptics';
 import React, { useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, runOnJS, WithSpringConfig } from 'react-native-reanimated';
+import PhotoLightbox from './PhotoLightbox';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const SWIPE_DISTANCE_THRESHOLD = SCREEN_WIDTH * 0.3;
+const SWIPE_VELOCITY_THRESHOLD = 500;
+
+// 헤더 매칭 스위치(MainHeader.tsx)와 동일한 톤 — 기본 스프링보다 감쇠를 늘리고
+// 강성을 낮춰 원위치로 돌아올 때 덜 튕기고 더 유연하게 움직이게 한다.
+const CARD_SPRING_CONFIG: WithSpringConfig = {
+  damping: 20,
+  stiffness: 100,
+  mass: 1,
+};
 
 interface DiscoveryMatchCardProps {
   match: Recommendation;
@@ -19,19 +35,71 @@ interface DiscoveryMatchCardProps {
 /**
  * DiscoveryMatchCard 컴포넌트 (SRP)
  * 발견 탭 추천 카드 UI를 담당하는 프레젠테이션 컴포넌트입니다.
- * 패스/통화하기 액션은 별도 푸터가 아니라 카드 하단에 통합되어 있다 — 얇은
- * 구분선만 두어 "하나의 카드"로 읽히면서도 정보 영역과 액션 영역이 구분되게 한다.
+ * 패스는 버튼이 아니라 카드를 좌우로 스와이프하는 제스처로 처리한다(방향과 무관하게
+ * 다음 후보로 넘어감). 카드 배경/이름/메타/태그 영역을 탭하면 상세 모달이 열리고,
+ * 사진을 탭하면 사진만 크게 보는 라이트박스가, 한줄소개 "더보기"는 모달이 아니라
+ * 카드 안에서 텍스트를 펼치는 인라인 확장으로 각각 분리되어 있다. 통화하기만 남은
+ * 명시적 버튼이다.
  */
 export default function DiscoveryMatchCard({ match, onOpenDetail, onPass, onConnect }: DiscoveryMatchCardProps) {
   const { colors } = useThemeColors();
   const [imageFailed, setImageFailed] = useState(false);
   const [isSummaryTruncated, setIsSummaryTruncated] = useState(false);
+  const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
+  const [isLightboxVisible, setIsLightboxVisible] = useState(false);
   const isScoreKnown = Number.isFinite(match.recommendationScore);
 
+  const translateX = useSharedValue(0);
+
+  const triggerSwipeHaptic = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  };
+
+  // 스와이프 제스처 밖(수직 ScrollView)과 충돌하지 않도록 수평 이동이 확실할 때만
+  // 이 제스처가 가져가고, 수직으로 더 많이 움직이면 스크롤에 양보한다.
+  const panGesture = Gesture.Pan()
+    .activeOffsetX([-10, 10])
+    .failOffsetY([-15, 15])
+    .onUpdate((event) => {
+      translateX.value = event.translationX;
+    })
+    .onEnd((event) => {
+      const passedThreshold =
+        Math.abs(event.translationX) > SWIPE_DISTANCE_THRESHOLD || Math.abs(event.velocityX) > SWIPE_VELOCITY_THRESHOLD;
+
+      if (passedThreshold) {
+        const direction = event.translationX > 0 ? 1 : -1;
+        runOnJS(triggerSwipeHaptic)();
+        translateX.value = withTiming(direction * SCREEN_WIDTH * 1.5, { duration: 220 }, (finished) => {
+          if (finished) {
+            runOnJS(onPass)();
+          }
+        });
+      } else {
+        translateX.value = withSpring(0, CARD_SPRING_CONFIG);
+      }
+    });
+
+  const cardAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: translateX.value }, { rotate: `${translateX.value / 20}deg` }],
+  }));
+
   return (
-    <View style={[styles.card, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
-      {/* 상단: 고정 비율 사진 박스 (풀블리드 아님) */}
-      <View style={styles.photoBox}>
+    <>
+    <GestureDetector gesture={panGesture}>
+    <Animated.View
+      style={[styles.card, cardAnimatedStyle, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
+    >
+      {/* 상단: 고정 비율 사진 박스 (풀블리드 아님) — 탭하면 라이트박스, chevron은 상세 모달(중복이지만
+          "여기 누르면 뭔가 열리는구나"를 알려주는 힌트로 의도적으로 남겨둠) */}
+      <TouchableOpacity
+        style={styles.photoBox}
+        onPress={() => !imageFailed && setIsLightboxVisible(true)}
+        activeOpacity={0.95}
+        disabled={imageFailed}
+        accessibilityRole="button"
+        accessibilityLabel="사진 크게 보기"
+      >
         {imageFailed ? (
           <LinearGradient colors={Colors.gradient.avatarPlaceholder} style={styles.photo}>
             <Text style={styles.photoFallbackText}>{match.name.charAt(0).toUpperCase()}</Text>
@@ -63,10 +131,10 @@ export default function DiscoveryMatchCard({ match, onOpenDetail, onPass, onConn
             <Text style={styles.scoreBadgeText}>매칭적합도 {match.recommendationScore}%</Text>
           </View>
         )}
-      </View>
+      </TouchableOpacity>
 
-      {/* 하단: 글래스 카드 정보 섹션 */}
-      <View style={styles.content}>
+      {/* 하단: 글래스 카드 정보 섹션 — 배경을 탭하면 상세 모달(더보기 토글 자체는 안쪽에서 따로 처리) */}
+      <TouchableOpacity style={styles.content} onPress={() => onOpenDetail?.(match)} activeOpacity={0.95} accessibilityRole="button" accessibilityLabel="상세 프로필 보기">
         <View style={styles.nameRow}>
           <Text style={[styles.nameText, { color: colors.text.primary }]} numberOfLines={1}>
             {match.name}
@@ -94,7 +162,11 @@ export default function DiscoveryMatchCard({ match, onOpenDetail, onPass, onConn
         </View>
 
         <View>
-          <Text style={[styles.summaryText, { color: colors.text.secondary }]} numberOfLines={2} ellipsizeMode="tail">
+          <Text
+            style={[styles.summaryText, { color: colors.text.secondary }]}
+            numberOfLines={isSummaryExpanded ? undefined : 2}
+            ellipsizeMode="tail"
+          >
             &quot;{match.selfIntroduction}&quot;
           </Text>
 
@@ -109,14 +181,16 @@ export default function DiscoveryMatchCard({ match, onOpenDetail, onPass, onConn
             &quot;{match.selfIntroduction}&quot;
           </Text>
 
+          {/* 더보기/접기는 상세 모달이 아니라 카드 안에서 텍스트만 펼치는 인라인 확장 —
+              카드 배경 탭이 이미 모달을 여니, 여기서까지 같은 곳으로 보내면 중복이다. */}
           {isSummaryTruncated && (
             <TouchableOpacity
-              onPress={() => onOpenDetail?.(match)}
+              onPress={() => setIsSummaryExpanded((prev) => !prev)}
               activeOpacity={0.7}
               accessibilityRole="button"
-              accessibilityLabel="자기소개 전체 보기"
+              accessibilityLabel={isSummaryExpanded ? '자기소개 접기' : '자기소개 전체 보기'}
             >
-              <Text style={styles.moreText}>더보기</Text>
+              <Text style={styles.moreText}>{isSummaryExpanded ? '접기' : '더보기'}</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -131,21 +205,11 @@ export default function DiscoveryMatchCard({ match, onOpenDetail, onPass, onConn
             </View>
           ))}
         </View>
-      </View>
+      </TouchableOpacity>
 
-      {/* 카드 안으로 통합된 액션 영역 — 얇은 구분선만으로 정보 영역과 나눠 하나의 카드처럼 보이게 한다 */}
+      {/* 패스 버튼은 제거됨 — 카드를 좌우로 스와이프하는 제스처가 그 역할을 대신한다.
+          통화하기만 남아 카드 하단을 그대로 채운다. */}
       <View style={[styles.buttonRow, { borderTopColor: colors.border.primary }]}>
-        <TouchableOpacity
-          style={[styles.passButton, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
-          onPress={onPass}
-          activeOpacity={0.7}
-          accessibilityRole="button"
-          accessibilityLabel="패스"
-        >
-          <Feather name="x" size={16} color={colors.text.secondary} />
-          <Text style={[styles.buttonText, { color: colors.text.secondary }]}>패스</Text>
-        </TouchableOpacity>
-
         <TouchableOpacity style={styles.connectButtonWrapper} onPress={onConnect} activeOpacity={0.85} accessibilityRole="button" accessibilityLabel="통화하기">
           <LinearGradient
             colors={[Colors.primary.electricCyan, Colors.primary.vividPurple]}
@@ -158,7 +222,15 @@ export default function DiscoveryMatchCard({ match, onOpenDetail, onPass, onConn
           </LinearGradient>
         </TouchableOpacity>
       </View>
-    </View>
+    </Animated.View>
+    </GestureDetector>
+
+    <PhotoLightbox
+      visible={isLightboxVisible}
+      imageUrl={match.profileImageUrl}
+      onClose={() => setIsLightboxVisible(false)}
+    />
+    </>
   );
 }
 
@@ -293,21 +365,10 @@ const styles = StyleSheet.create({
   },
   buttonRow: {
     flexDirection: 'row',
-    gap: Spacing.sm,
     borderTopWidth: 1,
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.md,
     paddingBottom: Spacing.lg,
-  },
-  passButton: {
-    width: 56,
-    height: 56,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.xxs,
-    borderWidth: 1,
-    borderRadius: Radii.xl,
   },
   connectButtonWrapper: {
     flex: 1,
