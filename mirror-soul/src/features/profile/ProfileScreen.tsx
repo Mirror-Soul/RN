@@ -145,10 +145,21 @@ export const ProfileScreen = () => {
             style={[styles.timeCard, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}
           >
             <View style={styles.timeHeadingRow}>
-              <View style={[styles.timeIcon, { backgroundColor: isDark ? Colors.glass.cyan10_d3 : 'rgba(0, 71, 255, 0.09)' }]}>
-                <Feather name="clock" size={17} color={colors.brand.accent} />
+              <View style={styles.timeLabelGroup}>
+                <View style={[styles.timeIcon, { backgroundColor: isDark ? Colors.glass.cyan10_d3 : 'rgba(0, 71, 255, 0.09)' }]}>
+                  <Feather name="clock" size={17} color={colors.brand.accent} />
+                </View>
+                <Text style={[styles.timeLabel, { color: colors.text.secondary }]}>남은 대화 시간</Text>
               </View>
-              <Text style={[styles.timeLabel, { color: colors.text.secondary }]}>남은 대화 시간</Text>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="대화 시간 채우기"
+                onPress={() => setIsRefillSheetOpen(true)}
+                style={({ pressed }) => [styles.refillButton, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }, pressed && { opacity: 0.7 }]}
+              >
+                <Feather name="plus" size={16} color={colors.brand.accent} />
+                <Text style={[styles.refillButtonText, { color: colors.brand.accent }]}>시간 채우기</Text>
+              </Pressable>
             </View>
             <View style={styles.timeContentRow}>
               {isTimeLoading ? (
@@ -160,15 +171,6 @@ export const ProfileScreen = () => {
               ) : (
                 <Text style={[styles.timeValue, { color: colors.text.primary }]}>{remainingTime}</Text>
               )}
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="대화 시간 채우기"
-                onPress={() => setIsRefillSheetOpen(true)}
-                style={({ pressed }) => [styles.refillButton, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }, pressed && { opacity: 0.7 }]}
-              >
-                <Feather name="plus" size={16} color={colors.brand.accent} />
-                <Text style={[styles.refillButtonText, { color: colors.brand.accent }]}>시간 채우기</Text>
-              </Pressable>
             </View>
           </Animated.View>
 
@@ -254,16 +256,17 @@ const styles = StyleSheet.create({
   },
   accountButtonText: { fontFamily: FontFamily.sans, fontWeight: FontWeight.medium, fontSize: FontSize.sm },
   timeCard: { borderWidth: 1, borderRadius: Radii.xl, padding: Spacing.lg, marginTop: Spacing.md },
-  timeHeadingRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
+  timeHeadingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.md },
+  timeLabelGroup: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
   timeIcon: { width: 30, height: 30, borderRadius: Radii.md, alignItems: 'center', justifyContent: 'center' },
   timeLabel: { fontFamily: FontFamily.sans, fontWeight: FontWeight.medium, fontSize: FontSize.sm },
-  timeContentRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, marginTop: Spacing.md },
-  timeValue: { flex: 1, fontFamily: FontFamily.mono, fontWeight: FontWeight.bold, fontSize: 32, lineHeight: 40, letterSpacing: -1.2 },
-  timeLoading: { height: 40, flex: 1, alignItems: 'flex-start' },
-  timeErrorWrapper: { flex: 1 },
+  timeContentRow: { marginTop: Spacing.md },
+  timeValue: { fontFamily: FontFamily.mono, fontWeight: FontWeight.bold, fontSize: 32, lineHeight: 40, letterSpacing: -1.2 },
+  timeLoading: { height: 40, alignItems: 'flex-start' },
+  timeErrorWrapper: {},
   timeError: { fontFamily: FontFamily.sans, fontWeight: FontWeight.medium, fontSize: FontSize.sm, textDecorationLine: 'underline' },
   refillButton: {
-    minWidth: 108, minHeight: 48, borderRadius: Radii.md, borderWidth: 1, paddingHorizontal: Spacing.md,
+    minWidth: 108, minHeight: 38, borderRadius: Radii.md, borderWidth: 1, paddingHorizontal: Spacing.md,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.xs,
   },
   refillButtonText: { fontFamily: FontFamily.sans, fontWeight: FontWeight.medium, fontSize: FontSize.sm },
