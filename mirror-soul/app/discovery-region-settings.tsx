@@ -11,6 +11,7 @@ import { getErrorDisplayMessage } from '@/src/utils/apiErrorCode';
 import { distanceKm, findNearestRegion, sortRegionsByDistance, takeNearest } from '@/src/utils/geoDistance';
 import { logger } from '@/src/utils/logger';
 import { Feather } from '@expo/vector-icons';
+import * as Location from 'expo-location';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -55,6 +56,7 @@ export default function DiscoveryRegionSettingsScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [anchor, setAnchor] = useState<RegionCoordinate | null>(null);
   const [nearbyCount, setNearbyCount] = useState(DEFAULT_NEARBY_COUNT);
+  const [isLocating, setIsLocating] = useState(false);
   const hasInitializedRef = useRef(false);
 
   const { data: allRegions, isLoading: isCoordinatesLoading } = useRegionCoordinatesQuery();
@@ -148,6 +150,35 @@ export default function DiscoveryRegionSettingsScreen() {
     [allRegions, animateTo]
   );
 
+  // 현재 위치로 이동 — GPS 좌표를 그대로 쓰지 않고 findNearestRegion으로 가장 가까운 실제
+  // 동을 앵커로 잡는다(지도 탭/마커 드래그와 동일한 경로) — 그래야 백엔드가 아는 지역
+  // ID(anchorRegionId)로 저장할 수 있다.
+  const handleLocateMe = useCallback(async () => {
+    if (!allRegions || allRegions.length === 0 || isLocating) return;
+    setIsLocating(true);
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        showToast('위치 접근 권한이 필요합니다.', 'error');
+        return;
+      }
+      const position = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+      const nearest = findNearestRegion(
+        { latitude: position.coords.latitude, longitude: position.coords.longitude },
+        allRegions
+      );
+      if (nearest) {
+        setAnchor(nearest);
+        animateTo(nearest);
+      }
+    } catch (error) {
+      logger.error('discovery-region-settings: handleLocateMe failed', error);
+      showToast('현재 위치를 가져오지 못했습니다.', 'error');
+    } finally {
+      setIsLocating(false);
+    }
+  }, [allRegions, isLocating, animateTo, showToast]);
+
   const handleConfirm = useCallback(async () => {
     if (!anchor) return;
     try {
@@ -190,6 +221,11 @@ export default function DiscoveryRegionSettingsScreen() {
               draggable
               onDragEnd={handleMarkerDragEnd}
               anchor={{ x: 0.5, y: 0.5 }}
+              // 커스텀 마커(아이콘 포함 View)는 네이티브가 스냅샷을 찍어 이미지로 쓰는데,
+              // 기본값(false)이면 최초 마운트 시 아이콘 폰트가 아직 안 그려진 스냅샷이
+              // 찍혀서 흰 배지만 보이고 핀 아이콘이 영영 안 나타날 수 있다 — 계속
+              // 재스냅샷하도록 켠다(마커가 이 화면엔 최대 1개뿐이라 성능 영향 미미).
+              tracksViewChanges
             >
               <View style={styles.markerBadge}>
                 <Feather name="map-pin" size={18} color={Colors.primary.mapMarkerBlue} />
@@ -250,6 +286,20 @@ export default function DiscoveryRegionSettingsScreen() {
           </View>
         )}
       </View>
+
+      <TouchableOpacity
+        style={[styles.locateButton, { top: insets.top + 60 }]}
+        onPress={handleLocateMe}
+        disabled={isLocating}
+        accessibilityRole="button"
+        accessibilityLabel="현재 위치로 이동"
+      >
+        {isLocating ? (
+          <ActivityIndicator size="small" color={Colors.primary.mapMarkerBlue} />
+        ) : (
+          <Feather name="crosshair" size={18} color={Colors.primary.mapMarkerBlue} />
+        )}
+      </TouchableOpacity>
 
       {isCoordinatesLoading && (
         <View style={[styles.loadingBanner, { top: insets.top + 64 }]}>
@@ -340,6 +390,24 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 64,
     right: 16,
+  },
+  // 검색창(높이 36) 바로 아래, 우측 정렬 — bottomPanel은 앵커 유무로 높이가 크게
+  // 달라져서(프롬프트 텍스트만 있을 때 vs 슬라이더까지 다 펼쳐질 때) 그 위로 안전하게
+  // 띄우려고 높이를 역산하는 대신, 높이가 고정된 검색창 기준으로 위치를 잡았다.
+  locateButton: {
+    position: 'absolute',
+    right: 16,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#ffffff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
   },
   searchBox: {
     flexDirection: 'row',

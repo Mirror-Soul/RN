@@ -106,6 +106,12 @@ module.exports = {
           androidGoogleMapsApiKey: process.env.GOOGLE_MAPS_ANDROID_API_KEY,
         },
       ],
+      [
+        'expo-location',
+        {
+          locationWhenInUsePermission: 'Mirror Soul에서 현재 위치로 탐색 지역을 설정하기 위해 위치 접근이 필요합니다.',
+        },
+      ],
       'expo-secure-store',
       './plugins/withDisableIOSPushEntitlement',
       'expo-notifications',
