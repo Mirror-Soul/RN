@@ -1,164 +1,126 @@
-import { Feather } from '@expo/vector-icons';
-import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
+import { Radii } from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
-import { formatRegion } from '@/src/utils/formatRegion';
-import { JOB_LABEL } from '@/src/constants/jobLabels';
 import type { Recommendation } from '@/src/types/api/home';
-import { Image } from 'expo-image';
-import { LinearGradient } from 'expo-linear-gradient';
+import * as Haptics from 'expo-haptics';
 import React, { useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Dimensions, StyleSheet } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, {
+  useAnimatedStyle,
+  withSpring,
+  withTiming,
+  runOnJS,
+  WithSpringConfig,
+  SharedValue,
+} from 'react-native-reanimated';
+import DiscoveryCardContent from './DiscoveryCardContent';
+import PhotoLightbox from './PhotoLightbox';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+// DiscoveryStackPeek도 같은 값을 기준으로 "드래그가 얼마나 진행됐는지"를 계산하므로 export한다.
+export const SWIPE_DISTANCE_THRESHOLD = SCREEN_WIDTH * 0.3;
+const SWIPE_VELOCITY_THRESHOLD = 500;
+
+// 헤더 매칭 스위치(MainHeader.tsx)와 동일한 톤 — 기본 스프링보다 감쇠를 늘리고
+// 강성을 낮춰 원위치로 돌아올 때 덜 튕기고 더 유연하게 움직이게 한다.
+const CARD_SPRING_CONFIG: WithSpringConfig = {
+  damping: 20,
+  stiffness: 100,
+  mass: 1,
+};
 
 interface DiscoveryMatchCardProps {
   match: Recommendation;
   onOpenDetail?: (match: Recommendation) => void;
+  /** 오른쪽으로 스와이프 — 다음 후보로 (기존 "패스"와 동일하게 서버에 스와이프 기록). */
   onPass: () => void;
+  /** 왼쪽으로 스와이프 — 이전 후보로 돌아가기. 서버 기록 없이 로컬 위치만 되돌린다. */
+  onGoBack: () => void;
+  /** false면 이미 첫 번째 후보라 더 되돌아갈 곳이 없다는 뜻 — 왼쪽 스와이프를 커밋하지 않는다. */
+  canGoBack: boolean;
   onConnect: () => void;
+  /** 부모(DiscoveryMatchSection)가 소유 — DiscoveryStackPeek도 같은 값을 봐야 드래그
+      진행 정도에 맞춰 뒤 카드가 반응할 수 있어서, 이 카드 안에서 만들지 않고 받는다. */
+  translateX: SharedValue<number>;
 }
 
 /**
  * DiscoveryMatchCard 컴포넌트 (SRP)
- * 발견 탭 추천 카드 UI를 담당하는 프레젠테이션 컴포넌트입니다.
- * 패스/통화하기 액션은 별도 푸터가 아니라 카드 하단에 통합되어 있다 — 얇은
- * 구분선만 두어 "하나의 카드"로 읽히면서도 정보 영역과 액션 영역이 구분되게 한다.
+ * 발견 탭 추천 카드의 제스처/변환/라이트박스 셸만 담당합니다 — 실제 정보 표시(사진/
+ * 이름/메타/한줄소개/칩/버튼)는 DiscoveryCardContent가 맡고, 이 컴포넌트는 그걸
+ * 감싸서 인터랙션(콜백)을 연결하기만 합니다(DiscoveryStackPeek과 내용을 공유하기
+ * 위한 분리 — DiscoveryCardContent 자체 주석 참고).
+ * 패스는 버튼이 아니라 카드를 좌우로 스와이프하는 제스처로 처리한다 — 오른쪽은 다음
+ * 후보로, 왼쪽은 이전 후보로 돌아간다(방향에 따라 의미가 다름).
  */
-export default function DiscoveryMatchCard({ match, onOpenDetail, onPass, onConnect }: DiscoveryMatchCardProps) {
+export default function DiscoveryMatchCard({ match, onOpenDetail, onPass, onGoBack, canGoBack, onConnect, translateX }: DiscoveryMatchCardProps) {
   const { colors } = useThemeColors();
-  const [imageFailed, setImageFailed] = useState(false);
-  const [isSummaryTruncated, setIsSummaryTruncated] = useState(false);
-  const isScoreKnown = Number.isFinite(match.recommendationScore);
+  const [isLightboxVisible, setIsLightboxVisible] = useState(false);
+
+  const triggerSwipeHaptic = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  };
+
+  // 스와이프 제스처 밖(수직 ScrollView)과 충돌하지 않도록 수평 이동이 확실할 때만
+  // 이 제스처가 가져가고, 수직으로 더 많이 움직이면 스크롤에 양보한다.
+  const panGesture = Gesture.Pan()
+    .activeOffsetX([-10, 10])
+    .failOffsetY([-15, 15])
+    .onUpdate((event) => {
+      translateX.value = event.translationX;
+    })
+    .onEnd((event) => {
+      const passedThreshold =
+        Math.abs(event.translationX) > SWIPE_DISTANCE_THRESHOLD || Math.abs(event.velocityX) > SWIPE_VELOCITY_THRESHOLD;
+      const isRightSwipe = event.translationX > 0;
+      // 왼쪽 스와이프인데 더 돌아갈 후보가 없으면(첫 카드) 커밋하지 않고 원위치로 되돌린다 —
+      // 그대로 날아가게 두면 currentIndex가 안 바뀌어(0에서 클램프) 같은 카드가 다시 안
+      // 마운트되고, 이미 화면 밖으로 이동한 상태로 멈춰 빈 화면처럼 보이게 된다.
+      const canCommit = isRightSwipe || canGoBack;
+
+      if (passedThreshold && canCommit) {
+        const direction = isRightSwipe ? 1 : -1;
+        runOnJS(triggerSwipeHaptic)();
+        translateX.value = withTiming(direction * SCREEN_WIDTH * 1.5, { duration: 220 }, (finished) => {
+          if (!finished) return;
+          if (isRightSwipe) {
+            runOnJS(onPass)();
+          } else {
+            runOnJS(onGoBack)();
+          }
+        });
+      } else {
+        translateX.value = withSpring(0, CARD_SPRING_CONFIG);
+      }
+    });
+
+  const cardAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: translateX.value }, { rotate: `${translateX.value / 20}deg` }],
+  }));
 
   return (
-    <View style={[styles.card, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
-      {/* 상단: 고정 비율 사진 박스 (풀블리드 아님) */}
-      <View style={styles.photoBox}>
-        {imageFailed ? (
-          <LinearGradient colors={Colors.gradient.avatarPlaceholder} style={styles.photo}>
-            <Text style={styles.photoFallbackText}>{match.name.charAt(0).toUpperCase()}</Text>
-          </LinearGradient>
-        ) : (
-          <Image
-            source={{ uri: match.profileImageUrl }}
-            style={styles.photo}
-            contentFit="cover"
-            cachePolicy="disk"
-            transition={150}
-            onError={() => setImageFailed(true)}
-          />
-        )}
+    <>
+    <GestureDetector gesture={panGesture}>
+    <Animated.View
+      style={[styles.card, cardAnimatedStyle, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
+    >
+      <DiscoveryCardContent
+        match={match}
+        showPhotoOverlays
+        summaryExpandable
+        onPhotoPress={() => setIsLightboxVisible(true)}
+        onContentPress={() => onOpenDetail?.(match)}
+        onConnectPress={onConnect}
+      />
+    </Animated.View>
+    </GestureDetector>
 
-        <TouchableOpacity
-          style={styles.detailButton}
-          onPress={() => onOpenDetail?.(match)}
-          activeOpacity={0.8}
-          accessibilityRole="button"
-          accessibilityLabel="상세 프로필 보기"
-        >
-          <Feather name="chevron-right" size={20} color={Colors.neutral.pureWhite} />
-        </TouchableOpacity>
-
-        {isScoreKnown && (
-          <View style={styles.scoreBadge}>
-            <Feather name="zap" size={11} color={Colors.primary.soulBlack} />
-            <Text style={styles.scoreBadgeText}>매칭적합도 {match.recommendationScore}%</Text>
-          </View>
-        )}
-      </View>
-
-      {/* 하단: 글래스 카드 정보 섹션 */}
-      <View style={styles.content}>
-        <View style={styles.nameRow}>
-          <Text style={[styles.nameText, { color: colors.text.primary }]} numberOfLines={1}>
-            {match.name}
-          </Text>
-          {match.age !== null && (
-            <View style={[styles.chip, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
-              <Text style={[styles.chipText, { color: colors.text.secondary }]}>{match.age}세</Text>
-            </View>
-          )}
-          {match.jobCertificationSubmitted ? (
-            <Feather name="check-circle" size={18} color={Colors.primary.electricCyan} />
-          ) : null}
-        </View>
-
-        <View style={styles.metaRow}>
-          <Feather name="map-pin" size={13} color={colors.text.muted} />
-          <Text style={[styles.metaText, { color: colors.text.muted }]} numberOfLines={1}>
-            {formatRegion(match.residence)}
-          </Text>
-          <View style={[styles.metaDivider, { backgroundColor: colors.border.primary }]} />
-          <Feather name="briefcase" size={13} color={colors.text.muted} />
-          <Text style={[styles.metaText, { color: colors.text.muted }]} numberOfLines={1}>
-            {JOB_LABEL[match.job]}
-          </Text>
-        </View>
-
-        <View>
-          <Text style={[styles.summaryText, { color: colors.text.secondary }]} numberOfLines={2} ellipsizeMode="tail">
-            &quot;{match.selfIntroduction}&quot;
-          </Text>
-
-          {/* 화면 밖에서 줄바꿈 제한 없이 렌더링해 실제 줄 수를 측정한다 — numberOfLines가
-              걸린 위쪽 Text는 항상 최대 2줄만 보고하므로 이걸로는 잘렸는지 알 수 없다.
-              폭/폰트가 위 Text와 완전히 같아야(기기·폰트 크기와 무관하게) 정확히 측정된다. */}
-          <Text
-            style={[styles.summaryText, styles.summaryMeasure]}
-            onTextLayout={(e) => setIsSummaryTruncated(e.nativeEvent.lines.length > 2)}
-            pointerEvents="none"
-          >
-            &quot;{match.selfIntroduction}&quot;
-          </Text>
-
-          {isSummaryTruncated && (
-            <TouchableOpacity
-              onPress={() => onOpenDetail?.(match)}
-              activeOpacity={0.7}
-              accessibilityRole="button"
-              accessibilityLabel="자기소개 전체 보기"
-            >
-              <Text style={styles.moreText}>더보기</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-
-        <View style={styles.tagRow}>
-          <View style={[styles.chip, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
-            <Text style={[styles.chipText, { color: Colors.primary.electricCyan }]}>{match.mbti}</Text>
-          </View>
-          {match.hashtags.slice(0, 2).map((tag) => (
-            <View key={tag} style={[styles.chip, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
-              <Text style={[styles.chipText, { color: colors.text.secondary }]}>#{tag}</Text>
-            </View>
-          ))}
-        </View>
-      </View>
-
-      {/* 카드 안으로 통합된 액션 영역 — 얇은 구분선만으로 정보 영역과 나눠 하나의 카드처럼 보이게 한다 */}
-      <View style={[styles.buttonRow, { borderTopColor: colors.border.primary }]}>
-        <TouchableOpacity
-          style={[styles.passButton, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
-          onPress={onPass}
-          activeOpacity={0.7}
-          accessibilityRole="button"
-          accessibilityLabel="패스"
-        >
-          <Feather name="x" size={16} color={colors.text.secondary} />
-          <Text style={[styles.buttonText, { color: colors.text.secondary }]}>패스</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.connectButtonWrapper} onPress={onConnect} activeOpacity={0.85} accessibilityRole="button" accessibilityLabel="통화하기">
-          <LinearGradient
-            colors={[Colors.primary.electricCyan, Colors.primary.vividPurple]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.connectButton}
-          >
-            <Feather name="phone" size={14} color={Colors.primary.soulBlack} />
-            <Text style={[styles.buttonText, styles.connectButtonText]}>통화하기</Text>
-          </LinearGradient>
-        </TouchableOpacity>
-      </View>
-    </View>
+    <PhotoLightbox
+      visible={isLightboxVisible}
+      imageUrl={match.profileImageUrl}
+      onClose={() => setIsLightboxVisible(false)}
+    />
+    </>
   );
 }
 
@@ -168,172 +130,5 @@ const styles = StyleSheet.create({
     borderRadius: Radii.xxl,
     overflow: 'hidden',
     borderWidth: 1,
-  },
-  photoBox: {
-    width: '100%',
-    aspectRatio: 4 / 3,
-  },
-  photo: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  photoFallbackText: {
-    fontFamily: FontFamily.sans,
-    fontSize: 64,
-    fontWeight: FontWeight.black,
-    color: Colors.neutral.pureWhite,
-  },
-  detailButton: {
-    position: 'absolute',
-    top: Spacing.lg,
-    right: Spacing.lg,
-    width: 40,
-    height: 40,
-    borderRadius: Radii.full,
-    backgroundColor: Colors.glass.black40,
-    borderWidth: 1,
-    borderColor: Colors.glass.white20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  scoreBadge: {
-    position: 'absolute',
-    left: Spacing.lg,
-    bottom: Spacing.lg,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xxs,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
-    borderRadius: Radii.full,
-    backgroundColor: Colors.primary.electricCyan,
-  },
-  scoreBadgeText: {
-    fontFamily: FontFamily.sans,
-    fontWeight: FontWeight.black,
-    fontSize: 10,
-    letterSpacing: 0.2,
-    color: Colors.primary.soulBlack,
-  },
-  content: {
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.md,
-    paddingBottom: Spacing.md,
-    gap: Spacing.sm,
-  },
-  nameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-  },
-  nameText: {
-    flex: 1,
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.xl,
-    fontWeight: FontWeight.black,
-    letterSpacing: -0.3,
-  },
-  metaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-  },
-  metaText: {
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.semibold,
-    flexShrink: 1,
-  },
-  metaDivider: {
-    width: 1,
-    height: 10,
-    marginHorizontal: Spacing.xxs,
-  },
-  summaryText: {
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.medium,
-    lineHeight: 20,
-  },
-  // 실제 줄 수 측정 전용 — 화면에 보이지 않고 레이아웃 흐름에도 영향을 주지 않는다.
-  // left/right:0으로 위 summaryText와 폭을 맞춰야 줄바꿈 지점이 동일하게 측정된다.
-  summaryMeasure: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: 0,
-    opacity: 0,
-  },
-  moreText: {
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.bold,
-    marginTop: Spacing.xxs,
-    color: Colors.primary.electricCyan,
-  },
-  tagRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.xs,
-  },
-  // 나이 배지/MBTI/해시태그가 전부 이 하나의 chip 스타일을 공유한다 — 색만
-  // 텍스트에서 다르게 줘서(MBTI만 accent) "같은 모양 가족, 다른 의미"로 통일한다.
-  chip: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xxs,
-    borderRadius: Radii.full,
-    borderWidth: 1,
-  },
-  chipText: {
-    fontFamily: FontFamily.sans,
-    fontSize: 10,
-    fontWeight: FontWeight.bold,
-    letterSpacing: 0.3,
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    gap: Spacing.sm,
-    borderTopWidth: 1,
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.md,
-    paddingBottom: Spacing.lg,
-  },
-  passButton: {
-    width: 56,
-    height: 56,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.xxs,
-    borderWidth: 1,
-    borderRadius: Radii.xl,
-  },
-  connectButtonWrapper: {
-    flex: 1,
-    height: 56,
-    borderRadius: Radii.xl,
-    shadowColor: Colors.primary.electricCyan,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 10,
-    elevation: 2,
-  },
-  connectButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.xs,
-    borderRadius: Radii.xl,
-  },
-  buttonText: {
-    fontFamily: FontFamily.sans,
-    fontWeight: FontWeight.bold,
-    fontSize: FontSize.sm,
-    letterSpacing: 0.2,
-  },
-  connectButtonText: {
-    color: Colors.primary.soulBlack,
   },
 });
