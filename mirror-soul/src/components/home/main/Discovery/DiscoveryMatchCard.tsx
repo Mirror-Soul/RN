@@ -25,6 +25,7 @@ interface DiscoveryMatchCardProps {
 export default function DiscoveryMatchCard({ match, onOpenDetail, onPass, onConnect }: DiscoveryMatchCardProps) {
   const { colors } = useThemeColors();
   const [imageFailed, setImageFailed] = useState(false);
+  const [isSummaryTruncated, setIsSummaryTruncated] = useState(false);
   const isScoreKnown = Number.isFinite(match.recommendationScore);
 
   return (
@@ -92,9 +93,33 @@ export default function DiscoveryMatchCard({ match, onOpenDetail, onPass, onConn
           </Text>
         </View>
 
-        <Text style={[styles.summaryText, { color: colors.text.secondary }]} numberOfLines={2} ellipsizeMode="tail">
-          &quot;{match.selfIntroduction}&quot;
-        </Text>
+        <View>
+          <Text style={[styles.summaryText, { color: colors.text.secondary }]} numberOfLines={2} ellipsizeMode="tail">
+            &quot;{match.selfIntroduction}&quot;
+          </Text>
+
+          {/* 화면 밖에서 줄바꿈 제한 없이 렌더링해 실제 줄 수를 측정한다 — numberOfLines가
+              걸린 위쪽 Text는 항상 최대 2줄만 보고하므로 이걸로는 잘렸는지 알 수 없다.
+              폭/폰트가 위 Text와 완전히 같아야(기기·폰트 크기와 무관하게) 정확히 측정된다. */}
+          <Text
+            style={[styles.summaryText, styles.summaryMeasure]}
+            onTextLayout={(e) => setIsSummaryTruncated(e.nativeEvent.lines.length > 2)}
+            pointerEvents="none"
+          >
+            &quot;{match.selfIntroduction}&quot;
+          </Text>
+
+          {isSummaryTruncated && (
+            <TouchableOpacity
+              onPress={() => onOpenDetail?.(match)}
+              activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="자기소개 전체 보기"
+            >
+              <Text style={styles.moreText}>더보기</Text>
+            </TouchableOpacity>
+          )}
+        </View>
 
         <View style={styles.tagRow}>
           <View style={[styles.chip, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
@@ -230,6 +255,22 @@ const styles = StyleSheet.create({
     fontSize: FontSize.sm,
     fontWeight: FontWeight.medium,
     lineHeight: 20,
+  },
+  // 실제 줄 수 측정 전용 — 화면에 보이지 않고 레이아웃 흐름에도 영향을 주지 않는다.
+  // left/right:0으로 위 summaryText와 폭을 맞춰야 줄바꿈 지점이 동일하게 측정된다.
+  summaryMeasure: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    opacity: 0,
+  },
+  moreText: {
+    fontFamily: FontFamily.sans,
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.bold,
+    marginTop: Spacing.xxs,
+    color: Colors.primary.electricCyan,
   },
   tagRow: {
     flexDirection: 'row',

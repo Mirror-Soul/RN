@@ -52,7 +52,8 @@ export const MOCK_RECOMMENDATIONS: Recommendation[] = [
     job: 'FINANCE_ACCOUNTING',
     jobCertificationSubmitted: false,
     residence: { sidoName: '서울특별시', sigunguName: '용산구' },
-    selfIntroduction: '숫자랑 씨름하는 회계사예요. 요즘은 달리기에 빠져서 매일 아침 한강을 뜁니다.',
+    // 일부러 길게 써서(2줄 초과) "더보기" 동작을 목업만으로도 확인할 수 있게 함
+    selfIntroduction: '숫자랑 씨름하는 회계사예요. 요즘은 달리기에 빠져서 매일 아침 한강을 뜁니다. 재작년부터 마라톤 풀코스도 두 번 완주했고, 요즘은 서브3을 목표로 훈련 중이에요. 주말엔 러닝크루 사람들이랑 같이 뛰고 나서 브런치 먹는 게 낙입니다.',
     mbti: 'ESTJ',
     hashtags: ['러닝', '한강', '재테크'],
     profileImageUrl: '',
