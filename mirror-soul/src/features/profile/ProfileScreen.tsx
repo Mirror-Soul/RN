@@ -80,6 +80,8 @@ export const ProfileScreen = () => {
   const handleOpenIntroduction = useCallback(() => router.push('/(main)/profile-introduction'), [router]);
   const handleOpenVoiceAudio = useCallback(() => router.push('/(main)/voice-audio'), [router]);
   const handleOpenNotification = useCallback(() => router.push('/(main)/notification'), [router]);
+  const handleOpenCustomerCenter = useCallback(() => router.push('/(main)/customer-center'), [router]);
+  const handleOpenTermsPolicy = useCallback(() => router.push('/(main)/terms-policy'), [router]);
   const handleOpenAllSettings = useCallback(() => router.push('/(main)/profile-settings'), [router]);
 
   return (
@@ -208,6 +210,22 @@ export const ProfileScreen = () => {
                 label="알림 설정"
                 description="부재중 통화와 잔여 시간 알림"
                 onPress={handleOpenNotification}
+              />
+              <SettingLink
+                icon="headphones"
+                iconColor={Colors.primary.vividPink}
+                iconBackground="rgba(246, 51, 154, 0.12)"
+                label="고객 센터"
+                description="자주 묻는 질문과 이메일 문의"
+                onPress={handleOpenCustomerCenter}
+              />
+              <SettingLink
+                icon="file-text"
+                iconColor={colors.text.muted}
+                iconBackground={colors.background.glass}
+                label="약관 및 정책"
+                description="서비스 이용약관 및 개인정보 처리방침"
+                onPress={handleOpenTermsPolicy}
                 isLast={true}
               />
             </View>

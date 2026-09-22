@@ -51,7 +51,7 @@ export const ProfileIntroductionScreen = () => {
 
   return (
     <ScreenLayout withScroll centerContent={false} paddingBottomOffset={112}>
-      <Header title="내 소개" rightElement={accountButton} />
+      <Header title="내 소개" onBackPress={() => router.replace('/(main)/profile')} rightElement={accountButton} />
 
       {introductionQuery.isLoading ? (
         <View style={styles.centerState}>
@@ -95,6 +95,11 @@ export const ProfileIntroductionScreen = () => {
                   </View>
                   <View style={styles.heroCopy}>
                     <Text style={[styles.eyebrow, { color: colors.text.muted }]}>MY AI TWIN</Text>
+                    {introductionQuery.isPreview ? (
+                      <View style={styles.previewBadge}>
+                        <Text style={styles.previewBadgeText}>개발용 목 데이터</Text>
+                      </View>
+                    ) : null}
                     <Text style={[styles.name, { color: colors.text.primary }]}>
                       {introduction.name?.trim() || '내 프로필'}
                       {introduction.age != null ? ` · ${introduction.age}` : ''}
@@ -273,6 +278,8 @@ const styles = StyleSheet.create({
   twinDot: { position: 'absolute', right: 1, bottom: 2, width: 15, height: 15, borderRadius: Radii.full, backgroundColor: Colors.primary.successGreen, borderColor: Colors.neutral.pureWhite, borderWidth: 2 },
   heroCopy: { flex: 1, gap: Spacing.xs },
   eyebrow: { fontFamily: FontFamily.sans, fontSize: FontSize.xs, fontWeight: FontWeight.black, letterSpacing: 1.25 },
+  previewBadge: { alignSelf: 'flex-start', paddingHorizontal: Spacing.sm, paddingVertical: Spacing.xxs, borderRadius: Radii.full, backgroundColor: Colors.glass.purple20 },
+  previewBadgeText: { fontFamily: FontFamily.sans, fontSize: FontSize.xs, fontWeight: FontWeight.bold, color: Colors.primary.vividPurple },
   name: { fontFamily: FontFamily.sans, fontSize: FontSize.xxxl, fontWeight: FontWeight.black, letterSpacing: -0.8 },
   metaText: { fontFamily: FontFamily.sans, fontSize: FontSize.sm },
   jobRow: { marginTop: Spacing.xl, paddingTop: Spacing.md, borderTopWidth: 1, flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
