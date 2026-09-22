@@ -78,7 +78,11 @@ export default function RegionRadiusSlider({ steps, value, onValueChange }: Regi
     [trackWidth, thumbX, stepCount, indexToX, notifyChange]
   );
 
+  // minDistance(0): 기본값(약 10pt)이면 손가락을 움직이지 않는 순수 탭은 팬 제스처가
+  // 아예 활성화되지 않아 onStart가 안 불린다 — 트랙의 특정 지점(예: "30개" 위치)을
+  // 드래그 없이 탭만 해도 바로 스냅되게 하려면 0으로 낮춰 터치 즉시 활성화시켜야 한다.
   const pan = Gesture.Pan()
+    .minDistance(0)
     .onStart((event) => {
       updateFromX(event.x - THUMB_SIZE / 2);
     })
@@ -129,7 +133,7 @@ const styles = StyleSheet.create({
     left: 0,
     height: 4,
     borderRadius: 2,
-    backgroundColor: Colors.primary.electricCyan,
+    backgroundColor: Colors.primary.mirrorOrange,
   },
   tick: {
     position: 'absolute',
@@ -145,7 +149,7 @@ const styles = StyleSheet.create({
     borderRadius: THUMB_SIZE / 2,
     backgroundColor: '#ffffff',
     borderWidth: 2,
-    borderColor: Colors.primary.electricCyan,
+    borderColor: Colors.primary.mirrorOrange,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,

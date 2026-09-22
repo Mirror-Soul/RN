@@ -114,9 +114,15 @@ export default function DiscoveryRegionSettingsScreen() {
     (event: MapPressEvent) => {
       if (!allRegions || allRegions.length === 0) return;
       const nearest = findNearestRegion(event.nativeEvent.coordinate, allRegions);
-      if (nearest) setAnchor(nearest);
+      if (nearest) {
+        setAnchor(nearest);
+        // 탭한 좌표와 가장 가까운 실제 동(anchor)의 좌표가 다를 수 있어(동 단위 이산 데이터라
+        // 정확히 탭한 픽셀과 동 중심이 어긋남), 지도를 그 동 중심으로 다시 맞춰줘야 "여기가
+        // 내가 고른 곳"이 명확해진다 — 드래그/검색 선택과 동일하게 맞춘다.
+        animateTo(nearest);
+      }
     },
-    [allRegions]
+    [allRegions, animateTo]
   );
 
   const handleMarkerDragEnd = useCallback(
@@ -173,8 +179,8 @@ export default function DiscoveryRegionSettingsScreen() {
             <Circle
               center={{ latitude: anchor.latitude, longitude: anchor.longitude }}
               radius={radiusMeters}
-              fillColor="rgba(0, 211, 243, 0.12)"
-              strokeColor="rgba(0, 211, 243, 0.6)"
+              fillColor="rgba(255, 137, 4, 0.12)"
+              strokeColor="rgba(255, 137, 4, 0.6)"
               strokeWidth={1.5}
             />
             {/* 기본 마커(Google 빨간 핀)는 브랜드 컬러와 충돌해서 커스텀 도트 마커로 교체 */}
@@ -259,7 +265,7 @@ export default function DiscoveryRegionSettingsScreen() {
           <>
             <View style={styles.anchorHeader}>
               <View style={styles.anchorIconWrapper}>
-                <Feather name="map-pin" size={16} color={Colors.primary.electricCyan} />
+                <Feather name="map-pin" size={16} color={Colors.primary.mirrorOrange} />
               </View>
               <View style={styles.anchorTextGroup}>
                 <Text style={styles.anchorName}>{anchor.eupmyeondongName}</Text>
@@ -275,9 +281,18 @@ export default function DiscoveryRegionSettingsScreen() {
             <RegionRadiusSlider steps={availableSteps} value={selectedCount} onValueChange={setNearbyCount} />
             <View style={styles.stepLabelRow}>
               {availableSteps.map((step) => (
-                <Text key={step} style={styles.stepLabelText}>
-                  {step}개
-                </Text>
+                <TouchableOpacity
+                  key={step}
+                  onPress={() => setNearbyCount(step)}
+                  hitSlop={8}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${step}개 선택`}
+                  accessibilityState={{ selected: step === selectedCount }}
+                >
+                  <Text style={[styles.stepLabelText, step === selectedCount && styles.stepLabelTextActive]}>
+                    {step}개
+                  </Text>
+                </TouchableOpacity>
               ))}
             </View>
 
@@ -424,7 +439,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(0, 211, 243, 0.12)',
+    backgroundColor: 'rgba(255, 137, 4, 0.12)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -442,7 +457,7 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.sans,
     fontSize: FontSize.sm,
     fontWeight: FontWeight.medium,
-    color: Colors.primary.electricCyan,
+    color: Colors.primary.mirrorOrange,
     marginTop: 2,
   },
   divider: {
@@ -469,6 +484,10 @@ const styles = StyleSheet.create({
     fontWeight: FontWeight.medium,
     color: 'rgba(0,0,0,0.4)',
   },
+  stepLabelTextActive: {
+    color: Colors.primary.mirrorOrange,
+    fontWeight: FontWeight.bold,
+  },
   confirmButton: {
     height: 64,
     borderRadius: Radii.xxl,
@@ -491,7 +510,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     backgroundColor: '#ffffff',
     borderWidth: 3,
-    borderColor: Colors.primary.electricCyan,
+    borderColor: Colors.primary.mirrorOrange,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
@@ -504,6 +523,6 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: Colors.primary.electricCyan,
+    backgroundColor: Colors.primary.mirrorOrange,
   },
 });
