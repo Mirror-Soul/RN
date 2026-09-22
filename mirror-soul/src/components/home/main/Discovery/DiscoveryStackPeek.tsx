@@ -22,11 +22,11 @@ interface DiscoveryStackPeekProps {
  * DiscoveryStackPeek 컴포넌트 (SRP)
  * 다음 후보 카드 — 평소(드래그 안 할 때)엔 뒤에 숨어 거의 안 보이다가, 위 카드를
  * 옆으로 미는 만큼만 살짝 드러난다(항상 뚜렷하게 보이는 정적 스택이 아님).
- * DiscoveryMatchCard와 같은 뼈대(사진 + 이름/나이 + 지역·직업 + 한줄소개 1줄)를
- * 재현하되, MBTI/해시태그 칩과 버튼처럼 가장 무거운 요소는 뺀다 — 장식 레이어가
- * 실제 카드보다 시각적으로 무거워지면(특히 앞 카드를 가리는 느낌) 안 되기 때문에,
- * 내용 범위(칩/버튼 제외)와 최대 노출 강도(opacity/scale 상한을 앞 카드보다 낮게)
- * 둘 다로 "이건 미리보기일 뿐"이라는 느낌을 유지한다. 인터랙션 없음(pointerEvents="none").
+ * DiscoveryMatchCard와 거의 같은 내용(사진 + 이름/나이 + 지역·직업 + 한줄소개 1줄 +
+ * MBTI/해시태그 칩 + 통화하기 버튼 모양)을 재현한다 — 다만 버튼은 순수 시각 요소일
+ * 뿐 실제로 탭할 수 없다(전체가 pointerEvents="none"). 내용이 실제 카드에 가까워진
+ * 만큼, 최대 노출 강도(opacity/scale 상한)는 앞 카드보다 낮게 유지해 다 드러나도
+ * "미리보기"로 읽히게 한다.
  */
 export default function DiscoveryStackPeek({ match, translateX, swipeThreshold }: DiscoveryStackPeekProps) {
   const { colors } = useThemeColors();
@@ -85,6 +85,30 @@ export default function DiscoveryStackPeek({ match, translateX, swipeThreshold }
         <Text style={[styles.summaryText, { color: colors.text.secondary }]} numberOfLines={1} ellipsizeMode="tail">
           &quot;{match.selfIntroduction}&quot;
         </Text>
+
+        <View style={styles.tagRow}>
+          <View style={[styles.chip, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
+            <Text style={[styles.chipText, { color: Colors.primary.electricCyan }]}>{match.mbti}</Text>
+          </View>
+          {match.hashtags.slice(0, 2).map((tag) => (
+            <View key={tag} style={[styles.chip, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
+              <Text style={[styles.chipText, { color: colors.text.secondary }]}>#{tag}</Text>
+            </View>
+          ))}
+        </View>
+      </View>
+
+      {/* 통화하기 버튼 모양만 재현 — 전체가 pointerEvents="none"이라 실제로 탭은 안 된다 */}
+      <View style={[styles.buttonRow, { borderTopColor: colors.border.primary }]}>
+        <LinearGradient
+          colors={[Colors.primary.electricCyan, Colors.primary.vividPurple]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.connectButton}
+        >
+          <Feather name="phone" size={14} color={Colors.primary.soulBlack} />
+          <Text style={[styles.buttonText, styles.connectButtonText]}>통화하기</Text>
+        </LinearGradient>
       </View>
     </Animated.View>
   );
@@ -149,5 +173,47 @@ const styles = StyleSheet.create({
     fontSize: FontSize.sm,
     fontWeight: FontWeight.medium,
     lineHeight: 20,
+  },
+  tagRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.xs,
+  },
+  chip: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xxs,
+    borderRadius: Radii.full,
+    borderWidth: 1,
+  },
+  chipText: {
+    fontFamily: FontFamily.sans,
+    fontSize: 10,
+    fontWeight: FontWeight.bold,
+    letterSpacing: 0.3,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    borderTopWidth: 1,
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.lg,
+  },
+  connectButton: {
+    flex: 1,
+    height: 56,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.xs,
+    borderRadius: Radii.xl,
+  },
+  buttonText: {
+    fontFamily: FontFamily.sans,
+    fontWeight: FontWeight.bold,
+    fontSize: FontSize.sm,
+    letterSpacing: 0.2,
+  },
+  connectButtonText: {
+    color: Colors.primary.soulBlack,
   },
 });
