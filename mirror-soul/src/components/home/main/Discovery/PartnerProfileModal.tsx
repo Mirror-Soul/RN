@@ -190,7 +190,7 @@ export default function PartnerProfileModal({ match, onClose, onConnectNow }: Pa
                 )}
               </Text>
               <View style={styles.tagRow}>
-                {displayedMatch.hashtags.map((tag) => (
+                {(detail?.personalityTags ?? displayedMatch.hashtags).map((tag) => (
                   <View key={tag} style={styles.aiTag}>
                     <Text style={styles.aiTagText}># {tag}</Text>
                   </View>
@@ -203,21 +203,21 @@ export default function PartnerProfileModal({ match, onClose, onConnectNow }: Pa
                 style={[styles.balanceCard, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
                 accessible
                 accessibilityLabel={
-                  detail
+                  detail?.mbtiAxisScores
                     ? `성향 밸런스: ${MBTI_AXES.map(
                         ([field, left, right]) =>
-                          `${left} ${detail.mbtiIndicators[field]}%, ${right} ${100 - detail.mbtiIndicators[field]}%`,
+                          `${left} ${detail.mbtiAxisScores?.[field] ?? 0}%, ${right} ${100 - (detail.mbtiAxisScores?.[field] ?? 0)}%`,
                       ).join(', ')}`
                     : '성향 밸런스 불러오는 중'
                 }
               >
-                {detail ? (
+                {detail?.mbtiAxisScores ? (
                   MBTI_AXES.map(([field, left, right]) => (
                     <MbtiAxisBar
                       key={field}
                       leftLabel={left}
                       rightLabel={right}
-                      value={detail.mbtiIndicators[field]}
+                      value={detail.mbtiAxisScores?.[field] ?? 0}
                       mutedColor={colors.text.muted}
                       trackColor={colors.border.strong}
                     />
@@ -230,8 +230,10 @@ export default function PartnerProfileModal({ match, onClose, onConnectNow }: Pa
 
             <Section title="목소리 미리듣기" index={2}>
               <View style={[styles.voiceCard, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
-                {detail ? (
+                {detail?.voicePreview ? (
                   <VoicePreviewPlayer voicePreview={detail.voicePreview} />
+                ) : detail ? (
+                  <Text style={[styles.voiceStyleText, { color: colors.text.muted }]}>음성 미리듣기를 준비 중이에요.</Text>
                 ) : (
                   <ActivityIndicator color={colors.text.muted} />
                 )}
@@ -241,7 +243,7 @@ export default function PartnerProfileModal({ match, onClose, onConnectNow }: Pa
             <Section title="이 사람의 이야기" index={3}>
               <View style={[styles.bioCard, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
                 <Text style={[styles.bioText, { color: colors.text.secondary }]}>
-                  &quot;{displayedMatch.selfIntroduction}&quot;
+                  &quot;{detail?.selfIntroduction ?? displayedMatch.selfIntroduction}&quot;
                 </Text>
               </View>
             </Section>
@@ -357,7 +359,7 @@ function VoicePreviewPlayer({ voicePreview }: { voicePreview: VoicePreview }) {
       </TouchableOpacity>
       <View style={styles.voiceInfo}>
         <Text style={[styles.voiceStyleText, { color: colors.text.primary }]}>
-          {formatDurationLabel(Math.round(voicePreview.durationMs / 1000))}
+          {formatDurationLabel(voicePreview.durationMs == null ? null : Math.round(voicePreview.durationMs / 1000))}
         </Text>
       </View>
     </>

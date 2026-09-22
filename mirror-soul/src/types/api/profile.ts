@@ -1,4 +1,5 @@
 import { ApiResponse } from './common';
+import type { JobEnum, MbtiEnum } from './onboarding';
 
 /**
  * 마이페이지(Profile) 도메인 API 타입 정의
@@ -16,6 +17,49 @@ export interface MyProfileResult {
 }
 
 export type MyProfileResponse = ApiResponse<MyProfileResult>;
+
+// ─────────────────────────────────────────────
+// GET /my-page/introduction
+// ─────────────────────────────────────────────
+/**
+ * 내 소개 전용 상세 프로필. 추천 상세(`GET /home/recommendations/{uuid}`)와
+ * 동일한 필드 계약을 사용하되, 본인 조회에는 추천 노출/자기 자신 차단 규칙을 적용하지 않는다.
+ */
+export interface IntroductionRegion {
+  sidoName: string;
+  sigunguName: string;
+}
+
+export interface MbtiAxisScores {
+  ieScore: number;
+  nsScore: number;
+  ftScore: number;
+  pjScore: number;
+}
+
+export interface IntroductionVoicePreview {
+  audioUrl: string;
+  contentType: string | null;
+  durationMs: number | null;
+}
+
+export interface MyIntroductionResult {
+  userUuid: string;
+  name: string | null;
+  age: number | null;
+  profileImageUrl: string | null;
+  syncRate: number | null;
+  region: IntroductionRegion | null;
+  job: JobEnum | null;
+  jobCertificationSubmitted: boolean;
+  selfIntroduction: string | null;
+  mbti: MbtiEnum | null;
+  mbtiAxisScores: MbtiAxisScores | null;
+  personalityTags: string[];
+  voicePreview: IntroductionVoicePreview | null;
+}
+
+export type MyIntroductionResponse = ApiResponse<MyIntroductionResult>;
 
 // ─────────────────────────────────────────────
 // GET /my-page/buy-time

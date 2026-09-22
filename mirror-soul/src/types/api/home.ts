@@ -81,7 +81,7 @@ export type RecommendationsResponse = ApiResponse<RecommendationsResult>;
 /** 백엔드는 RegionDTO/ResidenceDTO로 분리해서 쓰지만 모양이 Residence와 동일하다 */
 export type Region = Residence;
 
-export interface MbtiIndicators {
+export interface MbtiAxisScores {
   ieScore: number;
   nsScore: number;
   ftScore: number;
@@ -90,8 +90,8 @@ export interface MbtiIndicators {
 
 export interface VoicePreview {
   audioUrl: string;
-  contentType: string;
-  durationMs: number;
+  contentType: string | null;
+  durationMs: number | null;
 }
 
 export interface RecommendationDetailResult {
@@ -100,14 +100,14 @@ export interface RecommendationDetailResult {
   age: number | null;
   profileImageUrl: string;
   syncRate: number | null;
-  region: Region;
-  job: JobEnum;
+  region: Region | null;
+  job: JobEnum | null;
   jobCertificationSubmitted: boolean;
-  selfIntroduction: string;
-  mbti: MbtiEnum;
-  mbtiIndicators: MbtiIndicators;
-  hashtags: string[];
-  voicePreview: VoicePreview;
+  selfIntroduction: string | null;
+  mbti: MbtiEnum | null;
+  mbtiAxisScores: MbtiAxisScores | null;
+  personalityTags: string[];
+  voicePreview: VoicePreview | null;
 }
 
 export type RecommendationDetailResponse = ApiResponse<RecommendationDetailResult>;
