@@ -11,6 +11,7 @@ import DiscoveryMatchCard, { SWIPE_DISTANCE_THRESHOLD } from './DiscoveryMatchCa
 import DiscoveryStackPeek from './DiscoveryStackPeek';
 import { shouldPrefetchNextPage } from './discoveryPagination';
 import { MOCK_RECOMMENDATIONS } from './mockRecommendations';
+import { useRefreshCooldown } from './useRefreshCooldown';
 
 interface DiscoveryMatchSectionProps {
   onPass?: (userUuid: string) => void;
@@ -28,6 +29,7 @@ export default function DiscoveryMatchSection({ onPass, onConnect, onOpenDetail 
   const { recommendations, isLoading, isFetching, isError, hasNextPage, isFetchingNextPage, fetchNextPage, refetch } =
     useRecommendationsQuery();
   const swipeMutation = useSwipeMutation();
+  const { isInCooldown, startCooldown } = useRefreshCooldown();
   const [currentIndex, setCurrentIndex] = useState(0);
   // 같은 카드에 대한 패스 중복 실행(빠른 연속 탭)을 막는 동기 락 — swipeMutation 자체는
   // 백엔드가 멱등하게 처리해 중복 호출 비용이 없지만(useSwipeMutation.ts 참고), currentIndex는
@@ -91,6 +93,9 @@ export default function DiscoveryMatchSection({ onPass, onConnect, onOpenDetail 
     if (result.isSuccess) {
       setCurrentIndex(0);
     }
+    // 성공/실패 여부와 무관하게 쿨다운 — 연타로 서버 호출이 반복되는 걸 막는 게 목적이라
+    // 결과와 상관없이 방금 요청 하나가 나갔다는 사실 자체가 쿨다운 시작 조건이다.
+    startCooldown();
   };
 
   const refreshHeader = (
@@ -103,7 +108,7 @@ export default function DiscoveryMatchSection({ onPass, onConnect, onOpenDetail 
       <TouchableOpacity
         style={styles.refreshButton}
         onPress={handleRefresh}
-        disabled={isFetching}
+        disabled={isFetching || isInCooldown}
         activeOpacity={0.7}
         accessibilityRole="button"
         accessibilityLabel="추천 목록 새로고침"
