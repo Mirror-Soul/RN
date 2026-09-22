@@ -149,7 +149,7 @@ export const ProfileScreen = () => {
                 <View style={[styles.timeIcon, { backgroundColor: isDark ? Colors.glass.cyan10_d3 : 'rgba(0, 71, 255, 0.09)' }]}>
                   <Feather name="clock" size={17} color={colors.brand.accent} />
                 </View>
-                <Text style={[styles.timeLabel, { color: colors.text.secondary }]}>남은 대화 시간</Text>
+                <Text style={[styles.timeLabel, { color: colors.text.secondary }]} numberOfLines={1}>남은 대화 시간</Text>
               </View>
               {isTimeLoading ? (
                 <ActivityIndicator style={styles.timeLoading} color={colors.brand.accent} />
@@ -160,12 +160,6 @@ export const ProfileScreen = () => {
               ) : (
                 <Text style={[styles.timeValue, { color: colors.text.primary }]}>{remainingTime}</Text>
               )}
-            </View>
-            <View style={styles.timeActionRow}>
-              <View style={styles.availabilityCopy}>
-                <Feather name="zap" size={14} color={colors.brand.accent} />
-                <Text style={[styles.availabilityText, { color: colors.text.secondary }]}>충전 후 바로 사용 가능</Text>
-              </View>
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel="대화 시간 채우기"
@@ -260,22 +254,19 @@ const styles = StyleSheet.create({
   },
   accountButtonText: { fontFamily: FontFamily.sans, fontWeight: FontWeight.medium, fontSize: FontSize.sm },
   timeCard: { borderWidth: 1, borderRadius: Radii.xl, padding: Spacing.lg, marginTop: Spacing.md },
-  timeHeadingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.md },
-  timeLabelGroup: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
+  timeHeadingRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
+  timeLabelGroup: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, minWidth: 0 },
   timeIcon: { width: 30, height: 30, borderRadius: Radii.md, alignItems: 'center', justifyContent: 'center' },
   timeLabel: { fontFamily: FontFamily.sans, fontWeight: FontWeight.medium, fontSize: FontSize.sm },
-  timeValue: { fontFamily: FontFamily.mono, fontWeight: FontWeight.bold, fontSize: 28, lineHeight: 36, letterSpacing: -1.1 },
-  timeLoading: { height: 36, alignItems: 'flex-end' },
+  timeValue: { fontFamily: FontFamily.mono, fontWeight: FontWeight.bold, fontSize: FontSize.xl, lineHeight: 28, letterSpacing: -0.8 },
+  timeLoading: { width: 28, height: 28 },
   timeErrorWrapper: {},
   timeError: { fontFamily: FontFamily.sans, fontWeight: FontWeight.medium, fontSize: FontSize.sm, textDecorationLine: 'underline' },
-  timeActionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.md, marginTop: Spacing.md },
-  availabilityCopy: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs, flex: 1 },
-  availabilityText: { fontFamily: FontFamily.sans, fontWeight: FontWeight.medium, fontSize: FontSize.sm },
   refillButton: {
-    minWidth: 108, minHeight: 38, borderRadius: Radii.md, borderWidth: 1, paddingHorizontal: Spacing.md,
+    minWidth: 88, minHeight: 34, borderRadius: Radii.md, borderWidth: 1, paddingHorizontal: Spacing.sm,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.xs,
   },
-  refillButtonText: { fontFamily: FontFamily.sans, fontWeight: FontWeight.medium, fontSize: FontSize.sm },
+  refillButtonText: { fontFamily: FontFamily.sans, fontWeight: FontWeight.medium, fontSize: FontSize.xs },
   managementSection: { marginTop: Spacing.xl },
   supportSection: { marginTop: Spacing.xl },
   sectionLabel: { fontFamily: FontFamily.sans, fontWeight: FontWeight.bold, fontSize: FontSize.sm, letterSpacing: 0.6, marginLeft: Spacing.xs, marginBottom: Spacing.sm },
