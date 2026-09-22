@@ -58,6 +58,11 @@ const getOnboardingRoute = (status: string | null) => {
   }
 };
 
+const isPublicAuthRoute = (pathname: string) =>
+  pathname === '/login' ||
+  pathname === '/forgot-password' ||
+  pathname.startsWith('/signup');
+
 function RootLayout() {
   const rootNavigationState = useRootNavigationState();
   const pathname = usePathname();
@@ -91,8 +96,7 @@ function RootLayout() {
           // 예: 알림 없이 /chat/{id}로 직접 들어온 콜드 스타트(딥링크)를 이 effect가 매번
           // /(main)으로 덮어써버린다. usePushNotificationSetup의 100ms 보정은 알림 응답이
           // 있을 때만 동작하므로, 일반 딥링크는 여기서 직접 현재 경로를 지켜줘야 한다.
-          const isOnPreAuthScreen = pathname === '/login' || pathname.startsWith('/signup');
-          if (isOnPreAuthScreen) {
+          if (isPublicAuthRoute(pathname)) {
             router.replace('/(main)');
           }
         } else if (userStatus?.startsWith('ONBOARD_')) {
@@ -101,8 +105,11 @@ function RootLayout() {
       } else {
         // (main) 그룹의 홈 탭도 파일명이 index라 로그인 화면을 "/"에 두면 두 화면이
         // 같은 경로를 두고 충돌해 로그아웃 후에도 홈 화면에 머무는 버그가 생긴다.
-        // 그래서 로그인 화면은 /login(app/login.tsx)이라는 고유 경로를 쓴다.
-        router.replace('/login');
+        // 로그인·회원가입·비밀번호 찾기는 로그인 전에도 접근 가능해야 한다.
+        // 그 밖의 경로만 로그인 화면으로 보낸다.
+        if (!isPublicAuthRoute(pathname)) {
+          router.replace('/login');
+        }
       }
     }, 0);
 
