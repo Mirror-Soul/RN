@@ -82,7 +82,6 @@ export const ProfileScreen = () => {
   const handleOpenNotification = useCallback(() => router.push('/(main)/notification'), [router]);
   const handleOpenCustomerCenter = useCallback(() => router.push('/(main)/customer-center'), [router]);
   const handleOpenTermsPolicy = useCallback(() => router.push('/(main)/terms-policy'), [router]);
-  const handleOpenAllSettings = useCallback(() => router.push('/(main)/profile-settings'), [router]);
 
   return (
     <>
@@ -93,19 +92,6 @@ export const ProfileScreen = () => {
               <Text style={[styles.eyebrow, { color: colors.text.muted }]}>MY SPACE</Text>
               <Text style={[styles.screenTitle, { color: colors.text.primary }]}>프로필</Text>
             </View>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="전체 설정 열기"
-              hitSlop={8}
-              onPress={handleOpenAllSettings}
-              style={({ pressed }) => [
-                styles.settingsButton,
-                { backgroundColor: colors.background.card, borderColor: colors.border.primary },
-                pressed && { opacity: 0.72 },
-              ]}
-            >
-              <Feather name="settings" size={19} color={colors.text.primary} />
-            </Pressable>
           </Animated.View>
 
           <Animated.View
@@ -164,24 +150,26 @@ export const ProfileScreen = () => {
               </View>
               <Text style={[styles.timeLabel, { color: colors.text.secondary }]}>남은 대화 시간</Text>
             </View>
-            {isTimeLoading ? (
-              <ActivityIndicator style={styles.timeLoading} color={colors.brand.accent} />
-            ) : isTimeError ? (
-              <Pressable onPress={() => refetchTime()} accessibilityRole="button" accessibilityLabel="남은 대화 시간 다시 조회">
-                <Text style={[styles.timeError, { color: colors.state.danger }]}>시간을 불러오지 못했습니다 · 다시 시도</Text>
+            <View style={styles.timeContentRow}>
+              {isTimeLoading ? (
+                <ActivityIndicator style={styles.timeLoading} color={colors.brand.accent} />
+              ) : isTimeError ? (
+                <Pressable onPress={() => refetchTime()} accessibilityRole="button" accessibilityLabel="남은 대화 시간 다시 조회" style={styles.timeErrorWrapper}>
+                  <Text style={[styles.timeError, { color: colors.state.danger }]}>시간을 불러오지 못했습니다 · 다시 시도</Text>
+                </Pressable>
+              ) : (
+                <Text style={[styles.timeValue, { color: colors.text.primary }]}>{remainingTime}</Text>
+              )}
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="대화 시간 채우기"
+                onPress={() => setIsRefillSheetOpen(true)}
+                style={({ pressed }) => [styles.refillButton, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }, pressed && { opacity: 0.7 }]}
+              >
+                <Feather name="plus" size={16} color={colors.brand.accent} />
+                <Text style={[styles.refillButtonText, { color: colors.brand.accent }]}>시간 채우기</Text>
               </Pressable>
-            ) : (
-              <Text style={[styles.timeValue, { color: colors.text.primary }]}>{remainingTime}</Text>
-            )}
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="대화 시간 채우기"
-              onPress={() => setIsRefillSheetOpen(true)}
-              style={({ pressed }) => [styles.refillButton, { backgroundColor: colors.background.glass }, pressed && { opacity: 0.7 }]}
-            >
-              <Feather name="plus" size={16} color={colors.brand.accent} />
-              <Text style={[styles.refillButtonText, { color: colors.brand.accent }]}>시간 채우기</Text>
-            </Pressable>
+            </View>
           </Animated.View>
 
           <Animated.View entering={FadeInDown.delay(150).duration(420).springify()} style={styles.managementSection}>
@@ -247,15 +235,10 @@ export const ProfileScreen = () => {
 
 const styles = StyleSheet.create({
   content: { paddingHorizontal: Spacing.xxl },
-  topBar: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: Spacing.xl,
-  },
+  topBar: { marginBottom: Spacing.lg },
   eyebrow: { fontFamily: FontFamily.sans, fontWeight: FontWeight.bold, fontSize: FontSize.xs, letterSpacing: 1.4 },
   screenTitle: {
     fontFamily: FontFamily.sans, fontWeight: FontWeight.bold, fontSize: FontSize.xxxl, lineHeight: 31, letterSpacing: -0.7, marginTop: Spacing.xxs,
-  },
-  settingsButton: {
-    width: 42, height: 42, borderRadius: Radii.lg, borderWidth: 1, alignItems: 'center', justifyContent: 'center',
   },
   identityCard: { borderWidth: 1, borderRadius: Radii.xl, padding: Spacing.lg, overflow: 'hidden' },
   identityRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
@@ -274,12 +257,14 @@ const styles = StyleSheet.create({
   timeHeadingRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
   timeIcon: { width: 30, height: 30, borderRadius: Radii.md, alignItems: 'center', justifyContent: 'center' },
   timeLabel: { fontFamily: FontFamily.sans, fontWeight: FontWeight.medium, fontSize: FontSize.sm },
-  timeValue: { fontFamily: FontFamily.mono, fontWeight: FontWeight.bold, fontSize: 34, lineHeight: 41, letterSpacing: -1.2, marginTop: Spacing.lg },
-  timeLoading: { height: 41, alignSelf: 'flex-start', marginTop: Spacing.lg },
-  timeError: { fontFamily: FontFamily.sans, fontWeight: FontWeight.medium, fontSize: FontSize.sm, marginTop: Spacing.lg, textDecorationLine: 'underline' },
+  timeContentRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, marginTop: Spacing.md },
+  timeValue: { flex: 1, fontFamily: FontFamily.mono, fontWeight: FontWeight.bold, fontSize: 32, lineHeight: 40, letterSpacing: -1.2 },
+  timeLoading: { height: 40, flex: 1, alignItems: 'flex-start' },
+  timeErrorWrapper: { flex: 1 },
+  timeError: { fontFamily: FontFamily.sans, fontWeight: FontWeight.medium, fontSize: FontSize.sm, textDecorationLine: 'underline' },
   refillButton: {
-    alignSelf: 'flex-start', minHeight: 36, borderRadius: Radii.md, marginTop: Spacing.md, paddingHorizontal: Spacing.md,
-    flexDirection: 'row', alignItems: 'center', gap: Spacing.xs,
+    minWidth: 108, minHeight: 48, borderRadius: Radii.md, borderWidth: 1, paddingHorizontal: Spacing.md,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.xs,
   },
   refillButtonText: { fontFamily: FontFamily.sans, fontWeight: FontWeight.medium, fontSize: FontSize.sm },
   managementSection: { marginTop: Spacing.xl },
