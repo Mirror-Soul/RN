@@ -210,7 +210,14 @@ export const ProfileScreen = () => {
                 label="알림 설정"
                 description="부재중 통화와 잔여 시간 알림"
                 onPress={handleOpenNotification}
+                isLast={true}
               />
+            </View>
+          </Animated.View>
+
+          <Animated.View entering={FadeInDown.delay(190).duration(420).springify()} style={styles.supportSection}>
+            <Text style={[styles.sectionLabel, { color: colors.text.muted }]}>정보 및 지원</Text>
+            <View style={[styles.settingsCard, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
               <SettingLink
                 icon="headphones"
                 iconColor={Colors.primary.vividPink}
@@ -275,7 +282,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: Spacing.xs,
   },
   refillButtonText: { fontFamily: FontFamily.sans, fontWeight: FontWeight.medium, fontSize: FontSize.sm },
-  managementSection: { marginTop: Spacing.xxl },
+  managementSection: { marginTop: Spacing.xl },
+  supportSection: { marginTop: Spacing.xl },
   sectionLabel: { fontFamily: FontFamily.sans, fontWeight: FontWeight.bold, fontSize: FontSize.sm, letterSpacing: 0.6, marginLeft: Spacing.xs, marginBottom: Spacing.sm },
   settingsCard: { borderWidth: 1, borderRadius: Radii.xl, overflow: 'hidden' },
   settingRow: { flexDirection: 'row', alignItems: 'center', minHeight: 68, paddingHorizontal: Spacing.lg, gap: Spacing.md },

@@ -9,9 +9,12 @@ import { EmailContactButton } from './components/EmailContactButton';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { Header } from '@/src/components/common/Header';
 import { ScreenLayout } from '@/src/components/common/ScreenLayout';
+import { useLocalSearchParams } from 'expo-router';
+import type { SupportInquiryTopic } from './components/EmailContactButton';
 
 export const CustomerCenterScreen = () => {
   const { colors } = useThemeColors();
+  const { topic } = useLocalSearchParams<{ topic?: SupportInquiryTopic }>();
 
   return (
     <ScreenLayout withScroll={true}>
@@ -37,7 +40,7 @@ export const CustomerCenterScreen = () => {
           entering={FadeInDown.delay(240).duration(550).springify()}
           style={styles.emailSection}
         >
-          <EmailContactButton />
+          <EmailContactButton topic={topic} />
         </Animated.View>
       </View>
     </ScreenLayout>

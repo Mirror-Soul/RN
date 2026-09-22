@@ -5,22 +5,19 @@ import PartnerProfileModal from '@/src/components/home/main/Discovery/PartnerPro
 import LocationFilterBar from '@/src/components/home/main/LocationFilterBar';
 import MainHeader from '@/src/components/home/main/MainHeader';
 import ProfileQuickActionSheet from '@/src/components/home/main/ProfileQuickActionSheet';
-import RefillModal from '@/src/components/home/main/RefillModal';
 import SoulConnectTip from '@/src/components/home/main/SoulConnectTip';
 import { Layout, Spacing } from '@/src/constants/theme';
 import { MAIN_ROUTES } from '@/src/constants/routes/mainRoutes';
 import { useLayout } from '@/src/hooks/useLayout';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { performLogout } from '@/src/services/authService';
-import { useBuyTimeMutation } from '@/src/features/profile/hooks/useBuyTimeMutation';
-import { TIME_REFILL_OPTIONS } from '@/src/features/profile/constants/timeRefillOptions';
+import { TimeRefillBottomSheet } from '@/src/features/profile/components/TimeRefillBottomSheet';
 import { usePreferredRegionQuery } from '@/src/features/home/hooks/usePreferredRegionQuery';
 import { useMatchingStatus } from '@/src/features/home/hooks/useMatchingStatus';
 import type { Recommendation } from '@/src/types/api/home';
 import { useToast } from '@/src/components/common/Toast/ToastProvider';
-import { getErrorDisplayMessage } from '@/src/utils/apiErrorCode';
 import { logger } from '@/src/utils/logger';
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInUp } from 'react-native-reanimated';
@@ -43,8 +40,6 @@ export default function MainHomeScreen() {
   const [showRefillModal, setShowRefillModal] = useState(false);
   const [showQuickActions, setShowQuickActions] = useState(false);
   const [selectedMatch, setSelectedMatch] = useState<Recommendation | null>(null);
-  const buyTimeMutation = useBuyTimeMutation();
-  const purchaseInFlightRef = useRef(false);
   const { showToast } = useToast();
   // MainHeader가 배지 자체 조회를 이미 하지만, AiStatusTicker도 같은 상태가 필요해 여기서도
   // 구독한다 — react-query가 쿼리키(['match','status'])를 공유하므로 중복 요청은 없다.
@@ -115,24 +110,6 @@ export default function MainHomeScreen() {
     setSelectedMatch(match);
   }, [showToast]);
 
-  const handleSelectPackage = useCallback(async (pkgId: string) => {
-    // isPending은 리렌더 이후에나 반영되므로, 연속 탭에 의한 중복 결제를 막으려면 동기 락이 필요하다.
-    if (purchaseInFlightRef.current) return;
-    const option = TIME_REFILL_OPTIONS.find((o) => o.id === pkgId);
-    if (!option) return;
-
-    purchaseInFlightRef.current = true;
-    try {
-      await buyTimeMutation.mutateAsync(option.seconds);
-      setShowRefillModal(false);
-    } catch (error) {
-      logger.error('handleSelectPackage: buyTime failed', error);
-      showToast(getErrorDisplayMessage(error, '시간 충전에 실패했습니다. 잠시 후 다시 시도해주세요.'), 'error');
-    } finally {
-      purchaseInFlightRef.current = false;
-    }
-  }, [buyTimeMutation, showToast]);
-
   return (
     <ScrollView
       style={[styles.scrollView, { backgroundColor: colors.background.primary }]}
@@ -177,11 +154,7 @@ export default function MainHomeScreen() {
         <SoulConnectTip />
       </Animated.View>
 
-      <RefillModal
-        visible={showRefillModal}
-        onClose={() => setShowRefillModal(false)}
-        onSelectPackage={handleSelectPackage}
-      />
+      <TimeRefillBottomSheet isOpen={showRefillModal} onClose={() => setShowRefillModal(false)} />
 
       <ProfileQuickActionSheet
         visible={showQuickActions}

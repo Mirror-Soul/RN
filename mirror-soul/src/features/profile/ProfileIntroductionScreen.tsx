@@ -91,7 +91,6 @@ export const ProfileIntroductionScreen = () => {
                         <Text style={styles.avatarFallback}>{introduction.name?.trim().charAt(0) || '나'}</Text>
                       </LinearGradient>
                     )}
-                    <View style={styles.twinDot} />
                   </View>
                   <View style={styles.heroCopy}>
                     <Text style={[styles.eyebrow, { color: colors.text.muted }]}>MY AI TWIN</Text>
@@ -111,10 +110,30 @@ export const ProfileIntroductionScreen = () => {
                 </View>
                 <View style={[styles.jobRow, { borderTopColor: colors.border.primary }]}>
                   <Feather name="briefcase" size={15} color={colors.text.muted} />
-                  <Text style={[styles.jobText, { color: colors.text.secondary }]}>
-                    {introduction.job ? jobCategories.find((job) => job.value === introduction.job)?.label ?? introduction.job : '직업 미입력'}
-                  </Text>
-                  {introduction.jobCertificationSubmitted ? <Feather name="check-circle" size={15} color={Colors.primary.successGreen} /> : null}
+                  <View style={styles.jobCopy}>
+                    <Text style={[styles.jobText, { color: colors.text.secondary }]}>
+                      {introduction.job ? jobCategories.find((job) => job.value === introduction.job)?.label ?? introduction.job : '직업 미입력'}
+                    </Text>
+                    <Text style={[styles.jobStatusText, { color: colors.text.muted }]}>
+                      {introduction.jobCertificationSubmitted ? '직업 인증 서류 제출 완료' : '직업 인증으로 신뢰 프로필을 완성해 보세요'}
+                    </Text>
+                  </View>
+                  {introduction.jobCertificationSubmitted ? (
+                    <View style={styles.jobVerifiedBadge} accessibilityLabel="직업 인증 서류 제출 완료">
+                      <Feather name="shield" size={13} color={Colors.primary.successGreen} />
+                      <Text style={styles.jobVerifiedText}>인증 서류 제출</Text>
+                    </View>
+                  ) : (
+                    <Pressable
+                      onPress={() => router.push({ pathname: '/(main)/customer-center', params: { topic: 'job-verification' } })}
+                      style={[styles.jobVerifyButton, { borderColor: colors.border.primary, backgroundColor: colors.background.glass }]}
+                      accessibilityRole="button"
+                      accessibilityLabel="직업 인증 방법 보기"
+                    >
+                      <Feather name="upload-cloud" size={14} color={Colors.primary.electricCyan} />
+                      <Text style={styles.jobVerifyText}>인증하기</Text>
+                    </Pressable>
+                  )}
                 </View>
               </View>
             </LinearGradient>
@@ -139,10 +158,36 @@ export const ProfileIntroductionScreen = () => {
                 <Text style={[styles.trainingText, { color: colors.text.muted }]}>음성 업데이트 {twinSyncQuery.data?.voiceTrainingCount ?? 0}회</Text>
                 <Text style={[styles.trainingText, { color: colors.text.muted }]}>{formatTrainingDate(twinSyncQuery.data?.lastVoiceTrainingAt)}</Text>
               </View>
+              <Pressable
+                onPress={() => router.push('/(main)/grow')}
+                style={[styles.growCta, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
+                accessibilityRole="button"
+                accessibilityLabel="성장 탭에서 트윈 키우기"
+              >
+                <View style={styles.growCtaCopy}>
+                  <Feather name="trending-up" size={16} color={Colors.primary.electricCyan} />
+                  <Text style={[styles.growCtaText, { color: colors.text.primary }]}>성장 탭에서 트윈 키우기</Text>
+                </View>
+                <Feather name="chevron-right" size={17} color={colors.text.muted} />
+              </Pressable>
             </View>
           </Section>
 
-          <Section title="성향 밸런스" index={2}>
+          <Section
+            title="성향 밸런스"
+            index={2}
+            rightElement={
+              <Pressable
+                onPress={() => router.push({ pathname: '/(main)/customer-center', params: { topic: 'mbti-change' } })}
+                style={styles.sectionAction}
+                accessibilityRole="button"
+                accessibilityLabel="MBTI 변경 문의"
+              >
+                <Feather name="camera" size={13} color={Colors.primary.vividPurple} />
+                <Text style={styles.sectionActionText}>MBTI 변경 문의</Text>
+              </Pressable>
+            }
+          >
             <View style={[styles.card, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
               {introduction.mbtiAxisScores ? (
                 MBTI_AXES.map(([field, left, right]) => (
@@ -151,6 +196,7 @@ export const ProfileIntroductionScreen = () => {
               ) : (
                 <EmptyText>성향 밸런스가 준비되면 이곳에서 확인할 수 있어요.</EmptyText>
               )}
+              <Text style={[styles.mbtiHelpText, { color: colors.text.muted }]}>검사 결과 이미지를 첨부해 문의하면 확인 절차를 안내해 드려요.</Text>
             </View>
           </Section>
 
@@ -173,25 +219,28 @@ export const ProfileIntroductionScreen = () => {
           <Section title="목소리 미리듣기" index={4}>
             <View style={[styles.card, styles.voiceCard, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
               {introduction.voicePreview ? (
-                <IntroductionVoicePlayer voicePreview={introduction.voicePreview} />
+                <IntroductionVoicePlayer voicePreview={introduction.voicePreview} onUpdate={() => router.push('/voice-update')} />
               ) : (
-                <>
-                  <View style={[styles.voiceIcon, { backgroundColor: colors.background.glass }]}>
-                    <Feather name="mic" size={20} color={Colors.primary.electricCyan} />
-                  </View>
-                  <View style={styles.voiceCopy}>
-                    <Text style={[styles.cardTitle, { color: colors.text.primary }]}>음성 미리듣기를 준비 중이에요</Text>
-                    <Text style={[styles.cardDescription, { color: colors.text.secondary }]}>음성 업데이트를 완료하면 내 트윈의 목소리를 확인할 수 있어요.</Text>
-                  </View>
-                  <Pressable onPress={() => router.push('/voice-update')} accessibilityRole="button" accessibilityLabel="음성 업데이트 시작">
-                    <Text style={styles.linkText}>업데이트</Text>
-                  </Pressable>
-                </>
+                <VoicePreviewEmptyState onUpdate={() => router.push('/voice-update')} />
               )}
             </View>
           </Section>
 
-          <Section title="나의 이야기" index={5}>
+          <Section
+            title="나의 이야기"
+            index={5}
+            rightElement={
+              <Pressable
+                onPress={() => router.push({ pathname: '/(main)/customer-center', params: { topic: 'introduction-edit' } })}
+                style={styles.sectionAction}
+                accessibilityRole="button"
+                accessibilityLabel="자기소개 수정 요청"
+              >
+                <Feather name="edit-2" size={13} color={Colors.primary.electricCyan} />
+                <Text style={[styles.sectionActionText, styles.storyEditText]}>수정 요청</Text>
+              </Pressable>
+            }
+          >
             <View style={[styles.card, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
               {introduction.selfIntroduction?.trim() ? (
                 <Text style={[styles.introductionText, { color: colors.text.secondary }]}>{introduction.selfIntroduction.trim()}</Text>
@@ -206,11 +255,24 @@ export const ProfileIntroductionScreen = () => {
   );
 };
 
-function Section({ title, index, children }: { title: string; index: number; children: React.ReactNode }) {
+function Section({
+  title,
+  index,
+  children,
+  rightElement,
+}: {
+  title: string;
+  index: number;
+  children: React.ReactNode;
+  rightElement?: React.ReactNode;
+}) {
   const { colors } = useThemeColors();
   return (
     <Animated.View entering={FadeInDown.delay(index * 55).duration(360)}>
-      <Text style={[styles.sectionTitle, { color: colors.text.muted }]}>{title}</Text>
+      <View style={styles.sectionHeader}>
+        <Text style={[styles.sectionTitle, { color: colors.text.muted }]}>{title}</Text>
+        {rightElement}
+      </View>
       {children}
     </Animated.View>
   );
@@ -235,28 +297,72 @@ function AxisBar({ left, right, value }: { left: string; right: string; value: n
   );
 }
 
-function IntroductionVoicePlayer({ voicePreview }: { voicePreview: IntroductionVoicePreview }) {
+function IntroductionVoicePlayer({ voicePreview, onUpdate }: { voicePreview: IntroductionVoicePreview; onUpdate: () => void }) {
   const { colors } = useThemeColors();
   const player = useAudioPlayer(voicePreview.audioUrl);
   const status = useAudioPlayerStatus(player);
   return (
-    <>
-      <Pressable onPress={() => (status.playing ? player.pause() : player.play())} style={styles.playButton} accessibilityRole="button" accessibilityLabel={status.playing ? '목소리 미리듣기 일시정지' : '목소리 미리듣기 재생'}>
-        <Feather name={status.playing ? 'pause' : 'play'} size={22} color={Colors.primary.soulBlack} />
-      </Pressable>
-      <View style={styles.voiceCopy}>
-        <Text style={[styles.cardTitle, { color: colors.text.primary }]}>내 AI 트윈의 목소리</Text>
-        <Text style={[styles.cardDescription, { color: colors.text.secondary }]}>{formatDurationLabel(voicePreview.durationMs == null ? null : Math.round(voicePreview.durationMs / 1000))}</Text>
+    <View style={styles.voiceContent}>
+      <View style={styles.voiceHeading}>
+        <View style={[styles.voiceIcon, { backgroundColor: colors.background.glass }]}>
+          <Feather name="volume-2" size={20} color={Colors.primary.electricCyan} />
+        </View>
+        <View style={styles.voiceCopy}>
+          <Text style={[styles.cardTitle, { color: colors.text.primary }]}>내 AI 트윈의 목소리</Text>
+          <Text style={[styles.cardDescription, { color: colors.text.secondary }]}>
+            {formatDurationLabel(voicePreview.durationMs == null ? null : Math.round(voicePreview.durationMs / 1000))} · 실제 트윈 음성을 들어보세요.
+          </Text>
+        </View>
       </View>
-    </>
+      <View style={styles.voiceActions}>
+        <Pressable
+          onPress={() => (status.playing ? player.pause() : player.play())}
+          style={styles.voicePreviewButton}
+          accessibilityRole="button"
+          accessibilityLabel={status.playing ? '음성 미리듣기 일시정지' : '음성 미리듣기 재생'}
+        >
+          <Feather name={status.playing ? 'pause' : 'play'} size={17} color={Colors.primary.soulBlack} />
+          <Text style={styles.voicePreviewButtonText}>{status.playing ? '재생 중 · 일시정지' : '음성 미리듣기'}</Text>
+        </Pressable>
+        <Pressable onPress={onUpdate} style={[styles.voiceUpdateButton, { borderColor: colors.border.primary }]} accessibilityRole="button" accessibilityLabel="목소리 업데이트">
+          <Text style={[styles.voiceUpdateText, { color: colors.text.primary }]}>업데이트</Text>
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
+function VoicePreviewEmptyState({ onUpdate }: { onUpdate: () => void }) {
+  const { colors } = useThemeColors();
+  return (
+    <View style={styles.voiceContent}>
+      <View style={styles.voiceHeading}>
+        <View style={[styles.voiceIcon, { backgroundColor: colors.background.glass }]}>
+          <Feather name="mic" size={20} color={Colors.primary.electricCyan} />
+        </View>
+        <View style={styles.voiceCopy}>
+          <Text style={[styles.cardTitle, { color: colors.text.primary }]}>아직 내 트윈 목소리를 준비 중이에요</Text>
+          <Text style={[styles.cardDescription, { color: colors.text.secondary }]}>음성 업데이트를 완료하면 실제 목소리를 미리 들을 수 있어요.</Text>
+        </View>
+      </View>
+      <View style={styles.voiceActions}>
+        <View style={[styles.voicePreviewUnavailable, { backgroundColor: colors.background.glass }]} accessibilityLabel="음성 미리듣기 준비 중">
+          <Feather name="play" size={16} color={colors.text.muted} />
+          <Text style={[styles.voicePreviewUnavailableText, { color: colors.text.muted }]}>음성 미리듣기 준비 중</Text>
+        </View>
+        <Pressable onPress={onUpdate} style={[styles.voiceUpdateButton, { borderColor: colors.border.primary }]} accessibilityRole="button" accessibilityLabel="음성 업데이트 시작">
+          <Text style={[styles.voiceUpdateText, { color: colors.text.primary }]}>업데이트</Text>
+        </Pressable>
+      </View>
+    </View>
   );
 }
 
 function formatTrainingDate(value: string | null | undefined) {
-  if (!value) return '최근 업데이트 없음';
+  if (!value) return '음성 업데이트 기록 없음';
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '최근 업데이트 없음';
-  return `최근 업데이트 ${date.getMonth() + 1}.${date.getDate()}`;
+  if (Number.isNaN(date.getTime())) return '음성 업데이트 기록 없음';
+  return `최근 음성 업데이트 ${date.getMonth() + 1}.${date.getDate()}`;
 }
 
 const styles = StyleSheet.create({
@@ -268,24 +374,33 @@ const styles = StyleSheet.create({
   errorDescription: { fontFamily: FontFamily.sans, fontSize: FontSize.base, textAlign: 'center' },
   retryButton: { marginTop: Spacing.md, paddingHorizontal: Spacing.xl, paddingVertical: Spacing.md, borderRadius: Radii.full, backgroundColor: Colors.primary.electricCyan },
   retryButtonText: { fontFamily: FontFamily.sans, fontSize: FontSize.sm, fontWeight: FontWeight.bold, color: Colors.primary.soulBlack },
-  content: { paddingHorizontal: Spacing.xxl, gap: Spacing.xxl },
+  content: { paddingHorizontal: Spacing.xxl, gap: Spacing.xl },
   heroBorder: { padding: 1, borderRadius: Radii.xxl },
-  heroCard: { padding: Spacing.xl, borderRadius: Radii.xxl - 1 },
+  heroCard: { padding: Spacing.lg, borderRadius: Radii.xxl - 1 },
   heroTopRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.lg },
   avatarWrapper: { position: 'relative' },
   avatar: { width: 76, height: 76, borderRadius: Radii.full, alignItems: 'center', justifyContent: 'center' },
   avatarFallback: { fontFamily: FontFamily.sans, fontSize: FontSize.xxxl, fontWeight: FontWeight.black, color: Colors.neutral.pureWhite },
-  twinDot: { position: 'absolute', right: 1, bottom: 2, width: 15, height: 15, borderRadius: Radii.full, backgroundColor: Colors.primary.successGreen, borderColor: Colors.neutral.pureWhite, borderWidth: 2 },
   heroCopy: { flex: 1, gap: Spacing.xs },
   eyebrow: { fontFamily: FontFamily.sans, fontSize: FontSize.xs, fontWeight: FontWeight.black, letterSpacing: 1.25 },
   previewBadge: { alignSelf: 'flex-start', paddingHorizontal: Spacing.sm, paddingVertical: Spacing.xxs, borderRadius: Radii.full, backgroundColor: Colors.glass.purple20 },
   previewBadgeText: { fontFamily: FontFamily.sans, fontSize: FontSize.xs, fontWeight: FontWeight.bold, color: Colors.primary.vividPurple },
   name: { fontFamily: FontFamily.sans, fontSize: FontSize.xxxl, fontWeight: FontWeight.black, letterSpacing: -0.8 },
   metaText: { fontFamily: FontFamily.sans, fontSize: FontSize.sm },
-  jobRow: { marginTop: Spacing.xl, paddingTop: Spacing.md, borderTopWidth: 1, flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
-  jobText: { fontFamily: FontFamily.sans, fontSize: FontSize.sm, flex: 1 },
-  sectionTitle: { fontFamily: FontFamily.sans, fontSize: FontSize.xs, fontWeight: FontWeight.black, letterSpacing: 1.3, marginBottom: Spacing.md },
-  card: { padding: Spacing.xl, borderRadius: Radii.xl, borderWidth: 1, gap: Spacing.lg },
+  jobRow: { marginTop: Spacing.lg, paddingTop: Spacing.sm, borderTopWidth: 1, flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
+  jobCopy: { flex: 1, gap: Spacing.xxs },
+  jobText: { fontFamily: FontFamily.sans, fontSize: FontSize.sm },
+  jobStatusText: { fontFamily: FontFamily.sans, fontSize: FontSize.xs, lineHeight: 14 },
+  jobVerifiedBadge: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xxs, paddingHorizontal: Spacing.sm, paddingVertical: Spacing.xs, borderRadius: Radii.full, backgroundColor: Colors.glass.green10, borderWidth: 1, borderColor: Colors.glass.green20 },
+  jobVerifiedText: { fontFamily: FontFamily.sans, fontSize: FontSize.xs, fontWeight: FontWeight.bold, color: Colors.primary.successGreen },
+  jobVerifyButton: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xxs, paddingHorizontal: Spacing.sm, paddingVertical: Spacing.xs, borderRadius: Radii.full, borderWidth: 1 },
+  jobVerifyText: { fontFamily: FontFamily.sans, fontSize: FontSize.xs, fontWeight: FontWeight.bold, color: Colors.primary.electricCyan },
+  sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 20, marginBottom: Spacing.sm },
+  sectionTitle: { fontFamily: FontFamily.sans, fontSize: FontSize.xs, fontWeight: FontWeight.black, letterSpacing: 1.3 },
+  sectionAction: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xxs, paddingHorizontal: Spacing.xs, paddingVertical: Spacing.xxs },
+  sectionActionText: { fontFamily: FontFamily.sans, fontSize: FontSize.xs, fontWeight: FontWeight.bold, color: Colors.primary.vividPurple },
+  storyEditText: { color: Colors.primary.electricCyan },
+  card: { padding: Spacing.lg, borderRadius: Radii.xl, borderWidth: 1, gap: Spacing.md },
   readinessHeading: { flexDirection: 'row', justifyContent: 'space-between', gap: Spacing.lg },
   cardTitle: { fontFamily: FontFamily.sans, fontSize: FontSize.base, fontWeight: FontWeight.bold },
   cardDescription: { fontFamily: FontFamily.sans, fontSize: FontSize.sm, lineHeight: 18, marginTop: Spacing.xs },
@@ -294,6 +409,9 @@ const styles = StyleSheet.create({
   progressFill: { height: '100%', borderRadius: Radii.full },
   trainingMeta: { flexDirection: 'row', justifyContent: 'space-between', gap: Spacing.md },
   trainingText: { fontFamily: FontFamily.sans, fontSize: FontSize.xs },
+  growCta: { minHeight: 42, paddingHorizontal: Spacing.md, borderRadius: Radii.md, borderWidth: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  growCtaCopy: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
+  growCtaText: { fontFamily: FontFamily.sans, fontSize: FontSize.sm, fontWeight: FontWeight.bold },
   axisRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
   axisLabel: { width: 16, textAlign: 'center', fontFamily: FontFamily.sans, fontSize: FontSize.sm, fontWeight: FontWeight.black },
   axisTrack: { flex: 1, height: 7, borderRadius: Radii.full, overflow: 'hidden' },
@@ -302,10 +420,18 @@ const styles = StyleSheet.create({
   tag: { paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, borderRadius: Radii.full, backgroundColor: Colors.glass.cyan10_d3, borderColor: Colors.glass.cyan20_d3, borderWidth: 1 },
   tagText: { fontFamily: FontFamily.sans, fontSize: FontSize.sm, fontWeight: FontWeight.bold, color: Colors.primary.electricCyan },
   emptyText: { fontFamily: FontFamily.sans, fontSize: FontSize.sm, lineHeight: 20 },
-  voiceCard: { flexDirection: 'row', alignItems: 'center' },
+  mbtiHelpText: { fontFamily: FontFamily.sans, fontSize: FontSize.xs, lineHeight: 17, marginTop: Spacing.xs },
+  voiceCard: { padding: Spacing.lg },
+  voiceContent: { gap: Spacing.md },
+  voiceHeading: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
   voiceIcon: { width: 48, height: 48, borderRadius: Radii.full, alignItems: 'center', justifyContent: 'center' },
-  playButton: { width: 48, height: 48, borderRadius: Radii.full, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.primary.electricCyan },
   voiceCopy: { flex: 1 },
-  linkText: { fontFamily: FontFamily.sans, fontSize: FontSize.sm, fontWeight: FontWeight.bold, color: Colors.primary.electricCyan },
+  voiceActions: { flexDirection: 'row', gap: Spacing.sm },
+  voicePreviewButton: { flex: 1, minHeight: 42, borderRadius: Radii.md, backgroundColor: Colors.primary.electricCyan, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.xs },
+  voicePreviewButtonText: { fontFamily: FontFamily.sans, fontSize: FontSize.sm, fontWeight: FontWeight.bold, color: Colors.primary.soulBlack },
+  voicePreviewUnavailable: { flex: 1, minHeight: 42, borderRadius: Radii.md, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.xs },
+  voicePreviewUnavailableText: { fontFamily: FontFamily.sans, fontSize: FontSize.sm, fontWeight: FontWeight.medium },
+  voiceUpdateButton: { minWidth: 78, minHeight: 42, borderRadius: Radii.md, borderWidth: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: Spacing.md },
+  voiceUpdateText: { fontFamily: FontFamily.sans, fontSize: FontSize.sm, fontWeight: FontWeight.bold },
   introductionText: { fontFamily: FontFamily.sans, fontSize: FontSize.lg, fontWeight: FontWeight.medium, lineHeight: 26 },
 });

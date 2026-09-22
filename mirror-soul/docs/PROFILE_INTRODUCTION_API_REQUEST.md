@@ -61,6 +61,47 @@ Authorization: Bearer <access token>
 
 가치관 분석의 원본 답변, AI 내부 점수·추론 문구 등 비공개 분석 데이터는 이 API에 포함하지 않습니다. 화면에는 위의 표시용 `personalityTags`와 MBTI 축 점수만 필요합니다.
 
+## 후속 요청: 소개 수정 및 증빙 기반 변경
+
+현재 온보딩의 `PUT /onboarding/personality`는 `ONBOARD_B` 상태에서만 동작하므로, 가입 완료 사용자의 자기소개 수정에 재사용하면 안 됩니다.
+
+### 자기소개 수정
+
+```http
+PATCH /my-page/introduction
+Authorization: Bearer <access token>
+Content-Type: application/json
+
+{
+  "selfIntroduction": "수정할 소개 문구"
+}
+```
+
+- 본인만 수정할 수 있어야 합니다.
+- 성공 시 갱신된 소개 상세 DTO(또는 최소 `selfIntroduction`)를 반환해 프론트 캐시를 즉시 갱신할 수 있게 해 주세요.
+- 빈 문자열·공백만 입력은 거절하고, 최대 글자 수도 서버에서 검증해 주세요.
+
+### MBTI·직업 증빙 변경 요청
+
+MBTI 검사 결과 이미지 또는 직업 증빙을 올리고 운영 확인 후 반영하려면, 단순 S3 업로드 키만으로는 상태를 표현할 수 없습니다. 별도 요청/심사 모델이 필요합니다.
+
+```http
+POST /my-page/verification-requests
+Authorization: Bearer <access token>
+Content-Type: application/json
+
+{
+  "type": "MBTI",
+  "evidenceObjectKey": "verification-requests/...",
+  "requestedMbti": "INFJ"
+}
+```
+
+- `type`: `MBTI` 또는 `JOB`
+- 응답 예시: `requestId`, `status` (`PENDING` / `APPROVED` / `REJECTED`), `submittedAt`, `reviewNote`
+- MBTI는 **운영 승인 후에만** 실제 MBTI 및 축 점수를 바꾸도록 해 주세요. 클라이언트에서 이미지 업로드 직후 MBTI를 임의 변경하면 안 됩니다.
+- 직업은 현재의 `jobCertificationSubmitted`가 “서류 제출 여부”인지 “심사 완료 여부”인지 구분되지 않습니다. 심사 기능을 도입한다면 별도 상태를 제공해, 앱이 `서류 제출 완료`와 `직업 인증 완료`를 정확히 구분할 수 있어야 합니다.
+
 ## 프론트 반영 상태
 
 프론트는 이미 위 경로와 필드명으로 연동되어 있습니다. API 배포 전에는 화면에서 재시도 안내가 표시되며, 배포 후 별도 앱 API 변경 없이 실제 데이터를 렌더링합니다.
