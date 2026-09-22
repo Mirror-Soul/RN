@@ -77,6 +77,7 @@ export const ProfileScreen = () => {
   const remainingTime = formatCallTime(timeStatus?.remainingTalkTime ?? 0);
 
   const handleOpenAccount = useCallback(() => router.push('/(main)/account'), [router]);
+  const handleOpenIntroduction = useCallback(() => router.push('/(main)/profile-introduction'), [router]);
   const handleOpenVoiceAudio = useCallback(() => router.push('/(main)/voice-audio'), [router]);
   const handleOpenNotification = useCallback(() => router.push('/(main)/notification'), [router]);
   const handleOpenAllSettings = useCallback(() => router.push('/(main)/profile-settings'), [router]);
@@ -142,11 +143,11 @@ export const ProfileScreen = () => {
             </View>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="계정 관리 열기"
-              onPress={handleOpenAccount}
+              accessibilityLabel="내 소개 열기"
+              onPress={handleOpenIntroduction}
               style={({ pressed }) => [styles.accountButton, { borderColor: colors.border.strong }, pressed && { opacity: 0.7 }]}
             >
-              <Text style={[styles.accountButtonText, { color: colors.text.primary }]}>계정 관리</Text>
+              <Text style={[styles.accountButtonText, { color: colors.text.primary }]}>내 소개 보기</Text>
               <Feather name="arrow-up-right" size={15} color={colors.text.primary} />
             </Pressable>
           </Animated.View>

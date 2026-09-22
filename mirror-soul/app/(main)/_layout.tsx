@@ -43,6 +43,7 @@ export default function MainLayout() {
         <Tabs.Screen name="index" />
         <Tabs.Screen name="match" />
         <Tabs.Screen name="profile" />
+        <Tabs.Screen name="profile-introduction" options={{ href: null }} />
         <Tabs.Screen name="voice-audio" options={{ unmountOnBlur: true }} />
         <Tabs.Screen name="notification" options={{ unmountOnBlur: true }} />
         <Tabs.Screen name="customer-center" options={{ unmountOnBlur: true }} />
