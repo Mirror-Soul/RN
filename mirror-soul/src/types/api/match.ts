@@ -30,3 +30,19 @@ export interface TwinListResult {
 }
 
 export type TwinListResponse = ApiResponse<TwinListResult>;
+
+// ─────────────────────────────────────────────
+// GET /match/status
+// ─────────────────────────────────────────────
+export interface MatchingStatusResult {
+  matchingEnabled: boolean;
+}
+
+export type MatchingStatusResponse = ApiResponse<MatchingStatusResult>;
+
+// ─────────────────────────────────────────────
+// PATCH /match/status
+// ─────────────────────────────────────────────
+export interface UpdateMatchingStatusRequest {
+  matchingEnabled: boolean;
+}

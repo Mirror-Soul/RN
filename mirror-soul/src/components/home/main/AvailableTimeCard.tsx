@@ -2,6 +2,7 @@ import { Feather } from '@expo/vector-icons';
 import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { useTimeStatusQuery } from '@/src/features/profile/hooks/useTimeStatusQuery';
 import { formatCallTime } from '@/src/utils/formatCallTime';
@@ -27,7 +28,12 @@ export default function AvailableTimeCard({
     timeDisplay ?? (isLoading ? '--:--:--' : isError ? '조회 실패 · 재시도' : formatCallTime(data?.remainingTalkTime ?? 0));
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
+    <LinearGradient
+      colors={Colors.gradient.twinCardHeader}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 0 }}
+      style={[styles.container, { borderColor: Colors.glass.cyan20_d3 }]}
+    >
       <View style={styles.left}>
         <View style={styles.iconWrapper}>
           <Feather name="clock" size={20} color={Colors.primary.electricCyan} />
@@ -53,7 +59,7 @@ export default function AvailableTimeCard({
       >
         <Text style={styles.refillText}>Refill</Text>
       </TouchableOpacity>
-    </View>
+    </LinearGradient>
   );
 }
 

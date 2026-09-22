@@ -1,5 +1,5 @@
 import { Feather } from '@expo/vector-icons';
-import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
+import { FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
@@ -12,9 +12,9 @@ export default function SoulConnectTip() {
   const { colors } = useThemeColors();
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
+    <View style={[styles.container, { backgroundColor: colors.background.glass }]}>
       <View style={[styles.iconWrapper, { backgroundColor: colors.background.card }]}>
-        <Feather name="phone" size={20} color={Colors.primary.electricCyan} />
+        <Feather name="phone" size={14} color={colors.text.muted} />
       </View>
       <Text style={[styles.text, { color: colors.text.muted }]}>
         보낸 &apos;통화하기&apos; 기록은{' '}
@@ -29,15 +29,14 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.lg,
-    padding: Spacing.xl,
-    borderRadius: Radii.xxl,
-    borderWidth: 1,
+    gap: Spacing.md,
+    padding: Spacing.lg,
+    borderRadius: Radii.xl,
   },
   iconWrapper: {
-    width: 40,
-    height: 40,
-    borderRadius: Radii.xl,
+    width: 32,
+    height: 32,
+    borderRadius: Radii.md2,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -45,7 +44,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: FontFamily.sans,
     fontSize: FontSize.xs,
-    fontWeight: FontWeight.bold,
+    fontWeight: FontWeight.medium,
     lineHeight: 16,
   },
 });

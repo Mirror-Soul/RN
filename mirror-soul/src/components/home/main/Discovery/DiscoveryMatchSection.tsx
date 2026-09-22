@@ -4,11 +4,12 @@ import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { useRecommendationsQuery } from '@/src/features/home/hooks/useRecommendationsQuery';
 import { useSwipeMutation } from '@/src/features/home/hooks/useSwipeMutation';
 import type { Recommendation } from '@/src/types/api/home';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import DiscoveryMatchCard from './DiscoveryMatchCard';
 import { shouldPrefetchNextPage } from './discoveryPagination';
+import { MOCK_RECOMMENDATIONS } from './mockRecommendations';
 
 interface DiscoveryMatchSectionProps {
   onPass?: (userUuid: string) => void;
@@ -23,11 +24,20 @@ interface DiscoveryMatchSectionProps {
  */
 export default function DiscoveryMatchSection({ onPass, onConnect, onOpenDetail }: DiscoveryMatchSectionProps) {
   const { colors } = useThemeColors();
-  const { recommendations, isLoading, isError, hasNextPage, isFetchingNextPage, fetchNextPage, refetch } =
+  const { recommendations, isLoading, isFetching, isError, hasNextPage, isFetchingNextPage, fetchNextPage, refetch } =
     useRecommendationsQuery();
   const swipeMutation = useSwipeMutation();
   const [currentIndex, setCurrentIndex] = useState(0);
-  const currentMatch = recommendations[currentIndex];
+  // 같은 카드에 대한 패스 중복 실행(빠른 연속 탭)을 막는 동기 락 — swipeMutation 자체는
+  // 백엔드가 멱등하게 처리해 중복 호출 비용이 없지만(useSwipeMutation.ts 참고), currentIndex는
+  // 함수형 업데이터라 중복 호출 시 그대로 2 증가해 카드 한 장을 건너뛴다. 그걸 막기 위한 락이다.
+  const passInFlightUuidRef = useRef<string | null>(null);
+
+  // 실제 추천이 0건일 때만(개발 빌드 한정) 카드 디자인을 눈으로 확인할 수 있도록 목업으로 대체한다.
+  // 페이지네이션(다음 페이지 당겨오기)은 항상 실제 recommendations 기준으로만 판단한다.
+  const usingMockData = __DEV__ && !isLoading && !isError && recommendations.length === 0;
+  const displayRecommendations = usingMockData ? MOCK_RECOMMENDATIONS : recommendations;
+  const currentMatch = displayRecommendations[currentIndex];
 
   // 남은 카드가 얼마 없으면 다 소진되기 전에 다음 페이지를 미리 당겨온다
   useEffect(() => {
@@ -36,12 +46,60 @@ export default function DiscoveryMatchSection({ onPass, onConnect, onOpenDetail 
     }
   }, [currentIndex, recommendations.length, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
+  // 카드가 바뀌면(패스로 넘어갔든, 새로고침으로 인덱스가 리셋됐든) 다음 카드의 패스는
+  // 다시 눌릴 수 있어야 하므로 락을 해제한다.
+  useEffect(() => {
+    passInFlightUuidRef.current = null;
+  }, [currentMatch?.userUuid]);
+
   const handlePass = (userUuid: string) => {
+    if (passInFlightUuidRef.current === userUuid) return; // 같은 카드에 대한 중복 탭 무시
+    passInFlightUuidRef.current = userUuid;
+
+    if (userUuid.startsWith('mock-')) {
+      setCurrentIndex((prev) => prev + 1);
+      return;
+    }
     onPass?.(userUuid);
     // 낙관적 진행 — 스와이프 응답을 기다리지 않고 바로 다음 카드로 넘어간다
     swipeMutation.mutate(userUuid);
     setCurrentIndex((prev) => prev + 1);
   };
+
+  const handleRefresh = async () => {
+    // useInfiniteQuery의 refetch()는 쿼리 데이터만 갱신하고 currentIndex는 그대로 둔다.
+    // 모든 카드를 소진한 뒤 새로고침하면(currentIndex가 새 배열 길이 이상) currentMatch가
+    // 계속 undefined가 되어 새 추천이 와도 빈 상태에 갇히므로, 성공했을 때만 리셋한다.
+    const result = await refetch();
+    if (result.isSuccess) {
+      setCurrentIndex(0);
+    }
+  };
+
+  const refreshHeader = (
+    <View style={styles.sectionHeader}>
+      {usingMockData ? (
+        <Text style={[styles.mockLabel, { color: colors.text.muted }]}>목업 데이터</Text>
+      ) : (
+        <View />
+      )}
+      <TouchableOpacity
+        style={styles.refreshButton}
+        onPress={handleRefresh}
+        disabled={isFetching}
+        activeOpacity={0.7}
+        accessibilityRole="button"
+        accessibilityLabel="추천 목록 새로고침"
+      >
+        {isFetching ? (
+          <ActivityIndicator size="small" color={colors.text.muted} />
+        ) : (
+          <Feather name="refresh-cw" size={13} color={colors.text.muted} />
+        )}
+        <Text style={[styles.refreshText, { color: colors.text.muted }]}>새로고침</Text>
+      </TouchableOpacity>
+    </View>
+  );
 
   if (isLoading) {
     return (
@@ -79,26 +137,30 @@ export default function DiscoveryMatchSection({ onPass, onConnect, onOpenDetail 
   // 추천 대상이 실제로 더 없는 경우 — 빈 배열이 실제로 올 수 있다
   if (!currentMatch) {
     return (
-      <View
-        style={[styles.statusBox, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
-      >
-        <Feather name="users" size={28} color={colors.text.muted} />
-        <Text style={[styles.emptyTitle, { color: colors.text.primary }]}>추천할 상대가 아직 없어요</Text>
-        <Text style={[styles.emptySubtitle, { color: colors.text.muted }]}>
-          탐색 지역을 넓혀보거나 잠시 후 다시 확인해주세요.
-        </Text>
+      <View style={styles.container}>
+        {refreshHeader}
+        <View
+          style={[styles.statusBox, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
+        >
+          <Feather name="users" size={28} color={colors.text.muted} />
+          <Text style={[styles.emptyTitle, { color: colors.text.primary }]}>추천할 상대가 아직 없어요</Text>
+          <Text style={[styles.emptySubtitle, { color: colors.text.muted }]}>
+            탐색 지역을 넓혀보거나 잠시 후 다시 확인해주세요.
+          </Text>
+        </View>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
+      {refreshHeader}
       <Animated.View key={currentMatch.userUuid} entering={FadeIn.duration(300)} exiting={FadeOut.duration(200)}>
         <DiscoveryMatchCard
           match={currentMatch}
-          onPass={handlePass}
-          onConnect={onConnect}
           onOpenDetail={onOpenDetail}
+          onPass={() => handlePass(currentMatch.userUuid)}
+          onConnect={() => onConnect?.(currentMatch.userUuid)}
         />
       </Animated.View>
     </View>
@@ -129,5 +191,28 @@ const styles = StyleSheet.create({
     fontSize: FontSize.sm,
     fontWeight: FontWeight.bold,
     textAlign: 'center',
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: Spacing.sm,
+  },
+  mockLabel: {
+    fontFamily: FontFamily.sans,
+    fontSize: FontSize.xs,
+    fontWeight: FontWeight.bold,
+  },
+  refreshButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xxs,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xxs,
+  },
+  refreshText: {
+    fontFamily: FontFamily.sans,
+    fontSize: FontSize.xs,
+    fontWeight: FontWeight.bold,
   },
 });
