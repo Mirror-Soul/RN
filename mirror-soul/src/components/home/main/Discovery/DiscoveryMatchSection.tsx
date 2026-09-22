@@ -8,6 +8,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import DiscoveryMatchCard from './DiscoveryMatchCard';
+import DiscoveryStackPeek from './DiscoveryStackPeek';
 import { shouldPrefetchNextPage } from './discoveryPagination';
 import { MOCK_RECOMMENDATIONS } from './mockRecommendations';
 
@@ -38,6 +39,8 @@ export default function DiscoveryMatchSection({ onPass, onConnect, onOpenDetail 
   const usingMockData = __DEV__ && !isLoading && !isError && recommendations.length === 0;
   const displayRecommendations = usingMockData ? MOCK_RECOMMENDATIONS : recommendations;
   const currentMatch = displayRecommendations[currentIndex];
+  // 카드 바로 뒤에 살짝 보이는 다음 후보 — 장식용이라 없으면(마지막 카드) 그냥 안 보여준다.
+  const nextMatch = displayRecommendations[currentIndex + 1];
 
   // 남은 카드가 얼마 없으면 다 소진되기 전에 다음 페이지를 미리 당겨온다
   useEffect(() => {
@@ -64,6 +67,15 @@ export default function DiscoveryMatchSection({ onPass, onConnect, onOpenDetail 
     // 낙관적 진행 — 스와이프 응답을 기다리지 않고 바로 다음 카드로 넘어간다
     swipeMutation.mutate(userUuid);
     setCurrentIndex((prev) => prev + 1);
+  };
+
+  // 왼쪽 스와이프(이전 후보로) — 순수 로컬 위치 이동이라 서버 스와이프 기록을 남기지
+  // 않는다(패스 기록을 되돌리는 백엔드 API가 없기도 하고, "다시 한번 보기"일 뿐이라
+  // 굳이 되돌릴 필요도 없다). 첫 번째 카드보다 더 앞으로는 못 간다.
+  const handleGoBack = () => {
+    if (passInFlightUuidRef.current === currentMatch?.userUuid) return;
+    passInFlightUuidRef.current = currentMatch?.userUuid ?? null;
+    setCurrentIndex((prev) => Math.max(0, prev - 1));
   };
 
   const handleRefresh = async () => {
@@ -155,14 +167,19 @@ export default function DiscoveryMatchSection({ onPass, onConnect, onOpenDetail 
   return (
     <View style={styles.container}>
       {refreshHeader}
-      <Animated.View key={currentMatch.userUuid} entering={FadeIn.duration(300)} exiting={FadeOut.duration(200)}>
-        <DiscoveryMatchCard
-          match={currentMatch}
-          onOpenDetail={onOpenDetail}
-          onPass={() => handlePass(currentMatch.userUuid)}
-          onConnect={() => onConnect?.(currentMatch.userUuid)}
-        />
-      </Animated.View>
+      <View style={styles.stack}>
+        {nextMatch && <DiscoveryStackPeek match={nextMatch} />}
+        <Animated.View key={currentMatch.userUuid} entering={FadeIn.duration(300)} exiting={FadeOut.duration(200)}>
+          <DiscoveryMatchCard
+            match={currentMatch}
+            onOpenDetail={onOpenDetail}
+            onPass={() => handlePass(currentMatch.userUuid)}
+            onGoBack={handleGoBack}
+            canGoBack={currentIndex > 0}
+            onConnect={() => onConnect?.(currentMatch.userUuid)}
+          />
+        </Animated.View>
+      </View>
     </View>
   );
 }
@@ -170,6 +187,11 @@ export default function DiscoveryMatchSection({ onPass, onConnect, onOpenDetail 
 const styles = StyleSheet.create({
   container: {
     alignSelf: 'stretch',
+  },
+  // DiscoveryStackPeek이 absoluteFillObject로 이 컨테이너 기준으로 배치되므로
+  // position:relative가 필요하다 — 실제 크기는 안쪽 카드(비절대배치)가 정해준다.
+  stack: {
+    position: 'relative',
   },
   statusBox: {
     width: '100%',

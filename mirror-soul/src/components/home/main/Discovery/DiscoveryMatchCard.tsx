@@ -28,20 +28,25 @@ const CARD_SPRING_CONFIG: WithSpringConfig = {
 interface DiscoveryMatchCardProps {
   match: Recommendation;
   onOpenDetail?: (match: Recommendation) => void;
+  /** 오른쪽으로 스와이프 — 다음 후보로 (기존 "패스"와 동일하게 서버에 스와이프 기록). */
   onPass: () => void;
+  /** 왼쪽으로 스와이프 — 이전 후보로 돌아가기. 서버 기록 없이 로컬 위치만 되돌린다. */
+  onGoBack: () => void;
+  /** false면 이미 첫 번째 후보라 더 되돌아갈 곳이 없다는 뜻 — 왼쪽 스와이프를 커밋하지 않는다. */
+  canGoBack: boolean;
   onConnect: () => void;
 }
 
 /**
  * DiscoveryMatchCard 컴포넌트 (SRP)
  * 발견 탭 추천 카드 UI를 담당하는 프레젠테이션 컴포넌트입니다.
- * 패스는 버튼이 아니라 카드를 좌우로 스와이프하는 제스처로 처리한다(방향과 무관하게
- * 다음 후보로 넘어감). 카드 배경/이름/메타/태그 영역을 탭하면 상세 모달이 열리고,
- * 사진을 탭하면 사진만 크게 보는 라이트박스가, 한줄소개 "더보기"는 모달이 아니라
- * 카드 안에서 텍스트를 펼치는 인라인 확장으로 각각 분리되어 있다. 통화하기만 남은
- * 명시적 버튼이다.
+ * 패스는 버튼이 아니라 카드를 좌우로 스와이프하는 제스처로 처리한다 — 오른쪽은 다음
+ * 후보로, 왼쪽은 이전 후보로 돌아간다(방향에 따라 의미가 다름). 카드 배경/이름/메타/
+ * 태그 영역을 탭하면 상세 모달이 열리고, 사진을 탭하면 사진만 크게 보는 라이트박스가,
+ * 한줄소개 "더보기"는 모달이 아니라 카드 안에서 텍스트를 펼치는 인라인 확장으로
+ * 각각 분리되어 있다. 통화하기만 남은 명시적 버튼이다.
  */
-export default function DiscoveryMatchCard({ match, onOpenDetail, onPass, onConnect }: DiscoveryMatchCardProps) {
+export default function DiscoveryMatchCard({ match, onOpenDetail, onPass, onGoBack, canGoBack, onConnect }: DiscoveryMatchCardProps) {
   const { colors } = useThemeColors();
   const [imageFailed, setImageFailed] = useState(false);
   const [isSummaryTruncated, setIsSummaryTruncated] = useState(false);
@@ -66,13 +71,21 @@ export default function DiscoveryMatchCard({ match, onOpenDetail, onPass, onConn
     .onEnd((event) => {
       const passedThreshold =
         Math.abs(event.translationX) > SWIPE_DISTANCE_THRESHOLD || Math.abs(event.velocityX) > SWIPE_VELOCITY_THRESHOLD;
+      const isRightSwipe = event.translationX > 0;
+      // 왼쪽 스와이프인데 더 돌아갈 후보가 없으면(첫 카드) 커밋하지 않고 원위치로 되돌린다 —
+      // 그대로 날아가게 두면 currentIndex가 안 바뀌어(0에서 클램프) 같은 카드가 다시 안
+      // 마운트되고, 이미 화면 밖으로 이동한 상태로 멈춰 빈 화면처럼 보이게 된다.
+      const canCommit = isRightSwipe || canGoBack;
 
-      if (passedThreshold) {
-        const direction = event.translationX > 0 ? 1 : -1;
+      if (passedThreshold && canCommit) {
+        const direction = isRightSwipe ? 1 : -1;
         runOnJS(triggerSwipeHaptic)();
         translateX.value = withTiming(direction * SCREEN_WIDTH * 1.5, { duration: 220 }, (finished) => {
-          if (finished) {
+          if (!finished) return;
+          if (isRightSwipe) {
             runOnJS(onPass)();
+          } else {
+            runOnJS(onGoBack)();
           }
         });
       } else {
