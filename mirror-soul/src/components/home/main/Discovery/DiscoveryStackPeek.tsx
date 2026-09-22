@@ -1,14 +1,10 @@
-import { Feather } from '@expo/vector-icons';
-import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
+import { Radii } from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
-import { formatRegion } from '@/src/utils/formatRegion';
-import { JOB_LABEL } from '@/src/constants/jobLabels';
 import type { Recommendation } from '@/src/types/api/home';
-import { Image } from 'expo-image';
-import { LinearGradient } from 'expo-linear-gradient';
-import React, { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import React from 'react';
+import { StyleSheet } from 'react-native';
 import Animated, { useAnimatedStyle, SharedValue } from 'react-native-reanimated';
+import DiscoveryCardContent from './DiscoveryCardContent';
 
 interface DiscoveryStackPeekProps {
   match: Recommendation;
@@ -22,22 +18,21 @@ interface DiscoveryStackPeekProps {
  * DiscoveryStackPeek 컴포넌트 (SRP)
  * 다음 후보 카드 — 평소(드래그 안 할 때)엔 뒤에 숨어 거의 안 보이다가, 위 카드를
  * 옆으로 미는 만큼만 살짝 드러난다(항상 뚜렷하게 보이는 정적 스택이 아님).
- * DiscoveryMatchCard와 거의 같은 내용(사진 + 이름/나이 + 지역·직업 + 한줄소개 1줄 +
- * MBTI/해시태그 칩 + 통화하기 버튼 모양)을 재현한다 — 다만 버튼은 순수 시각 요소일
- * 뿐 실제로 탭할 수 없다(전체가 pointerEvents="none"). 내용이 실제 카드에 가까워진
- * 만큼, 최대 노출 강도(opacity/scale 상한)는 앞 카드보다 낮게 유지해 다 드러나도
- * "미리보기"로 읽히게 한다.
+ * 내용 자체는 DiscoveryCardContent를 그대로 재사용(DiscoveryMatchCard와 항상
+ * 동일하게 유지됨) — 여기서는 진행도 기반 변환만 감싼다. 콜백을 하나도 안 넘겨서
+ * 모든 터치 요소가 반응 없는 View로 렌더링되고(어차피 밖의 pointerEvents="none"이
+ * 전부 막아줌), showPhotoOverlays/summaryExpandable도 기본값 false로 chevron·
+ * 더보기 토글 없이 표시된다.
  */
 export default function DiscoveryStackPeek({ match, translateX, swipeThreshold }: DiscoveryStackPeekProps) {
   const { colors } = useThemeColors();
-  const [imageFailed, setImageFailed] = useState(false);
 
   const animatedStyle = useAnimatedStyle(() => {
     // 0(안 건드림) ~ 1(커밋 임계값에 도달) 사이로 드래그 진행도를 계산
     const progress = Math.min(Math.abs(translateX.value) / swipeThreshold, 1);
     return {
-      // 내용이 늘어난 만큼, 최대 노출 강도는 오히려 낮춰서(0.9→0.75, 0.98→0.96) 앞
-      // 카드보다 항상 옅게 유지한다 — 다 드러나도 "배경"으로 읽히게.
+      // 내용이 실카드에 가까운 만큼, 최대 노출 강도는 오히려 낮춰서 앞 카드보다
+      // 항상 옅게 유지한다 — 다 드러나도 "배경"으로 읽히게.
       opacity: progress * 0.75,
       transform: [{ scale: 0.88 + progress * 0.08 }, { translateY: (1 - progress) * 16 }],
     };
@@ -48,68 +43,7 @@ export default function DiscoveryStackPeek({ match, translateX, swipeThreshold }
       pointerEvents="none"
       style={[styles.card, animatedStyle, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
     >
-      <View style={styles.photoBox}>
-        {imageFailed ? (
-          <LinearGradient colors={Colors.gradient.avatarPlaceholder} style={styles.photo}>
-            <Text style={styles.photoFallbackText}>{match.name.charAt(0).toUpperCase()}</Text>
-          </LinearGradient>
-        ) : (
-          <Image
-            source={{ uri: match.profileImageUrl }}
-            style={styles.photo}
-            contentFit="cover"
-            cachePolicy="disk"
-            onError={() => setImageFailed(true)}
-          />
-        )}
-      </View>
-
-      <View style={styles.infoStrip}>
-        <Text style={[styles.nameText, { color: colors.text.primary }]} numberOfLines={1}>
-          {match.name}
-          {match.age !== null ? <Text style={styles.ageText}> {match.age}</Text> : null}
-        </Text>
-
-        <View style={styles.metaRow}>
-          <Feather name="map-pin" size={12} color={colors.text.muted} />
-          <Text style={[styles.metaText, { color: colors.text.muted }]} numberOfLines={1}>
-            {formatRegion(match.residence)}
-          </Text>
-          <View style={[styles.metaDivider, { backgroundColor: colors.border.primary }]} />
-          <Feather name="briefcase" size={12} color={colors.text.muted} />
-          <Text style={[styles.metaText, { color: colors.text.muted }]} numberOfLines={1}>
-            {JOB_LABEL[match.job]}
-          </Text>
-        </View>
-
-        <Text style={[styles.summaryText, { color: colors.text.secondary }]} numberOfLines={1} ellipsizeMode="tail">
-          &quot;{match.selfIntroduction}&quot;
-        </Text>
-
-        <View style={styles.tagRow}>
-          <View style={[styles.chip, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
-            <Text style={[styles.chipText, { color: Colors.primary.electricCyan }]}>{match.mbti}</Text>
-          </View>
-          {match.hashtags.slice(0, 2).map((tag) => (
-            <View key={tag} style={[styles.chip, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
-              <Text style={[styles.chipText, { color: colors.text.secondary }]}>#{tag}</Text>
-            </View>
-          ))}
-        </View>
-      </View>
-
-      {/* 통화하기 버튼 모양만 재현 — 전체가 pointerEvents="none"이라 실제로 탭은 안 된다 */}
-      <View style={[styles.buttonRow, { borderTopColor: colors.border.primary }]}>
-        <LinearGradient
-          colors={[Colors.primary.electricCyan, Colors.primary.vividPurple]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.connectButton}
-        >
-          <Feather name="phone" size={14} color={Colors.primary.soulBlack} />
-          <Text style={[styles.buttonText, styles.connectButtonText]}>통화하기</Text>
-        </LinearGradient>
-      </View>
+      <DiscoveryCardContent match={match} />
     </Animated.View>
   );
 }
@@ -120,100 +54,5 @@ const styles = StyleSheet.create({
     borderRadius: Radii.xxl,
     overflow: 'hidden',
     borderWidth: 1,
-  },
-  photoBox: {
-    width: '100%',
-    aspectRatio: 4 / 3,
-  },
-  photo: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  photoFallbackText: {
-    fontFamily: FontFamily.sans,
-    fontSize: 64,
-    fontWeight: FontWeight.black,
-    color: Colors.neutral.pureWhite,
-  },
-  infoStrip: {
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.md,
-    paddingBottom: Spacing.md,
-    gap: Spacing.xs,
-  },
-  nameText: {
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.xl,
-    fontWeight: FontWeight.black,
-    letterSpacing: -0.3,
-  },
-  ageText: {
-    fontWeight: FontWeight.regular,
-    color: Colors.neutral.darkGray,
-  },
-  metaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-  },
-  metaText: {
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.semibold,
-    flexShrink: 1,
-  },
-  metaDivider: {
-    width: 1,
-    height: 10,
-    marginHorizontal: Spacing.xxs,
-  },
-  summaryText: {
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.medium,
-    lineHeight: 20,
-  },
-  tagRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.xs,
-  },
-  chip: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xxs,
-    borderRadius: Radii.full,
-    borderWidth: 1,
-  },
-  chipText: {
-    fontFamily: FontFamily.sans,
-    fontSize: 10,
-    fontWeight: FontWeight.bold,
-    letterSpacing: 0.3,
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    borderTopWidth: 1,
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.md,
-    paddingBottom: Spacing.lg,
-  },
-  connectButton: {
-    flex: 1,
-    height: 56,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.xs,
-    borderRadius: Radii.xl,
-  },
-  buttonText: {
-    fontFamily: FontFamily.sans,
-    fontWeight: FontWeight.bold,
-    fontSize: FontSize.sm,
-    letterSpacing: 0.2,
-  },
-  connectButtonText: {
-    color: Colors.primary.soulBlack,
   },
 });
