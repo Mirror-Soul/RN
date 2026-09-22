@@ -41,7 +41,7 @@ export default function DiscoveryStackPeek({ match, translateX, swipeThreshold }
   return (
     <Animated.View
       pointerEvents="none"
-      style={[styles.card, animatedStyle, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
+      style={[styles.card, animatedStyle, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}
     >
       <DiscoveryCardContent match={match} />
     </Animated.View>

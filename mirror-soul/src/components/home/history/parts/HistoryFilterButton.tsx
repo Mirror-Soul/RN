@@ -25,7 +25,7 @@ export default function HistoryFilterButton({
       style={[
         styles.container,
         isActive
-          ? { backgroundColor: colors.background.card, borderColor: colors.border.primary }
+          ? { backgroundColor: Colors.glass.cyan10_d3, borderColor: Colors.primary.electricCyan }
           : { backgroundColor: 'transparent', borderColor: 'transparent' },
       ]}
       onPress={onPress}
@@ -36,7 +36,7 @@ export default function HistoryFilterButton({
       <Text
         style={[
           styles.label,
-          isActive ? { color: colors.text.primary } : { color: colors.text.muted },
+          isActive ? { color: Colors.primary.electricCyan } : { color: colors.text.muted },
         ]}
       >
         {label}

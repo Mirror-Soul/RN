@@ -20,7 +20,7 @@ export default function HistoryStatCard({
   const { colors } = useThemeColors();
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
+    <View style={[styles.container, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
       <View style={styles.countWrapper}>
         <Text style={[styles.countText, countColor ? { color: countColor } : { color: colors.text.primary }]}>{count}</Text>
       </View>

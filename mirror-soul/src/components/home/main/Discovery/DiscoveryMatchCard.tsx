@@ -102,7 +102,7 @@ export default function DiscoveryMatchCard({ match, onOpenDetail, onPass, onGoBa
     <>
     <GestureDetector gesture={panGesture}>
     <Animated.View
-      style={[styles.card, cardAnimatedStyle, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
+      style={[styles.card, cardAnimatedStyle, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}
     >
       <DiscoveryCardContent
         match={match}
