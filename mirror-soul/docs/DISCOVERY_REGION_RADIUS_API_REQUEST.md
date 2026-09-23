@@ -126,9 +126,10 @@ public record RegionSearchResultDTO(
 ) {}
 ```
 
-- `WHERE eupmyeondong_name LIKE '%:keyword%' OR sigungu_name LIKE '%:keyword%'` 정도의
-  단순 부분일치로 충분해 보인다 (전국 데이터가 수천 건 규모라 성능 이슈 없음). 결과가
-  너무 많으면 상위 N개(예: 20개)만 반환.
+- `WHERE eupmyeondong_name LIKE CONCAT('%', :keyword, '%') ESCAPE '\' OR sigungu_name LIKE CONCAT('%', :keyword, '%') ESCAPE '\'`
+  정도의 단순 부분일치로 충분해 보인다 (전국 데이터가 수천 건 규모라 성능 이슈 없음).
+  `keyword`의 `%`, `_`, `\`는 바인딩 전에 이스케이프할 것 (따옴표 안에 `:keyword`를 그대로
+  두면 파라미터 바인딩이 안 되고 리터럴 문자열 `:keyword`로 검색된다). 결과는 상위 20개만 반환.
 - 프론트에서 타이핑마다 호출하지 않도록 디바운스 처리할 예정 — 백엔드는 별도 rate
   limit을 걱정할 필요는 없어 보이지만, 인증 없는 공개 API이니 남용 방지가 필요하면
   알려달라.

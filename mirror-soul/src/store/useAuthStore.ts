@@ -100,7 +100,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       return;
     }
 
-    await tokenStorage.saveTokens(newAccessToken, refreshTokenToSave, userUuid, userStatus);
+    // saveTokens()가 아니라 saveRefreshedTokens()를 쓴다 — USER_STATUS를 다시 쓰면, 이 함수가
+    // 위에서 읽어둔(오래됐을 수 있는) userStatus가 온보딩 단계 전환(updateUserStatus)의 쓰기와
+    // 경합해 방금 완료된 단계를 되돌릴 수 있다.
+    await tokenStorage.saveRefreshedTokens(newAccessToken, refreshTokenToSave);
     set({ accessToken: newAccessToken });
   },
 

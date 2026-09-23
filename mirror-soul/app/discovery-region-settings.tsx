@@ -16,6 +16,7 @@ import { router } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -54,14 +55,22 @@ export default function DiscoveryRegionSettingsScreen() {
   const mapRef = useRef<MapView>(null);
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
   const [anchor, setAnchor] = useState<RegionCoordinate | null>(null);
   const [nearbyCount, setNearbyCount] = useState(DEFAULT_NEARBY_COUNT);
   const [isLocating, setIsLocating] = useState(false);
   const hasInitializedRef = useRef(false);
 
+  // 한글 IME는 조합 중간 상태도 onChangeText로 보내서(예: "부곡" 입력 시 ㅂ→부→부ㄱ→부고→부곡),
+  // 디바운스 없이 그대로 넘기면 인증 없는 공개 검색 API가 키 입력마다 호출된다.
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedQuery(searchQuery), 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
   const { data: allRegions, isLoading: isCoordinatesLoading } = useRegionCoordinatesQuery();
-  const { data: searchResults, isLoading: isSearching } = useRegionSearchQuery(searchQuery);
-  const { data: existingPreference } = usePreferredRegionQuery();
+  const { data: searchResults, isLoading: isSearching } = useRegionSearchQuery(debouncedQuery);
+  const { data: existingPreference, isPending: isPreferencePending } = usePreferredRegionQuery();
   const updateMutation = useUpdatePreferredRegionMutation();
 
   const animateTo = useCallback((coordinate: { latitude: number; longitude: number }) => {
@@ -72,8 +81,11 @@ export default function DiscoveryRegionSettingsScreen() {
   }, []);
 
   // 기존에 저장된 탐색 지역이 있으면 최초 1회만 앵커/반경을 그걸로 초기화한다.
+  // 좌표 목록은 gcTime: Infinity라 재방문 시 캐시에서 즉시 준비될 수 있는 반면 선호 지역
+  // 조회는 아직 진행 중(undefined)일 수 있다 — isPreferencePending으로 "조회 중"과 "미설정"을
+  // 구분하지 않으면, 조회가 끝나기 전에 플래그가 닫혀 기존 설정을 영영 못 불러올 수 있다.
   useEffect(() => {
-    if (hasInitializedRef.current || !allRegions || allRegions.length === 0) return;
+    if (hasInitializedRef.current || !allRegions || allRegions.length === 0 || isPreferencePending) return;
     hasInitializedRef.current = true;
     if (!existingPreference) return;
 
@@ -83,7 +95,7 @@ export default function DiscoveryRegionSettingsScreen() {
       setNearbyCount(existingPreference.nearbyCount);
       animateTo(existingAnchor);
     }
-  }, [allRegions, existingPreference, animateTo]);
+  }, [allRegions, existingPreference, isPreferencePending, animateTo]);
 
   // anchor가 바뀔 때만(슬라이더 조작 때는 X) 전체 거리 정렬을 다시 계산한다 — 5천여 건 재정렬은
   // 저렴한 연산이 아니라서, 슬라이더는 이 결과에서 자르기(takeNearest)만 하도록 분리했다.
@@ -263,7 +275,10 @@ export default function DiscoveryRegionSettingsScreen() {
         </View>
 
         {trimmedQuery.length > 0 && (
-          <View style={[styles.searchResults, { backgroundColor: colors.background.primary }]}>
+          <ScrollView
+            style={[styles.searchResults, { backgroundColor: colors.background.primary }]}
+            keyboardShouldPersistTaps="handled"
+          >
             {isSearching ? (
               <ActivityIndicator style={styles.searchResultsPadding} color={Colors.primary.electricCyan} />
             ) : searchResults && searchResults.length > 0 ? (
@@ -272,6 +287,7 @@ export default function DiscoveryRegionSettingsScreen() {
                   key={result.regionId}
                   style={styles.searchResultItem}
                   onPress={() => handleSelectSearchResult(result)}
+                  accessibilityRole="button"
                 >
                   <Text style={[styles.searchResultText, { color: colors.text.primary }]}>
                     {result.sidoName} {result.sigunguName} {result.eupmyeondongName}
@@ -283,7 +299,7 @@ export default function DiscoveryRegionSettingsScreen() {
                 검색 결과가 없습니다.
               </Text>
             )}
-          </View>
+          </ScrollView>
         )}
       </View>
 

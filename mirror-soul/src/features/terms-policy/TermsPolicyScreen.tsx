@@ -21,7 +21,7 @@ export const TermsPolicyScreen = () => {
         <View style={styles.gradientOverlay} />
       </View>
 
-      <Header title="약관 및 정책" delay={0} onBackPress={() => router.replace('/(main)/profile')} />
+      <Header title="약관 및 정책" delay={0} onBackPress={() => (router.canGoBack() ? router.back() : router.replace('/(main)/profile'))} />
 
       <Animated.View 
         entering={FadeInDown.delay(120).duration(550).springify()}

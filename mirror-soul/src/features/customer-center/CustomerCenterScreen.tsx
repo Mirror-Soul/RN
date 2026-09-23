@@ -19,7 +19,7 @@ export const CustomerCenterScreen = () => {
 
   return (
     <ScreenLayout withScroll={true}>
-      <Header title="고객센터" delay={0} onBackPress={() => router.replace('/(main)/profile')} />
+      <Header title="고객센터" delay={0} onBackPress={() => (router.canGoBack() ? router.back() : router.replace('/(main)/profile'))} />
 
       <View style={styles.contentPadding}>
         <Animated.View

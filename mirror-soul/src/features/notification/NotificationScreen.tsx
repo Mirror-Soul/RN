@@ -18,7 +18,7 @@ export const NotificationScreen = () => {
 
   return (
     <ScreenLayout withScroll={true}>
-      <Header title="알림 설정" delay={0} onBackPress={() => router.replace('/(main)/profile')} />
+      <Header title="알림 설정" delay={0} onBackPress={() => (router.canGoBack() ? router.back() : router.replace('/(main)/profile'))} />
 
       <View style={styles.contentPadding}>
         <Animated.View

@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -9,21 +9,15 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { Header } from '@/src/components/common/Header';
 import { ScreenLayout } from '@/src/components/common/ScreenLayout';
+import { MBTI_AXES } from '@/src/components/home/main/Discovery/mbtiAxes';
 import { jobCategories } from '@/src/components/signup/steps/Step2_BasicProfile/Professional/jobData';
 import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
 import { useTwinSyncQuery } from '@/src/features/growth/hooks/useTwinSyncQuery';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
-import type { IntroductionVoicePreview, MbtiAxisScores } from '@/src/types/api/profile';
+import type { IntroductionVoicePreview } from '@/src/types/api/profile';
 import { formatDurationLabel } from '@/src/utils/formatCallTime';
 import { formatRegion } from '@/src/utils/formatRegion';
 import { useIntroductionQuery } from './hooks/useIntroductionQuery';
-
-const MBTI_AXES: [keyof MbtiAxisScores, string, string][] = [
-  ['ieScore', 'I', 'E'],
-  ['nsScore', 'N', 'S'],
-  ['ftScore', 'F', 'T'],
-  ['pjScore', 'P', 'J'],
-];
 
 /**
  * 인증한 사용자의 소개를 표시하는 화면이다. 추천 상세와 화면이 같은 필드 계약을 쓰지만,
@@ -37,6 +31,17 @@ export const ProfileIntroductionScreen = () => {
   const [imageFailed, setImageFailed] = useState(false);
   const introduction = introductionQuery.data;
   const syncRate = introduction?.syncRate ?? twinSyncQuery.data?.syncRate ?? null;
+
+  // 이 화면은 (main) 탭 네비게이터 안의 Screen이라 다른 화면으로 push해도 언마운트되지
+  // 않는다 — staleTime: 0만으로는 재진입 시 refetch가 안 되므로(react-query는 탭 재포커스를
+  // 트리거로 보지 않는다) 포커스를 얻을 때마다 명시적으로 refetch한다. voicePreview.audioUrl은
+  // presigned URL이라 오래 머물면 만료될 수 있다.
+  const { refetch: refetchIntroduction } = introductionQuery;
+  useFocusEffect(
+    useCallback(() => {
+      refetchIntroduction();
+    }, [refetchIntroduction])
+  );
 
   const accountButton = (
     <Pressable
@@ -301,6 +306,13 @@ function IntroductionVoicePlayer({ voicePreview, onUpdate }: { voicePreview: Int
   const { colors } = useThemeColors();
   const player = useAudioPlayer(voicePreview.audioUrl);
   const status = useAudioPlayerStatus(player);
+
+  // 재생 중에 "업데이트"나 고객센터로 이동해도(이 화면은 push 대상이라 언마운트되지 않는다)
+  // 소리가 계속 나오지 않도록, 화면이 포커스를 잃는 시점에 멈춘다.
+  useFocusEffect(
+    useCallback(() => () => player.pause(), [player])
+  );
+
   return (
     <View style={styles.voiceContent}>
       <View style={styles.voiceHeading}>
