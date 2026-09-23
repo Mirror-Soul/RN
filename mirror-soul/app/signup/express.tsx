@@ -18,7 +18,6 @@ export default function ExpressYourselfScreen() {
   const router = useRouter();
   const { contentContainerStyle, screenPadding } = useLayout();
   const {
-    mbti,
     setMbti,
     setScores, // 추가
     description,
@@ -33,7 +32,7 @@ export default function ExpressYourselfScreen() {
 
   const handleContinue = () => {
     handleSubmit(() => {
-      router.push(SIGNUP_ROUTES.INTERVIEW);
+      router.replace(SIGNUP_ROUTES.INTERVIEW);
     });
   };
 
@@ -112,4 +111,3 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xxl,
   }
 });
-

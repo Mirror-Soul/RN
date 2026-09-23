@@ -5,6 +5,7 @@ import {
   getAccountInfo,
   getAlarmSetting,
   getAudioSettings,
+  getMyIntroduction,
   getMyProfile,
   getMyTime,
   modifyAlarmSetting,
@@ -45,6 +46,21 @@ describe('profileService', () => {
     const response = await getMyProfile();
     expect(mockedApiClient.get).toHaveBeenCalledWith('/my-page');
     expect(response.result.name).toBe('김소울');
+  });
+
+  it('getMyIntroduction calls GET /my-page/introduction', async () => {
+    mockedApiClient.get.mockResolvedValueOnce(
+      okResponse({
+        userUuid: 'uuid-1', name: '김소울', age: 28, profileImageUrl: null, syncRate: 74,
+        region: { sidoName: '서울', sigunguName: '강남구' }, job: 'DESIGN', jobCertificationSubmitted: false,
+        selfIntroduction: '안녕하세요', mbti: 'INFJ',
+        mbtiAxisScores: { ieScore: 72, nsScore: 65, ftScore: 70, pjScore: 75 },
+        personalityTags: ['차분한'], voicePreview: null,
+      })
+    );
+    const response = await getMyIntroduction();
+    expect(mockedApiClient.get).toHaveBeenCalledWith('/my-page/introduction');
+    expect(response.result.personalityTags).toEqual(['차분한']);
   });
 
   it('getMyTime calls GET /my-page/buy-time', async () => {

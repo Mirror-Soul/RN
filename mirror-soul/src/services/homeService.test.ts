@@ -51,8 +51,8 @@ describe('homeService', () => {
         jobCertificationSubmitted: true,
         selfIntroduction: '안녕하세요',
         mbti: 'INFJ',
-        mbtiIndicators: { ieScore: 72, nsScore: 65, ftScore: 70, pjScore: 75 },
-        hashtags: ['차분한'],
+        mbtiAxisScores: { ieScore: 72, nsScore: 65, ftScore: 70, pjScore: 75 },
+        personalityTags: ['차분한'],
         voicePreview: { audioUrl: 'https://example.com/a.mp3', contentType: 'audio/mpeg', durationMs: 5000 },
       })
     );

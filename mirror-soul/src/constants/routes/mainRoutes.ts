@@ -20,6 +20,7 @@ export const ROUTE_TO_TAB: Record<string, BottomTabId> = {
   grow: 'grow',
   match: 'match',
   profile: 'profile',
+  'profile-introduction': 'profile',
   'voice-audio': 'profile',
   notification: 'profile',
   'customer-center': 'profile',

@@ -9,14 +9,16 @@ import { useVoiceAudioSettings } from './hooks/useVoiceAudioSettings';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { Header } from '@/src/components/common/Header';
 import { ScreenLayout } from '@/src/components/common/ScreenLayout';
+import { useRouter } from 'expo-router';
 
 export const VoiceAudioScreen = () => {
+  const router = useRouter();
   const { speechSpeed, handleSpeedChange, isLoading } = useVoiceAudioSettings();
   const { colors } = useThemeColors();
 
   return (
     <ScreenLayout withScroll={true}>
-      <Header title="음성/오디오 설정" delay={0} />
+      <Header title="음성/오디오 설정" delay={0} onBackPress={() => (router.canGoBack() ? router.back() : router.replace('/(main)/profile'))} />
 
       <View style={styles.contentPadding}>
         <Animated.View

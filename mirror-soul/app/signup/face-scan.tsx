@@ -26,6 +26,7 @@ import FaceCameraView from '@/src/components/signup/steps/Step5_FaceScan/compone
 import { useFaceScan } from '@/src/components/signup/steps/Step5_FaceScan/hooks/useFaceScan';
 import { useFaceProcessor } from '@/src/components/signup/steps/Step5_FaceScan/hooks/useFaceProcessor';
 import { useFaceScanUpload } from '@/src/components/signup/steps/Step5_FaceScan/hooks/useFaceScanUpload';
+import { useAuthStore } from '@/src/store/useAuthStore';
 
 /**
  * 3D Face Scan 메인 화면
@@ -105,8 +106,11 @@ export default function FaceScanScreen() {
   }));
 
   // --- 이벤트 핸들러 ---
-  const handleNext = () => {
+  const handleNext = async () => {
     // '/'는 (main) 홈 탭과 로그인 화면이 동시에 매칭될 수 있어 명시적으로 홈을 지정한다.
+    // 얼굴 스캔 저장 성공 시 백엔드는 ACTIVE로 전환한다. 완료 화면은 유지하고,
+    // 사용자가 다음을 누르는 시점에만 앱 상태를 동기화한다.
+    await useAuthStore.getState().updateUserStatus('ACTIVE');
     router.replace('/(main)');
   };
 

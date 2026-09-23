@@ -56,7 +56,7 @@ export const AccountSettingsScreen = () => {
       <View style={styles.bgTopLeft} pointerEvents="none" />
       <View style={styles.bgBottomRight} pointerEvents="none" />
 
-      <Header title="계정 관리" delay={0} />
+      <Header title="계정 관리" delay={0} onBackPress={() => (router.canGoBack() ? router.back() : router.replace('/(main)/profile'))} />
 
       <Animated.View 
         entering={FadeInDown.delay(120).duration(550).springify()}

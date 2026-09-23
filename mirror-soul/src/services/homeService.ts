@@ -1,12 +1,11 @@
 import apiClient from './apiClient';
 import {
   HomeResponse,
-  PreferredRegionsResponse,
   RecommendationDetailResponse,
   RecommendationsResponse,
-  SigunguOptionsResponse,
   SwipeResponse,
-  UpdatePreferredRegionsRequest,
+  UpdatePreferredRegionRequest,
+  UpdatePreferredRegionResponse,
 } from '../types/api/home';
 import { logger } from '../utils/logger';
 
@@ -14,7 +13,7 @@ import { logger } from '../utils/logger';
  * 홈(Home) 도메인 API 서비스 (SoC)
  */
 
-/** 홈 화면 조회 - 잔여 대화 시간과 현재 선호 지역 */
+/** 홈 화면 조회 - 잔여 대화 시간과 현재 탐색 지역(앵커+반경) */
 export const getHome = async (): Promise<HomeResponse> => {
   logger.debug('getHome');
   try {
@@ -27,30 +26,17 @@ export const getHome = async (): Promise<HomeResponse> => {
   }
 };
 
-/** 선호 지역 설정 (1~3개) */
-export const updatePreferredRegions = async (
-  data: UpdatePreferredRegionsRequest
-): Promise<PreferredRegionsResponse> => {
-  logger.debug('updatePreferredRegions:', data);
+/** 탐색 지역(동 앵커+반경) 설정 */
+export const updatePreferredRegion = async (
+  data: UpdatePreferredRegionRequest
+): Promise<UpdatePreferredRegionResponse> => {
+  logger.debug('updatePreferredRegion:', data);
   try {
-    const response = await apiClient.put<PreferredRegionsResponse>('/home/preferred-regions', data);
-    logger.info('updatePreferredRegions SUCCESS:', response.data);
+    const response = await apiClient.put<UpdatePreferredRegionResponse>('/home/preferred-region', data);
+    logger.info('updatePreferredRegion SUCCESS:', response.data);
     return response.data;
   } catch (error: unknown) {
-    logger.error('updatePreferredRegions ERROR:', { message: error instanceof Error ? error.message : String(error) });
-    throw error;
-  }
-};
-
-/** 선호 지역 선택지 조회 */
-export const getPreferredRegionOptions = async (): Promise<SigunguOptionsResponse> => {
-  logger.debug('getPreferredRegionOptions');
-  try {
-    const response = await apiClient.get<SigunguOptionsResponse>('/home/preferred-regions/options');
-    logger.info('getPreferredRegionOptions SUCCESS:', response.data);
-    return response.data;
-  } catch (error: unknown) {
-    logger.error('getPreferredRegionOptions ERROR:', { message: error instanceof Error ? error.message : String(error) });
+    logger.error('updatePreferredRegion ERROR:', { message: error instanceof Error ? error.message : String(error) });
     throw error;
   }
 };

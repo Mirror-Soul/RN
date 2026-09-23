@@ -11,6 +11,7 @@ export const Colors = {
     activeRedText: '#FF6467', // "실시간 음성 인식 중" 텍스트 컬러
     goldText: '#FFDF20',      // "NEW" 배지 텍스트 컬러
     mirrorOrange: '#FF8904',  // 매칭 포인트 오렌지
+    mapMarkerBlue: '#155DFC', // Discovery 지역 설정 지도 위 앵커/반경 강조색 — electricCyan은 Google 지도 색과 겹쳐 보여서 별도로 둠 (gradient.twinCallButton의 파랑과 동일 톤)
     cardBlack: '#111111',     // 히어로 카드 등 짙은 카드 배경
   },
   gradient: {

@@ -18,6 +18,7 @@ import Step2Header from './components/Step2Header';
 import { useStep2Form } from './hooks/useStep2Form';
 
 import { saveProfile } from '@/src/services/onboardingService';
+import { useAuthStore } from '@/src/store/useAuthStore';
 import { JobEnum } from '@/src/types/api/onboarding';
 import { jobCategories } from './Professional/jobData';
 
@@ -74,8 +75,10 @@ export default function Step2BasicProfileContainer() {
       );
 
       if (response.isSuccess) {
-        // 성공: Step3로 이동
-        router.push(SIGNUP_ROUTES.EXPRESS);
+        // 백엔드는 이 요청에서 ONBOARD_B로 전환한다. 앱 상태도 먼저 맞춰야
+        // 전역 라우팅 가드가 이전 단계(ONBOARD_A)로 되돌리지 않는다.
+        await useAuthStore.getState().updateUserStatus('ONBOARD_B');
+        router.replace(SIGNUP_ROUTES.EXPRESS);
       } else {
         Alert.alert('저장 실패', response.message || '프로필 정보를 저장하지 못했습니다.');
       }

@@ -20,6 +20,7 @@ import { useSTT } from '@/src/hooks/useSTT';
 import { useInterviewQuestions } from '@/src/components/signup/steps/Step4_Interview/hooks/useInterviewQuestions';
 import { useInterviewUpload } from '@/src/components/signup/steps/Step4_Interview/hooks/useInterviewUpload';
 import MicPermissionModal from '@/src/components/signup/steps/Step4_Interview/components/parts/MicPermissionModal';
+import { useAuthStore } from '@/src/store/useAuthStore';
 
 export default function InterviewScreen() {
   const { contentContainerStyle, screenPadding } = useLayout();
@@ -36,7 +37,7 @@ export default function InterviewScreen() {
     resetRecording,
   } = useInterviewSpeech();
 
-  const { transcript, startListening, stopListening, resetTranscript, isListening: isSTTListening } = useSTT('ko-KR');
+  const { transcript, startListening, stopListening, resetTranscript } = useSTT('ko-KR');
   const { 
     currentQuestion, 
     currentQuestionIndex, 
@@ -125,11 +126,18 @@ export default function InterviewScreen() {
         return;
       }
 
+      if (!finalUri) {
+        Alert.alert('녹음 오류', '답변 오디오를 찾을 수 없습니다. 다시 녹음해주세요.');
+        return;
+      }
+
       const isSuccess = await uploadInterviewAudio(finalUri, targetQuestionId, finalTranscript || transcript);
       if (!isSuccess) return;
 
       if (isLastQuestion) {
-        router.push('/signup/face-scan');
+        // 마지막 답변 저장 성공 시 백엔드는 ONBOARD_D로 전환한다.
+        await useAuthStore.getState().updateUserStatus('ONBOARD_D');
+        router.replace('/signup/face-scan');
       } else {
         goToNextQuestion();
       }
