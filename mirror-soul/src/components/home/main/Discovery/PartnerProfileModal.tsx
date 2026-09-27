@@ -42,7 +42,7 @@ interface PartnerProfileModalProps {
  * 세로 슬라이드(하단→전체 화면)로 응용합니다.
  */
 export default function PartnerProfileModal({ match, onClose, onConnectNow }: PartnerProfileModalProps) {
-  const { colors, isDark } = useThemeColors();
+  const { colors } = useThemeColors();
   const insets = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
   // 고정 480px 대신 화면 높이 비율로 — 작은 기기에서 과도하게 크거나 큰 기기에서 작아 보이는 문제 방지
@@ -134,7 +134,12 @@ export default function PartnerProfileModal({ match, onClose, onConnectNow }: Pa
           <View style={[styles.hero, { height: heroHeight }]}>
             {imageFailed || !profileImageUrl ? (
               <LinearGradient colors={Colors.gradient.avatarPlaceholder} style={styles.heroImage}>
-                <Text style={styles.heroImageFallbackText}>{profileName.charAt(0).toUpperCase()}</Text>
+                <View style={styles.heroImageFallbackContent} accessible accessibilityLabel="프로필 사진을 준비 중입니다">
+                  <View style={styles.heroImageFallbackAvatar}>
+                    <Feather name="user" size={46} color={Colors.neutral.pureWhite} />
+                  </View>
+                  <Text style={styles.heroImageFallbackText}>프로필 사진을 준비 중이에요</Text>
+                </View>
               </LinearGradient>
             ) : (
               <Image
@@ -146,11 +151,10 @@ export default function PartnerProfileModal({ match, onClose, onConnectNow }: Pa
                 onError={() => setImageFailed(true)}
               />
             )}
-            {/* heroInfo(이름/위치/직업)는 항상 흰 텍스트라 하단부는 테마와 무관하게 어둡게 유지하고,
-                아주 마지막(85~100%) 구간만 콘텐츠 영역과 이어지도록 테마색으로 옮겨 라이트 모드
-                대비를 확보한다 — 텍스트 영역까지 밝아지면 라이트 모드에서 흰 글씨가 안 보인다. */}
+            {/* heroInfo는 항상 흰 텍스트이므로 다크/라이트 테마 모두 Hero 하단을 어둡게 마감한다.
+                콘텐츠 배경색으로 끝내면 라이트 모드에서 이름·위치·직업 텍스트가 묻힌다. */}
             <LinearGradient
-              colors={['transparent', 'rgba(5,5,5,0.4)', 'rgba(5,5,5,0.75)', isDark ? '#141414' : '#F0EFEB']}
+              colors={['transparent', 'rgba(5,5,5,0.4)', 'rgba(5,5,5,0.82)', Colors.primary.cardBlack]}
               locations={[0, 0.45, 0.85, 1]}
               style={StyleSheet.absoluteFill}
             />
@@ -193,14 +197,14 @@ export default function PartnerProfileModal({ match, onClose, onConnectNow }: Pa
               <View style={styles.metaRow}>
                 <View style={styles.metaItem}>
                   <Feather name="map-pin" size={14} color={Colors.neutral.lightGray} />
-                  <Text style={styles.metaText}>{profileRegion ? formatRegion(profileRegion) : '지역 정보 없음'}</Text>
+                  <Text style={styles.metaText}>{profileRegion ? formatRegion(profileRegion) : '활동 지역 미설정'}</Text>
                 </View>
                 <View style={styles.metaItem}>
                   <Feather name="briefcase" size={14} color={Colors.neutral.lightGray} />
                   <Text style={styles.metaText}>
-                    {profileJob ? jobCategories.find((c) => c.value === profileJob)?.label ?? profileJob : '직업 정보 없음'}
+                    {profileJob ? jobCategories.find((c) => c.value === profileJob)?.label ?? profileJob : '직업 정보 미등록'}
                   </Text>
-                  {jobCertificationSubmitted ? (
+                  {profileJob && jobCertificationSubmitted ? (
                     <View style={styles.documentSubmittedBadge} accessible accessibilityLabel="직업 인증 서류 제출">
                       <Feather name="shield" size={12} color={Colors.neutral.pureWhite} />
                       <Text style={styles.documentSubmittedText}>서류 제출</Text>
@@ -276,7 +280,7 @@ export default function PartnerProfileModal({ match, onClose, onConnectNow }: Pa
                         />
                       ))
                     ) : detail ? (
-                      <Text style={[styles.emptyText, { color: colors.text.muted }]}>MBTI 지표가 등록되면 이곳에서 확인할 수 있어요.</Text>
+                      <Text style={[styles.emptyText, { color: colors.text.muted }]}>MBTI 결과를 준비 중이에요.</Text>
                     ) : (
                       <ActivityIndicator color={colors.text.muted} />
                     )}
@@ -303,7 +307,7 @@ export default function PartnerProfileModal({ match, onClose, onConnectNow }: Pa
                 <Section title="이 사람의 이야기" index={3}>
                   <View style={[styles.bioCard, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
                     <Text style={[styles.bioText, { color: colors.text.secondary }]}>
-                      {profileIntroduction ? `“${profileIntroduction}”` : '등록된 소개가 없어요.'}
+                      {profileIntroduction ? `“${profileIntroduction}”` : '아직 자기소개를 준비 중이에요.'}
                     </Text>
                   </View>
                 </Section>
@@ -516,11 +520,28 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     justifyContent: 'center',
     alignItems: 'center',
+    // 반투명 기본 아바타 그라디언트가 라이트 콘텐츠 배경을 비치지 않게 해
+    // 기본 상태의 흰 아이콘/안내 문구 대비를 유지한다.
+    backgroundColor: Colors.primary.cardBlack,
+  },
+  heroImageFallbackContent: {
+    alignItems: 'center',
+    gap: Spacing.md,
+  },
+  heroImageFallbackAvatar: {
+    width: 92,
+    height: 92,
+    borderRadius: Radii.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.glass.white10,
+    borderWidth: 1,
+    borderColor: Colors.glass.white20,
   },
   heroImageFallbackText: {
     fontFamily: FontFamily.sans,
-    fontSize: 96,
-    fontWeight: FontWeight.black,
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.semibold,
     color: Colors.neutral.pureWhite,
   },
   closeButtonWrapper: {

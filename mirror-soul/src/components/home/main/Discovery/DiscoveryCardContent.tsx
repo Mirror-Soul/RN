@@ -45,9 +45,9 @@ export default function DiscoveryCardContent({
   const [isSummaryTruncated, setIsSummaryTruncated] = useState(false);
   const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
   const isScoreKnown = Number.isFinite(match.recommendationScore);
-  const summary = match.selfIntroduction ?? '소개를 준비 중이에요.';
-  const locationLabel = match.residence ? formatRegion(match.residence) : '지역 정보 없음';
-  const jobLabel = match.job ? JOB_LABEL[match.job] : '직업 정보 없음';
+  const summary = match.selfIntroduction ?? '아직 자기소개를 준비 중이에요.';
+  const locationLabel = match.residence ? formatRegion(match.residence) : '활동 지역 미설정';
+  const jobLabel = match.job ? JOB_LABEL[match.job] : '직업 정보 미등록';
 
   return (
     <>
@@ -62,7 +62,12 @@ export default function DiscoveryCardContent({
       >
         {imageFailed || !match.profileImageUrl ? (
           <LinearGradient colors={Colors.gradient.avatarPlaceholder} style={styles.photo}>
-            <Text style={styles.photoFallbackText}>{match.name.charAt(0).toUpperCase()}</Text>
+            <View style={styles.photoFallbackContent} accessible accessibilityLabel="프로필 사진을 준비 중입니다">
+              <View style={styles.photoFallbackAvatar}>
+                <Feather name="user" size={30} color={Colors.neutral.pureWhite} />
+              </View>
+              <Text style={styles.photoFallbackText}>프로필 사진을 준비 중이에요</Text>
+            </View>
           </LinearGradient>
         ) : (
           <Image
@@ -116,7 +121,7 @@ export default function DiscoveryCardContent({
               <Text style={[styles.chipText, { color: colors.text.secondary }]}>{match.age}세</Text>
             </View>
           )}
-          {match.jobCertificationSubmitted ? (
+          {match.job && match.jobCertificationSubmitted ? (
             <View style={styles.documentSubmittedBadge} accessible accessibilityLabel="직업 인증 서류 제출">
               <Feather name="shield" size={13} color={Colors.primary.electricCyan} />
               <Text style={styles.documentSubmittedText}>서류 제출</Text>
@@ -223,11 +228,28 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     justifyContent: 'center',
     alignItems: 'center',
+    // avatarPlaceholder는 반투명 색이라 라이트 카드 위에서도 흰 아이콘/문구가
+    // 충분히 읽히도록 공통 베이스를 둔다. 실제 사진이 있을 때는 이미지가 이를 덮는다.
+    backgroundColor: Colors.primary.cardBlack,
+  },
+  photoFallbackContent: {
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  photoFallbackAvatar: {
+    width: 64,
+    height: 64,
+    borderRadius: Radii.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.glass.white10,
+    borderWidth: 1,
+    borderColor: Colors.glass.white20,
   },
   photoFallbackText: {
     fontFamily: FontFamily.sans,
-    fontSize: 64,
-    fontWeight: FontWeight.black,
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.semibold,
     color: Colors.neutral.pureWhite,
   },
   detailButton: {
