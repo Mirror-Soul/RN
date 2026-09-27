@@ -117,7 +117,7 @@ export default function DiscoveryMatchCard({ match, onOpenDetail, onPass, onGoBa
 
     <PhotoLightbox
       visible={isLightboxVisible}
-      imageUrl={match.profileImageUrl}
+      imageUrl={match.profileImageUrl ?? ''}
       onClose={() => setIsLightboxVisible(false)}
     />
     </>

@@ -45,6 +45,9 @@ export default function DiscoveryCardContent({
   const [isSummaryTruncated, setIsSummaryTruncated] = useState(false);
   const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
   const isScoreKnown = Number.isFinite(match.recommendationScore);
+  const summary = match.selfIntroduction ?? '소개를 준비 중이에요.';
+  const locationLabel = match.residence ? formatRegion(match.residence) : '지역 정보 없음';
+  const jobLabel = match.job ? JOB_LABEL[match.job] : '직업 정보 없음';
 
   return (
     <>
@@ -53,11 +56,11 @@ export default function DiscoveryCardContent({
         style={styles.photoBox}
         onPress={onPhotoPress}
         activeOpacity={0.95}
-        disabled={imageFailed || !onPhotoPress}
+        disabled={imageFailed || !match.profileImageUrl || !onPhotoPress}
         accessibilityRole="button"
         accessibilityLabel="사진 크게 보기"
       >
-        {imageFailed ? (
+        {imageFailed || !match.profileImageUrl ? (
           <LinearGradient colors={Colors.gradient.avatarPlaceholder} style={styles.photo}>
             <Text style={styles.photoFallbackText}>{match.name.charAt(0).toUpperCase()}</Text>
           </LinearGradient>
@@ -114,19 +117,22 @@ export default function DiscoveryCardContent({
             </View>
           )}
           {match.jobCertificationSubmitted ? (
-            <Feather name="check-circle" size={18} color={Colors.primary.electricCyan} />
+            <View style={styles.documentSubmittedBadge} accessible accessibilityLabel="직업 인증 서류 제출">
+              <Feather name="shield" size={13} color={Colors.primary.electricCyan} />
+              <Text style={styles.documentSubmittedText}>서류 제출</Text>
+            </View>
           ) : null}
         </View>
 
         <View style={styles.metaRow}>
           <Feather name="map-pin" size={13} color={colors.text.muted} />
           <Text style={[styles.metaText, { color: colors.text.muted }]} numberOfLines={1}>
-            {formatRegion(match.residence)}
+            {locationLabel}
           </Text>
           <View style={[styles.metaDivider, { backgroundColor: colors.border.primary }]} />
           <Feather name="briefcase" size={13} color={colors.text.muted} />
           <Text style={[styles.metaText, { color: colors.text.muted }]} numberOfLines={1}>
-            {JOB_LABEL[match.job]}
+            {jobLabel}
           </Text>
         </View>
 
@@ -137,7 +143,7 @@ export default function DiscoveryCardContent({
               numberOfLines={isSummaryExpanded ? undefined : 2}
               ellipsizeMode="tail"
             >
-              &quot;{match.selfIntroduction}&quot;
+              &quot;{summary}&quot;
             </Text>
 
             {/* 화면 밖에서 줄바꿈 제한 없이 렌더링해 실제 줄 수를 측정한다 — numberOfLines가
@@ -148,7 +154,7 @@ export default function DiscoveryCardContent({
               onTextLayout={(e) => setIsSummaryTruncated(e.nativeEvent.lines.length > 2)}
               pointerEvents="none"
             >
-              &quot;{match.selfIntroduction}&quot;
+              &quot;{summary}&quot;
             </Text>
 
             {/* 더보기/접기는 상세 모달이 아니라 카드 안에서 텍스트만 펼치는 인라인 확장 —
@@ -166,14 +172,16 @@ export default function DiscoveryCardContent({
           </View>
         ) : (
           <Text style={[styles.summaryText, { color: colors.text.secondary }]} numberOfLines={1} ellipsizeMode="tail">
-            &quot;{match.selfIntroduction}&quot;
+            &quot;{summary}&quot;
           </Text>
         )}
 
         <View style={styles.tagRow}>
-          <View style={[styles.chip, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
-            <Text style={[styles.chipText, { color: Colors.primary.electricCyan }]}>{match.mbti}</Text>
-          </View>
+          {match.mbti ? (
+            <View style={[styles.chip, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
+              <Text style={[styles.chipText, { color: Colors.primary.electricCyan }]}>{match.mbti}</Text>
+            </View>
+          ) : null}
           {match.personalityTags.slice(0, 2).map((tag) => (
             <View key={tag} style={[styles.chip, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
               <Text style={[styles.chipText, { color: colors.text.secondary }]}>#{tag}</Text>
@@ -264,6 +272,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.xs,
+  },
+  documentSubmittedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xxs,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xxs,
+    borderRadius: Radii.full,
+    backgroundColor: Colors.glass.cyan10_d3,
+  },
+  documentSubmittedText: {
+    fontFamily: FontFamily.sans,
+    fontSize: 10,
+    fontWeight: FontWeight.bold,
+    color: Colors.primary.electricCyan,
   },
   nameText: {
     flex: 1,

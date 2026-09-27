@@ -2,6 +2,7 @@ import { Feather } from '@expo/vector-icons';
 import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { useRecommendationDetailQuery } from '@/src/features/home/hooks/useRecommendationDetailQuery';
+import { getErrorCode, getErrorDisplayMessage } from '@/src/utils/apiErrorCode';
 import { formatRegion } from '@/src/utils/formatRegion';
 import { formatDurationLabel } from '@/src/utils/formatCallTime';
 import { jobCategories } from '@/src/components/signup/steps/Step2_BasicProfile/Professional/jobData';
@@ -57,7 +58,13 @@ export default function PartnerProfileModal({ match, onClose, onConnectNow }: Pa
   const displayedUserUuid = displayedMatch?.userUuid;
   const isMockMatch = isMockRecommendationUuid(displayedUserUuid);
   const mockDetail = getMockRecommendationDetail(displayedUserUuid);
-  const { data: apiDetail } = useRecommendationDetailQuery(isMockMatch ? null : (displayedUserUuid ?? null));
+  const {
+    data: apiDetail,
+    error: detailError,
+    isError: isDetailError,
+    isFetching: isDetailFetching,
+    refetch: refetchDetail,
+  } = useRecommendationDetailQuery(isMockMatch ? null : (displayedUserUuid ?? null));
   const detail = mockDetail ?? apiDetail;
 
   useEffect(() => {
@@ -92,6 +99,22 @@ export default function PartnerProfileModal({ match, onClose, onConnectNow }: Pa
 
   if (!displayedMatch) return null;
 
+  // 목록은 모달을 즉시 열기 위한 스냅샷이고, 상세 응답이 도착하면 그것을 정본으로 사용한다.
+  // 단, 상세 API가 null을 명시한 필드는 목록의 오래된 값으로 되살리지 않고 빈 상태를 보여준다.
+  const profileName = detail?.name ?? displayedMatch.name;
+  const profileAge = detail ? detail.age : displayedMatch.age;
+  const profileImageUrl = detail ? detail.profileImageUrl : displayedMatch.profileImageUrl;
+  const profileRegion = detail ? detail.region : displayedMatch.residence;
+  const profileJob = detail ? detail.job : displayedMatch.job;
+  const jobCertificationSubmitted = detail ? detail.jobCertificationSubmitted : displayedMatch.jobCertificationSubmitted;
+  const profileMbti = detail ? detail.mbti : displayedMatch.mbti;
+  const profileIntroduction = detail ? detail.selfIntroduction : displayedMatch.selfIntroduction;
+  const personalityTags = detail ? detail.personalityTags : displayedMatch.personalityTags;
+  const isRecommendationUnavailable = getErrorCode(detailError) === 'RECOMMENDATION_TARGET_NOT_FOUND';
+  const detailErrorMessage = isRecommendationUnavailable
+    ? '이 추천은 더 이상 상세 정보를 확인할 수 없어요.'
+    : getErrorDisplayMessage(detailError, '상세 정보를 불러오지 못했어요. 잠시 후 다시 시도해주세요.');
+
   return (
     <Modal visible transparent animationType="none" statusBarTranslucent onRequestClose={onClose}>
       <Animated.View
@@ -109,13 +132,13 @@ export default function PartnerProfileModal({ match, onClose, onConnectNow }: Pa
       >
         <ScrollView showsVerticalScrollIndicator={false} bounces={false}>
           <View style={[styles.hero, { height: heroHeight }]}>
-            {imageFailed ? (
+            {imageFailed || !profileImageUrl ? (
               <LinearGradient colors={Colors.gradient.avatarPlaceholder} style={styles.heroImage}>
-                <Text style={styles.heroImageFallbackText}>{displayedMatch.name.charAt(0).toUpperCase()}</Text>
+                <Text style={styles.heroImageFallbackText}>{profileName.charAt(0).toUpperCase()}</Text>
               </LinearGradient>
             ) : (
               <Image
-                source={{ uri: displayedMatch.profileImageUrl }}
+                source={{ uri: profileImageUrl }}
                 style={styles.heroImage}
                 contentFit="cover"
                 cachePolicy="disk"
@@ -157,26 +180,31 @@ export default function PartnerProfileModal({ match, onClose, onConnectNow }: Pa
                     <Text style={styles.compatBadgeText}>트윈 싱크로율 {detail.syncRate}%</Text>
                   </LinearGradient>
                 ) : null}
-                <View style={styles.mbtiBadge}>
-                  <Text style={styles.mbtiBadgeText}>{displayedMatch.mbti}</Text>
-                </View>
+                {profileMbti ? (
+                  <View style={styles.mbtiBadge}>
+                    <Text style={styles.mbtiBadgeText}>{profileMbti}</Text>
+                  </View>
+                ) : null}
               </View>
               <Text style={styles.nameText}>
-                {displayedMatch.name}
-                <Text style={styles.ageText}> {displayedMatch.age}</Text>
+                {profileName}
+                {profileAge != null ? <Text style={styles.ageText}> {profileAge}</Text> : null}
               </Text>
               <View style={styles.metaRow}>
                 <View style={styles.metaItem}>
                   <Feather name="map-pin" size={14} color={Colors.neutral.lightGray} />
-                  <Text style={styles.metaText}>{formatRegion(displayedMatch.residence)}</Text>
+                  <Text style={styles.metaText}>{profileRegion ? formatRegion(profileRegion) : '지역 정보 없음'}</Text>
                 </View>
                 <View style={styles.metaItem}>
                   <Feather name="briefcase" size={14} color={Colors.neutral.lightGray} />
                   <Text style={styles.metaText}>
-                    {jobCategories.find((c) => c.value === displayedMatch.job)?.label ?? displayedMatch.job}
+                    {profileJob ? jobCategories.find((c) => c.value === profileJob)?.label ?? profileJob : '직업 정보 없음'}
                   </Text>
-                  {displayedMatch.jobCertificationSubmitted ? (
-                    <Feather name="check-circle" size={14} color={Colors.neutral.pureWhite} />
+                  {jobCertificationSubmitted ? (
+                    <View style={styles.documentSubmittedBadge} accessible accessibilityLabel="직업 인증 서류 제출">
+                      <Feather name="shield" size={12} color={Colors.neutral.pureWhite} />
+                      <Text style={styles.documentSubmittedText}>서류 제출</Text>
+                    </View>
                   ) : null}
                 </View>
               </View>
@@ -184,76 +212,103 @@ export default function PartnerProfileModal({ match, onClose, onConnectNow }: Pa
           </View>
 
           <View style={styles.content}>
-            <Section title="AI 페르소나 분석" index={0}>
-              <Text style={[styles.insightText, { color: colors.text.secondary }]}>
-                {detail?.syncRate != null ? (
-                  <>
-                    AI 트윈이 {displayedMatch.name}님의 목소리와 성격을{' '}
-                    <Text style={styles.insightHighlight}>{detail.syncRate}%</Text>까지 재현했어요. 대화에서는 이런
-                    성향이 느껴져요.
-                  </>
-                ) : (
-                  '트윈 매칭 분석 정보를 불러오는 중이에요.'
-                )}
-              </Text>
-              <View style={styles.tagRow}>
-                {(detail?.personalityTags ?? displayedMatch.personalityTags).map((tag) => (
-                  <View key={tag} style={styles.aiTag}>
-                    <Text style={styles.aiTagText}># {tag}</Text>
+            {isDetailError && !isMockMatch ? (
+              <DetailLoadError
+                message={detailErrorMessage}
+                unavailable={isRecommendationUnavailable}
+                isRetrying={isDetailFetching}
+                onClose={onClose}
+                onRetry={() => refetchDetail()}
+              />
+            ) : (
+              <>
+                <Section title="AI 페르소나 분석" index={0}>
+                  <Text style={[styles.insightText, { color: colors.text.secondary }]}>
+                    {detail?.syncRate != null ? (
+                      <>
+                        AI 트윈이 {profileName}님의 목소리와 성격을{' '}
+                        <Text style={styles.insightHighlight}>{detail.syncRate}%</Text>까지 재현했어요. 대화에서는 이런
+                        성향이 느껴져요.
+                      </>
+                    ) : detail ? (
+                      'AI 트윈 분석 정보를 아직 준비하고 있어요.'
+                    ) : (
+                      'AI 트윈 분석 정보를 불러오는 중이에요.'
+                    )}
+                  </Text>
+                  {personalityTags.length > 0 ? (
+                    <View style={styles.tagRow}>
+                      {personalityTags.map((tag) => (
+                        <View key={tag} style={styles.aiTag}>
+                          <Text style={styles.aiTagText}># {tag}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  ) : (
+                    <Text style={[styles.emptyText, { color: colors.text.muted }]}>AI 페르소나 분석을 준비하고 있어요.</Text>
+                  )}
+                </Section>
+
+                <Section title="MBTI 성향 밸런스" index={1}>
+                  <View
+                    style={[styles.balanceCard, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
+                    accessible
+                    accessibilityLabel={
+                      detail?.mbtiAxisScores
+                        ? `MBTI 성향 밸런스: ${MBTI_AXES.map(
+                            ([field, left, right]) =>
+                              `${left} ${detail.mbtiAxisScores?.[field] ?? 0}%, ${right} ${100 - (detail.mbtiAxisScores?.[field] ?? 0)}%`,
+                          ).join(', ')}`
+                        : detail
+                          ? 'MBTI 성향 밸런스 정보 없음'
+                          : 'MBTI 성향 밸런스 불러오는 중'
+                    }
+                  >
+                    {detail?.mbtiAxisScores ? (
+                      MBTI_AXES.map(([field, left, right]) => (
+                        <MbtiAxisBar
+                          key={field}
+                          leftLabel={left}
+                          rightLabel={right}
+                          value={detail.mbtiAxisScores?.[field] ?? 0}
+                          mutedColor={colors.text.muted}
+                          trackColor={colors.border.strong}
+                        />
+                      ))
+                    ) : detail ? (
+                      <Text style={[styles.emptyText, { color: colors.text.muted }]}>MBTI 지표가 등록되면 이곳에서 확인할 수 있어요.</Text>
+                    ) : (
+                      <ActivityIndicator color={colors.text.muted} />
+                    )}
                   </View>
-                ))}
-              </View>
-            </Section>
+                </Section>
 
-            <Section title="성향 밸런스" index={1}>
-              <View
-                style={[styles.balanceCard, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
-                accessible
-                accessibilityLabel={
-                  detail?.mbtiAxisScores
-                    ? `성향 밸런스: ${MBTI_AXES.map(
-                        ([field, left, right]) =>
-                          `${left} ${detail.mbtiAxisScores?.[field] ?? 0}%, ${right} ${100 - (detail.mbtiAxisScores?.[field] ?? 0)}%`,
-                      ).join(', ')}`
-                    : '성향 밸런스 불러오는 중'
-                }
-              >
-                {detail?.mbtiAxisScores ? (
-                  MBTI_AXES.map(([field, left, right]) => (
-                    <MbtiAxisBar
-                      key={field}
-                      leftLabel={left}
-                      rightLabel={right}
-                      value={detail.mbtiAxisScores?.[field] ?? 0}
-                      mutedColor={colors.text.muted}
-                      trackColor={colors.border.strong}
-                    />
-                  ))
-                ) : (
-                  <ActivityIndicator color={colors.text.muted} />
-                )}
-              </View>
-            </Section>
+                <Section title="목소리 미리듣기" index={2}>
+                  <View style={[styles.voiceCard, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
+                    {detail?.voicePreview ? (
+                      <VoicePreviewPlayer
+                        key={detail.voicePreview.audioUrl}
+                        voicePreview={detail.voicePreview}
+                        isReloading={isDetailFetching}
+                        onReload={isMockMatch ? undefined : () => refetchDetail()}
+                      />
+                    ) : detail ? (
+                      <Text style={[styles.voiceStyleText, { color: colors.text.muted }]}>음성 미리듣기를 준비 중이에요.</Text>
+                    ) : (
+                      <ActivityIndicator color={colors.text.muted} />
+                    )}
+                  </View>
+                </Section>
 
-            <Section title="목소리 미리듣기" index={2}>
-              <View style={[styles.voiceCard, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
-                {detail?.voicePreview ? (
-                  <VoicePreviewPlayer voicePreview={detail.voicePreview} />
-                ) : detail ? (
-                  <Text style={[styles.voiceStyleText, { color: colors.text.muted }]}>음성 미리듣기를 준비 중이에요.</Text>
-                ) : (
-                  <ActivityIndicator color={colors.text.muted} />
-                )}
-              </View>
-            </Section>
-
-            <Section title="이 사람의 이야기" index={3}>
-              <View style={[styles.bioCard, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
-                <Text style={[styles.bioText, { color: colors.text.secondary }]}>
-                  &quot;{detail?.selfIntroduction ?? displayedMatch.selfIntroduction}&quot;
-                </Text>
-              </View>
-            </Section>
+                <Section title="이 사람의 이야기" index={3}>
+                  <View style={[styles.bioCard, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
+                    <Text style={[styles.bioText, { color: colors.text.secondary }]}>
+                      {profileIntroduction ? `“${profileIntroduction}”` : '등록된 소개가 없어요.'}
+                    </Text>
+                  </View>
+                </Section>
+              </>
+            )}
           </View>
         </ScrollView>
 
@@ -269,10 +324,12 @@ export default function PartnerProfileModal({ match, onClose, onConnectNow }: Pa
           />
           <TouchableOpacity
             onPress={() => onConnectNow?.(displayedMatch)}
+            disabled={isRecommendationUnavailable}
             activeOpacity={0.85}
             accessibilityRole="button"
-            accessibilityLabel="통화하기"
-            style={styles.connectNowWrapper}
+            accessibilityLabel={isRecommendationUnavailable ? '통화할 수 없음' : '통화하기'}
+            accessibilityState={{ disabled: isRecommendationUnavailable }}
+            style={[styles.connectNowWrapper, isRecommendationUnavailable && styles.connectNowDisabled]}
           >
             <LinearGradient
               colors={[Colors.primary.electricCyan, Colors.primary.vividPurple]}
@@ -281,7 +338,7 @@ export default function PartnerProfileModal({ match, onClose, onConnectNow }: Pa
               style={styles.connectNowButton}
             >
               <Feather name="phone" size={20} color={Colors.neutral.pureWhite} />
-              <Text style={styles.connectNowText}>통화하기</Text>
+              <Text style={styles.connectNowText}>{isRecommendationUnavailable ? '통화할 수 없어요' : '통화하기'}</Text>
             </LinearGradient>
           </TouchableOpacity>
         </View>
@@ -348,7 +405,15 @@ function withAlpha(hexColor: string, alpha: number): string {
  * detail 쿼리 키가 바뀌면서 이 컴포넌트가 언마운트되고, expo-audio가 언마운트 시 내부적으로
  * 플레이어를 release하므로 이전 오디오가 자동으로 멈춘다(수동 정리 코드 불필요).
  */
-function VoicePreviewPlayer({ voicePreview }: { voicePreview: VoicePreview }) {
+function VoicePreviewPlayer({
+  voicePreview,
+  onReload,
+  isReloading,
+}: {
+  voicePreview: VoicePreview;
+  onReload?: () => void;
+  isReloading: boolean;
+}) {
   const { colors } = useThemeColors();
   const player = useAudioPlayer(voicePreview.audioUrl);
   const status = useAudioPlayerStatus(player);
@@ -368,8 +433,63 @@ function VoicePreviewPlayer({ voicePreview }: { voicePreview: VoicePreview }) {
         <Text style={[styles.voiceStyleText, { color: colors.text.primary }]}>
           {formatDurationLabel(voicePreview.durationMs == null ? null : Math.round(voicePreview.durationMs / 1000))}
         </Text>
+        {onReload ? (
+          <TouchableOpacity
+            onPress={onReload}
+            disabled={isReloading}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="음성 미리듣기 다시 불러오기"
+            style={styles.voiceReloadButton}
+          >
+            {isReloading ? (
+              <ActivityIndicator size="small" color={Colors.primary.electricCyan} />
+            ) : (
+              <>
+                <Feather name="refresh-cw" size={12} color={Colors.primary.electricCyan} />
+                <Text style={styles.voiceReloadText}>재생이 안 되나요? 다시 불러오기</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        ) : null}
       </View>
     </>
+  );
+}
+
+function DetailLoadError({
+  message,
+  unavailable,
+  isRetrying,
+  onClose,
+  onRetry,
+}: {
+  message: string;
+  unavailable: boolean;
+  isRetrying: boolean;
+  onClose: () => void;
+  onRetry: () => void;
+}) {
+  const { colors } = useThemeColors();
+  const actionLabel = unavailable ? '추천 목록으로 돌아가기' : '다시 시도';
+
+  return (
+    <View style={[styles.detailErrorCard, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
+      <Feather name="alert-circle" size={25} color={colors.text.muted} />
+      <Text style={[styles.detailErrorTitle, { color: colors.text.primary }]}>상세 정보를 불러오지 못했어요</Text>
+      <Text style={[styles.detailErrorMessage, { color: colors.text.muted }]}>{message}</Text>
+      <TouchableOpacity
+        onPress={unavailable ? onClose : onRetry}
+        disabled={!unavailable && isRetrying}
+        activeOpacity={0.8}
+        accessibilityRole="button"
+        accessibilityLabel={actionLabel}
+        style={[styles.detailErrorAction, { borderColor: colors.border.primary }]}
+      >
+        {!unavailable && isRetrying ? <ActivityIndicator size="small" color={Colors.primary.electricCyan} /> : null}
+        <Text style={[styles.detailErrorActionText, { color: colors.text.primary }]}>{actionLabel}</Text>
+      </TouchableOpacity>
+    </View>
   );
 }
 
@@ -481,11 +601,27 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.xs,
+    flexShrink: 1,
   },
   metaText: {
     fontFamily: FontFamily.sans,
     fontSize: FontSize.base,
     color: Colors.neutral.lightGray,
+  },
+  documentSubmittedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    paddingHorizontal: Spacing.xs,
+    paddingVertical: 2,
+    borderRadius: Radii.full,
+    backgroundColor: Colors.glass.white10,
+  },
+  documentSubmittedText: {
+    fontFamily: FontFamily.sans,
+    fontSize: 9,
+    fontWeight: FontWeight.bold,
+    color: Colors.neutral.pureWhite,
   },
   content: {
     paddingHorizontal: Spacing.xl,
@@ -531,6 +667,12 @@ const styles = StyleSheet.create({
     fontWeight: FontWeight.bold,
     color: Colors.primary.electricCyan,
   },
+  emptyText: {
+    fontFamily: FontFamily.sans,
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.medium,
+    lineHeight: 20,
+  },
   voiceCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -555,6 +697,18 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.sans,
     fontSize: FontSize.base,
     fontWeight: FontWeight.bold,
+  },
+  voiceReloadButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: Spacing.xxs,
+  },
+  voiceReloadText: {
+    fontFamily: FontFamily.sans,
+    fontSize: FontSize.xs,
+    fontWeight: FontWeight.bold,
+    color: Colors.primary.electricCyan,
   },
   balanceCard: {
     padding: Spacing.xl,
@@ -595,6 +749,40 @@ const styles = StyleSheet.create({
     fontWeight: FontWeight.medium,
     lineHeight: 22,
   },
+  detailErrorCard: {
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: Radii.xxl,
+    padding: Spacing.xxxl,
+    gap: Spacing.md,
+  },
+  detailErrorTitle: {
+    fontFamily: FontFamily.sans,
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.black,
+  },
+  detailErrorMessage: {
+    fontFamily: FontFamily.sans,
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.medium,
+    lineHeight: 20,
+    textAlign: 'center',
+  },
+  detailErrorAction: {
+    minHeight: 40,
+    paddingHorizontal: Spacing.lg,
+    borderWidth: 1,
+    borderRadius: Radii.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.xs,
+  },
+  detailErrorActionText: {
+    fontFamily: FontFamily.sans,
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.bold,
+  },
   floatingBar: {
     position: 'absolute',
     bottom: 0,
@@ -609,6 +797,9 @@ const styles = StyleSheet.create({
   },
   connectNowWrapper: {
     flex: 1,
+  },
+  connectNowDisabled: {
+    opacity: 0.45,
   },
   connectNowButton: {
     height: 56,
