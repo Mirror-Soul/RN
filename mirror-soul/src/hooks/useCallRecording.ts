@@ -26,8 +26,14 @@ export function useCallRecording() {
         throw new Error('마이크 녹음 권한이 없습니다. 통화 시작 전 권한을 요청해주세요.');
       }
 
-      // iOS AVAudioSession을 녹음 가능 모드로 설정 (안전망: useAICallFlow에서 선행 설정되지만 중복 호출은 무해함)
-      await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
+      // iOS AVAudioSession을 녹음 가능 모드로 설정 (안전망: useAICallFlow에서 선행 설정되지만
+      // 이 훅이 독립적으로 재사용될 경우를 대비해 방어적으로 한 번 더 설정한다).
+      // iOS 전용 — Android에서는 이 호출이 AudioManager.MODE_NORMAL을 강제해 InCallManager가
+      // 막 설정한 MODE_IN_COMMUNICATION을 되돌려버리므로(통화 음량 저하 원인), 절대 무해하지
+      // 않다. Android 오디오 라우팅은 InCallManager가 전담하도록 여기서는 스킵한다.
+      if (Platform.OS === 'ios') {
+        await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
+      }
 
       await recorder.prepareToRecordAsync();
       recorder.record();

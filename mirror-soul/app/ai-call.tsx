@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { LayoutChangeEvent, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Spacing } from '@/src/constants/theme';
@@ -23,14 +23,21 @@ import CallScreenBackground from '@/src/components/call/CallScreenBackground';
  * 연결된 이후에는 실제 영상통화 레이아웃을 보여준다.
  * 통화 종료 후 자동으로 이전 화면으로 돌아갑니다.
  *
- * 레이아웃은 영상통화 형태로 미리 잡아뒀지만(전체화면 상대 영상 + 우상단 내 셀프뷰 PIP),
+ * 레이아웃은 영상통화 형태로 미리 잡아뒀지만(전체화면 상대 영상 + 내 셀프뷰 PIP),
  * AI 서버가 아직 비디오 트랙을 안 보내는 상태라 CallRemoteVideoView가 자동으로 기존
  * 아바타 자리표시자를 대신 그린다 — 실제 비디오 트랙이 붙으면 이 화면은 그대로 두고
  * CallRemoteVideoView 내부만 실 스트림을 받게 된다.
  *
  * 음소거/스피커는 react-native-incall-manager로 실제 오디오 라우팅까지 연결되어 있다
- * (useAICallFlow 참고, 연결 시 기본값 스피커 on = 한뼘통화). 카메라 토글은 아직 로컬 캡처
- * 연동 전이라 순수 UI 자리표시자다.
+ * (useAICallFlow 참고, 연결 시 기본값 스피커 on = 한뼘통화). 카메라 토글은 내 화면에만
+ * 보이는 셀프뷰를 실제로 켜고 끈다 — 의도적으로 AI 서버로는 보내지 않는다(어차피 비디오
+ * 트랙을 받으면 버리는 서버라 지금은 효과가 없고, 이미 연결된 통화 중 재협상을 새로 거는
+ * 위험을 감수할 이유가 없다).
+ *
+ * 셀프뷰 PIP는 탭하면 커졌다 작아졌다 토글되고, 드래그하면 네 모서리 중 가까운 곳으로
+ * 스냅된다(CallLocalPreview 참고) — 위치는 헤더/컨트롤 오버레이의 실측 높이(onLayout)로
+ * 계산한 안전 영역(localPreviewSafeArea) 안에서만 움직이고, 통화마다 기본 위치(우상단)로
+ * 초기화된다(저장하지 않음).
  *
  * 의도적으로 `useLayout()`의 컨텐츠 폭 캡을 적용하지 않는다 — 통화 화면은 몰입형
  * 풀블리드 UI(영상/컨트롤이 화면 전체를 채움)가 맞고, 태블릿에서도 좁은 칼럼으로
@@ -39,10 +46,12 @@ import CallScreenBackground from '@/src/components/call/CallScreenBackground';
 export default function AICallScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { height: windowHeight, width: windowWidth } = useWindowDimensions();
   const { targetUuid } = useLocalSearchParams<{ targetUuid?: string }>();
   const {
     callStatus,
     remoteStream,
+    localCameraStream,
     startCall,
     hangUp,
     error,
@@ -50,10 +59,32 @@ export default function AICallScreen() {
     toggleSpeaker,
     isMuted,
     toggleMute,
+    isCameraOn,
+    toggleCamera,
   } = useAICallFlow(targetUuid);
 
-  // 카메라는 아직 로컬 캡처 연동 전이라 순수 UI 자리표시자 state로 남겨둔다.
-  const [isCameraOn, setIsCameraOn] = useState(false);
+  // 셀프뷰 PIP 드래그 가능 영역(safeArea) 계산용 — 헤더/컨트롤 오버레이의 실제 렌더 높이를
+  // onLayout으로 측정한다. Spacing 상수로 어림잡지 않는 이유: 두 오버레이 모두 내부 컴포넌트
+  // (CallHeader/CallControls)의 실제 콘텐츠 높이가 포함돼야 정확한데, 그건 여기서 알 수 없다.
+  const [headerHeight, setHeaderHeight] = useState(0);
+  const [controlsHeight, setControlsHeight] = useState(0);
+  const handleHeaderLayout = useCallback((event: LayoutChangeEvent) => {
+    setHeaderHeight(event.nativeEvent.layout.height);
+  }, []);
+  const handleControlsLayout = useCallback((event: LayoutChangeEvent) => {
+    setControlsHeight(event.nativeEvent.layout.height);
+  }, []);
+  // headerOverlay는 top:0, controlsOverlay는 bottom:0 절대 배치이므로, 측정된 높이가 곧
+  // 화면 좌표계의 경계선이다.
+  const localPreviewSafeArea = useMemo(
+    () => ({
+      top: headerHeight,
+      bottom: windowHeight - controlsHeight,
+      left: insets.left,
+      right: windowWidth - insets.right,
+    }),
+    [headerHeight, controlsHeight, windowHeight, windowWidth, insets.left, insets.right]
+  );
 
   // 실제로 한 번이라도 'connected'에 도달했는지 추적한다. 연결 전(joining/inviting/connecting)에
   // 취소하면 callStatus가 잠깐 'ending'을 거치는데, 이때 실제 통화 레이아웃(빈 영상 배경 +
@@ -104,17 +135,25 @@ export default function AICallScreen() {
     <CallScreenBackground>
       <CallRemoteVideoView callStatus={callStatus} remoteStream={remoteStream} />
 
-      <View style={[styles.headerOverlay, { paddingTop: insets.top + Spacing.md }]}>
+      <View
+        style={[styles.headerOverlay, { paddingTop: insets.top + Spacing.md }]}
+        onLayout={handleHeaderLayout}
+      >
         <CallHeader callStatus={callStatus} />
       </View>
 
       {callStatus === 'connected' && (
-        <View style={[styles.localPreviewOverlay, { top: insets.top + Spacing.massive }]}>
-          <CallLocalPreview isCameraOn={isCameraOn} />
-        </View>
+        <CallLocalPreview
+          isCameraOn={isCameraOn}
+          localStream={localCameraStream}
+          safeArea={localPreviewSafeArea}
+        />
       )}
 
-      <View style={[styles.controlsOverlay, { paddingBottom: insets.bottom }]}>
+      <View
+        style={[styles.controlsOverlay, { paddingBottom: insets.bottom }]}
+        onLayout={handleControlsLayout}
+      >
         <CallControls
           callStatus={callStatus}
           onHangUp={hangUp}
@@ -123,7 +162,7 @@ export default function AICallScreen() {
           isSpeakerOn={isSpeakerOn}
           onToggleSpeaker={toggleSpeaker}
           isCameraOn={isCameraOn}
-          onToggleCamera={() => setIsCameraOn((prev) => !prev)}
+          onToggleCamera={toggleCamera}
         />
       </View>
     </CallScreenBackground>
@@ -136,10 +175,6 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-  },
-  localPreviewOverlay: {
-    position: 'absolute',
-    right: Spacing.xl,
   },
   controlsOverlay: {
     position: 'absolute',
