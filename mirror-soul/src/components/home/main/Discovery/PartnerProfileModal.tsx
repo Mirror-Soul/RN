@@ -818,6 +818,14 @@ const styles = StyleSheet.create({
   },
   connectNowWrapper: {
     flex: 1,
+    borderRadius: Radii.xl,
+    // 버튼 색을 그대로 번지게 하는 glow 대신, 아래로 살짝 떨어지는 중립 그림자를
+    // 사용한다. 라이트/다크 배경 모두에서 하단 고정 바와 자연스럽게 분리된다.
+    shadowColor: Colors.primary.soulBlack,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 5,
   },
   connectNowDisabled: {
     opacity: 0.45,
@@ -825,6 +833,9 @@ const styles = StyleSheet.create({
   connectNowButton: {
     height: 56,
     borderRadius: Radii.xl,
+    borderWidth: 1,
+    borderColor: Colors.glass.white20,
+    overflow: 'hidden',
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
