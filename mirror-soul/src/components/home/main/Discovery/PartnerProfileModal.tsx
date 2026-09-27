@@ -190,7 +190,7 @@ export default function PartnerProfileModal({ match, onClose, onConnectNow }: Pa
                 )}
               </Text>
               <View style={styles.tagRow}>
-                {(detail?.personalityTags ?? displayedMatch.hashtags).map((tag) => (
+                {(detail?.personalityTags ?? displayedMatch.personalityTags).map((tag) => (
                   <View key={tag} style={styles.aiTag}>
                     <Text style={styles.aiTagText}># {tag}</Text>
                   </View>

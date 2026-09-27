@@ -174,7 +174,7 @@ export default function DiscoveryCardContent({
           <View style={[styles.chip, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
             <Text style={[styles.chipText, { color: Colors.primary.electricCyan }]}>{match.mbti}</Text>
           </View>
-          {match.hashtags.slice(0, 2).map((tag) => (
+          {match.personalityTags.slice(0, 2).map((tag) => (
             <View key={tag} style={[styles.chip, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
               <Text style={[styles.chipText, { color: colors.text.secondary }]}>#{tag}</Text>
             </View>

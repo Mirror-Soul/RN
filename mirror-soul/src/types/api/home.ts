@@ -61,7 +61,7 @@ export interface Recommendation {
   residence: Residence;
   selfIntroduction: string;
   mbti: MbtiEnum;
-  hashtags: string[];
+  personalityTags: string[];
   profileImageUrl: string;
   recommendationScore: number;
 }
