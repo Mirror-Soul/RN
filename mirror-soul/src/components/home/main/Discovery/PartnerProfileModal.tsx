@@ -6,6 +6,7 @@ import { formatRegion } from '@/src/utils/formatRegion';
 import { formatDurationLabel } from '@/src/utils/formatCallTime';
 import { jobCategories } from '@/src/components/signup/steps/Step2_BasicProfile/Professional/jobData';
 import { MBTI_AXES } from './mbtiAxes';
+import { getMockRecommendationDetail, isMockRecommendationUuid } from './mockRecommendations';
 import type { Recommendation, VoicePreview } from '@/src/types/api/home';
 import { BlurView } from 'expo-blur';
 import { Image } from 'expo-image';
@@ -51,7 +52,13 @@ export default function PartnerProfileModal({ match, onClose, onConnectNow }: Pa
   const [displayedMatch, setDisplayedMatch] = useState<Recommendation | null>(null);
   // displayedMatch(닫힘 애니메이션 동안에도 유지되는 값)를 키로 써야, match prop이 먼저 null이
   // 되어도 애니메이션이 끝나기 전에 상세 전용 섹션이 먼저 비어버리지 않는다.
-  const { data: detail } = useRecommendationDetailQuery(displayedMatch?.userUuid ?? null);
+  // 목업 UUID는 백엔드 UUID가 아니며 실제 추천 노출 이력도 없다. 따라서 API 요청을 완전히
+  // 건너뛰고, 실제 상세 API 응답과 같은 타입의 fixture로 UI를 렌더링한다.
+  const displayedUserUuid = displayedMatch?.userUuid;
+  const isMockMatch = isMockRecommendationUuid(displayedUserUuid);
+  const mockDetail = getMockRecommendationDetail(displayedUserUuid);
+  const { data: apiDetail } = useRecommendationDetailQuery(isMockMatch ? null : (displayedUserUuid ?? null));
+  const detail = mockDetail ?? apiDetail;
 
   useEffect(() => {
     if (match) {
