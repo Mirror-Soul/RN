@@ -278,3 +278,8 @@ export const isAuthError = (error: unknown): boolean => {
     code === 'AUTH_FAILED'
   );
 };
+
+/** 라우트 자체가 없을 때(API_NOT_FOUND) — 아직 배포 전인 엔드포인트를 개발 모드에서 구분할 때 사용 */
+export const isNotFoundError = (error: unknown): boolean => {
+  return getErrorCode(error) === 'API_NOT_FOUND';
+};

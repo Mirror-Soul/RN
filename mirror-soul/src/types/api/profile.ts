@@ -19,11 +19,12 @@ export interface MyProfileResult {
 export type MyProfileResponse = ApiResponse<MyProfileResult>;
 
 // ─────────────────────────────────────────────
-// GET /my-page/introduction
+// GET /my-page/profile
 // ─────────────────────────────────────────────
 /**
- * 내 소개 전용 상세 프로필. 추천 상세(`GET /home/recommendations/{uuid}`)와
- * 동일한 필드 계약을 사용하되, 본인 조회에는 추천 노출/자기 자신 차단 규칙을 적용하지 않는다.
+ * 내 소개 전용 상세 프로필(백엔드 `MyProfileDetailDTO`). 추천 상세(`GET /home/recommendations/{uuid}`)와
+ * 유사한 필드 계약을 쓰되, 본인 조회라 추천 노출/자기 자신 차단 규칙이 없고 email/jobDescription/
+ * matchingEnabled가 추가로 붙는다.
  */
 export interface IntroductionRegion {
   sidoName: string;
@@ -45,18 +46,22 @@ export interface IntroductionVoicePreview {
 
 export interface MyIntroductionResult {
   userUuid: string;
+  email: string;
   name: string | null;
   age: number | null;
   profileImageUrl: string | null;
   syncRate: number | null;
   region: IntroductionRegion | null;
   job: JobEnum | null;
+  jobDescription: string | null;
   jobCertificationSubmitted: boolean;
   selfIntroduction: string | null;
   mbti: MbtiEnum | null;
   mbtiAxisScores: MbtiAxisScores | null;
   personalityTags: string[];
   voicePreview: IntroductionVoicePreview | null;
+  /** 매칭 on/off — 이 화면에서 직접 쓰진 않지만(별도 useMatchingStatus가 진실의 원천) 계약엔 포함된다. */
+  matchingEnabled: boolean;
 }
 
 export type MyIntroductionResponse = ApiResponse<MyIntroductionResult>;

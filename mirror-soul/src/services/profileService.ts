@@ -32,11 +32,11 @@ export const getMyProfile = async (): Promise<MyProfileResponse> => {
   }
 };
 
-/** 내 소개 상세 조회 — 추천 상세와 같은 표시 필드를 본인 기준으로 반환한다. */
+/** 내 소개 상세 조회 — 추천 상세와 유사한 표시 필드를 본인 기준으로 반환한다. */
 export const getMyIntroduction = async (): Promise<MyIntroductionResponse> => {
   logger.debug('getMyIntroduction');
   try {
-    const response = await apiClient.get<MyIntroductionResponse>('/my-page/introduction');
+    const response = await apiClient.get<MyIntroductionResponse>('/my-page/profile');
     logger.info('getMyIntroduction SUCCESS:', response.data);
     return response.data;
   } catch (error: unknown) {
