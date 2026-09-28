@@ -96,7 +96,7 @@ module.exports = {
       [
         'react-native-vision-camera',
         {
-          cameraPermissionText: 'Mirror Soul에서 3D 얼굴 스캔을 위해 카메라 접근이 필요합니다.',
+          cameraPermissionText: 'Mirror Soul에서 3D 얼굴 스캔 및 영상통화 중 내 모습을 보여주기 위해 카메라 접근이 필요합니다.',
         },
       ],
       [

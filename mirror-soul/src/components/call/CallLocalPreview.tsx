@@ -1,7 +1,7 @@
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
@@ -93,17 +93,19 @@ export default function CallLocalPreview({ isCameraOn, localStream, safeArea }: 
 
   const toggleEnlarged = useCallback(() => setIsEnlarged((prev) => !prev), []);
 
-  const startXRef = React.useRef(0);
-  const startYRef = React.useRef(0);
+  // Pan 콜백은 UI 스레드 worklet으로 실행되므로, 시작 좌표 역시 공유값으로 관리한다.
+  // React ref는 JS 스레드 상태라 worklet 간 드래그 시작점으로 쓰면 일관성이 보장되지 않는다.
+  const dragStartX = useSharedValue(0);
+  const dragStartY = useSharedValue(0);
 
   const panGesture = Gesture.Pan()
     .onStart(() => {
-      startXRef.current = translateX.value;
-      startYRef.current = translateY.value;
+      dragStartX.value = translateX.value;
+      dragStartY.value = translateY.value;
     })
     .onUpdate((event) => {
-      const nextX = startXRef.current + event.translationX;
-      const nextY = startYRef.current + event.translationY;
+      const nextX = dragStartX.value + event.translationX;
+      const nextY = dragStartY.value + event.translationY;
       // 손가락을 따라가되 safeArea 밖으로는 못 나가게 막는다(헤더/컨트롤과 겹치지 않도록).
       translateX.value = Math.min(Math.max(nextX, safeArea.left), safeArea.right - boxWidth.value);
       translateY.value = Math.min(Math.max(nextY, safeArea.top), safeArea.bottom - boxHeight.value);
