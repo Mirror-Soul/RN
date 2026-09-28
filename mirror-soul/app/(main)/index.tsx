@@ -15,7 +15,6 @@ import { TimeRefillBottomSheet } from '@/src/features/profile/components/TimeRef
 import { usePreferredRegionQuery } from '@/src/features/home/hooks/usePreferredRegionQuery';
 import { useMatchingStatus } from '@/src/features/home/hooks/useMatchingStatus';
 import type { Recommendation } from '@/src/types/api/home';
-import { useToast } from '@/src/components/common/Toast/ToastProvider';
 import { logger } from '@/src/utils/logger';
 import React, { useCallback, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
@@ -40,7 +39,6 @@ export default function MainHomeScreen() {
   const [showRefillModal, setShowRefillModal] = useState(false);
   const [showQuickActions, setShowQuickActions] = useState(false);
   const [selectedMatch, setSelectedMatch] = useState<Recommendation | null>(null);
-  const { showToast } = useToast();
   // MainHeader가 배지 자체 조회를 이미 하지만, AiStatusTicker도 같은 상태가 필요해 여기서도
   // 구독한다 — react-query가 쿼리키(['match','status'])를 공유하므로 중복 요청은 없다.
   const { matchingEnabled, isError: isMatchingStatusError } = useMatchingStatus();
@@ -101,14 +99,11 @@ export default function MainHomeScreen() {
     Alert.alert('안내', '통화하기 기능은 곧 제공될 예정입니다.');
   }, []);
 
-  // 목업 카드(userUuid가 'mock-'로 시작)는 상세 조회 API가 없으므로 모달을 열지 않고 안내만 한다.
+  // 목업 카드도 실제 상세 응답과 같은 로컬 fixture로 모달을 열어 UI/UX를 검토할 수 있다.
+  // API를 호출하지 않는 분기는 PartnerProfileModal이 담당한다.
   const handleOpenDetail = useCallback((match: Recommendation) => {
-    if (match.userUuid.startsWith('mock-')) {
-      showToast('목업 데이터에는 상세 정보가 없어요.', 'info');
-      return;
-    }
     setSelectedMatch(match);
-  }, [showToast]);
+  }, []);
 
   return (
     <ScrollView

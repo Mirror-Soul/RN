@@ -67,7 +67,10 @@ export default function DiscoveryMatchCard({ match, onOpenDetail, onPass, onGoBa
     .activeOffsetX([-10, 10])
     .failOffsetY([-15, 15])
     .onUpdate((event) => {
-      translateX.value = event.translationX;
+      // 첫 번째 카드에는 이전 후보가 없으므로, 왼쪽으로는 드래그 단계부터 이동시키지
+      // 않는다. 기존에는 손가락을 놓을 때만 원위치로 돌아와 "넘어갈 수 있는 것처럼"
+      // 보였는데, 이 제한으로 다음(오른쪽) 방향만 자연스럽게 반응한다.
+      translateX.value = canGoBack ? event.translationX : Math.max(0, event.translationX);
     })
     .onEnd((event) => {
       const passedThreshold =
@@ -117,7 +120,7 @@ export default function DiscoveryMatchCard({ match, onOpenDetail, onPass, onGoBa
 
     <PhotoLightbox
       visible={isLightboxVisible}
-      imageUrl={match.profileImageUrl}
+      imageUrl={match.profileImageUrl ?? ''}
       onClose={() => setIsLightboxVisible(false)}
     />
     </>

@@ -56,13 +56,13 @@ export interface Recommendation {
   userUuid: string;
   name: string;
   age: number | null;
-  job: JobEnum;
+  job: JobEnum | null;
   jobCertificationSubmitted: boolean;
-  residence: Residence;
-  selfIntroduction: string;
-  mbti: MbtiEnum;
+  residence: Residence | null;
+  selfIntroduction: string | null;
+  mbti: MbtiEnum | null;
   personalityTags: string[];
-  profileImageUrl: string;
+  profileImageUrl: string | null;
   recommendationScore: number;
 }
 
@@ -98,7 +98,7 @@ export interface RecommendationDetailResult {
   userUuid: string;
   name: string;
   age: number | null;
-  profileImageUrl: string;
+  profileImageUrl: string | null;
   syncRate: number | null;
   region: Region | null;
   job: JobEnum | null;
