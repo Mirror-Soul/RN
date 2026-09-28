@@ -58,15 +58,27 @@ export type ValueBalanceAxis =
   | 'TASTE';
 
 export interface ValueBalanceQuestionResult {
-  /** 오늘의 quota를 다 썼으면 questionId/axis/leftLabel/rightLabel이 전부 null로 온다(VALUE_BALANCE_DAILY_LIMIT_REACHED 성공코드). answeredCount/dailyLimit은 이 경우에도 항상 채워져 온다. */
+  /** 현재 세트가 잠겼거나 전체 과정을 완료했으면 null이다. */
   questionId: number | null;
   axis: ValueBalanceAxis | null;
   leftLabel: string | null;
   rightLabel: string | null;
-  /** 오늘 답변한 질문 수 */
-  answeredCount: number;
-  /** 하루 최대 질문 수 */
-  dailyLimit: number;
+  /** 현재 진행 중인 세트 번호(1부터 시작). */
+  currentSet: number;
+  /** 현재 세트에서 답한 질문 수. */
+  answeredInSet: number;
+  /** 세트 하나의 질문 수. */
+  setSize: number;
+  /** 전체 세트 수. */
+  totalSets: number;
+  /** 전체 누적 답변 수. */
+  totalAnswered: number;
+  /** 세트 분석 대기 중인지 여부. */
+  locked: boolean;
+  /** 다음 세트가 열리는 시각. 잠기지 않았으면 null. */
+  lockedUntil: string | null;
+  /** 전체 가치관 밸런스 과정을 모두 완료했는지 여부. */
+  completed: boolean;
 }
 
 export type ValueBalanceQuestionResponse = ApiResponse<ValueBalanceQuestionResult>;
@@ -82,8 +94,15 @@ export interface ValueBalanceAnswerRequest {
 
 export interface ValueBalanceAnswerResult {
   questionId: number;
-  answeredCount: number;
-  dailyLimit: number;
+  currentSet: number;
+  answeredInSet: number;
+  setSize: number;
+  totalSets: number;
+  totalAnswered: number;
+  locked: boolean;
+  lockedUntil: string | null;
+  completed: boolean;
+  analysisJobId: number | null;
 }
 
 export type ValueBalanceAnswerResponse = ApiResponse<ValueBalanceAnswerResult>;

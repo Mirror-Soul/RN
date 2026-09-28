@@ -29,18 +29,22 @@ type AnswerableQuestion = ValueBalanceQuestionResult & {
   rightLabel: string;
 };
 
-/** quota 소진 시 questionId 등이 null인 채로 오므로, 실제로 답변 가능한 질문인지 타입 단에서 좁혀준다. */
+/** 세트 분석 대기/전체 완료 시 일부 필드가 null이므로, 실제 답변 가능 여부를 타입 단에서 좁혀준다. */
 function isAnswerableQuestion(
   question: ValueBalanceQuestionResult | undefined
 ): question is AnswerableQuestion {
-  return question != null && question.questionId != null;
+  return question != null
+    && question.questionId != null
+    && question.axis != null
+    && question.leftLabel != null
+    && question.rightLabel != null;
 }
 
 /**
  * ValueBalanceModal 컴포넌트 (SRP)
  * 가치관 밸런스 게임 바텀시트입니다. GET /evolve/value-balance는 한 번에 질문 1개만 주므로,
  * 연속 질문 흐름은 "답변 제출 성공 → 쿼리 무효화 → 다음 질문 자동 refetch"로 구현합니다.
- * 진행률(N of dailyLimit)은 GET 응답의 answeredCount/dailyLimit을 기본값으로 쓰고, 방금
+ * 진행률(현재 세트의 N of setSize)은 GET 응답의 answeredInSet/setSize를 기본값으로 쓰고, 방금
  * 답변을 제출했다면(POST 응답이 GET refetch보다 먼저 도착하는 짧은 순간) lastAnswer로
  * 덮어써서 최신값을 보여줍니다 — 오늘 이미 답변한 뒤 모달을 다시 열어도 진행률이 0%로
  * 보이지 않습니다.
@@ -59,6 +63,7 @@ export default function ValueBalanceModal({ isOpen, onClose }: ValueBalanceModal
   // 새 질문으로 바뀌면(답변 성공/자동 복구 refetch 등) 이전 질문에 남아있던 하이라이트를 지운다.
   useEffect(() => {
     setSelectedSide(null);
+    setLastAnswer(null);
   }, [question?.questionId]);
 
   const isBusy = submitMutation.isPending || isFetching;
@@ -76,22 +81,43 @@ export default function ValueBalanceModal({ isOpen, onClose }: ValueBalanceModal
       // 이미 답한 질문이거나(레이스) 질문이 만료된 경우, 화면엔 여전히 낡은 질문이 남아있어
       // 사용자가 같은 버튼을 다시 눌러도 같은 에러가 반복된다 — 새 질문으로 자동 복구한다.
       const code = getErrorCode(error);
-      if (code === 'VALUE_BALANCE_ALREADY_ANSWERED' || code === 'VALUE_BALANCE_QUESTION_NOT_FOUND') {
+      if (
+        code === 'VALUE_BALANCE_ALREADY_ANSWERED'
+        || code === 'VALUE_BALANCE_QUESTION_NOT_FOUND'
+        || code === 'VALUE_BALANCE_SET_LOCKED'
+        || code === 'VALUE_BALANCE_COMPLETED'
+      ) {
         refetch();
       }
     }
   };
 
   // lastAnswer(방금 제출한 POST 응답)가 있으면 그걸 우선 쓰고, 없으면 GET 응답의
-  // answeredCount/dailyLimit을 기본값으로 쓴다 — 화면 진입 직후에도 오늘 이미 답변한
-  // 개수를 정확히 반영한다.
+  // answeredInSet/setSize를 기본값으로 쓴다.
   const progressStats = lastAnswer
-    ? { answeredCount: lastAnswer.answeredCount, dailyLimit: lastAnswer.dailyLimit }
+    ? {
+        answeredInSet: lastAnswer.answeredInSet,
+        setSize: lastAnswer.setSize,
+        currentSet: lastAnswer.currentSet,
+        totalSets: lastAnswer.totalSets,
+      }
     : question
-      ? { answeredCount: question.answeredCount, dailyLimit: question.dailyLimit }
+      ? {
+          answeredInSet: question.answeredInSet,
+          setSize: question.setSize,
+          currentSet: question.currentSet,
+          totalSets: question.totalSets,
+        }
       : null;
-  const progress = progressStats ? (progressStats.answeredCount / progressStats.dailyLimit) * 100 : 0;
-  const isFinished = !isLoading && !isError && question?.questionId == null;
+  const safeSetSize = progressStats && Number.isFinite(progressStats.setSize)
+    ? Math.max(1, Math.floor(progressStats.setSize))
+    : 1;
+  const safeAnsweredInSet = progressStats && Number.isFinite(progressStats.answeredInSet)
+    ? Math.min(safeSetSize, Math.max(0, Math.floor(progressStats.answeredInSet)))
+    : 0;
+  const progress = progressStats ? (safeAnsweredInSet / safeSetSize) * 100 : 0;
+  const isFinished = !isLoading && !isError && question?.completed === true;
+  const isLocked = !isLoading && !isError && question?.locked === true && !isFinished;
 
   return (
     <BottomSheet isOpen={isOpen} onClose={onClose} height={460}>
@@ -101,7 +127,7 @@ export default function ValueBalanceModal({ isOpen, onClose }: ValueBalanceModal
           accessibilityRole="progressbar"
           accessibilityValue={
             progressStats
-              ? { min: 0, max: progressStats.dailyLimit, now: progressStats.answeredCount }
+              ? { min: 0, max: safeSetSize, now: safeAnsweredInSet }
               : { min: 0, max: 1, now: 0 }
           }
         >
@@ -135,10 +161,32 @@ export default function ValueBalanceModal({ isOpen, onClose }: ValueBalanceModal
               <Ionicons name="sparkles-outline" size={40} color={Colors.primary.electricCyan} />
             </View>
             <Text style={[styles.title, { color: colors.text.primary }]}>분석 완료</Text>
-            <Text style={[styles.subtitle, { color: colors.text.muted }]}>
-              오늘의 가치관 밸런스 질문을 모두 완료했어요. 내일 다시 만나요.
+            <Text style={[styles.subtitle, { color: colors.text.muted }]}
+            >
+              모든 가치관 밸런스 세트를 완료했어요. 트윈이 더 깊이 당신을 이해할 수 있어요.
             </Text>
           </View>
+        ) : isLocked ? (
+          <TouchableOpacity
+            style={styles.finishing}
+            onPress={() => refetch()}
+            disabled={isFetching}
+            accessibilityRole="button"
+            accessibilityLabel="가치관 밸런스 분석 상태 다시 확인"
+            accessibilityState={{ busy: isFetching }}
+          >
+            {isFetching ? (
+              <ActivityIndicator color={Colors.primary.electricCyan} />
+            ) : (
+              <>
+                <View style={styles.finishingBadge}>
+                  <Ionicons name="analytics-outline" size={40} color={Colors.primary.electricCyan} />
+                </View>
+                <Text style={[styles.title, { color: colors.text.primary }]}>이번 세트를 분석 중이에요</Text>
+                <Text style={[styles.subtitle, { color: colors.text.muted }]}>분석이 끝나면 다음 가치관 질문이 열려요. 탭하여 다시 확인할 수 있어요.</Text>
+              </>
+            )}
+          </TouchableOpacity>
         ) : (
           isAnswerableQuestion(question) && (
             <>
@@ -221,8 +269,9 @@ export default function ValueBalanceModal({ isOpen, onClose }: ValueBalanceModal
               </View>
 
               {progressStats && (
-                <Text style={[styles.stepText, { color: colors.text.muted }]}>
-                  질문 {progressStats.answeredCount + 1} / {progressStats.dailyLimit}
+                <Text style={[styles.stepText, { color: colors.text.muted }]}
+                >
+                  세트 {progressStats.currentSet} / {progressStats.totalSets} · 질문 {safeAnsweredInSet + 1} / {safeSetSize}
                 </Text>
               )}
             </>

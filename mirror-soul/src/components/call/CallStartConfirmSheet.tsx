@@ -15,7 +15,7 @@ interface CallStartConfirmSheetProps {
   isOpen: boolean;
   onClose: () => void;
   /** 실제 추천은 통화 API 화면으로, 목업은 서버 연결 없는 UI 미리보기 화면으로 보낸다. */
-  onStart: (match: Recommendation, isPreview: boolean) => void;
+  onStart: (match: Recommendation, isPreview: boolean, remainingSeconds?: number) => void;
   /** 잔여 시간이 없을 때, 시트를 닫고 시간 충전 흐름으로 전환한다. */
   onRefill: () => void;
 }
@@ -81,7 +81,7 @@ export default function CallStartConfirmSheet({ match, isOpen, onClose, onStart,
 
     startInFlightRef.current = true;
     setIsStarting(true);
-    onStart(match, isPreview);
+    onStart(match, isPreview, isPreview ? undefined : remainingSeconds);
   };
 
   if (!match) return null;
@@ -92,7 +92,7 @@ export default function CallStartConfirmSheet({ match, isOpen, onClose, onStart,
   const startDisabled = !isPreview && (isCheckingTime || isError);
 
   return (
-    <BottomSheet isOpen={isOpen} onClose={onClose} height={380}>
+    <BottomSheet isOpen={isOpen} onClose={onClose} height={420}>
       <View style={styles.container}>
         <View style={styles.heroRow}>
           <View style={styles.avatar}>
@@ -134,6 +134,10 @@ export default function CallStartConfirmSheet({ match, isOpen, onClose, onStart,
             ) : (
               <Text style={[styles.timeHint, { color: colors.text.muted }]}>남은 시간이 있을 때만 통화를 시작할 수 있어요.</Text>
             )}
+            <View style={[styles.timeLimitNotice, { borderTopColor: colors.border.primary }]}>
+              <Feather name="info" size={14} color={Colors.primary.electricCyan} />
+              <Text style={[styles.timeLimitNoticeText, { color: colors.text.secondary }]}>통화는 연결된 순간부터 시간이 차감되며, 남은 시간이 0초가 되면 자동으로 종료돼요.</Text>
+            </View>
           </View>
         )}
 
@@ -236,6 +240,21 @@ const styles = StyleSheet.create({
   },
   retryText: {
     textDecorationLine: 'underline',
+  },
+  timeLimitNotice: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Spacing.sm,
+    borderTopWidth: 1,
+    marginTop: Spacing.md,
+    paddingTop: Spacing.md,
+  },
+  timeLimitNoticeText: {
+    flex: 1,
+    fontFamily: FontFamily.sans,
+    fontSize: FontSize.xs,
+    fontWeight: FontWeight.regular,
+    lineHeight: 16,
   },
   previewNotice: {
     flexDirection: 'row',

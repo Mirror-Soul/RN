@@ -108,14 +108,21 @@ export default function MainHomeScreen() {
     setCallCandidate(pendingMatch);
   }, []);
 
-  const handleStartCall = useCallback((match: Recommendation, isPreview: boolean) => {
+  const handleStartCall = useCallback((match: Recommendation, isPreview: boolean, remainingSeconds?: number) => {
     setCallCandidate(null);
     // BottomSheet의 닫힘 애니메이션을 먼저 끝내야 새 화면을 native Modal이 덮지 않는다.
     setTimeout(() => {
       router.push(
         isPreview
           ? { pathname: '/ai-call', params: { preview: 'true', targetName: match.name } }
-          : { pathname: '/ai-call', params: { targetUuid: match.userUuid, targetName: match.name } },
+          : {
+              pathname: '/ai-call',
+              params: {
+                targetUuid: match.userUuid,
+                targetName: match.name,
+                remainingSeconds: String(remainingSeconds ?? 0),
+              },
+            },
       );
     }, 280);
   }, []);

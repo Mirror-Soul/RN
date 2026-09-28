@@ -11,6 +11,7 @@ import { logger } from '../utils/logger';
 import { queryClient } from '../services/queryClient';
 import { getErrorDisplayMessage } from '../utils/apiErrorCode';
 import type { SignalingMessage, AnswerData, IceData, OfferData, CallRejectData, SignalingErrorData } from '../types/signaling';
+import type { EndCallResult } from '../types/api/call';
 
 const WS_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL?.replace('https://', 'wss://').replace('http://', 'ws://');
 const INVITE_TIMEOUT_MS = 10000; // 10초 AI 응답 대기
@@ -24,6 +25,9 @@ export type CallStatus =
   | 'connected'   // 통화 중
   | 'ending'      // 종료 처리 중 (녹음 업로드)
   | 'ended';      // 종료 완료
+
+/** 서버가 통화 종료를 확정한 결과. 만남 신청은 이 결과의 callId를 반드시 사용한다. */
+export type CompletedCall = EndCallResult;
 
 /**
  * AI 트윈 음성 통화 전체 시나리오 오케스트레이션 훅 (SoC)
@@ -52,6 +56,9 @@ export function useAICallFlow(targetUserUuid?: string) {
   const [isCameraOn, setIsCameraOn] = useState(false);
   // 서버의 최종 durationSec과 별개로, 연결된 순간부터의 경과 시간을 통화 화면에 실시간 표시한다.
   const [callDurationSeconds, setCallDurationSeconds] = useState(0);
+  // 종료 API가 성공한 뒤에만 채운다. 상대 트윈 통화의 후속 만남 신청은 서버가 COMPLETED로
+  // 확정한 callId가 필요하므로, 표시용 로컬 타이머만으로는 이 값을 만들면 안 된다.
+  const [completedCall, setCompletedCall] = useState<CompletedCall | null>(null);
 
   const { userUuid } = useAuthStore();
   // 실제로 전화를 거는 대상(피호출자) — REST 방 생성과 WS CALL_INVITE 양쪽 다 이 값을 써야
@@ -488,7 +495,12 @@ export function useAICallFlow(targetUserUuid?: string) {
 
     // 3. REST API 종료 알림
     try {
-      await endCall(session.callId, recordingUrl);
+      const response = await endCall(session.callId, recordingUrl);
+      // 연결 전 취소된 방에는 만남 신청을 붙일 수 없다. 실제 연결까지 완료했고 서버 종료도
+      // 성공한 통화에만 후속 UI가 사용할 callId/duration을 남긴다.
+      if (connectedAtRef.current != null && response.isSuccess) {
+        setCompletedCall(response.result);
+      }
       // 종료 응답이 서버에서 잔여 시간을 차감한 뒤 돌아온다. 홈/프로필의 활성 잔액 쿼리를
       // 즉시 무효화해 다음 화면에서 오래된 시간을 잠깐 보여주지 않게 한다.
       void queryClient.invalidateQueries({ queryKey: ['profile', 'time'] });
@@ -516,6 +528,7 @@ export function useAICallFlow(targetUserUuid?: string) {
     setError(null);
     connectedAtRef.current = null;
     setCallDurationSeconds(0);
+    setCompletedCall(null);
     setCallStatus('initiating');
     logger.info('[useAICallFlow] Starting call...');
 
@@ -667,5 +680,6 @@ export function useAICallFlow(targetUserUuid?: string) {
     isCameraOn,
     toggleCamera,
     callDurationSeconds,
+    completedCall,
   };
 }

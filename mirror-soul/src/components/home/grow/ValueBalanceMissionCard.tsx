@@ -17,23 +17,31 @@ interface ValueBalanceMissionCardProps {
 export default function ValueBalanceMissionCard({ onPress }: ValueBalanceMissionCardProps) {
   const { colors } = useThemeColors();
   const { data: question, isLoading, isError, refetch } = useValueBalanceQuestionQuery();
-  // quota 소진 시에도 result 자체는 null이 아니라 questionId 등 필드만 null인 객체로 온다
-  // (백엔드 VALUE_BALANCE_DAILY_LIMIT_REACHED 응답도 result를 항상 채워 보낸다).
-  const isQuotaReached = !isLoading && !isError && question?.questionId == null;
-  // 에러(재조회 전 stale 데이터일 수 있음) 상태에선 진행 표시를 보여주지 않는다.
-  // "N/5" 슬래시 표기는 화살표와 나란히 있으면 페이지네이션처럼 보여서, 점(dot) 진행
-  // 표시로 대체한다(FaceDataPromptCard의 stepDots와 동일한 시각 언어).
-  const progress = question && !isError
-    ? { answered: question.answeredCount, total: question.dailyLimit }
+  const isCompleted = !isLoading && !isError && question?.completed === true;
+  const isLocked = !isLoading && !isError && question?.locked === true && !isCompleted;
+  // 서버 계약이 바뀌거나 불완전한 응답이 와도 Array.from/레이아웃 값에 NaN이 들어가
+  // 성장 탭 전체가 렌더 오류로 멈추지 않도록, 표시값은 먼저 안전한 정수 범위로 정규화한다.
+  const rawSetSize = question?.setSize;
+  const safeSetSize = typeof rawSetSize === 'number' && Number.isFinite(rawSetSize)
+    ? Math.max(0, Math.floor(rawSetSize))
+    : 0;
+  const rawAnswered = question?.answeredInSet;
+  const safeAnswered = typeof rawAnswered === 'number' && Number.isFinite(rawAnswered)
+    ? Math.min(safeSetSize, Math.max(0, Math.floor(rawAnswered)))
+    : 0;
+  const progress = question && !isError && safeSetSize > 0
+    ? { answered: safeAnswered, total: safeSetSize }
     : null;
   // 실제 상태(완료/재시도)가 있을 때만 배지 텍스트로 보여주고, 그 외(진행 중)엔 "필수" 같은
   // 지어낸 라벨 대신 화살표로 단순 이동 안내만 한다.
-  const statusLabel = isError ? '재시도' : isQuotaReached ? '완료' : null;
+  const statusLabel = isError ? '재시도' : isCompleted ? '완료' : isLocked ? '분석 중' : null;
 
   const subtitle = isError
     ? '질문을 불러오지 못했어요. 탭하여 다시 시도해주세요.'
-    : isQuotaReached
-      ? '오늘의 질문을 모두 완료했어요. 내일 다시 도전해보세요.'
+    : isCompleted
+      ? '모든 가치관 밸런스 세트를 완료했어요.'
+      : isLocked
+        ? '이번 세트를 분석하고 있어요. 잠시 뒤 다시 확인해주세요.'
       : '트윈의 의사결정 알고리즘을 정교하게 다듬기';
 
   return (
@@ -41,14 +49,14 @@ export default function ValueBalanceMissionCard({ onPress }: ValueBalanceMission
       style={[
         styles.card,
         { backgroundColor: colors.background.card, borderColor: colors.border.primary },
-        isQuotaReached && styles.cardDisabled,
+        isCompleted && styles.cardDisabled,
       ]}
-      onPress={isError ? () => refetch() : isQuotaReached ? undefined : onPress}
-      disabled={isQuotaReached}
+      onPress={isError || isLocked ? () => refetch() : isCompleted ? undefined : onPress}
+      disabled={isCompleted}
       activeOpacity={0.85}
       accessibilityRole="button"
-      accessibilityLabel={isError ? '가치관 밸런스 게임 미션 다시 조회' : '가치관 밸런스 게임 미션'}
-      accessibilityState={{ disabled: isQuotaReached }}
+      accessibilityLabel={isError || isLocked ? '가치관 밸런스 게임 상태 다시 조회' : '가치관 밸런스 게임 미션'}
+      accessibilityState={{ disabled: isCompleted }}
     >
       <View style={styles.left}>
         <View style={styles.iconWrapper}>
