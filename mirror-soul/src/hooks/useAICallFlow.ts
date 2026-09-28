@@ -8,6 +8,8 @@ import { initiateCall, setCallInProgress, endCall } from '../services/callServic
 import { useWebRTCCall } from './useWebRTCCall';
 import { useCallRecording } from './useCallRecording';
 import { logger } from '../utils/logger';
+import { queryClient } from '../services/queryClient';
+import { getErrorDisplayMessage } from '../utils/apiErrorCode';
 import type { SignalingMessage, AnswerData, IceData, OfferData, CallRejectData, SignalingErrorData } from '../types/signaling';
 
 const WS_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL?.replace('https://', 'wss://').replace('http://', 'ws://');
@@ -48,6 +50,8 @@ export function useAICallFlow(targetUserUuid?: string) {
   // 카메라는 기본 off — 마이크와 달리 통화 시작 시점이 아니라 사용자가 실제로 켤 때만
   // 권한을 요청한다(불필요하게 미리 요청하지 않기 위함).
   const [isCameraOn, setIsCameraOn] = useState(false);
+  // 서버의 최종 durationSec과 별개로, 연결된 순간부터의 경과 시간을 통화 화면에 실시간 표시한다.
+  const [callDurationSeconds, setCallDurationSeconds] = useState(0);
 
   const { userUuid } = useAuthStore();
   // 실제로 전화를 거는 대상(피호출자) — REST 방 생성과 WS CALL_INVITE 양쪽 다 이 값을 써야
@@ -78,6 +82,7 @@ export function useAICallFlow(targetUserUuid?: string) {
   // Android 권한 프롬프트와 getUserMedia가 비동기라 통화 종료 후에도 완료될 수 있다.
   // 종료/새 토글마다 세대를 바꿔 늦게 도착한 카메라 활성화를 무효화한다.
   const cameraToggleAttemptIdRef = useRef(0);
+  const connectedAtRef = useRef<number | null>(null);
 
   const {
     remoteStream,
@@ -144,6 +149,8 @@ export function useAICallFlow(targetUserUuid?: string) {
       if (!session) return;
 
       logger.info('[useAICallFlow] WebRTC connected! Notifying server...');
+      connectedAtRef.current = Date.now();
+      setCallDurationSeconds(0);
       setCallStatus('connected');
 
       // 기본 라우팅은 OS/InCallManager 자동 선택에 맡긴다. 이 경로는 유선·블루투스
@@ -160,6 +167,22 @@ export function useAICallFlow(targetUserUuid?: string) {
       });
     }
   }, [iceConnectionState, callStatus, startRecording]);
+
+  // 연결 대기·종료 처리 시간은 포함하지 않고, 실제 연결 중인 시간만 초 단위로 표시한다.
+  useEffect(() => {
+    if (callStatus !== 'connected' || connectedAtRef.current == null) return;
+
+    const updateDuration = () => {
+      const startedAt = connectedAtRef.current;
+      if (startedAt != null) {
+        setCallDurationSeconds(Math.max(0, Math.floor((Date.now() - startedAt) / 1000)));
+      }
+    };
+
+    updateDuration();
+    const intervalId = setInterval(updateDuration, 1000);
+    return () => clearInterval(intervalId);
+  }, [callStatus]);
 
   // ─────────────────────────────────────────────
   // 스피커/음소거 토글 (공개 API)
@@ -466,6 +489,9 @@ export function useAICallFlow(targetUserUuid?: string) {
     // 3. REST API 종료 알림
     try {
       await endCall(session.callId, recordingUrl);
+      // 종료 응답이 서버에서 잔여 시간을 차감한 뒤 돌아온다. 홈/프로필의 활성 잔액 쿼리를
+      // 즉시 무효화해 다음 화면에서 오래된 시간을 잠깐 보여주지 않게 한다.
+      void queryClient.invalidateQueries({ queryKey: ['profile', 'time'] });
     } catch (err) {
       logger.error('[useAICallFlow] endCall REST failed:', err);
     }
@@ -488,6 +514,8 @@ export function useAICallFlow(targetUserUuid?: string) {
     const myAttemptId = ++startAttemptIdRef.current;
 
     setError(null);
+    connectedAtRef.current = null;
+    setCallDurationSeconds(0);
     setCallStatus('initiating');
     logger.info('[useAICallFlow] Starting call...');
 
@@ -528,7 +556,6 @@ export function useAICallFlow(targetUserUuid?: string) {
       // 통화방을 정리(보상 종료)할 방법이 없어진다.
       const [initiateResult, webrtcResult] = await Promise.allSettled([
         initiateCall(calleeUuid, {
-          callerUserUuid: userUuid,
           mediaType: 'VOICE',
         }),
         initWebRTC(),
@@ -598,7 +625,7 @@ export function useAICallFlow(targetUserUuid?: string) {
         }));
       };
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : '통화를 시작할 수 없습니다.';
+      const message = getErrorDisplayMessage(err, '통화를 시작할 수 없습니다.');
       logger.error('[useAICallFlow] startCall failed:', err);
       if (callSessionRef.current) {
         // REST로 서버에 통화방이 이미 생성된 상태 — 로컬 정리만으론 서버에 고아 통화가 남는다.
@@ -639,5 +666,6 @@ export function useAICallFlow(targetUserUuid?: string) {
     toggleMute,
     isCameraOn,
     toggleCamera,
+    callDurationSeconds,
   };
 }

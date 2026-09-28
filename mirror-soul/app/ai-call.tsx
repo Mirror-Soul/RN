@@ -17,7 +17,7 @@ import CallScreenBackground from '@/src/components/call/CallScreenBackground';
  *
  * 진입 경로:
  * - Grow 탭 → 트윈 시뮬레이션 카드 클릭 (파라미터 없음 → 본인 클론에 통화)
- * - Matching 탭 → 만남 신청 카드의 TWIN CALL (`targetUuid` 파라미터로 상대방 uuid 전달)
+ * - 발견/매칭 탭 → 상대 카드의 TWIN CALL (`targetUuid` 파라미터로 상대방 uuid 전달)
  * 화면 진입 시 사용자 조작 없이 바로 통화가 걸린다("탭해서 시작" 단계를 거치지 않음).
  * 연결 완료 전(idle~connecting)에는 CallConnectingView(펄스 오브 + 스텝 인디케이터)를,
  * 연결된 이후에는 실제 영상통화 레이아웃을 보여준다.
@@ -29,7 +29,7 @@ import CallScreenBackground from '@/src/components/call/CallScreenBackground';
  * CallRemoteVideoView 내부만 실 스트림을 받게 된다.
  *
  * 음소거/스피커는 react-native-incall-manager로 실제 오디오 라우팅까지 연결되어 있다
- * (useAICallFlow 참고, 연결 시 기본값 스피커 on = 한뼘통화). 카메라 토글은 내 화면에만
+ * (useAICallFlow 참고, 기본 라우팅은 OS가 결정한다). 카메라 토글은 내 화면에만
  * 보이는 셀프뷰를 실제로 켜고 끈다 — 의도적으로 AI 서버로는 보내지 않는다(어차피 비디오
  * 트랙을 받으면 버리는 서버라 지금은 효과가 없고, 이미 연결된 통화 중 재협상을 새로 거는
  * 위험을 감수할 이유가 없다).
@@ -47,7 +47,8 @@ export default function AICallScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { height: windowHeight, width: windowWidth } = useWindowDimensions();
-  const { targetUuid } = useLocalSearchParams<{ targetUuid?: string }>();
+  const { targetUuid, preview } = useLocalSearchParams<{ targetUuid?: string; preview?: string }>();
+  const isPreview = preview === 'true';
   const {
     callStatus,
     remoteStream,
@@ -61,7 +62,29 @@ export default function AICallScreen() {
     toggleMute,
     isCameraOn,
     toggleCamera,
+    callDurationSeconds,
   } = useAICallFlow(targetUuid);
+  const [previewDurationSeconds, setPreviewDurationSeconds] = useState(0);
+  const [previewMuted, setPreviewMuted] = useState(false);
+  const [previewSpeakerOn, setPreviewSpeakerOn] = useState(false);
+  const [previewCameraOn, setPreviewCameraOn] = useState(false);
+
+  // 목업 통화는 서버·권한 없이 화면만 검토하는 모드지만, 실제 화면과 같은 경과 시간 UI는
+  // 확인할 수 있도록 로컬 타이머를 돌린다.
+  useEffect(() => {
+    if (!isPreview) return;
+    const startedAt = Date.now();
+    const updateDuration = () => setPreviewDurationSeconds(Math.floor((Date.now() - startedAt) / 1000));
+    updateDuration();
+    const intervalId = setInterval(updateDuration, 1000);
+    return () => clearInterval(intervalId);
+  }, [isPreview]);
+
+  const visibleCallStatus = isPreview ? 'connected' : callStatus;
+  const visibleDurationSeconds = isPreview ? previewDurationSeconds : callDurationSeconds;
+  const visibleMuted = isPreview ? previewMuted : isMuted;
+  const visibleSpeakerOn = isPreview ? previewSpeakerOn : isSpeakerOn;
+  const visibleCameraOn = isPreview ? previewCameraOn : isCameraOn;
 
   // 셀프뷰 PIP 드래그 가능 영역(safeArea) 계산용 — 헤더/컨트롤 오버레이의 실제 렌더 높이를
   // onLayout으로 측정한다. Spacing 상수로 어림잡지 않는 이유: 두 오버레이 모두 내부 컴포넌트
@@ -91,14 +114,15 @@ export default function AICallScreen() {
   // 비활성화된 컨트롤)이 한 프레임 스쳐 지나가는 게 아니라 계속 CallConnectingView에 머물러야 한다.
   const hasConnectedRef = useRef(false);
   useEffect(() => {
-    if (callStatus === 'connected') hasConnectedRef.current = true;
-  }, [callStatus]);
+    if (visibleCallStatus === 'connected') hasConnectedRef.current = true;
+  }, [visibleCallStatus]);
 
   // 화면 진입 시 자동으로 통화를 건다 — "탭해서 시작" 화면을 없애고 바로 연결 흐름으로 들어간다.
   // StrictMode 이중 렌더/재마운트에도 한 번만 걸리도록 ref로 막는다(startCall이 REST 방 생성을
   // 포함해서 두 번 걸리면 안 됨).
   const hasAutoStartedRef = useRef(false);
   useEffect(() => {
+    if (isPreview) return;
     if (hasAutoStartedRef.current) return;
     hasAutoStartedRef.current = true;
     startCall();
@@ -107,10 +131,10 @@ export default function AICallScreen() {
 
   // 통화 종료 시 화면 이탈 (단, 에러가 발생한 경우는 제외하여 사용자가 에러를 인지할 수 있도록 함)
   useEffect(() => {
-    if (callStatus === 'ended' && !error) {
+    if (!isPreview && callStatus === 'ended' && !error) {
       router.back();
     }
-  }, [callStatus, error, router]);
+  }, [callStatus, error, isPreview, router]);
 
   // 에러 발생 시 안내 UI
   if (error) {
@@ -122,7 +146,7 @@ export default function AICallScreen() {
   // 한 번도 연결되지 않은 채 취소한 경우(hasConnectedRef가 false)엔 'ending'/'ended'로 바뀌어도
   // 계속 CallConnectingView에 머문다 — router.back()이 호출될 때까지 화면이 안 바뀐다.
   const isCallLayoutVisible =
-    callStatus === 'connected' || (hasConnectedRef.current && (callStatus === 'ending' || callStatus === 'ended'));
+    isPreview || callStatus === 'connected' || (hasConnectedRef.current && (callStatus === 'ending' || callStatus === 'ended'));
 
   if (!isCallLayoutVisible) {
     // hangUp()은 세션이 이미 만들어졌으면(REST 응답 후) CALL_END 시그널 + endCall REST까지 정식으로
@@ -133,19 +157,19 @@ export default function AICallScreen() {
 
   return (
     <CallScreenBackground>
-      <CallRemoteVideoView callStatus={callStatus} remoteStream={remoteStream} />
+      <CallRemoteVideoView callStatus={visibleCallStatus} remoteStream={isPreview ? null : remoteStream} />
 
       <View
         style={[styles.headerOverlay, { paddingTop: insets.top + Spacing.md }]}
         onLayout={handleHeaderLayout}
       >
-        <CallHeader callStatus={callStatus} />
+        <CallHeader callStatus={visibleCallStatus} callDurationSeconds={visibleDurationSeconds} isPreview={isPreview} />
       </View>
 
-      {callStatus === 'connected' && (
+      {visibleCallStatus === 'connected' && (
         <CallLocalPreview
-          isCameraOn={isCameraOn}
-          localStream={localCameraStream}
+          isCameraOn={visibleCameraOn}
+          localStream={isPreview ? null : localCameraStream}
           safeArea={localPreviewSafeArea}
         />
       )}
@@ -155,14 +179,14 @@ export default function AICallScreen() {
         onLayout={handleControlsLayout}
       >
         <CallControls
-          callStatus={callStatus}
-          onHangUp={hangUp}
-          isMuted={isMuted}
-          onToggleMute={toggleMute}
-          isSpeakerOn={isSpeakerOn}
-          onToggleSpeaker={toggleSpeaker}
-          isCameraOn={isCameraOn}
-          onToggleCamera={toggleCamera}
+          callStatus={visibleCallStatus}
+          onHangUp={isPreview ? () => router.back() : hangUp}
+          isMuted={visibleMuted}
+          onToggleMute={isPreview ? () => setPreviewMuted((value) => !value) : toggleMute}
+          isSpeakerOn={visibleSpeakerOn}
+          onToggleSpeaker={isPreview ? () => setPreviewSpeakerOn((value) => !value) : toggleSpeaker}
+          isCameraOn={visibleCameraOn}
+          onToggleCamera={isPreview ? () => setPreviewCameraOn((value) => !value) : toggleCamera}
         />
       </View>
     </CallScreenBackground>

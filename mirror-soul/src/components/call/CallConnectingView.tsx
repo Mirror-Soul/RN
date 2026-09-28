@@ -22,7 +22,7 @@ const STEPS: StepConfig[] = [
   { statuses: ['idle', 'initiating'], label: '통화를 준비하는 중...' },
   { statuses: ['joining'], label: '서버에 연결하는 중...' },
   { statuses: ['inviting'], label: 'AI 트윈을 호출하는 중...' },
-  { statuses: ['connecting'], label: '영상을 연결하는 중...' },
+  { statuses: ['connecting'], label: '통화를 연결하는 중...' },
 ];
 
 const getStepIndex = (callStatus: CallStatus) => {

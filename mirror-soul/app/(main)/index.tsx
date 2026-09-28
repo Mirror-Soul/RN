@@ -1,7 +1,7 @@
-import AiStatusTicker from '@/src/components/home/main/AiStatusTicker';
 import AvailableTimeCard from '@/src/components/home/main/AvailableTimeCard';
 import DiscoveryMatchSection from '@/src/components/home/main/Discovery/DiscoveryMatchSection';
 import PartnerProfileModal from '@/src/components/home/main/Discovery/PartnerProfileModal';
+import CallStartConfirmSheet from '@/src/components/call/CallStartConfirmSheet';
 import LocationFilterBar from '@/src/components/home/main/LocationFilterBar';
 import MainHeader from '@/src/components/home/main/MainHeader';
 import ProfileQuickActionSheet from '@/src/components/home/main/ProfileQuickActionSheet';
@@ -16,7 +16,7 @@ import { usePreferredRegionQuery } from '@/src/features/home/hooks/usePreferredR
 import { useMatchingStatus } from '@/src/features/home/hooks/useMatchingStatus';
 import type { Recommendation } from '@/src/types/api/home';
 import { logger } from '@/src/utils/logger';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInUp } from 'react-native-reanimated';
@@ -39,6 +39,10 @@ export default function MainHomeScreen() {
   const [showRefillModal, setShowRefillModal] = useState(false);
   const [showQuickActions, setShowQuickActions] = useState(false);
   const [selectedMatch, setSelectedMatch] = useState<Recommendation | null>(null);
+  const [callCandidate, setCallCandidate] = useState<Recommendation | null>(null);
+  // 상세 모달의 닫힘 애니메이션이 끝난 뒤 통화 시작 시트를 열어, 두 native Modal이
+  // 잠깐 겹쳐 보이는 전환을 피한다.
+  const pendingCallCandidateRef = useRef<Recommendation | null>(null);
   // MainHeader가 배지 자체 조회를 이미 하지만, AiStatusTicker도 같은 상태가 필요해 여기서도
   // 구독한다 — react-query가 쿼리키(['match','status'])를 공유하므로 중복 요청은 없다.
   const { matchingEnabled, isError: isMatchingStatusError } = useMatchingStatus();
@@ -87,16 +91,33 @@ export default function MainHomeScreen() {
   }, []);
 
   const handleConnectNow = useCallback((match: Recommendation) => {
-    // TODO: 실제 통화 연결 라우트가 정해지면 router.push로 교체
-    logger.debug('Call now pressed', { matchId: match.userUuid });
-    Alert.alert('안내', '통화하기 기능은 곧 제공될 예정입니다.');
+    logger.debug('Call requested from profile detail', { matchId: match.userUuid });
+    pendingCallCandidateRef.current = match;
     setSelectedMatch(null);
   }, []);
 
-  const handleConnectPress = useCallback((id: string) => {
-    // TODO: 실제 통화 연결 라우트가 정해지면 router.push로 교체
-    logger.debug('Call pressed', { id });
-    Alert.alert('안내', '통화하기 기능은 곧 제공될 예정입니다.');
+  const handleConnectPress = useCallback((match: Recommendation) => {
+    logger.debug('Call requested from discovery card', { matchId: match.userUuid });
+    setCallCandidate(match);
+  }, []);
+
+  const handleProfileModalDismiss = useCallback(() => {
+    const pendingMatch = pendingCallCandidateRef.current;
+    if (!pendingMatch) return;
+    pendingCallCandidateRef.current = null;
+    setCallCandidate(pendingMatch);
+  }, []);
+
+  const handleStartCall = useCallback((match: Recommendation, isPreview: boolean) => {
+    setCallCandidate(null);
+    // BottomSheet의 닫힘 애니메이션을 먼저 끝내야 새 화면을 native Modal이 덮지 않는다.
+    setTimeout(() => {
+      router.push(
+        isPreview
+          ? { pathname: '/ai-call', params: { preview: 'true', targetName: match.name } }
+          : { pathname: '/ai-call', params: { targetUuid: match.userUuid, targetName: match.name } },
+      );
+    }, 280);
   }, []);
 
   // 목업 카드도 실제 상세 응답과 같은 로컬 fixture로 모달을 열어 UI/UX를 검토할 수 있다.
@@ -135,13 +156,13 @@ export default function MainHomeScreen() {
           />
         </View>
 
-        {/* 그룹 3: 추천 카드 + 액션 푸터(DiscoveryMatchSection 내부에서 함께 렌더링) */}
+        {/* 그룹 3: 추천 상태/새로고침 + 카드 + 액션 푸터 */}
         <View style={[styles.group, styles.groupSpacer]}>
-          <AiStatusTicker isMatchingEnabled={matchingEnabled} isError={isMatchingStatusError} />
-
           <DiscoveryMatchSection
             onConnect={handleConnectPress}
             onOpenDetail={handleOpenDetail}
+            isMatchingEnabled={matchingEnabled}
+            isMatchingStatusError={isMatchingStatusError}
           />
         </View>
 
@@ -162,7 +183,15 @@ export default function MainHomeScreen() {
       <PartnerProfileModal
         match={selectedMatch}
         onClose={() => setSelectedMatch(null)}
+        onDismiss={handleProfileModalDismiss}
         onConnectNow={handleConnectNow}
+      />
+
+      <CallStartConfirmSheet
+        match={callCandidate}
+        isOpen={callCandidate !== null}
+        onClose={() => setCallCandidate(null)}
+        onStart={handleStartCall}
       />
     </ScrollView>
   );

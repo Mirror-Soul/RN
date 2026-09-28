@@ -32,6 +32,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 interface PartnerProfileModalProps {
   match: Recommendation | null;
   onClose: () => void;
+  /** 닫힘 애니메이션 완료 뒤 호출 — 다음 native Modal을 이어 열 때 전환 겹침을 막는다. */
+  onDismiss?: () => void;
   onConnectNow?: (match: Recommendation) => void;
 }
 
@@ -41,7 +43,7 @@ interface PartnerProfileModalProps {
  * SelectDropdownModal.tsx와 동일한 Modal(transparent)+Animated.View 진입 애니메이션 패턴을
  * 세로 슬라이드(하단→전체 화면)로 응용합니다.
  */
-export default function PartnerProfileModal({ match, onClose, onConnectNow }: PartnerProfileModalProps) {
+export default function PartnerProfileModal({ match, onClose, onDismiss, onConnectNow }: PartnerProfileModalProps) {
   const { colors } = useThemeColors();
   const insets = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
@@ -86,6 +88,7 @@ export default function PartnerProfileModal({ match, onClose, onConnectNow }: Pa
       }).start(({ finished }) => {
         if (finished) {
           setDisplayedMatch(null);
+          onDismiss?.();
         }
       });
     }

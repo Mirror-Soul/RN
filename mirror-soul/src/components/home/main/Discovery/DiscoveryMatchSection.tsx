@@ -12,11 +12,14 @@ import DiscoveryStackPeek from './DiscoveryStackPeek';
 import { shouldPrefetchNextPage } from './discoveryPagination';
 import { MOCK_RECOMMENDATIONS } from './mockRecommendations';
 import { useRefreshCooldown } from './useRefreshCooldown';
+import AiStatusTicker from '../AiStatusTicker';
 
 interface DiscoveryMatchSectionProps {
   onPass?: (userUuid: string) => void;
-  onConnect?: (userUuid: string) => void;
+  onConnect?: (match: Recommendation) => void;
   onOpenDetail?: (match: Recommendation) => void;
+  isMatchingEnabled?: boolean | null;
+  isMatchingStatusError?: boolean;
 }
 
 /**
@@ -24,7 +27,13 @@ interface DiscoveryMatchSectionProps {
  * 추천 목록 조회 + 로컬 인덱스 진행 + 패스(스와이프) 기록을 오케스트레이션합니다.
  * 상세 모달의 열림 상태는 부모(index.tsx)가 소유합니다.
  */
-export default function DiscoveryMatchSection({ onPass, onConnect, onOpenDetail }: DiscoveryMatchSectionProps) {
+export default function DiscoveryMatchSection({
+  onPass,
+  onConnect,
+  onOpenDetail,
+  isMatchingEnabled,
+  isMatchingStatusError,
+}: DiscoveryMatchSectionProps) {
   const { colors } = useThemeColors();
   const { recommendations, isLoading, isFetching, isError, hasNextPage, isFetchingNextPage, fetchNextPage, refetch } =
     useRecommendationsQuery();
@@ -100,11 +109,10 @@ export default function DiscoveryMatchSection({ onPass, onConnect, onOpenDetail 
 
   const refreshHeader = (
     <View style={styles.sectionHeader}>
-      {usingMockData ? (
-        <Text style={[styles.mockLabel, { color: colors.text.muted }]}>목업 데이터</Text>
-      ) : (
-        <View />
-      )}
+      <View style={styles.sectionHeaderLeading}>
+        <AiStatusTicker isMatchingEnabled={isMatchingEnabled} isError={isMatchingStatusError} />
+        {usingMockData ? <Text style={[styles.mockLabel, { color: colors.text.muted }]}>목업</Text> : null}
+      </View>
       <TouchableOpacity
         style={styles.refreshButton}
         onPress={handleRefresh}
@@ -125,33 +133,42 @@ export default function DiscoveryMatchSection({ onPass, onConnect, onOpenDetail 
 
   if (isLoading) {
     return (
-      <View style={[styles.statusBox, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
-        <ActivityIndicator color={colors.text.muted} />
+      <View style={styles.container}>
+        {refreshHeader}
+        <View style={[styles.statusBox, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
+          <ActivityIndicator color={colors.text.muted} />
+        </View>
       </View>
     );
   }
 
   if (isError && recommendations.length === 0) {
     return (
-      <TouchableOpacity
-        style={[styles.statusBox, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}
-        onPress={() => refetch()}
-        activeOpacity={0.8}
-        accessibilityRole="button"
-        accessibilityLabel="추천 목록 다시 조회"
-      >
-        <Feather name="alert-circle" size={28} color={colors.text.muted} />
-        <Text style={[styles.emptyTitle, { color: colors.text.primary }]}>추천 목록을 불러오지 못했어요</Text>
-        <Text style={[styles.emptySubtitle, { color: colors.text.muted }]}>탭해서 다시 시도해주세요.</Text>
-      </TouchableOpacity>
+      <View style={styles.container}>
+        {refreshHeader}
+        <TouchableOpacity
+          style={[styles.statusBox, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}
+          onPress={() => refetch()}
+          activeOpacity={0.8}
+          accessibilityRole="button"
+          accessibilityLabel="추천 목록 다시 조회"
+        >
+          <Feather name="alert-circle" size={28} color={colors.text.muted} />
+          <Text style={[styles.emptyTitle, { color: colors.text.primary }]}>추천 목록을 불러오지 못했어요</Text>
+          <Text style={[styles.emptySubtitle, { color: colors.text.muted }]}>탭해서 다시 시도해주세요.</Text>
+        </TouchableOpacity>
+      </View>
     );
   }
 
   // 인덱스는 다 소진했지만 다음 페이지가 아직 도착하지 않은 짧은 구간 — 빈 상태가 아니라 로딩 상태
   if (!currentMatch && isFetchingNextPage) {
     return (
-      <View style={[styles.statusBox, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
-        <ActivityIndicator color={colors.text.muted} />
+      <View style={styles.container}>
+        {refreshHeader}
+        <View style={[styles.statusBox, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
+          <ActivityIndicator color={colors.text.muted} />
+        </View>
       </View>
     );
   }
@@ -188,7 +205,7 @@ export default function DiscoveryMatchSection({ onPass, onConnect, onOpenDetail 
             onPass={() => handlePass(currentMatch.userUuid)}
             onGoBack={handleGoBack}
             canGoBack={currentIndex > 0}
-            onConnect={() => onConnect?.(currentMatch.userUuid)}
+            onConnect={() => onConnect?.(currentMatch)}
             translateX={translateX}
           />
         </Animated.View>
@@ -231,7 +248,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    gap: Spacing.sm,
     marginBottom: Spacing.sm,
+  },
+  sectionHeaderLeading: {
+    flex: 1,
+    minWidth: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
   },
   mockLabel: {
     fontFamily: FontFamily.sans,

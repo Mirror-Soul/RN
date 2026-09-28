@@ -4,9 +4,12 @@ import { Animated, StyleSheet, Text, View } from 'react-native';
 import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import type { CallStatus } from '@/src/hooks/useAICallFlow';
+import { formatDurationLabel } from '@/src/utils/formatCallTime';
 
 interface CallHeaderProps {
   callStatus: CallStatus;
+  callDurationSeconds?: number;
+  isPreview?: boolean;
 }
 
 const STATUS_TEXT: Record<CallStatus, string> = {
@@ -26,10 +29,15 @@ const STATUS_TEXT: Record<CallStatus, string> = {
  * TwinSimulationCard의 "Live Call" 뱃지와 톤을 맞춘 글래스 필 + 펄스 점으로,
  * 연결 중일 때만 살아있는 느낌의 점 애니메이션을 준다.
  */
-export default function CallHeader({ callStatus }: CallHeaderProps) {
+export default function CallHeader({ callStatus, callDurationSeconds = 0, isPreview = false }: CallHeaderProps) {
   const { colors, isDark } = useThemeColors();
-  const isConnected = callStatus === 'connected';
+  const isConnected = callStatus === 'connected' || isPreview;
   const pulse = useRef(new Animated.Value(1)).current;
+  const statusText = isPreview
+    ? `통화 화면 미리보기 · ${formatDurationLabel(callDurationSeconds)}`
+    : callStatus === 'connected'
+      ? `AI 트윈과 대화 중 · ${formatDurationLabel(callDurationSeconds)}`
+      : STATUS_TEXT[callStatus];
 
   useEffect(() => {
     if (!isConnected) {
@@ -64,7 +72,7 @@ export default function CallHeader({ callStatus }: CallHeaderProps) {
           ]}
         />
         <Text style={[styles.statusText, { color: colors.text.muted }, isConnected && styles.connectedText]}>
-          {STATUS_TEXT[callStatus]}
+          {statusText}
         </Text>
       </BlurView>
     </View>
