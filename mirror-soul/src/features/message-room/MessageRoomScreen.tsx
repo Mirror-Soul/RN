@@ -1,46 +1,49 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
-  View,
-  StyleSheet,
+  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   Pressable,
+  StyleSheet,
   Text,
-  ActivityIndicator,
+  View,
 } from 'react-native';
+import { Feather } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import Animated from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import { FlashList, ListRenderItemInfo } from '@shopify/flash-list';
 
 import { Header } from '@/src/components/common/Header';
+import CallStartConfirmSheet, { CallTarget } from '@/src/components/call/CallStartConfirmSheet';
+import { TimeRefillBottomSheet } from '@/src/features/profile/components/TimeRefillBottomSheet';
+import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
+import { useLayout } from '@/src/hooks/useLayout';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 import MessageInput from './components/MessageInput';
 import MessageRoomOptionsPanel from './components/MessageRoomOptionsPanel';
+import { MessageRoomHeaderLeft } from './components/MessageRoomHeaderLeft';
+import { MessageRoomHeaderRight } from './components/MessageRoomHeaderRight';
+import { MessageListItemRenderer } from './components/MessageListItemRenderer';
 import { ChatRoom, FlattenedListItem } from './types';
 import { useMessageRoom } from './hooks/useMessageRoom';
 import { useMessageRoomAnimations } from './hooks/useMessageRoomAnimations';
 import { useMessageListFormatter } from './hooks/useMessageListFormatter';
-import { MessageRoomHeaderLeft } from './components/MessageRoomHeaderLeft';
-import { MessageRoomHeaderRight } from './components/MessageRoomHeaderRight';
-import { MessageListItemRenderer } from './components/MessageListItemRenderer';
-import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
-import { useLayout } from '@/src/hooks/useLayout';
 
 interface MessageRoomScreenProps {
   room: ChatRoom;
 }
 
 /**
- * 메시지방 상세 스크린
- *
- * 구성:
- * - Header (common/Header 재사용 — leftContent로 아바타+이름 영역 커스터마이징)
- * - 배경 글로우 효과 (애니메이션)
- * - 메시지 목록 (날짜 구분 + 말풍선 stagger 애니메이션)
- * - MessageInput 푸터
+ * 실제 채팅 API를 중심으로 구성한 1:1 메시지 화면.
+ * 빈 방도 "오류처럼 비어 보이지" 않도록 연결 완료 상태와 첫 대화 안내를 명시한다.
  */
 export default function MessageRoomScreen({ room }: MessageRoomScreenProps) {
   const router = useRouter();
+  const { colors } = useThemeColors();
   const { contentContainerStyle } = useLayout();
+  const [isCallSheetOpen, setIsCallSheetOpen] = useState(false);
+  const [isRefillSheetOpen, setIsRefillSheetOpen] = useState(false);
 
   const {
     dateGroups,
@@ -53,99 +56,122 @@ export default function MessageRoomScreen({ room }: MessageRoomScreenProps) {
     refetch,
     fetchNextPage,
     hasNextPage,
+    isSending,
   } = useMessageRoom(room.chatRoomId);
 
   const flattenedData = useMessageListFormatter(dateGroups);
   const { glowLeftStyle, glowRightStyle } = useMessageRoomAnimations();
-
-  // 말풍선 아바타는 실제 사진 대신 이니셜+고정 그라디언트를 쓴다(작은 반복 요소라 헤더/옵션
-  // 패널의 실사진 아바타와 달리 굳이 이미지 로딩을 안 태운다) — 백엔드에 room.avatarLetter 같은
-  // 개념 자체가 없으므로 partner.name에서 직접 파생한다.
+  const callTarget: CallTarget = { userUuid: room.partner.userUuid, name: room.partner.name };
   const bubbleAvatarLetter = room.partner.name.charAt(0).toUpperCase();
 
-  // FlashList 렌더링 콜백 함수
-  const renderItem = useCallback(
-    ({ item }: ListRenderItemInfo<FlattenedListItem>) => {
-      return (
-        <MessageListItemRenderer
-          item={item}
-          avatarLetter={bubbleAvatarLetter}
-          avatarGradient={Colors.gradient.avatarPlaceholder}
-        />
+  const handleStartCall = useCallback((target: CallTarget, isPreview: boolean, remainingSeconds?: number) => {
+    setIsCallSheetOpen(false);
+    // 시트의 닫힘 애니메이션을 끝낸 뒤 이동해 새 화면을 가리지 않게 한다.
+    setTimeout(() => {
+      router.push(
+        isPreview
+          ? { pathname: '/ai-call', params: { preview: 'true', targetName: target.name } }
+          : {
+              pathname: '/ai-call',
+              params: {
+                targetUuid: target.userUuid,
+                targetName: target.name,
+                remainingSeconds: String(remainingSeconds ?? 0),
+              },
+            },
       );
-    },
+    }, 280);
+  }, [router]);
+
+  const handleRefillFromCall = useCallback(() => {
+    setIsCallSheetOpen(false);
+    setTimeout(() => setIsRefillSheetOpen(true), 280);
+  }, []);
+
+  const renderItem = useCallback(
+    ({ item }: ListRenderItemInfo<FlattenedListItem>) => (
+      <MessageListItemRenderer
+        item={item}
+        avatarLetter={bubbleAvatarLetter}
+        avatarGradient={Colors.gradient.avatarPlaceholder}
+      />
+    ),
     [bubbleAvatarLetter]
   );
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { backgroundColor: colors.background.primary }]}>
       <KeyboardAvoidingView
         style={StyleSheet.absoluteFill}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={0}
       >
-        {/* ── 배경 ── */}
-        <View style={styles.background}>
-          <Animated.View pointerEvents="none" style={[styles.glowLeft, glowLeftStyle]} />
-          <Animated.View pointerEvents="none" style={[styles.glowRight, glowRightStyle]} />
+        <View style={styles.background} pointerEvents="none">
+          <Animated.View
+            style={[styles.glowLeft, glowLeftStyle, { backgroundColor: colors.glow.cyan, shadowColor: colors.glow.cyan }]}
+          />
+          <Animated.View
+            style={[styles.glowRight, glowRightStyle, { backgroundColor: colors.glow.purple, shadowColor: colors.glow.purple }]}
+          />
         </View>
 
-        {/* ── 헤더 ── */}
         <Header
           leftContent={<MessageRoomHeaderLeft room={room} />}
           rightElement={
             <MessageRoomHeaderRight
               onOpenPanel={() => setIsPanelOpen(true)}
-              onCallPress={() =>
-                router.push({ pathname: '/ai-call', params: { targetUuid: room.partner.userUuid } })
-              }
+              onCallPress={() => setIsCallSheetOpen(true)}
             />
           }
           onBackPress={() => router.back()}
-          backgroundColor="rgba(0, 0, 0, 0.6)"
-          borderBottomColor={Colors.glass.white05}
+          backgroundColor={colors.background.elevated}
+          borderBottomColor={colors.border.primary}
           delay={0}
         />
 
-        {/* ── 메시지 목록 ── */}
         <View style={[styles.messageList, contentContainerStyle]}>
           {isLoading ? (
             <View style={styles.centerState}>
               <ActivityIndicator color={Colors.primary.electricCyan} />
+              <Text style={[styles.centerStateText, { color: colors.text.secondary }]}>대화를 불러오는 중이에요</Text>
             </View>
           ) : isError ? (
             <View style={styles.centerState}>
-              <Text style={styles.centerStateText}>메시지를 불러오지 못했습니다</Text>
-              <Pressable onPress={() => refetch()} accessibilityRole="button" accessibilityLabel="다시 시도">
+              <Feather name="message-circle" size={28} color={colors.text.muted} />
+              <Text style={[styles.centerStateText, { color: colors.text.primary }]}>메시지를 불러오지 못했습니다</Text>
+              <Pressable onPress={() => void refetch()} accessibilityRole="button" accessibilityLabel="메시지 다시 불러오기">
                 <Text style={styles.retryText}>다시 시도</Text>
               </Pressable>
             </View>
+          ) : flattenedData.length === 0 ? (
+            <ConversationEmptyState partnerName={room.partner.name} />
           ) : (
-            // @ts-ignore: estimatedItemSize is valid but types might be outdated
             <FlashList
               ref={scrollRef}
               data={flattenedData}
               renderItem={renderItem}
               contentContainerStyle={styles.messageListContent}
               showsVerticalScrollIndicator={false}
-              estimatedItemSize={70}
               getItemType={(item) => item.type}
-              inverted={true} // 최신 메시지가 화면 최하단(배열 맨앞)에 렌더링되도록 역순 정렬
               keyExtractor={(item) => item.id}
-              // inverted 리스트라 "끝에 도달"이 화면상으로는 위로 스크롤해서 과거 메시지에 닿은 것 — 다음(더 과거) 페이지 요청
-              onEndReached={() => {
-                if (hasNextPage) fetchNextPage();
+              // FlashList v2는 inverted를 지원하지 않는다. messages가 오래된 순서로
+              // 정리돼 있으므로 하단에서 시작하고, 화면 상단에 닿을 때 더 과거 페이지를 가져온다.
+              maintainVisibleContentPosition={{
+                startRenderingFromBottom: true,
+                autoscrollToBottomThreshold: 0.1,
+                animateAutoScrollToBottom: true,
               }}
-              onEndReachedThreshold={0.4}
+              onStartReached={() => {
+                if (hasNextPage) void fetchNextPage();
+              }}
+              onStartReachedThreshold={0.4}
             />
           )}
         </View>
 
-        {/* ── 입력 푸터 ── */}
-        <MessageInput onSend={handleSend} />
+        <MessageInput onSend={handleSend} isSending={isSending} />
       </KeyboardAvoidingView>
 
-      {/* ── 옵션 패널 (absolute, KAV 위에 올림) ── */}
       <MessageRoomOptionsPanel
         room={room}
         isOpen={isPanelOpen}
@@ -155,6 +181,35 @@ export default function MessageRoomScreen({ room }: MessageRoomScreenProps) {
           router.back();
         }}
       />
+
+      <CallStartConfirmSheet
+        target={callTarget}
+        isOpen={isCallSheetOpen}
+        onClose={() => setIsCallSheetOpen(false)}
+        onStart={handleStartCall}
+        onRefill={handleRefillFromCall}
+      />
+      <TimeRefillBottomSheet isOpen={isRefillSheetOpen} onClose={() => setIsRefillSheetOpen(false)} />
+    </View>
+  );
+}
+
+function ConversationEmptyState({ partnerName }: { partnerName: string }) {
+  const { colors } = useThemeColors();
+
+  return (
+    <View style={styles.emptyState}>
+      <LinearGradient colors={Colors.gradient.cyanToPurple} style={styles.emptyIcon}>
+        <Feather name="message-circle" size={27} color={Colors.primary.soulBlack} />
+      </LinearGradient>
+      <Text style={[styles.emptyTitle, { color: colors.text.primary }]}>대화를 시작할 수 있어요</Text>
+      <Text style={[styles.emptyDescription, { color: colors.text.secondary }]}>
+        {partnerName}님과 연결되었어요.{`\n`}가볍게 인사를 건네 보세요.
+      </Text>
+      <View style={[styles.emptyHint, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
+        <Feather name="shield" size={14} color={Colors.primary.electricCyan} />
+        <Text style={[styles.emptyHintText, { color: colors.text.muted }]}>불편한 대화는 우측 메뉴에서 신고하거나 차단할 수 있어요.</Text>
+      </View>
     </View>
   );
 }
@@ -162,50 +217,42 @@ export default function MessageRoomScreen({ room }: MessageRoomScreenProps) {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#0A0A0A',
   },
   background: {
     ...StyleSheet.absoluteFillObject,
-    pointerEvents: 'none',
   },
-  /* 배경 글로우 */
   glowLeft: {
     position: 'absolute',
-    width: 256,
-    height: 256,
+    width: 190,
+    height: 190,
     borderRadius: Radii.full,
-    backgroundColor: 'rgba(0, 184, 219, 1)',
-    top: 0,
-    left: '25%',
-    // React Native에서 CSS filter:blur 대체: shadowRadius 활용
-    shadowColor: 'rgba(0, 184, 219, 1)',
+    top: 120,
+    left: -110,
+    opacity: 0.12,
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1,
-    shadowRadius: 100,
+    shadowOpacity: 0.6,
+    shadowRadius: 80,
     elevation: 0,
   },
   glowRight: {
     position: 'absolute',
-    width: 256,
-    height: 256,
+    width: 220,
+    height: 220,
     borderRadius: Radii.full,
-    backgroundColor: 'rgba(173, 70, 255, 1)',
-    bottom: 200,
-    right: '15%',
-    shadowColor: 'rgba(173, 70, 255, 1)',
+    bottom: 120,
+    right: -140,
+    opacity: 0.1,
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1,
-    shadowRadius: 100,
+    shadowOpacity: 0.55,
+    shadowRadius: 90,
     elevation: 0,
   },
-
-  /* ── 메시지 목록 ── */
   messageList: {
     flex: 1,
   },
   messageListContent: {
     paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.xxl,
+    paddingTop: Spacing.xl,
     paddingBottom: Spacing.xl,
   },
   centerState: {
@@ -213,17 +260,64 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     gap: Spacing.md,
+    paddingHorizontal: Spacing.xxxl,
   },
   centerStateText: {
     fontFamily: FontFamily.sans,
     fontWeight: FontWeight.medium,
     fontSize: FontSize.base,
-    color: Colors.neutral.lightGray,
+    textAlign: 'center',
   },
   retryText: {
     fontFamily: FontFamily.sans,
     fontWeight: FontWeight.black,
     fontSize: FontSize.sm,
     color: Colors.primary.electricCyan,
+  },
+  emptyState: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.xxxl,
+    paddingBottom: Spacing.massive,
+  },
+  emptyIcon: {
+    width: 64,
+    height: 64,
+    borderRadius: Radii.xl,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyTitle: {
+    marginTop: Spacing.xl,
+    fontFamily: FontFamily.sans,
+    fontWeight: FontWeight.black,
+    fontSize: FontSize.xxl,
+    letterSpacing: -0.45,
+  },
+  emptyDescription: {
+    marginTop: Spacing.sm,
+    fontFamily: FontFamily.sans,
+    fontWeight: FontWeight.regular,
+    fontSize: FontSize.base,
+    lineHeight: 21,
+    textAlign: 'center',
+  },
+  emptyHint: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Spacing.sm,
+    marginTop: Spacing.xxl,
+    borderWidth: 1,
+    borderRadius: Radii.lg,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+  },
+  emptyHintText: {
+    flex: 1,
+    fontFamily: FontFamily.sans,
+    fontWeight: FontWeight.medium,
+    fontSize: FontSize.xs,
+    lineHeight: 17,
   },
 });

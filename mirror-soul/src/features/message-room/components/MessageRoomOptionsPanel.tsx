@@ -1,11 +1,10 @@
 import React, { useEffect } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
   Pressable,
+  StyleSheet,
+  Text,
   useWindowDimensions,
-  Switch,
+  View,
 } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -13,10 +12,10 @@ import Animated, {
   withTiming,
   withSpring,
   Easing,
-  runOnJS,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors, FontFamily, FontSize, FontWeight, Spacing } from '@/src/constants/theme';
+import { FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { ChatRoom } from '../types';
 import { OptionsProfileSection } from './options/OptionsProfileSection';
 import { OptionsSettingsSection } from './options/OptionsSettingsSection';
@@ -38,13 +37,10 @@ const ANIMATION_DURATION = 280;
  *
  * 더보기 버튼 탭 시 우측에서 슬라이드 인 되는 패널입니다.
  *
- * 구성:
- * - 오버레이 (반투명 블랙, 탭 시 닫기)
- * - 패널 (우측 고정 280px):
- *   - 상대 프로필 (대형 아바타 + 이름 + 나이/유사도)
- *   - SETTINGS 섹션: 알림 설정 토글, 시간 채우기(선물), 프로필 상세보기
- *   - DANGER ZONE 섹션: 대화 내용 삭제, 차단하기
- *   - 닫기 버튼 (하단 고정)
+ * 구현된 서버 동작을 중심으로 한다.
+ * - 메시지 알림: GET/PATCH /chat/rooms/{room-id}/notification
+ * - 차단: POST /blocks/{target-user-uuid}
+ * 신고는 서버 신고 API가 없어 고객센터 이메일로 연결한다.
  */
 export default function MessageRoomOptionsPanel({
   room,
@@ -54,6 +50,7 @@ export default function MessageRoomOptionsPanel({
 }: MessageRoomOptionsPanelProps) {
   const { height: screenHeight } = useWindowDimensions();
   const insets = useSafeAreaInsets();
+  const { colors } = useThemeColors();
 
   // 패널 translateX: PANEL_WIDTH(숨김) → 0(보임)
   const translateX = useSharedValue(PANEL_WIDTH);
@@ -101,19 +98,38 @@ export default function MessageRoomOptionsPanel({
       <Animated.View
         style={[
           styles.panel,
-          { paddingTop: insets.top + Spacing.xxl, paddingBottom: insets.bottom + Spacing.lg },
+          {
+            backgroundColor: colors.background.elevated,
+            borderLeftColor: colors.border.primary,
+            paddingTop: insets.top + Spacing.lg,
+            paddingBottom: insets.bottom + Spacing.lg,
+          },
           panelStyle,
         ]}
       >
+        <View style={styles.panelHeader}>
+          <Text style={[styles.panelTitle, { color: colors.text.primary }]}>대화 설정</Text>
+          <Pressable
+            style={[styles.headerCloseButton, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
+            onPress={onClose}
+            accessibilityRole="button"
+            accessibilityLabel="대화 설정 닫기"
+          >
+            <Text style={[styles.headerCloseText, { color: colors.text.secondary }]}>닫기</Text>
+          </Pressable>
+        </View>
         <OptionsProfileSection room={room} />
-        <OptionsSettingsSection roomId={room.chatRoomId} />
+        <OptionsSettingsSection roomId={room.chatRoomId} isActive={isOpen} />
         <OptionsDangerSection room={room} onBlocked={onBlocked} />
 
-        {/* ─ 닫기 버튼 (하단 고정) ─ */}
         <View style={styles.closeSection}>
-          <View style={styles.closeDivider} />
-          <Pressable style={styles.closeButton} onPress={onClose}>
-            <Text style={styles.closeButtonText}>닫기</Text>
+          <View style={[styles.closeDivider, { backgroundColor: colors.border.primary }]} />
+          <Pressable
+            style={[styles.closeButton, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
+            onPress={onClose}
+            accessibilityRole="button"
+          >
+            <Text style={[styles.closeButtonText, { color: colors.text.secondary }]}>대화로 돌아가기</Text>
           </Pressable>
         </View>
       </Animated.View>
@@ -141,11 +157,32 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     width: PANEL_WIDTH,
-    backgroundColor: '#0F0F0F',
     borderLeftWidth: 1,
-    borderLeftColor: Colors.glass.white05,
     flexDirection: 'column',
     paddingHorizontal: Spacing.xxl,
+  },
+  panelHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: Spacing.xxl,
+  },
+  panelTitle: {
+    fontFamily: FontFamily.sans,
+    fontWeight: FontWeight.black,
+    fontSize: FontSize.xl,
+    letterSpacing: -0.4,
+  },
+  headerCloseButton: {
+    borderWidth: 1,
+    borderRadius: Radii.full,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+  },
+  headerCloseText: {
+    fontFamily: FontFamily.sans,
+    fontWeight: FontWeight.semibold,
+    fontSize: FontSize.xs,
   },
 
   /* ── 닫기 버튼 ── */
@@ -155,14 +192,11 @@ const styles = StyleSheet.create({
   },
   closeDivider: {
     height: 1,
-    backgroundColor: Colors.glass.white05,
     marginBottom: Spacing.xxl,
   },
   closeButton: {
-    backgroundColor: Colors.glass.white05,
     borderWidth: 1,
-    borderColor: Colors.glass.white10,
-    borderRadius: 14,
+    borderRadius: Radii.md,
     paddingVertical: 13,
     alignItems: 'center',
   },
@@ -172,6 +206,5 @@ const styles = StyleSheet.create({
     fontSize: FontSize.base,
     lineHeight: 20,
     letterSpacing: -0.15,
-    color: Colors.neutral.lightGray,
   },
 });

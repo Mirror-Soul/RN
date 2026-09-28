@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { MessageItem } from '../types';
 
 interface MessageBubbleProps {
@@ -36,6 +37,7 @@ export default function MessageBubble({
   hideAvatar = false,
 }: MessageBubbleProps) {
   const isSent = message.direction === 'SENT';
+  const { colors } = useThemeColors();
 
   if (isSent) {
     return (
@@ -46,7 +48,7 @@ export default function MessageBubble({
         {/* 시간 텍스트 (+ 상대방이 읽었으면 읽음 표시) */}
         <View style={styles.timePad}>
           {message.isReadByPartner && <Text style={styles.readLabel}>읽음</Text>}
-          <Text style={styles.timeText}>{message.timestamp}</Text>
+          <Text style={[styles.timeText, { color: colors.text.muted }]}>{message.timestamp}</Text>
         </View>
 
         {/* 말풍선: 그라디언트 (twinCallButton) */}
@@ -87,12 +89,12 @@ export default function MessageBubble({
 
       {/* 말풍선: 반투명 글래스 */}
       <View style={styles.receivedBubbleWrapper}>
-        <View style={[styles.bubbleBase, styles.receivedBubble]}>
-          <Text style={styles.receivedText}>{message.text}</Text>
+        <View style={[styles.bubbleBase, styles.receivedBubble, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
+          <Text style={[styles.receivedText, { color: colors.text.primary }]}>{message.text}</Text>
         </View>
         {/* 시간 텍스트 */}
         <View style={styles.timePadReceived}>
-          <Text style={styles.timeText}>{message.timestamp}</Text>
+          <Text style={[styles.timeText, { color: colors.text.muted }]}>{message.timestamp}</Text>
         </View>
       </View>
     </Animated.View>
@@ -143,7 +145,6 @@ const styles = StyleSheet.create({
     height: 28,
     borderRadius: Radii.smmd,
     borderWidth: 1,
-    borderColor: Colors.glass.white05,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -164,8 +165,6 @@ const styles = StyleSheet.create({
     borderTopRightRadius: Radii.lg,
     borderBottomRightRadius: Radii.lg,
     borderBottomLeftRadius: Radii.lg,
-    backgroundColor: Colors.glass.white10,
-    borderColor: Colors.glass.white05,
     flexShrink: 1,
     alignSelf: 'flex-start',
   },
@@ -175,7 +174,6 @@ const styles = StyleSheet.create({
     fontSize: FontSize.base,
     lineHeight: 23,
     letterSpacing: -0.15,
-    color: Colors.neutral.pureWhite,
   },
 
   /* ─── SHARED ─── */
@@ -183,7 +181,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.sm + 2,
     borderWidth: 1,
-    borderColor: Colors.glass.white05,
     // iOS shadow
     shadowColor: Colors.primary.soulBlack,
     shadowOffset: { width: 0, height: 1 },

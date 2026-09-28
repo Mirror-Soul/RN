@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
-import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
+import { FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface MessageDateDividerProps {
   label: string;
@@ -12,10 +13,12 @@ interface MessageDateDividerProps {
  * 메시지 목록에서 날짜 그룹을 구분합니다.
  */
 export default function MessageDateDivider({ label }: MessageDateDividerProps) {
+  const { colors } = useThemeColors();
+
   return (
     <Animated.View entering={FadeIn.duration(400)} style={styles.container}>
-      <View style={styles.badge}>
-        <Text style={styles.label}>{label}</Text>
+      <View style={[styles.badge, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
+        <Text style={[styles.label, { color: colors.text.muted }]}>{label}</Text>
       </View>
     </Animated.View>
   );
@@ -31,9 +34,7 @@ const styles = StyleSheet.create({
   badge: {
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.xs + 2,
-    backgroundColor: Colors.glass.white05,
     borderWidth: 1,
-    borderColor: Colors.glass.white05,
     borderRadius: Radii.full,
   },
   label: {
@@ -43,6 +44,5 @@ const styles = StyleSheet.create({
     lineHeight: 15,
     letterSpacing: 0.37,
     textTransform: 'uppercase',
-    color: Colors.neutral.darkGray,
   },
 });

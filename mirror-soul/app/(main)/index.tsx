@@ -1,7 +1,7 @@
 import AvailableTimeCard from '@/src/components/home/main/AvailableTimeCard';
 import DiscoveryMatchSection from '@/src/components/home/main/Discovery/DiscoveryMatchSection';
 import PartnerProfileModal from '@/src/components/home/main/Discovery/PartnerProfileModal';
-import CallStartConfirmSheet from '@/src/components/call/CallStartConfirmSheet';
+import CallStartConfirmSheet, { CallTarget } from '@/src/components/call/CallStartConfirmSheet';
 import LocationFilterBar from '@/src/components/home/main/LocationFilterBar';
 import MainHeader from '@/src/components/home/main/MainHeader';
 import ProfileQuickActionSheet from '@/src/components/home/main/ProfileQuickActionSheet';
@@ -108,7 +108,7 @@ export default function MainHomeScreen() {
     setCallCandidate(pendingMatch);
   }, []);
 
-  const handleStartCall = useCallback((match: Recommendation, isPreview: boolean, remainingSeconds?: number) => {
+  const handleStartCall = useCallback((match: CallTarget, isPreview: boolean, remainingSeconds?: number) => {
     setCallCandidate(null);
     // BottomSheet의 닫힘 애니메이션을 먼저 끝내야 새 화면을 native Modal이 덮지 않는다.
     setTimeout(() => {
@@ -201,7 +201,7 @@ export default function MainHomeScreen() {
       />
 
       <CallStartConfirmSheet
-        match={callCandidate}
+        target={callCandidate}
         isOpen={callCandidate !== null}
         onClose={() => setCallCandidate(null)}
         onStart={handleStartCall}

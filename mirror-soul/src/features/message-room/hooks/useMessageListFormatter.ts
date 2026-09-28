@@ -6,14 +6,12 @@ import { Animation } from '@/src/constants/theme';
  * 중첩된 MessageDateGroup[] 을 FlashList 가 렌더링하기 편한 1차원 FlattenedListItem[] 으로 변환합니다.
  * 
  * [최적화 & 프로토콜]
- * - inverted=true 방식에 맞춰 최신 메시지가 배열의 맨 앞(index 0)에 오도록 배열을 Reverse 합니다.
+ * - FlashList v2의 일반 방향(오래된 메시지 → 최신 메시지)에 맞춰 API 순서를 보존합니다.
  * - 각 아이템은 BaseListItem을 상속한 구조를 따릅니다.
  */
 export function useMessageListFormatter(dateGroups: MessageDateGroup[]): FlattenedListItem[] {
   return useMemo(() => {
     const flatList: FlattenedListItem[] = [];
-    let msgOffset = 0;
-
     // 원본 데이터를 순회하며 1차원 배열로 평탄화 (Flat)
     dateGroups.forEach((group) => {
       // 1. 날짜 구분선 데이터 삽입
@@ -34,18 +32,15 @@ export function useMessageListFormatter(dateGroups: MessageDateGroup[]): Flatten
           id: msg.id,
           message: msg,
           hideAvatar,
-          enterDelay: 0, // 임시 할당 (역순 처리 후 재계산)
+          enterDelay: 0, // 순차 진입 효과를 위해 아래에서 재계산
         });
       });
     });
 
-    // inverted={true} 인 FlashList 에서는 데이터가 역순으로 들어와야
-    // 가장 최신 데이터가 화면 하단(리스트의 시작점)에 렌더링됩니다.
-    const reversedList = flatList.reverse();
-
-    // 역순 정렬된 리스트를 기준으로 최신 메시지(index 0)부터 딜레이를 부여합니다.
+    // 오래된 메시지부터 순차적으로 딜레이를 부여한다. FlashList v2는
+    // startRenderingFromBottom으로 첫 진입 위치만 하단으로 맞춘다.
     let messageIndex = 0;
-    return reversedList.map((item) => {
+    return flatList.map((item) => {
       if (item.type === 'message') {
         const delay = messageIndex * Animation.staggerDelay;
         messageIndex++;
