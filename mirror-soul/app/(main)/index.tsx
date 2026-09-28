@@ -120,6 +120,12 @@ export default function MainHomeScreen() {
     }, 280);
   }, []);
 
+  const handleRefillFromCall = useCallback(() => {
+    setCallCandidate(null);
+    // 통화 확인 시트가 닫힌 뒤 충전 시트를 열어 native Modal 전환이 겹치지 않게 한다.
+    setTimeout(() => setShowRefillModal(true), 280);
+  }, []);
+
   // 목업 카드도 실제 상세 응답과 같은 로컬 fixture로 모달을 열어 UI/UX를 검토할 수 있다.
   // API를 호출하지 않는 분기는 PartnerProfileModal이 담당한다.
   const handleOpenDetail = useCallback((match: Recommendation) => {
@@ -192,6 +198,7 @@ export default function MainHomeScreen() {
         isOpen={callCandidate !== null}
         onClose={() => setCallCandidate(null)}
         onStart={handleStartCall}
+        onRefill={handleRefillFromCall}
       />
     </ScrollView>
   );

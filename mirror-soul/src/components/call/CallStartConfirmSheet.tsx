@@ -16,6 +16,8 @@ interface CallStartConfirmSheetProps {
   onClose: () => void;
   /** 실제 추천은 통화 API 화면으로, 목업은 서버 연결 없는 UI 미리보기 화면으로 보낸다. */
   onStart: (match: Recommendation, isPreview: boolean) => void;
+  /** 잔여 시간이 없을 때, 시트를 닫고 시간 충전 흐름으로 전환한다. */
+  onRefill: () => void;
 }
 
 /**
@@ -24,7 +26,7 @@ interface CallStartConfirmSheetProps {
  * 실제 추천은 최신 잔여 시간을 다시 조회한 뒤에만 진입을 허용한다. 목업 추천은 의도적으로
  * 어떤 API나 권한도 요청하지 않고, 통화 화면의 UI를 검토하는 미리보기 모드로만 진입한다.
  */
-export default function CallStartConfirmSheet({ match, isOpen, onClose, onStart }: CallStartConfirmSheetProps) {
+export default function CallStartConfirmSheet({ match, isOpen, onClose, onStart, onRefill }: CallStartConfirmSheetProps) {
   const { colors } = useThemeColors();
   const startInFlightRef = useRef(false);
   const [isStarting, setIsStarting] = useState(false);
@@ -66,9 +68,16 @@ export default function CallStartConfirmSheet({ match, isOpen, onClose, onStart 
     }
   }, [isOpen]);
 
-  const handleStart = () => {
+  const handlePrimaryAction = () => {
     if (!match || startInFlightRef.current) return;
-    if (!isPreview && (!hasFreshTimeCheck || isFetching || isError || !hasRemainingTime)) return;
+    if (!isPreview && (!hasFreshTimeCheck || isFetching || isError)) return;
+
+    // 0초일 때는 막힌 버튼을 남기지 않는다. 사용자가 다음에 해야 할 행동(충전)을
+    // 같은 주 CTA로 제시해, 시간 카드까지 다시 찾아갈 필요가 없게 한다.
+    if (!isPreview && !hasRemainingTime) {
+      onRefill();
+      return;
+    }
 
     startInFlightRef.current = true;
     setIsStarting(true);
@@ -79,7 +88,8 @@ export default function CallStartConfirmSheet({ match, isOpen, onClose, onStart 
 
   const isCheckingTime = !hasFreshTimeCheck || isFetching;
   const timeLabel = isCheckingTime ? '확인 중...' : isError ? '확인하지 못했어요' : formatCallTime(remainingSeconds);
-  const startDisabled = !isPreview && (isCheckingTime || isError || !hasRemainingTime);
+  const shouldPromptRefill = !isPreview && !isCheckingTime && !isError && !hasRemainingTime;
+  const startDisabled = !isPreview && (isCheckingTime || isError);
 
   return (
     <BottomSheet isOpen={isOpen} onClose={onClose} height={380}>
@@ -120,7 +130,7 @@ export default function CallStartConfirmSheet({ match, isOpen, onClose, onStart 
                 <Text style={[styles.timeHint, styles.retryText, { color: colors.state.danger }]}>다시 확인하기</Text>
               </TouchableOpacity>
             ) : !isCheckingTime && !hasRemainingTime ? (
-              <Text style={[styles.timeHint, { color: colors.state.danger }]}>대화 시간을 충전한 뒤 통화를 시작할 수 있어요.</Text>
+              <Text style={[styles.timeHint, { color: colors.state.danger }]}>지금 충전하면 바로 AI 트윈과 대화를 시작할 수 있어요.</Text>
             ) : (
               <Text style={[styles.timeHint, { color: colors.text.muted }]}>남은 시간이 있을 때만 통화를 시작할 수 있어요.</Text>
             )}
@@ -128,11 +138,11 @@ export default function CallStartConfirmSheet({ match, isOpen, onClose, onStart 
         )}
 
         <TouchableOpacity
-          onPress={handleStart}
+          onPress={handlePrimaryAction}
           disabled={startDisabled || isStarting}
           activeOpacity={0.85}
           accessibilityRole="button"
-          accessibilityLabel={isPreview ? '통화 화면 미리보기 시작' : '통화 시작'}
+          accessibilityLabel={isPreview ? '통화 화면 미리보기 시작' : shouldPromptRefill ? '대화 시간 충전하기' : '통화 시작'}
           accessibilityState={{ disabled: startDisabled || isStarting }}
           style={[styles.startButtonWrapper, (startDisabled || isStarting) && styles.startButtonDisabled]}
         >
@@ -142,8 +152,12 @@ export default function CallStartConfirmSheet({ match, isOpen, onClose, onStart 
             end={{ x: 1, y: 0 }}
             style={styles.startButton}
           >
-            {isStarting ? <ActivityIndicator size="small" color={Colors.neutral.pureWhite} /> : <Feather name="phone" size={18} color={Colors.neutral.pureWhite} />}
-            <Text style={styles.startButtonText}>{isPreview ? '미리보기 시작' : '통화 시작'}</Text>
+            {isStarting ? (
+              <ActivityIndicator size="small" color={Colors.neutral.pureWhite} />
+            ) : (
+              <Feather name={shouldPromptRefill ? 'credit-card' : 'phone'} size={18} color={Colors.neutral.pureWhite} />
+            )}
+            <Text style={styles.startButtonText}>{isPreview ? '미리보기 시작' : shouldPromptRefill ? '대화 시간 충전하기' : '통화 시작'}</Text>
           </LinearGradient>
         </TouchableOpacity>
       </View>
