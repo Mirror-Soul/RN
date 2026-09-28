@@ -10,6 +10,10 @@ import { logger } from '../utils/logger';
 
 const ICE_SERVERS = [{ urls: 'stun:stun.l.google.com:19302' }];
 
+const stopStreamTracks = (stream: MediaStream | null) => {
+  stream?.getTracks().forEach((track: any) => track.stop());
+};
+
 /**
  * WebRTC PeerConnection 생명주기를 관리하는 훅 (SoC)
  *
@@ -20,6 +24,15 @@ export function useWebRTCCall() {
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
   const [iceConnectionState, setIceConnectionState] = useState<string>('new');
+  // 내 카메라 셀프뷰 전용 스트림 — 의도적으로 PeerConnection에 addTrack하지 않는다.
+  // AI 서버(aiortc)는 초기 offer 이후의 갱신 협상을 클라이언트가 먼저 거는 경우를 검증한 적이
+  // 없고, 비디오 트랙을 받아도 어차피 버리므로(model_calling/webrtc/peer.py on_track) 지금은
+  // "내 화면에 내 카메라를 보여주는" 로컬 프리뷰로 범위를 좁힌다.
+  const [localCameraStream, setLocalCameraStream] = useState<MediaStream | null>(null);
+  const localCameraStreamRef = useRef<MediaStream | null>(null);
+  // getUserMedia는 취소 API가 없으므로, 각 요청에 세대를 부여한다. 종료/비활성화 뒤에
+  // 늦게 도착한 스트림은 상태에 넣지 않고 즉시 트랙을 멈춘다.
+  const cameraRequestIdRef = useRef(0);
 
   // ICE 후보 발생 시 시그널링 서버로 전달하기 위한 콜백 Ref
   const onLocalIceCandidateCb = useRef<((candidate: RTCIceCandidate) => void) | null>(null);
@@ -68,6 +81,34 @@ export function useWebRTCCall() {
       logger.error('[useWebRTCCall] Failed to get microphone stream:', err);
       throw err;
     }
+  }, []);
+
+  /** 내 카메라 셀프뷰 시작 — 통화 마이크 스트림과 별개의 video-only 스트림을 새로 획득한다. */
+  const enableCamera = useCallback(async () => {
+    if (localCameraStreamRef.current) return true; // 이미 켜져 있으면 중복 획득하지 않는다
+
+    const requestId = ++cameraRequestIdRef.current;
+    const stream = (await mediaDevices.getUserMedia({ audio: false, video: { facingMode: 'user' } })) as MediaStream;
+
+    if (requestId !== cameraRequestIdRef.current) {
+      stopStreamTracks(stream);
+      logger.debug('[useWebRTCCall] Discarded camera stream from an invalidated request');
+      return false;
+    }
+
+    localCameraStreamRef.current = stream;
+    setLocalCameraStream(stream);
+    logger.debug('[useWebRTCCall] Local camera preview stream acquired');
+    return true;
+  }, []);
+
+  /** 내 카메라 셀프뷰 종료 — 트랙을 멈춰서 카메라 하드웨어(및 표시등)를 실제로 끈다. */
+  const disableCamera = useCallback(() => {
+    cameraRequestIdRef.current += 1;
+    stopStreamTracks(localCameraStreamRef.current);
+    localCameraStreamRef.current = null;
+    setLocalCameraStream(null);
+    logger.debug('[useWebRTCCall] Local camera preview stream released');
   }, []);
 
   /** 버퍼링된 ICE 후보를 일괄 적용하는 내부 헬퍼 */
@@ -137,6 +178,8 @@ export function useWebRTCCall() {
 
   /** 정리: PeerConnection 및 트랙 해제 */
   const close = useCallback(() => {
+    disableCamera();
+
     const pc = pcRef.current;
     if (!pc) return;
 
@@ -149,7 +192,7 @@ export function useWebRTCCall() {
     setRemoteStream(null);
     setIceConnectionState('closed');
     logger.debug('[useWebRTCCall] PeerConnection closed and cleaned up');
-  }, []);
+  }, [disableCamera]);
 
   // 언마운트 시 자동 정리 (메모리 누수 방지)
   useEffect(() => {
@@ -160,9 +203,12 @@ export function useWebRTCCall() {
 
   return {
     remoteStream,
+    localCameraStream,
     iceConnectionState,
     onLocalIceCandidateCb,
     initialize,
+    enableCamera,
+    disableCamera,
     createOffer,
     createAnswer,
     applyAnswer,

@@ -20,8 +20,8 @@ import { formatRegion } from '@/src/utils/formatRegion';
 import { useIntroductionQuery } from './hooks/useIntroductionQuery';
 
 /**
- * 인증한 사용자의 소개를 표시하는 화면이다. 추천 상세와 화면이 같은 필드 계약을 쓰지만,
- * 자기 자신을 추천 상세 API로 조회하지 않고 `/my-page/introduction`만 호출한다.
+ * 인증한 사용자의 소개를 표시하는 화면이다. 추천 상세와 유사한 필드 계약을 쓰지만,
+ * 자기 자신을 추천 상세 API로 조회하지 않고 `/my-page/profile`만 호출한다.
  */
 export const ProfileIntroductionScreen = () => {
   const router = useRouter();
@@ -119,6 +119,11 @@ export const ProfileIntroductionScreen = () => {
                     <Text style={[styles.jobText, { color: colors.text.secondary }]}>
                       {introduction.job ? jobCategories.find((job) => job.value === introduction.job)?.label ?? introduction.job : '직업 미입력'}
                     </Text>
+                    {introduction.jobDescription?.trim() ? (
+                      <Text style={[styles.jobDescriptionText, { color: colors.text.muted }]} numberOfLines={1}>
+                        {introduction.jobDescription.trim()}
+                      </Text>
+                    ) : null}
                     <Text style={[styles.jobStatusText, { color: colors.text.muted }]}>
                       {introduction.jobCertificationSubmitted ? '직업 인증 서류 제출 완료' : '직업 인증으로 신뢰 프로필을 완성해 보세요'}
                     </Text>
@@ -402,6 +407,7 @@ const styles = StyleSheet.create({
   jobRow: { marginTop: Spacing.lg, paddingTop: Spacing.sm, borderTopWidth: 1, flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
   jobCopy: { flex: 1, gap: Spacing.xxs },
   jobText: { fontFamily: FontFamily.sans, fontSize: FontSize.sm },
+  jobDescriptionText: { fontFamily: FontFamily.sans, fontSize: FontSize.xs, lineHeight: 14, marginTop: Spacing.xxs },
   jobStatusText: { fontFamily: FontFamily.sans, fontSize: FontSize.xs, lineHeight: 14 },
   jobVerifiedBadge: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xxs, paddingHorizontal: Spacing.sm, paddingVertical: Spacing.xs, borderRadius: Radii.full, backgroundColor: Colors.glass.green10, borderWidth: 1, borderColor: Colors.glass.green20 },
   jobVerifiedText: { fontFamily: FontFamily.sans, fontSize: FontSize.xs, fontWeight: FontWeight.bold, color: Colors.primary.successGreen },

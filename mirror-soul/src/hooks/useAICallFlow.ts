@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { Platform, PermissionsAndroid } from 'react-native';
 import InCallManager from 'react-native-incall-manager';
 import type { MediaStream } from 'react-native-webrtc';
 import { AudioModule, setAudioModeAsync } from 'expo-audio';
@@ -40,9 +41,13 @@ export type CallStatus =
 export function useAICallFlow(targetUserUuid?: string) {
   const [callStatus, setCallStatus] = useState<CallStatus>('idle');
   const [error, setError] = useState<string | null>(null);
-  // 기본값 스피커 on — 화면을 보며 통화하는 영상통화 UX(한뼘통화)에 맞춘다.
-  const [isSpeakerOn, setIsSpeakerOn] = useState(true);
+  // 기본 경로는 시스템에 맡긴다. 유선/블루투스 기기가 연결되어 있으면 그 기기가 우선되어야
+  // 하며, 사용자가 스피커를 직접 선택했을 때만 강제로 스피커로 전환한다.
+  const [isSpeakerOn, setIsSpeakerOn] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
+  // 카메라는 기본 off — 마이크와 달리 통화 시작 시점이 아니라 사용자가 실제로 켤 때만
+  // 권한을 요청한다(불필요하게 미리 요청하지 않기 위함).
+  const [isCameraOn, setIsCameraOn] = useState(false);
 
   const { userUuid } = useAuthStore();
   // 실제로 전화를 거는 대상(피호출자) — REST 방 생성과 WS CALL_INVITE 양쪽 다 이 값을 써야
@@ -70,12 +75,18 @@ export function useAICallFlow(targetUserUuid?: string) {
   // 화면이 언마운트되면(_cleanup이 이 값을 증가시켜 무효화) 그 시도가 뒤늦게 완료되더라도
   // 로컬 연결을 이어가지 않고 서버에 생성된 방을 보상 종료하도록 구분하는 데 쓴다.
   const startAttemptIdRef = useRef(0);
+  // Android 권한 프롬프트와 getUserMedia가 비동기라 통화 종료 후에도 완료될 수 있다.
+  // 종료/새 토글마다 세대를 바꿔 늦게 도착한 카메라 활성화를 무효화한다.
+  const cameraToggleAttemptIdRef = useRef(0);
 
   const {
     remoteStream,
+    localCameraStream,
     iceConnectionState,
     onLocalIceCandidateCb,
     initialize: initWebRTC,
+    enableCamera,
+    disableCamera,
     createOffer,
     createAnswer,
     applyAnswer,
@@ -135,10 +146,10 @@ export function useAICallFlow(targetUserUuid?: string) {
       logger.info('[useAICallFlow] WebRTC connected! Notifying server...');
       setCallStatus('connected');
 
-      // InCallManager가 이 시점부터 오디오 라우팅(스피커/이어피스)과 마이크 뮤트를 관장한다.
-      // media: 'audio'로 시작하되, 기본값을 스피커 on으로 강제한다(한뼘통화 UX).
-      InCallManager.start({ media: 'audio', auto: false });
-      InCallManager.setSpeakerphoneOn(isSpeakerOn);
+      // 기본 라우팅은 OS/InCallManager 자동 선택에 맡긴다. 이 경로는 유선·블루투스
+      // 기기가 연결됐을 때 해당 장치로 오디오를 보내며, 스피커는 아래 토글로 사용자가
+      // 명시적으로 선택했을 때만 강제한다.
+      InCallManager.start({ media: 'audio', auto: true });
 
       setCallInProgress(session.callId).catch((err) => {
         logger.error('[useAICallFlow] setCallInProgress failed:', err);
@@ -148,7 +159,7 @@ export function useAICallFlow(targetUserUuid?: string) {
         logger.error('[useAICallFlow] startRecording failed:', err);
       });
     }
-  }, [iceConnectionState, callStatus, startRecording, isSpeakerOn]);
+  }, [iceConnectionState, callStatus, startRecording]);
 
   // ─────────────────────────────────────────────
   // 스피커/음소거 토글 (공개 API)
@@ -156,7 +167,14 @@ export function useAICallFlow(targetUserUuid?: string) {
   const toggleSpeaker = useCallback(() => {
     setIsSpeakerOn((prev) => {
       const next = !prev;
-      InCallManager.setSpeakerphoneOn(next);
+      if (next) {
+        InCallManager.setForceSpeakerphoneOn(true);
+      } else {
+        // 라이브러리 JS 구현은 null을 "미디어 타입에 따른 기본 라우팅"으로 변환한다.
+        // 타입 선언은 boolean만 허용하지만, native API의 0 플래그를 사용해야 외부 기기
+        // 연결 시 이어피스를 강제하지 않고 시스템 라우팅으로 되돌릴 수 있다.
+        (InCallManager.setForceSpeakerphoneOn as (flag: boolean | null) => void)(null);
+      }
       return next;
     });
   }, []);
@@ -168,6 +186,50 @@ export function useAICallFlow(targetUserUuid?: string) {
       return next;
     });
   }, []);
+
+  // ─────────────────────────────────────────────
+  // 카메라 토글 (공개 API) — 내 화면에만 보이는 셀프뷰. Android는 getUserMedia가 런타임
+  // 권한을 직접 요청/확인하지 않으므로(react-native-webrtc GetUserMediaImpl 확인) 여기서
+  // 먼저 명시적으로 요청한다 — 안 하면 권한 거부 시 catch 불가능한 예외로 앱이 죽을 수 있다.
+  // iOS는 getUserMedia 호출 자체가 시스템 카메라 권한 프롬프트를 트리거한다.
+  // ─────────────────────────────────────────────
+  const toggleCamera = useCallback(async () => {
+    const cameraAttemptId = ++cameraToggleAttemptIdRef.current;
+
+    if (isCameraOn) {
+      disableCamera();
+      setIsCameraOn(false);
+      return;
+    }
+
+    if (Platform.OS === 'android') {
+      const result = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.CAMERA, {
+        title: '카메라 접근 권한',
+        message: 'Mirror Soul에서 영상통화 중 내 모습을 보여주려면 카메라 접근이 필요합니다.',
+        buttonPositive: '허용',
+        buttonNegative: '거부',
+      });
+      if (result !== PermissionsAndroid.RESULTS.GRANTED) {
+        logger.warn('[useAICallFlow] Camera permission denied (Android)');
+        return;
+      }
+    }
+
+    if (cameraAttemptId !== cameraToggleAttemptIdRef.current || !callSessionRef.current) {
+      return;
+    }
+
+    try {
+      const enabled = await enableCamera();
+      if (enabled && cameraAttemptId === cameraToggleAttemptIdRef.current && callSessionRef.current) {
+        setIsCameraOn(true);
+      }
+    } catch (err) {
+      if (cameraAttemptId === cameraToggleAttemptIdRef.current) {
+        logger.error('[useAICallFlow] Failed to enable camera:', err);
+      }
+    }
+  }, [isCameraOn, enableCamera, disableCamera]);
 
   // ─────────────────────────────────────────────
   // WebSocket 메시지 처리
@@ -333,6 +395,7 @@ export function useAICallFlow(targetUserUuid?: string) {
     // 대기 중인 startCall 시도가 있다면 여기서 무효화한다 — Promise.allSettled가 끝난 뒤
     // 이 값이 자기 시작 시점과 달라진 걸 보고, 뒤늦게 로컬 연결을 이어가지 않는다.
     startAttemptIdRef.current += 1;
+    cameraToggleAttemptIdRef.current += 1;
 
     if (inviteTimeoutRef.current) {
       clearTimeout(inviteTimeoutRef.current);
@@ -348,10 +411,11 @@ export function useAICallFlow(targetUserUuid?: string) {
       wsRef.current = null;
     }
 
-    closeWebRTC();
+    closeWebRTC(); // 카메라 스트림 트랙 정지까지 포함
     InCallManager.stop();
-    setIsSpeakerOn(true);
+    setIsSpeakerOn(false);
     setIsMuted(false);
+    setIsCameraOn(false);
     callSessionRef.current = null;
     isHangingUpRef.current = false;
 
@@ -446,8 +510,15 @@ export function useAICallFlow(targetUserUuid?: string) {
       // WebRTC(getUserMedia)와 expo-audio가 같은 마이크를 공유하려면
       // iOS AVAudioSession이 처음부터 .playAndRecord 모드여야 합니다.
       // initWebRTC() 호출 전에 설정해야 충돌이 발생하지 않습니다.
-      await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
-      logger.debug('[useAICallFlow] Audio mode configured for recording');
+      // iOS 전용 — Android에서 이 두 필드(allowsRecording/playsInSilentMode)는 아무 효과가
+      // 없고, expo-audio의 Android 구현은 대신 AudioManager.MODE_NORMAL + 스피커 강제 on으로
+      // 해석한다(AudioModule.kt). InCallManager.start()가 직후 올바르게 MODE_IN_COMMUNICATION을
+      // 설정해도, 이 호출이 (또는 useCallRecording의 동일 호출이) Android에서 그걸 되돌려버려
+      // 통화 내내 잘못된 오디오 모드로 남는 원인이 된다 — 그래서 Android에서는 호출 자체를 스킵한다.
+      if (Platform.OS === 'ios') {
+        await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
+        logger.debug('[useAICallFlow] Audio mode configured for recording (iOS)');
+      }
 
       // 1+2. REST API(방 생성)와 WebRTC 초기화(마이크 스트림 획득)는 서로의 결과값이
       // 필요 없는 독립적인 작업이다(roomId 등은 WebSocket JOIN 시에만 필요) — 순차 실행 시
@@ -558,6 +629,7 @@ export function useAICallFlow(targetUserUuid?: string) {
   return {
     callStatus,
     remoteStream: remoteStream as MediaStream | null,
+    localCameraStream: localCameraStream as MediaStream | null,
     startCall,
     hangUp,
     error,
@@ -565,5 +637,7 @@ export function useAICallFlow(targetUserUuid?: string) {
     toggleSpeaker,
     isMuted,
     toggleMute,
+    isCameraOn,
+    toggleCamera,
   };
 }
