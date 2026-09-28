@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -15,6 +15,7 @@ import { useRouter } from 'expo-router';
 import { FlashList, ListRenderItemInfo } from '@shopify/flash-list';
 
 import { Header } from '@/src/components/common/Header';
+import PartnerProfileModal from '@/src/components/home/main/Discovery/PartnerProfileModal';
 import CallStartConfirmSheet, { CallTarget } from '@/src/components/call/CallStartConfirmSheet';
 import { TimeRefillBottomSheet } from '@/src/features/profile/components/TimeRefillBottomSheet';
 import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
@@ -26,6 +27,7 @@ import { MessageRoomHeaderLeft } from './components/MessageRoomHeaderLeft';
 import { MessageRoomHeaderRight } from './components/MessageRoomHeaderRight';
 import { MessageListItemRenderer } from './components/MessageListItemRenderer';
 import { ChatRoom, FlattenedListItem } from './types';
+import type { Recommendation } from '@/src/types/api/home';
 import { useMessageRoom } from './hooks/useMessageRoom';
 import { useMessageRoomAnimations } from './hooks/useMessageRoomAnimations';
 import { useMessageListFormatter } from './hooks/useMessageListFormatter';
@@ -44,6 +46,8 @@ export default function MessageRoomScreen({ room }: MessageRoomScreenProps) {
   const { contentContainerStyle } = useLayout();
   const [isCallSheetOpen, setIsCallSheetOpen] = useState(false);
   const [isRefillSheetOpen, setIsRefillSheetOpen] = useState(false);
+  const [profileCandidate, setProfileCandidate] = useState<Recommendation | null>(null);
+  const openCallAfterProfileDismissRef = useRef(false);
 
   const {
     dateGroups,
@@ -62,6 +66,24 @@ export default function MessageRoomScreen({ room }: MessageRoomScreenProps) {
   const flattenedData = useMessageListFormatter(dateGroups);
   const { glowLeftStyle, glowRightStyle } = useMessageRoomAnimations();
   const callTarget: CallTarget = { userUuid: room.partner.userUuid, name: room.partner.name };
+  // 채팅방 API는 상대의 요약 정보만 내려준다. 상세 화면은 같은 UUID로
+  // GET /home/recommendations/{target-user-uuid}를 호출해 최신 프로필을 받는다.
+  const partnerProfileCandidate = useMemo<Recommendation>(
+    () => ({
+      userUuid: room.partner.userUuid,
+      name: room.partner.name,
+      age: room.partner.age,
+      job: null,
+      jobCertificationSubmitted: false,
+      residence: null,
+      selfIntroduction: null,
+      mbti: null,
+      personalityTags: [],
+      profileImageUrl: room.partner.profileImageUrl,
+      recommendationScore: 0,
+    }),
+    [room.partner]
+  );
   const bubbleAvatarLetter = room.partner.name.charAt(0).toUpperCase();
 
   const handleStartCall = useCallback((target: CallTarget, isPreview: boolean, remainingSeconds?: number) => {
@@ -88,12 +110,23 @@ export default function MessageRoomScreen({ room }: MessageRoomScreenProps) {
     setTimeout(() => setIsRefillSheetOpen(true), 280);
   }, []);
 
+  const handleProfileDismiss = useCallback(() => {
+    if (!openCallAfterProfileDismissRef.current) return;
+    openCallAfterProfileDismissRef.current = false;
+    setIsCallSheetOpen(true);
+  }, []);
+
+  const handleCallFromProfile = useCallback(() => {
+    openCallAfterProfileDismissRef.current = true;
+    setProfileCandidate(null);
+  }, []);
+
   const renderItem = useCallback(
     ({ item }: ListRenderItemInfo<FlattenedListItem>) => (
       <MessageListItemRenderer
         item={item}
         avatarLetter={bubbleAvatarLetter}
-        avatarGradient={Colors.gradient.avatarPlaceholder}
+        avatarGradient={Colors.gradient.voiceStart}
       />
     ),
     [bubbleAvatarLetter]
@@ -108,7 +141,7 @@ export default function MessageRoomScreen({ room }: MessageRoomScreenProps) {
       >
         <View style={styles.background} pointerEvents="none">
           <Animated.View
-            style={[styles.glowLeft, glowLeftStyle, { backgroundColor: colors.glow.cyan, shadowColor: colors.glow.cyan }]}
+            style={[styles.glowLeft, glowLeftStyle, { backgroundColor: colors.glow.purple, shadowColor: colors.glow.purple }]}
           />
           <Animated.View
             style={[styles.glowRight, glowRightStyle, { backgroundColor: colors.glow.purple, shadowColor: colors.glow.purple }]}
@@ -125,14 +158,13 @@ export default function MessageRoomScreen({ room }: MessageRoomScreenProps) {
           }
           onBackPress={() => router.back()}
           backgroundColor={colors.background.elevated}
-          borderBottomColor={colors.border.primary}
           delay={0}
         />
 
         <View style={[styles.messageList, contentContainerStyle]}>
           {isLoading ? (
             <View style={styles.centerState}>
-              <ActivityIndicator color={Colors.primary.electricCyan} />
+              <ActivityIndicator color={Colors.primary.vividPurple} />
               <Text style={[styles.centerStateText, { color: colors.text.secondary }]}>대화를 불러오는 중이에요</Text>
             </View>
           ) : isError ? (
@@ -176,6 +208,7 @@ export default function MessageRoomScreen({ room }: MessageRoomScreenProps) {
         room={room}
         isOpen={isPanelOpen}
         onClose={() => setIsPanelOpen(false)}
+        onViewProfile={() => setProfileCandidate(partnerProfileCandidate)}
         onBlocked={() => {
           setIsPanelOpen(false);
           router.back();
@@ -189,6 +222,12 @@ export default function MessageRoomScreen({ room }: MessageRoomScreenProps) {
         onStart={handleStartCall}
         onRefill={handleRefillFromCall}
       />
+      <PartnerProfileModal
+        match={profileCandidate}
+        onClose={() => setProfileCandidate(null)}
+        onDismiss={handleProfileDismiss}
+        onConnectNow={handleCallFromProfile}
+      />
       <TimeRefillBottomSheet isOpen={isRefillSheetOpen} onClose={() => setIsRefillSheetOpen(false)} />
     </View>
   );
@@ -199,15 +238,15 @@ function ConversationEmptyState({ partnerName }: { partnerName: string }) {
 
   return (
     <View style={styles.emptyState}>
-      <LinearGradient colors={Colors.gradient.cyanToPurple} style={styles.emptyIcon}>
+      <LinearGradient colors={Colors.gradient.voiceStart} style={styles.emptyIcon}>
         <Feather name="message-circle" size={27} color={Colors.primary.soulBlack} />
       </LinearGradient>
       <Text style={[styles.emptyTitle, { color: colors.text.primary }]}>대화를 시작할 수 있어요</Text>
       <Text style={[styles.emptyDescription, { color: colors.text.secondary }]}>
         {partnerName}님과 연결되었어요.{`\n`}가볍게 인사를 건네 보세요.
       </Text>
-      <View style={[styles.emptyHint, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
-        <Feather name="shield" size={14} color={Colors.primary.electricCyan} />
+      <View style={[styles.emptyHint, { backgroundColor: colors.background.glass }]}>
+        <Feather name="shield" size={14} color={Colors.primary.vividPurple} />
         <Text style={[styles.emptyHintText, { color: colors.text.muted }]}>불편한 대화는 우측 메뉴에서 신고하거나 차단할 수 있어요.</Text>
       </View>
     </View>
@@ -228,7 +267,7 @@ const styles = StyleSheet.create({
     borderRadius: Radii.full,
     top: 120,
     left: -110,
-    opacity: 0.12,
+    opacity: 0.06,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.6,
     shadowRadius: 80,
@@ -241,7 +280,7 @@ const styles = StyleSheet.create({
     borderRadius: Radii.full,
     bottom: 120,
     right: -140,
-    opacity: 0.1,
+    opacity: 0.06,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.55,
     shadowRadius: 90,
@@ -272,7 +311,7 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.sans,
     fontWeight: FontWeight.black,
     fontSize: FontSize.sm,
-    color: Colors.primary.electricCyan,
+    color: Colors.primary.vividPurple,
   },
   emptyState: {
     flex: 1,
@@ -308,7 +347,6 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: Spacing.sm,
     marginTop: Spacing.xxl,
-    borderWidth: 1,
     borderRadius: Radii.lg,
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,

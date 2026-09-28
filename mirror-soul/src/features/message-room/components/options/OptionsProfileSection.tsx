@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { Pressable, View, Text, StyleSheet } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Image } from 'expo-image';
@@ -9,15 +9,25 @@ import { ChatRoom } from '../../types';
 
 interface OptionsProfileSectionProps {
   room: ChatRoom;
+  onPress: () => void;
 }
 
-export function OptionsProfileSection({ room }: OptionsProfileSectionProps) {
+/** 채팅방 목록의 요약 정보와 추천 상세 API 진입점을 함께 제공한다. */
+export function OptionsProfileSection({ room, onPress }: OptionsProfileSectionProps) {
   const { partner } = room;
   const [imageFailed, setImageFailed] = useState(false);
   const { colors } = useThemeColors();
 
   return (
-    <View style={[styles.profileSection, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
+    <Pressable
+      style={({ pressed }) => [
+        styles.profileSection,
+        { backgroundColor: colors.background.glass, opacity: pressed ? 0.76 : 1 },
+      ]}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${partner.name} 상세 프로필 보기`}
+    >
       <View style={styles.profileTopRow}>
         {!imageFailed && partner.profileImageUrl ? (
           <Image
@@ -30,7 +40,7 @@ export function OptionsProfileSection({ room }: OptionsProfileSectionProps) {
           />
         ) : (
           <LinearGradient
-            colors={Colors.gradient.twinCallButton}
+            colors={Colors.gradient.voiceStart}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.largeAvatar}
@@ -42,22 +52,22 @@ export function OptionsProfileSection({ room }: OptionsProfileSectionProps) {
           <Text style={[styles.profileName, { color: colors.text.primary }]} numberOfLines={1}>
             {partner.name}
           </Text>
-          <Text style={[styles.profileMeta, { color: colors.text.secondary }]}>현재 연결된 대화 상대</Text>
+          <Text style={[styles.profileMeta, { color: colors.text.secondary }]}>프로필 자세히 보기</Text>
         </View>
+        <Feather name="chevron-right" size={20} color={colors.text.muted} />
       </View>
-      <View style={[styles.similarityPill, { backgroundColor: Colors.glass.cyan10_d3 }]}>
-        <Feather name="zap" size={13} color={Colors.primary.electricCyan} />
+      <View style={[styles.similarityPill, { backgroundColor: Colors.glass.purple10 }]}>
+        <Feather name="star" size={13} color={Colors.primary.vividPurple} />
         <Text style={[styles.similarityText, { color: colors.text.secondary }]}>
           {partner.twinSimilarity !== null ? `트윈 유사도 ${partner.twinSimilarity}%` : '트윈 유사도 분석 중'}
         </Text>
       </View>
-    </View>
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   profileSection: {
-    borderWidth: 1,
     borderRadius: Radii.lg,
     padding: Spacing.md,
   },
@@ -70,15 +80,8 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: Radii.lg,
-    borderWidth: 1,
-    borderColor: Colors.glass.white10,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: Colors.primary.electricCyan,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 4,
   },
   largeAvatarText: {
     fontFamily: FontFamily.sans,

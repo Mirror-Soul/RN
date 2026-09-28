@@ -19,11 +19,11 @@ export function OptionsSettingsSection({ roomId, isActive }: OptionsSettingsSect
     <View style={styles.menuSection}>
       <Text style={[styles.sectionLabel, { color: colors.text.muted }]}>대화 설정</Text>
 
-      <View style={[styles.settingCard, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
+      <View style={[styles.settingCard, { backgroundColor: colors.background.glass }]}>
         <View style={styles.settingRow}>
           <View style={styles.menuItemLeft}>
-            <View style={[styles.iconBox, { backgroundColor: Colors.glass.cyan10_d3 }]}>
-              <Feather name="bell" size={16} color={Colors.primary.electricCyan} />
+            <View style={[styles.iconBox, { backgroundColor: Colors.glass.purple10 }]}>
+              <Feather name="bell" size={16} color={Colors.primary.vividPurple} />
             </View>
             <View style={styles.copyContainer}>
               <Text style={[styles.menuItemText, { color: colors.text.primary }]}>메시지 알림</Text>
@@ -34,15 +34,15 @@ export function OptionsSettingsSection({ roomId, isActive }: OptionsSettingsSect
           </View>
           {isError ? (
             <Pressable
-              style={[styles.retryButton, { borderColor: colors.border.strong }]}
+              style={[styles.retryButton, { backgroundColor: colors.background.card }]}
               onPress={() => void refetch()}
               accessibilityRole="button"
               accessibilityLabel="알림 설정 다시 불러오기"
             >
-              <Text style={[styles.retryText, { color: colors.brand.accent }]}>다시 시도</Text>
+              <Text style={[styles.retryText, { color: colors.text.secondary }]}>다시 시도</Text>
             </Pressable>
           ) : isLoading || !isActive ? (
-            <ActivityIndicator size="small" color={Colors.primary.electricCyan} />
+            <ActivityIndicator size="small" color={Colors.primary.vividPurple} />
           ) : (
             <AnimatedSwitch value={enabled} onToggle={handleToggle} disabled={isLoading} />
           )}
@@ -67,7 +67,6 @@ const styles = StyleSheet.create({
   },
   settingCard: {
     marginTop: Spacing.md,
-    borderWidth: 1,
     borderRadius: Radii.lg,
     padding: Spacing.md,
   },
@@ -108,7 +107,6 @@ const styles = StyleSheet.create({
     lineHeight: 16,
   },
   retryButton: {
-    borderWidth: 1,
     borderRadius: Radii.full,
     paddingHorizontal: Spacing.sm,
     paddingVertical: Spacing.xs,

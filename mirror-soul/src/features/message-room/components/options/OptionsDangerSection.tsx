@@ -79,7 +79,7 @@ export function OptionsDangerSection({ room, onBlocked }: OptionsDangerSectionPr
     <View style={[styles.menuSection, styles.dangerSection]}>
       <Text style={[styles.sectionLabel, { color: colors.text.muted }]}>안전 관리</Text>
 
-      <View style={[styles.actionCard, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
+      <View style={[styles.actionCard, { backgroundColor: colors.background.glass }]}>
         <Pressable
           style={styles.menuItem}
           onPress={() => void handleReport()}
@@ -97,7 +97,7 @@ export function OptionsDangerSection({ room, onBlocked }: OptionsDangerSectionPr
           </View>
         </Pressable>
 
-        <View style={[styles.itemDivider, { backgroundColor: colors.border.primary }]} />
+        <View style={[styles.itemDivider, { backgroundColor: colors.background.card }]} />
         <Pressable
           style={styles.menuItem}
           onPress={handleBlock}
@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
   },
   dangerSection: {
-    marginTop: Spacing.xxl,
+    marginTop: 0,
   },
   sectionLabel: {
     fontFamily: FontFamily.sans,
@@ -143,7 +143,6 @@ const styles = StyleSheet.create({
   },
   actionCard: {
     marginTop: Spacing.md,
-    borderWidth: 1,
     borderRadius: Radii.lg,
     overflow: 'hidden',
   },

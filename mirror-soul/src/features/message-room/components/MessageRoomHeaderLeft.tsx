@@ -23,7 +23,7 @@ export function MessageRoomHeaderLeft({ room }: MessageRoomHeaderLeftProps) {
         {!imageFailed && partner.profileImageUrl ? (
           <Image
             source={{ uri: partner.profileImageUrl }}
-            style={[styles.headerAvatar, { borderColor: colors.border.primary }]}
+            style={styles.headerAvatar}
             contentFit="cover"
             cachePolicy="disk"
             transition={150}
@@ -31,10 +31,10 @@ export function MessageRoomHeaderLeft({ room }: MessageRoomHeaderLeftProps) {
           />
         ) : (
           <LinearGradient
-            colors={Colors.gradient.twinCallButton}
+            colors={Colors.gradient.voiceStart}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            style={[styles.headerAvatar, { borderColor: colors.border.primary }]}
+            style={styles.headerAvatar}
           >
             <Text style={styles.headerAvatarText}>{partner.name.charAt(0).toUpperCase()}</Text>
           </LinearGradient>
@@ -77,14 +77,8 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: Radii.lg,
-    borderWidth: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: Colors.primary.electricCyan,
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.2,
-    shadowRadius: 15,
-    elevation: 4,
   },
   headerAvatarText: {
     fontFamily: FontFamily.sans,
