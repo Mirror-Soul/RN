@@ -1,22 +1,10 @@
-import React, { useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  Pressable,
-  useWindowDimensions,
-  Switch,
-} from 'react-native';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  withSpring,
-  Easing,
-  runOnJS,
-} from 'react-native-reanimated';
+import React from 'react';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import Animated, { FadeIn, SlideInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors, FontFamily, FontSize, FontWeight, Spacing } from '@/src/constants/theme';
+import { Feather } from '@expo/vector-icons';
+import { FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { ChatRoom } from '../types';
 import { OptionsProfileSection } from './options/OptionsProfileSection';
 import { OptionsSettingsSection } from './options/OptionsSettingsSection';
@@ -26,152 +14,140 @@ interface MessageRoomOptionsPanelProps {
   room: ChatRoom;
   isOpen: boolean;
   onClose: () => void;
+  onViewProfile: () => void;
   /** 차단 완료 후 호출 (대화방에서 나가기 등) */
   onBlocked: () => void;
 }
 
-const PANEL_WIDTH = 280;
-const ANIMATION_DURATION = 280;
-
 /**
- * 메시지방 옵션 사이드 패널
- *
- * 더보기 버튼 탭 시 우측에서 슬라이드 인 되는 패널입니다.
- *
- * 구성:
- * - 오버레이 (반투명 블랙, 탭 시 닫기)
- * - 패널 (우측 고정 280px):
- *   - 상대 프로필 (대형 아바타 + 이름 + 나이/유사도)
- *   - SETTINGS 섹션: 알림 설정 토글, 시간 채우기(선물), 프로필 상세보기
- *   - DANGER ZONE 섹션: 대화 내용 삭제, 차단하기
- *   - 닫기 버튼 (하단 고정)
+ * Android와 iOS 모두에서 자연스럽게 동작하는 하단 액션 시트.
+ * 기존의 좁은 우측 패널 대신 화면 폭을 활용해 읽기·탭 영역을 확보한다.
  */
 export default function MessageRoomOptionsPanel({
   room,
   isOpen,
   onClose,
+  onViewProfile,
   onBlocked,
 }: MessageRoomOptionsPanelProps) {
-  const { height: screenHeight } = useWindowDimensions();
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  const { colors } = useThemeColors();
+  const sheetWidth = Math.min(width, 560);
 
-  // 패널 translateX: PANEL_WIDTH(숨김) → 0(보임)
-  const translateX = useSharedValue(PANEL_WIDTH);
-  // 오버레이 opacity
-  const overlayOpacity = useSharedValue(0);
-
-  useEffect(() => {
-    if (isOpen) {
-      overlayOpacity.value = withTiming(1, {
-        duration: ANIMATION_DURATION,
-        easing: Easing.out(Easing.cubic),
-      });
-      translateX.value = withSpring(0, {
-        damping: 22,
-        stiffness: 200,
-        mass: 0.8,
-      });
-    } else {
-      overlayOpacity.value = withTiming(0, {
-        duration: ANIMATION_DURATION - 40,
-        easing: Easing.in(Easing.cubic),
-      });
-      translateX.value = withTiming(PANEL_WIDTH, {
-        duration: ANIMATION_DURATION - 40,
-        easing: Easing.in(Easing.cubic),
-      });
-    }
-  }, [isOpen, overlayOpacity, translateX]);
-
-  const overlayStyle = useAnimatedStyle(() => ({
-    opacity: overlayOpacity.value,
-  }));
-
-  const panelStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: translateX.value }],
-  }));
+  const handleViewProfile = () => {
+    onClose();
+    // Modal의 닫힘이 먼저 반영된 다음 상세 Modal을 열어 Android에서 두 레이어가 겹치지 않게 한다.
+    setTimeout(onViewProfile, 180);
+  };
 
   return (
-    <View style={[styles.root, { height: screenHeight }]} pointerEvents={isOpen ? 'auto' : 'none'}>
-      {/* ── 오버레이 ── */}
-      <Animated.View style={[styles.overlay, overlayStyle]}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
-      </Animated.View>
+    <Modal
+      transparent
+      visible={isOpen}
+      animationType="fade"
+      statusBarTranslucent
+      onRequestClose={onClose}
+    >
+      <View style={styles.root}>
+        <Animated.View entering={FadeIn.duration(160)} style={[styles.overlay, { backgroundColor: colors.background.overlay }]}>
+          <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityRole="button" accessibilityLabel="대화 메뉴 닫기" />
+        </Animated.View>
 
-      <Animated.View
-        style={[
-          styles.panel,
-          { paddingTop: insets.top + Spacing.xxl, paddingBottom: insets.bottom + Spacing.lg },
-          panelStyle,
-        ]}
-      >
-        <OptionsProfileSection room={room} />
-        <OptionsSettingsSection roomId={room.chatRoomId} />
-        <OptionsDangerSection room={room} onBlocked={onBlocked} />
+        <Animated.View
+          entering={SlideInDown.duration(260)}
+          style={[
+            styles.sheet,
+            {
+              width: sheetWidth,
+              backgroundColor: colors.background.elevated,
+              paddingBottom: Math.max(insets.bottom, Spacing.lg),
+            },
+          ]}
+        >
+          <View style={[styles.handle, { backgroundColor: colors.border.strong }]} />
+          <View style={styles.header}>
+            <View>
+              <Text style={[styles.title, { color: colors.text.primary }]}>대화 정보</Text>
+              <Text style={[styles.subtitle, { color: colors.text.secondary }]}>이 대화방의 설정과 안전 기능을 관리해요.</Text>
+            </View>
+            <Pressable
+              style={[styles.closeButton, { backgroundColor: colors.background.glass }]}
+              onPress={onClose}
+              accessibilityRole="button"
+              accessibilityLabel="대화 메뉴 닫기"
+            >
+              <Feather name="x" size={20} color={colors.text.primary} />
+            </Pressable>
+          </View>
 
-        {/* ─ 닫기 버튼 (하단 고정) ─ */}
-        <View style={styles.closeSection}>
-          <View style={styles.closeDivider} />
-          <Pressable style={styles.closeButton} onPress={onClose}>
-            <Text style={styles.closeButtonText}>닫기</Text>
-          </Pressable>
-        </View>
-      </Animated.View>
-    </View>
+          <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} bounces={false}>
+            <OptionsProfileSection room={room} onPress={handleViewProfile} />
+            <OptionsSettingsSection roomId={room.chatRoomId} isActive={isOpen} />
+            <OptionsDangerSection room={room} onBlocked={onBlocked} />
+          </ScrollView>
+        </Animated.View>
+      </View>
+    </Modal>
   );
 }
 
 const styles = StyleSheet.create({
   root: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 100,
+    flex: 1,
+    justifyContent: 'flex-end',
+    alignItems: 'center',
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
   },
-
-  /* ── 패널 ── */
-  panel: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    bottom: 0,
-    width: PANEL_WIDTH,
-    backgroundColor: '#0F0F0F',
-    borderLeftWidth: 1,
-    borderLeftColor: Colors.glass.white05,
-    flexDirection: 'column',
+  sheet: {
+    maxHeight: '82%',
+    borderTopLeftRadius: Radii.xxl,
+    borderTopRightRadius: Radii.xxl,
     paddingHorizontal: Spacing.xxl,
+    paddingTop: Spacing.sm,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: -8 },
+    shadowOpacity: 0.16,
+    shadowRadius: 24,
+    elevation: 18,
   },
-
-  /* ── 닫기 버튼 ── */
-  closeSection: {
-    marginTop: 'auto' as any,
-    alignSelf: 'stretch',
+  handle: {
+    alignSelf: 'center',
+    width: 36,
+    height: 4,
+    borderRadius: Radii.full,
+    marginVertical: Spacing.sm,
   },
-  closeDivider: {
-    height: 1,
-    backgroundColor: Colors.glass.white05,
-    marginBottom: Spacing.xxl,
+  header: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    marginTop: Spacing.md,
+  },
+  title: {
+    fontFamily: FontFamily.sans,
+    fontWeight: FontWeight.black,
+    fontSize: FontSize.xl,
+    letterSpacing: -0.5,
+  },
+  subtitle: {
+    marginTop: Spacing.xs,
+    fontFamily: FontFamily.sans,
+    fontWeight: FontWeight.regular,
+    fontSize: FontSize.sm,
+    lineHeight: 18,
   },
   closeButton: {
-    backgroundColor: Colors.glass.white05,
-    borderWidth: 1,
-    borderColor: Colors.glass.white10,
-    borderRadius: 14,
-    paddingVertical: 13,
+    width: 40,
+    height: 40,
+    borderRadius: Radii.full,
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  closeButtonText: {
-    fontFamily: FontFamily.sans,
-    fontWeight: FontWeight.medium,
-    fontSize: FontSize.base,
-    lineHeight: 20,
-    letterSpacing: -0.15,
-    color: Colors.neutral.lightGray,
+  content: {
+    gap: Spacing.xxl,
+    paddingTop: Spacing.xxl,
   },
 });

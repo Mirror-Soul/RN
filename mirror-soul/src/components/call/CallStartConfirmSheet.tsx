@@ -2,7 +2,6 @@ import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import type { Recommendation } from '@/src/types/api/home';
 import { BottomSheet } from '@/src/components/common/BottomSheet/BottomSheet';
 import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
@@ -10,12 +9,18 @@ import { useTimeStatusQuery } from '@/src/features/profile/hooks/useTimeStatusQu
 import { formatCallTime } from '@/src/utils/formatCallTime';
 import { isMockRecommendationUuid } from '@/src/components/home/main/Discovery/mockRecommendations';
 
+/** 통화 시작 확인에 필요한 최소 상대 정보. 발견 추천과 채팅방 상대가 모두 이 형태를 만족한다. */
+export interface CallTarget {
+  userUuid: string;
+  name: string;
+}
+
 interface CallStartConfirmSheetProps {
-  match: Recommendation | null;
+  target: CallTarget | null;
   isOpen: boolean;
   onClose: () => void;
   /** 실제 추천은 통화 API 화면으로, 목업은 서버 연결 없는 UI 미리보기 화면으로 보낸다. */
-  onStart: (match: Recommendation, isPreview: boolean, remainingSeconds?: number) => void;
+  onStart: (target: CallTarget, isPreview: boolean, remainingSeconds?: number) => void;
   /** 잔여 시간이 없을 때, 시트를 닫고 시간 충전 흐름으로 전환한다. */
   onRefill: () => void;
 }
@@ -26,12 +31,12 @@ interface CallStartConfirmSheetProps {
  * 실제 추천은 최신 잔여 시간을 다시 조회한 뒤에만 진입을 허용한다. 목업 추천은 의도적으로
  * 어떤 API나 권한도 요청하지 않고, 통화 화면의 UI를 검토하는 미리보기 모드로만 진입한다.
  */
-export default function CallStartConfirmSheet({ match, isOpen, onClose, onStart, onRefill }: CallStartConfirmSheetProps) {
+export default function CallStartConfirmSheet({ target, isOpen, onClose, onStart, onRefill }: CallStartConfirmSheetProps) {
   const { colors } = useThemeColors();
   const startInFlightRef = useRef(false);
   const [isStarting, setIsStarting] = useState(false);
   const [hasFreshTimeCheck, setHasFreshTimeCheck] = useState(false);
-  const isPreview = isMockRecommendationUuid(match?.userUuid);
+  const isPreview = isMockRecommendationUuid(target?.userUuid);
   // 목업 미리보기와 닫힌 시트는 잔액을 확인할 이유가 없다. 실제 통화 확인 단계에서만
   // GET /my-page/buy-time을 활성화해 목업 버튼이 어떤 API도 유발하지 않게 한다.
   const shouldQueryTime = isOpen && !isPreview;
@@ -69,7 +74,7 @@ export default function CallStartConfirmSheet({ match, isOpen, onClose, onStart,
   }, [isOpen]);
 
   const handlePrimaryAction = () => {
-    if (!match || startInFlightRef.current) return;
+    if (!target || startInFlightRef.current) return;
     if (!isPreview && (!hasFreshTimeCheck || isFetching || isError)) return;
 
     // 0초일 때는 막힌 버튼을 남기지 않는다. 사용자가 다음에 해야 할 행동(충전)을
@@ -81,10 +86,10 @@ export default function CallStartConfirmSheet({ match, isOpen, onClose, onStart,
 
     startInFlightRef.current = true;
     setIsStarting(true);
-    onStart(match, isPreview, isPreview ? undefined : remainingSeconds);
+    onStart(target, isPreview, isPreview ? undefined : remainingSeconds);
   };
 
-  if (!match) return null;
+  if (!target) return null;
 
   const isCheckingTime = !hasFreshTimeCheck || isFetching;
   const timeLabel = isCheckingTime ? '확인 중...' : isError ? '확인하지 못했어요' : formatCallTime(remainingSeconds);
@@ -100,7 +105,7 @@ export default function CallStartConfirmSheet({ match, isOpen, onClose, onStart,
           </View>
           <View style={styles.heroCopy}>
             <Text style={[styles.title, { color: colors.text.primary }]}>
-              {isPreview ? `${match.name}님 통화 화면 미리보기` : `${match.name}님의 AI 트윈과 통화할까요?`}
+              {isPreview ? `${target.name}님 통화 화면 미리보기` : `${target.name}님의 AI 트윈과 통화할까요?`}
             </Text>
             <Text style={[styles.subtitle, { color: colors.text.secondary }]}>
               {isPreview ? '서버 연결과 권한 요청 없이 UI만 보여드려요.' : '통화 시간은 연결된 뒤부터 기록됩니다.'}

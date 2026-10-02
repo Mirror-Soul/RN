@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Alert } from 'react-native';
-import { FlashList } from '@shopify/flash-list';
+import { FlashListRef } from '@shopify/flash-list';
 import { useAuthStore } from '@/src/store/useAuthStore';
 import { getErrorDisplayMessage } from '@/src/utils/apiErrorCode';
 import { useChatMessagesQuery } from '@/src/features/chat/hooks/useChatMessagesQuery';
@@ -12,7 +12,8 @@ import { FlattenedListItem } from '../types';
 
 /** 메시지방 화면 오케스트레이션 훅 — 실제 메시지 조회/전송/읽음 처리를 조합한다(SoC). */
 export function useMessageRoom(roomId: number) {
-  const scrollRef = useRef<FlashList<FlattenedListItem>>(null);
+  // FlashList v2는 컴포넌트 타입과 imperative ref 타입을 분리해서 내보낸다.
+  const scrollRef = useRef<FlashListRef<FlattenedListItem>>(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const myUuid = useAuthStore((s) => s.userUuid);
 
@@ -35,10 +36,14 @@ export function useMessageRoom(roomId: number) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages]);
 
-  const handleSend = (text: string) => {
-    sendMutation.mutate(text, {
-      onError: (error) => Alert.alert('전송 실패', getErrorDisplayMessage(error, '메시지를 보내지 못했습니다.')),
-    });
+  const handleSend = async (text: string): Promise<boolean> => {
+    try {
+      await sendMutation.mutateAsync(text);
+      return true;
+    } catch (error) {
+      Alert.alert('전송 실패', getErrorDisplayMessage(error, '메시지를 보내지 못했습니다.'));
+      return false;
+    }
   };
 
   return {
@@ -53,5 +58,6 @@ export function useMessageRoom(roomId: number) {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
+    isSending: sendMutation.isPending,
   };
 }

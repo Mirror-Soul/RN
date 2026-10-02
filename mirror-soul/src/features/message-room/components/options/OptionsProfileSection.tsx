@@ -1,21 +1,34 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { Pressable, View, Text, StyleSheet } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Image } from 'expo-image';
-import { Colors, FontFamily, FontSize, FontWeight, Spacing } from '@/src/constants/theme';
+import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { ChatRoom } from '../../types';
 
 interface OptionsProfileSectionProps {
   room: ChatRoom;
+  onPress: () => void;
 }
 
-export function OptionsProfileSection({ room }: OptionsProfileSectionProps) {
+/** 채팅방 목록의 요약 정보와 추천 상세 API 진입점을 함께 제공한다. */
+export function OptionsProfileSection({ room, onPress }: OptionsProfileSectionProps) {
   const { partner } = room;
   const [imageFailed, setImageFailed] = useState(false);
+  const { colors } = useThemeColors();
 
   return (
-    <View style={styles.profileSection}>
-      <View style={styles.avatarMargin}>
+    <Pressable
+      style={({ pressed }) => [
+        styles.profileSection,
+        { backgroundColor: colors.background.glass, opacity: pressed ? 0.76 : 1 },
+      ]}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${partner.name} 상세 프로필 보기`}
+    >
+      <View style={styles.profileTopRow}>
         {!imageFailed && partner.profileImageUrl ? (
           <Image
             source={{ uri: partner.profileImageUrl }}
@@ -27,7 +40,7 @@ export function OptionsProfileSection({ room }: OptionsProfileSectionProps) {
           />
         ) : (
           <LinearGradient
-            colors={Colors.gradient.twinCallButton}
+            colors={Colors.gradient.voiceStart}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.largeAvatar}
@@ -35,63 +48,81 @@ export function OptionsProfileSection({ room }: OptionsProfileSectionProps) {
             <Text style={styles.largeAvatarText}>{partner.name.charAt(0).toUpperCase()}</Text>
           </LinearGradient>
         )}
+        <View style={styles.profileCopy}>
+          <Text style={[styles.profileName, { color: colors.text.primary }]} numberOfLines={1}>
+            {partner.name}
+          </Text>
+          <Text style={[styles.profileMeta, { color: colors.text.secondary }]}>프로필 자세히 보기</Text>
+        </View>
+        <Feather name="chevron-right" size={20} color={colors.text.muted} />
       </View>
-      <Text style={styles.profileName}>{partner.name}</Text>
-      <View style={styles.profileMetaRow}>
-        <Text style={styles.profileMeta}>
-          {partner.twinSimilarity !== null ? `유사도 ${partner.twinSimilarity}%` : '유사도 분석 중'}
+      <View style={[styles.similarityPill, { backgroundColor: Colors.glass.purple10 }]}>
+        <Feather name="star" size={13} color={Colors.primary.vividPurple} />
+        <Text style={[styles.similarityText, { color: colors.text.secondary }]}>
+          {partner.twinSimilarity !== null ? `트윈 유사도 ${partner.twinSimilarity}%` : '트윈 유사도 분석 중'}
         </Text>
       </View>
-    </View>
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   profileSection: {
-    alignItems: 'center',
-    paddingBottom: Spacing.xxxl,
+    borderRadius: Radii.lg,
+    padding: Spacing.md,
   },
-  avatarMargin: {
-    paddingBottom: Spacing.lg,
+  profileTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
   },
   largeAvatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: Colors.glass.white10,
+    width: 52,
+    height: 52,
+    borderRadius: Radii.lg,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: Colors.primary.electricCyan,
-    shadowOffset: { width: 0, height: 20 },
-    shadowOpacity: 0.2,
-    shadowRadius: 25,
-    elevation: 8,
   },
   largeAvatarText: {
     fontFamily: FontFamily.sans,
     fontWeight: FontWeight.bold,
-    fontSize: 30,
-    lineHeight: 36,
+    fontSize: FontSize.xl,
+    lineHeight: 24,
     letterSpacing: 0.4,
     color: Colors.neutral.pureWhite,
   },
   profileName: {
     fontFamily: FontFamily.sans,
     fontWeight: FontWeight.semibold,
-    fontSize: FontSize.xl,
-    lineHeight: 28,
+    fontSize: FontSize.lg,
+    lineHeight: 22,
     letterSpacing: -0.44,
-    color: Colors.neutral.pureWhite,
+    flexShrink: 1,
   },
-  profileMetaRow: {
-    paddingTop: Spacing.xs,
+  profileCopy: {
+    flex: 1,
   },
   profileMeta: {
+    marginTop: Spacing.xxs,
     fontFamily: FontFamily.sans,
     fontWeight: FontWeight.regular,
     fontSize: FontSize.sm,
     lineHeight: 16,
-    color: Colors.neutral.darkGray,
+  },
+  similarityPill: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: Spacing.md,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs + 2,
+    borderRadius: Radii.full,
+  },
+  similarityText: {
+    marginLeft: Spacing.xs,
+    fontFamily: FontFamily.sans,
+    fontWeight: FontWeight.medium,
+    fontSize: FontSize.xs,
+    lineHeight: 15,
   },
 });

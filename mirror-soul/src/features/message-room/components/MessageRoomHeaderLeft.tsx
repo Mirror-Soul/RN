@@ -4,6 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Image } from 'expo-image';
 import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
 import { formatRelativeTime } from '@/src/utils/formatRelativeTime';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { ChatRoom } from '../types';
 
 interface MessageRoomHeaderLeftProps {
@@ -13,6 +14,7 @@ interface MessageRoomHeaderLeftProps {
 export function MessageRoomHeaderLeft({ room }: MessageRoomHeaderLeftProps) {
   const { partner } = room;
   const [imageFailed, setImageFailed] = useState(false);
+  const { colors } = useThemeColors();
 
   return (
     <View style={styles.headerLeft}>
@@ -29,7 +31,7 @@ export function MessageRoomHeaderLeft({ room }: MessageRoomHeaderLeftProps) {
           />
         ) : (
           <LinearGradient
-            colors={Colors.gradient.twinCallButton}
+            colors={Colors.gradient.voiceStart}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.headerAvatar}
@@ -41,15 +43,15 @@ export function MessageRoomHeaderLeft({ room }: MessageRoomHeaderLeftProps) {
 
       {/* 이름 + 메타 */}
       <View style={styles.headerInfo}>
-        <Text style={styles.headerName} numberOfLines={1}>
+        <Text style={[styles.headerName, { color: colors.text.primary }]} numberOfLines={1}>
           {partner.name}
         </Text>
         <View style={styles.headerMeta}>
-          <Text style={styles.headerMetaText}>
+          <Text style={[styles.headerMetaText, { color: colors.text.secondary }]}>
             {partner.twinSimilarity !== null ? `유사도 ${partner.twinSimilarity}%` : '유사도 분석 중'}
           </Text>
-          <View style={styles.metaDot} />
-          <Text style={styles.headerMetaText}>
+          <View style={[styles.metaDot, { backgroundColor: colors.text.muted }]} />
+          <Text style={[styles.headerMetaText, { color: colors.text.secondary }]}>
             {partner.lastActiveAt ? formatRelativeTime(partner.lastActiveAt) : '활동 정보 없음'}
           </Text>
         </View>
@@ -75,15 +77,8 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: Radii.lg,
-    borderWidth: 1,
-    borderColor: Colors.glass.white10,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: Colors.primary.electricCyan,
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.2,
-    shadowRadius: 15,
-    elevation: 4,
   },
   headerAvatarText: {
     fontFamily: FontFamily.sans,
@@ -91,7 +86,6 @@ const styles = StyleSheet.create({
     fontSize: FontSize.lg,
     lineHeight: 24,
     letterSpacing: -0.31,
-    color: Colors.neutral.pureWhite,
   },
   headerInfo: {
     flex: 1,
@@ -116,12 +110,10 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xs,
     lineHeight: 15,
     letterSpacing: 0.12,
-    color: Colors.neutral.darkGray,
   },
   metaDot: {
     width: 4,
     height: 4,
     borderRadius: Radii.full,
-    backgroundColor: Colors.neutral.disabledText,
   },
 });

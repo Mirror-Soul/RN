@@ -1,8 +1,9 @@
 import React from 'react';
-import { View, Text, StyleSheet, Pressable, Alert, Linking } from 'react-native';
+import { ActivityIndicator, Alert, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Feather, Ionicons } from '@expo/vector-icons';
-import { Colors, FontFamily, FontSize, FontWeight, Spacing } from '@/src/constants/theme';
+import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
 import { useBlockUserMutation } from '@/src/features/chat/hooks/useBlockUserMutation';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { getErrorDisplayMessage } from '@/src/utils/apiErrorCode';
 import { SUPPORT_EMAIL } from '@/src/features/customer-center/constants/faqData';
 import { logger } from '@/src/utils/logger';
@@ -23,6 +24,7 @@ interface OptionsDangerSectionProps {
  */
 export function OptionsDangerSection({ room, onBlocked }: OptionsDangerSectionProps) {
   const blockMutation = useBlockUserMutation();
+  const { colors } = useThemeColors();
 
   const handleBlock = () => {
     Alert.alert(
@@ -75,24 +77,47 @@ export function OptionsDangerSection({ room, onBlocked }: OptionsDangerSectionPr
 
   return (
     <View style={[styles.menuSection, styles.dangerSection]}>
-      <Text style={styles.sectionLabel}>위험 구역</Text>
+      <Text style={[styles.sectionLabel, { color: colors.text.muted }]}>안전 관리</Text>
 
-      {/* 신고하기 */}
-      <View style={styles.menuItemMargin}>
-        <Pressable style={styles.menuItem} onPress={handleReport}>
+      <View style={[styles.actionCard, { backgroundColor: colors.background.glass }]}>
+        <Pressable
+          style={styles.menuItem}
+          onPress={() => void handleReport()}
+          accessibilityRole="button"
+          accessibilityLabel="이메일로 신고하기"
+        >
           <View style={styles.menuItemLeft}>
-            <Feather name="flag" size={16} color={Colors.neutral.darkGray} />
-            <Text style={styles.dangerItemText}>신고하기</Text>
+            <View style={[styles.iconBox, { backgroundColor: Colors.glass.white10 }]}>
+              <Feather name="flag" size={16} color={colors.text.secondary} />
+            </View>
+            <View style={styles.copyContainer}>
+              <Text style={[styles.itemTitle, { color: colors.text.primary }]}>이메일로 신고하기</Text>
+              <Text style={[styles.itemDescription, { color: colors.text.secondary }]}>고객센터에서 신고 내용을 확인해요.</Text>
+            </View>
           </View>
         </Pressable>
-      </View>
 
-      {/* 차단하기 */}
-      <View style={styles.menuItemMarginSm}>
-        <Pressable style={styles.menuItem} onPress={handleBlock} disabled={blockMutation.isPending}>
+        <View style={[styles.itemDivider, { backgroundColor: colors.background.card }]} />
+        <Pressable
+          style={styles.menuItem}
+          onPress={handleBlock}
+          disabled={blockMutation.isPending}
+          accessibilityRole="button"
+          accessibilityLabel={`${room.partner.name} 차단하기`}
+          accessibilityState={{ disabled: blockMutation.isPending, busy: blockMutation.isPending }}
+        >
           <View style={styles.menuItemLeft}>
-            <Ionicons name="ban-outline" size={16} color={Colors.neutral.darkGray} />
-            <Text style={styles.dangerItemText}>차단하기</Text>
+            <View style={[styles.iconBox, { backgroundColor: 'rgba(220, 38, 38, 0.10)' }]}>
+              {blockMutation.isPending ? (
+                <ActivityIndicator size="small" color={colors.state.danger} />
+              ) : (
+                <Ionicons name="ban-outline" size={17} color={colors.state.danger} />
+              )}
+            </View>
+            <View style={styles.copyContainer}>
+              <Text style={[styles.itemTitle, { color: colors.state.danger }]}>차단하기</Text>
+              <Text style={[styles.itemDescription, { color: colors.text.secondary }]}>차단하면 이 대화방을 다시 찾을 수 없어요.</Text>
+            </View>
           </View>
         </Pressable>
       </View>
@@ -105,46 +130,61 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
   },
   dangerSection: {
-    marginTop: Spacing.xxxl,
+    marginTop: 0,
   },
   sectionLabel: {
     fontFamily: FontFamily.sans,
     fontWeight: FontWeight.bold,
     fontSize: FontSize.xs,
     lineHeight: 15,
-    letterSpacing: 1.12,
     textTransform: 'uppercase',
-    color: Colors.neutral.disabledText,
-    paddingHorizontal: Spacing.sm,
+    letterSpacing: 0.8,
+    paddingHorizontal: Spacing.xs,
   },
-  menuItemMargin: {
-    paddingTop: Spacing.md,
-    alignSelf: 'stretch',
+  actionCard: {
+    marginTop: Spacing.md,
+    borderRadius: Radii.lg,
+    overflow: 'hidden',
   },
-  menuItemMarginSm: {
-    paddingTop: Spacing.xs,
-    alignSelf: 'stretch',
+  itemDivider: {
+    height: StyleSheet.hairlineWidth,
+    marginLeft: Spacing.lg + 34 + Spacing.md,
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.md,
-    borderRadius: 14,
     alignSelf: 'stretch',
   },
   menuItemLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.md,
+    flex: 1,
   },
-  dangerItemText: {
+  iconBox: {
+    width: 34,
+    height: 34,
+    borderRadius: Radii.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  copyContainer: {
+    flex: 1,
+  },
+  itemTitle: {
     fontFamily: FontFamily.sans,
     fontWeight: FontWeight.medium,
     fontSize: FontSize.base,
     lineHeight: 20,
     letterSpacing: -0.15,
-    color: Colors.neutral.lightGray,
+  },
+  itemDescription: {
+    marginTop: Spacing.xxs,
+    fontFamily: FontFamily.sans,
+    fontWeight: FontWeight.regular,
+    fontSize: FontSize.xs,
+    lineHeight: 16,
   },
 });
