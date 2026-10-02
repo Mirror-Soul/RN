@@ -36,11 +36,28 @@ export default function GrowthHeroSection({
   onVerifyPress,
 }: GrowthHeroSectionProps) {
   const { colors } = useThemeColors();
-  const hasValue = similarityPercent !== null;
+  // API 과도기나 아직 트윈이 준비되지 않은 계정에서는 성공 응답이라도 result/syncRate가
+  // 비어 있을 수 있다. 이 경우 아래의 syncCopy를 역참조하면 성장 탭 전체가 무너지므로
+  // 런타임 값까지 검증한 뒤 "준비 중" 상태로 표시한다.
+  const hasValue = typeof similarityPercent === 'number' && Number.isFinite(similarityPercent);
   const safePercent = hasValue ? Math.min(100, Math.max(0, similarityPercent)) : 0;
-  const syncCopy = hasValue ? getSyncCopy(safePercent) : null;
+  const syncCopy = getSyncCopy(safePercent);
 
-  const progressValueText = isLoading ? '측정 중...' : isError ? '조회 실패' : `${safePercent}% 완료`;
+  const progressValueText = isLoading
+    ? '측정 중...'
+    : isError
+      ? '조회 실패'
+      : hasValue
+        ? `${safePercent}% 완료`
+        : '준비 중';
+  const headline = isLoading
+    ? '트윈과의 싱크를\n확인하고 있어요.'
+    : hasValue
+      ? syncCopy.headline
+      : '트윈 유사도를\n준비하고 있어요.';
+  const subCopy = hasValue
+    ? syncCopy.subCopy
+    : '프로필과 학습 데이터가 준비되면 유사도를 확인할 수 있어요.';
 
   return (
     <View style={styles.container}>
@@ -58,7 +75,7 @@ export default function GrowthHeroSection({
           </TouchableOpacity>
         ) : (
           <Text style={[styles.headline, { color: colors.text.primary }]}>
-            {isLoading ? '트윈과의 싱크를\n확인하고 있어요.' : syncCopy!.headline}
+            {headline}
           </Text>
         )}
 
@@ -83,7 +100,7 @@ export default function GrowthHeroSection({
 
       {!isError && (
         <Text style={[styles.subCopy, { color: colors.text.muted }]}>
-          {isLoading ? '잠시만 기다려 주세요.' : syncCopy!.subCopy}
+          {isLoading ? '잠시만 기다려 주세요.' : subCopy}
         </Text>
       )}
 

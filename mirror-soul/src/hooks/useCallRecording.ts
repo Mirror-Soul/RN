@@ -73,7 +73,9 @@ export function useCallRecording() {
       const presignedResponse = await getPresignedUrl({
         fileName,
         contentType,
-        directory: 'call-recordings',
+        // 백엔드의 현재 UploadDirectory 허용값에는 call-recordings가 없다.
+        // 전용 디렉터리가 생기기 전까지 음성 파일을 허용된 interviews 경로에 보관한다.
+        directory: 'interviews',
       });
 
       if (!presignedResponse.isSuccess) {

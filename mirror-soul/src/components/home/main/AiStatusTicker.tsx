@@ -41,8 +41,10 @@ export default function AiStatusTicker({ isMatchingEnabled, isError }: AiStatusT
   return (
     <View style={styles.container}>
       <View style={[styles.dot, (isPaused || isError) && styles.dotPaused]} />
-      <Animated.View key={message} entering={FadeIn.duration(200)} exiting={FadeOut.duration(150)}>
-        <Text style={[styles.text, { color: colors.text.muted }]}>{message}</Text>
+      <Animated.View key={message} entering={FadeIn.duration(200)} exiting={FadeOut.duration(150)} style={styles.messageWrapper}>
+        <Text numberOfLines={1} ellipsizeMode="tail" style={[styles.text, { color: colors.text.muted }]}>
+          {message}
+        </Text>
       </Animated.View>
     </View>
   );
@@ -50,10 +52,12 @@ export default function AiStatusTicker({ isMatchingEnabled, isError }: AiStatusT
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.sm,
     paddingHorizontal: Spacing.xxs,
+    minWidth: 0,
   },
   dot: {
     width: 4,
@@ -64,7 +68,11 @@ const styles = StyleSheet.create({
   dotPaused: {
     backgroundColor: Colors.neutral.darkGray,
   },
+  messageWrapper: {
+    flexShrink: 1,
+  },
   text: {
+    flexShrink: 1,
     fontFamily: FontFamily.sans,
     fontSize: FontSize.sm,
     fontWeight: FontWeight.bold,

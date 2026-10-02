@@ -8,7 +8,7 @@ import { ApiResponse } from './common';
 // POST /calls/clones/{clone-user-uuid}
 // ─────────────────────────────────────────────
 export interface InitiateCallRequest {
-  callerUserUuid: string;
+  /** 호출자는 Bearer 토큰에서 서버가 식별한다. */
   mediaType: 'VOICE';
 }
 
@@ -27,7 +27,7 @@ export type InitiateCallResponse = ApiResponse<InitiateCallResult>;
 // ─────────────────────────────────────────────
 // PATCH /calls/{call-id}/in-progress
 // ─────────────────────────────────────────────
-export type InProgressResponse = ApiResponse<string>;
+export type InProgressResponse = ApiResponse<null>;
 
 // ─────────────────────────────────────────────
 // POST /calls/{call-id}/end
@@ -37,7 +37,10 @@ export interface EndCallRequest {
 }
 
 export interface EndCallResult {
-  recordingUrl: string;
+  callId: number;
+  status: string;
+  durationSec: number;
+  remainingTalkTime: number;
 }
 
 export type EndCallResponse = ApiResponse<EndCallResult>;

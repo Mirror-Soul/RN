@@ -39,7 +39,7 @@ export default function MatchScreen() {
   // 카드 폭(contentWidth) 기준 400을 레퍼런스로 스케일링 — 폰에서는 기존과 동일한 값.
   const horizontalPadding = (contentWidth * 24) / 400;
 
-  const { data, isLoading, isError, refetch } = useReceivedMeetingRequestsQuery();
+  const { data, isLoading, isFetching, isError, refetch } = useReceivedMeetingRequestsQuery();
   const requests = data?.requests ?? [];
 
   const rejectMutation = useRejectMeetingRequestMutation();
@@ -119,7 +119,7 @@ export default function MatchScreen() {
         <View style={contentContainerStyle}>
           <Animated.View entering={FadeInUp.duration(400)} style={styles.container}>
             <View style={{ paddingHorizontal: horizontalPadding }}>
-              <MatchingHeader />
+              <MatchingHeader onRefresh={() => void refetch()} isRefreshing={isFetching} />
               <MatchingActiveStatus />
               <MatchingActionButtons activeTab={activeTab} onChangeTab={setActiveTab} unreadCount={totalUnreadCount} />
             </View>
@@ -140,7 +140,7 @@ export default function MatchScreen() {
                 </View>
               ) : requests.length === 0 ? (
                 <View style={{ paddingHorizontal: horizontalPadding }}>
-                  <MatchingTabStatus message="아직 받은 만남 신청이 없어요" />
+                  <MatchingTabStatus message="아직 받은 만남 신청이 없어요" onRetry={() => void refetch()} />
                 </View>
               ) : (
                 <>
