@@ -17,7 +17,7 @@ const stopStreamTracks = (stream: MediaStream | null) => {
 /**
  * WebRTC PeerConnection 생명주기를 관리하는 훅 (SoC)
  *
- * 역할: RTCPeerConnection 생성, 로컬 마이크 스트림, 원격 오디오 스트림 수신
+ * 역할: RTCPeerConnection 생성, 로컬 마이크 스트림, 원격 AI 오디오·비디오 스트림 수신
  * 시그널링 로직은 useAICallFlow에서 담당합니다.
  */
 export function useWebRTCCall() {
@@ -47,7 +47,7 @@ export function useWebRTCCall() {
     const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
     pcRef.current = pc;
 
-    // 원격 오디오 스트림 수신
+    // 원격 AI 미디어 스트림(오디오·비디오) 수신
     pc.addEventListener('track', (event: any) => {
       logger.debug('[useWebRTCCall] Remote track received');
       if (event.streams?.[0]) {
@@ -77,6 +77,12 @@ export function useWebRTCCall() {
         pc.addTrack(track, stream);
       });
       logger.debug('[useWebRTCCall] Local audio track added');
+
+      // AI 서버가 답변 음성에 맞춰 생성한 비디오만 내려보내도록 협상한다. 이 수신 전용
+      // transceiver가 Offer에 video m-line을 만들기 때문에, 사용자 카메라를 켜거나
+      // 카메라 권한을 요청하지 않아도 AI 영상 트랙을 받을 수 있다.
+      pc.addTransceiver('video', { direction: 'recvonly' });
+      logger.debug('[useWebRTCCall] Remote AI video transceiver added (recvonly)');
     } catch (err) {
       logger.error('[useWebRTCCall] Failed to get microphone stream:', err);
       throw err;

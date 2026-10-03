@@ -29,10 +29,8 @@ function parseTimeLimitSeconds(value: string | undefined): number | null {
  * 연결된 이후에는 실제 영상통화 레이아웃을 보여준다.
  * 통화 종료 후 자동으로 이전 화면으로 돌아갑니다.
  *
- * 레이아웃은 영상통화 형태로 미리 잡아뒀지만(전체화면 상대 영상 + 내 셀프뷰 PIP),
- * AI 서버가 아직 비디오 트랙을 안 보내는 상태라 CallRemoteVideoView가 자동으로 기존
- * 아바타 자리표시자를 대신 그린다 — 실제 비디오 트랙이 붙으면 이 화면은 그대로 두고
- * CallRemoteVideoView 내부만 실 스트림을 받게 된다.
+ * 전체화면 AI 영상 + 내 셀프뷰 PIP 형태다. AI 서버가 보낸 비디오 트랙은
+ * CallRemoteVideoView가 자동으로 표시하고, 아직 트랙이 없을 때만 아바타 자리표시자를 쓴다.
  *
  * 음소거/스피커는 react-native-incall-manager로 실제 오디오 라우팅까지 연결되어 있다
  * (useAICallFlow 참고, 기본 라우팅은 OS가 결정한다). 카메라 토글은 내 화면에만
