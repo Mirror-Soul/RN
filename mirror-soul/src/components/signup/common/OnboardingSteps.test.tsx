@@ -26,9 +26,10 @@ it('shows the planned steps without offering navigation that bypasses signup', (
 
 it('closes the expanded steps when the keyboard needs the screen space', () => {
   let show!: () => void;
-  const listener = jest.spyOn(Keyboard, 'addListener').mockImplementation((_event, callback) => {
+  const subscribe = Keyboard.addListener.bind(Keyboard);
+  const listener = jest.spyOn(Keyboard, 'addListener').mockImplementation((event, callback) => {
     show = () => callback({ duration: 0, easing: 'keyboard', endCoordinates: { width: 320, height: 300, screenX: 0, screenY: 400 } });
-    return { remove: jest.fn() };
+    return subscribe(event, callback);
   });
   const screen = render(<OnboardingSteps />);
   fireEvent.press(screen.getByRole('button', { name: '가입 순서' }));
