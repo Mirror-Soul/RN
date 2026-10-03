@@ -282,12 +282,15 @@ export function useAICallFlow(targetUserUuid?: string) {
         logger.info('[useAICallFlow] JOINED received. Sending CALL_INVITE...');
         setCallStatus('inviting');
 
+        // 백엔드 시그널링 검증(Backend #185)은 CALL_INVITE.data에 callId만 허용한다 — 필드가 하나라도
+        // 더 있으면 SIGNALING_ERROR(INVALID_MESSAGE)로 거부된다. 클론·mediaType은 AI 서버가 callId로
+        // 백엔드 내부 API에서 직접 조회하므로 여기서 보내지 않는다.
         sendMessage({
           type: 'CALL_INVITE',
           roomId: session.roomId,
           from: session.callerSignalId,
           to: session.aiSignalId,
-          data: { callId: session.callId, cloneUserUuid: calleeUuid, mediaType: 'VOICE' },
+          data: { callId: session.callId },
         });
 
         inviteTimeoutRef.current = setTimeout(() => {
@@ -414,7 +417,7 @@ export function useAICallFlow(targetUserUuid?: string) {
       default:
         logger.debug('[useAICallFlow] Unhandled message type:', msg.type);
     }
-  }, [createOffer, createAnswer, applyAnswer, applyOffer, applyIceCandidate, sendMessage, calleeUuid]);
+  }, [createOffer, createAnswer, applyAnswer, applyOffer, applyIceCandidate, sendMessage]);
 
   // ─────────────────────────────────────────────
   // 내부 정리 함수
