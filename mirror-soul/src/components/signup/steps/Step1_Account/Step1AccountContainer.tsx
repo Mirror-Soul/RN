@@ -1,8 +1,8 @@
 import React, { useRef } from 'react';
-import { Alert, StyleSheet, Text } from 'react-native';
+import { Alert, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SIGNUP_ROUTES } from '@/src/constants/routes/signupRoutes';
-import { FontFamily, FontSize } from '@/src/constants/theme';
+import { FontFamily, FontSize, Spacing } from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { getErrorDisplayMessage, isConflictError } from '@/src/utils/apiErrorCode';
 import { isValidPassword } from '@/src/utils/validation';
@@ -58,11 +58,16 @@ export default function Step1AccountContainer() {
         formattedTime={form.formattedTime} onResendCode={form.handleResendCode} isLoading={form.isEmailActionLoading} />
       <PasswordSection state={state} onChange={updateState} />
     </SignupSection>
-    <SignupSection title="이용 전 확인해주세요" description="필수 항목에 동의하면 가입을 계속할 수 있어요. 마케팅 수신은 선택이에요.">
-      <AgeVerificationSection state={state} onChange={updateState} />
-      <AgreementSection state={state} onChange={updateState} />
+    <SignupSection compact title="이용 전 확인해주세요" description="필수 항목에 동의하면 가입을 계속할 수 있어요. 마케팅 수신은 선택이에요.">
+      <View style={styles.confirmations}>
+        <AgeVerificationSection state={state} onChange={updateState} />
+        <AgreementSection state={state} onChange={updateState} />
+      </View>
     </SignupSection>
     <Text style={[styles.note, { color: colors.text.secondary }]}>연령 확인은 현재 본인이 만 19세 이상임을 직접 확인하는 방식이에요.</Text>
   </SignupFormScreen>;
 }
-const styles = StyleSheet.create({ note: { fontFamily: FontFamily.sans, fontSize: FontSize.base, lineHeight: 22 } });
+const styles = StyleSheet.create({
+  confirmations: { gap: Spacing.xs },
+  note: { fontFamily: FontFamily.sans, fontSize: FontSize.base, lineHeight: 22 },
+});
