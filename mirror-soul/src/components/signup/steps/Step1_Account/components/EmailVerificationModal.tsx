@@ -11,7 +11,7 @@ import { VerificationModalProps } from '../types/step1';
 
 const ACCESSORY_ID = 'signup-verification-done';
 
-export default function EmailVerificationModal({ isVisible, email, onClose, onVerify, timeLeft = 180, formattedTime = '03:00', onResend, isLoading = false }: VerificationModalProps) {
+export default function EmailVerificationModal({ isVisible, email, onClose, onVerify, timeLeft = 180, formattedTime = '03:00', onResend, isLoading = false, requiresNewCode = false }: VerificationModalProps) {
   const { colors, isDark } = useThemeColors();
   const fieldColors = useSignupFieldColors();
   const { contentContainerStyle, screenPadding } = useLayout();
@@ -19,6 +19,7 @@ export default function EmailVerificationModal({ isVisible, email, onClose, onVe
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [verifying, setVerifying] = useState(false);
+  const [availableHeight, setAvailableHeight] = useState<number | null>(null);
   const lock = useRef(false);
   const generation = useRef(0);
   const mounted = useRef(true);
@@ -74,9 +75,9 @@ export default function EmailVerificationModal({ isVisible, email, onClose, onVe
     <View style={[styles.overlay, { backgroundColor: colors.background.overlay }]}>
       <Pressable accessibilityRole="button" accessibilityLabel="이메일 인증창 닫기" onPress={close} style={StyleSheet.absoluteFill} />
       <KeyboardAvoidingView enabled={Platform.OS === 'ios'} behavior="padding" style={styles.keyboard} pointerEvents="box-none">
-        <SafeAreaView style={styles.safeArea} pointerEvents="box-none">
+        <SafeAreaView style={styles.safeArea} pointerEvents="box-none" onLayout={({ nativeEvent: { layout } }) => setAvailableHeight(layout.height)}>
           <View testID="email-verification-dialog" style={[contentContainerStyle, styles.frame, { paddingHorizontal: screenPadding }]} pointerEvents="box-none">
-            <View style={[styles.card, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
+            <View style={[styles.card, { backgroundColor: colors.background.card, borderColor: colors.border.primary, maxHeight: availableHeight == null ? '100%' : Math.max(1, availableHeight - Spacing.sm * 2) }]}>
               <ScrollView style={styles.scroll} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag"
                 automaticallyAdjustContentInsets={false} contentInsetAdjustmentBehavior="never" showsVerticalScrollIndicator={false}>
                 <View style={styles.heading}>
@@ -92,14 +93,14 @@ export default function EmailVerificationModal({ isVisible, email, onClose, onVe
                 <View style={styles.codeGroup}>
                   <View style={styles.labelRow}>
                     <Text style={[styles.copy, { color: fieldColors.label }]}>인증 코드</Text>
-                    <Text style={[styles.copy, { color: timeLeft > 0 ? colors.brand.accent : colors.state.danger }]}>{timeLeft > 0 ? formattedTime : '시간 만료'}</Text>
+                    <Text style={[styles.copy, { color: timeLeft > 0 ? colors.brand.accent : colors.state.danger }]}>{timeLeft > 0 ? formattedTime : requiresNewCode ? '새 코드 필요' : '시간 만료'}</Text>
                   </View>
                   <TextInput ref={input} accessibilityLabel="이메일 인증 코드 6자리" value={code} onChangeText={changeCode}
                     placeholder="6자리 숫자" placeholderTextColor={fieldColors.placeholder} keyboardType="number-pad" textContentType="oneTimeCode" autoComplete="one-time-code" maxFontSizeMultiplier={2}
                     inputAccessoryViewID={Platform.OS === 'ios' ? ACCESSORY_ID : undefined} returnKeyType="done" onSubmitEditing={() => void confirm()}
                     editable={!blocked && timeLeft > 0} style={[styles.input, { color: colors.text.primary, borderColor: error ? colors.state.danger : validCode ? colors.brand.accent : fieldColors.border, backgroundColor: fieldColors.inputBackground }]} />
                   {!!error && <Text accessibilityRole="alert" style={[styles.copy, { color: colors.state.danger }]}>{error}</Text>}
-                  {timeLeft <= 0 && <Text style={[styles.copy, { color: fieldColors.hint }]}>입력 시간이 지났어요. 코드를 다시 받아주세요.</Text>}
+                  {timeLeft <= 0 && <Text style={[styles.copy, { color: fieldColors.hint }]}>{requiresNewCode ? '코드를 여러 번 확인하지 못했어요. 새 코드를 받아주세요.' : '입력 시간이 지났어요. 코드를 다시 받아주세요.'}</Text>}
                 </View>
               </ScrollView>
               <View style={styles.footer}>

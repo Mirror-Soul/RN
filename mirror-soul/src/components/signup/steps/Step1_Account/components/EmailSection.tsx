@@ -19,8 +19,9 @@ interface Props extends SectionProps {
   formattedTime?: string;
   onResendCode?: () => void;
   isLoading?: boolean;
+  requiresNewCode?: boolean;
 }
-export default function EmailSection({ state, onChange, isModalVisible, setIsModalVisible, onSendCode, onVerify, timeLeft = 0, isTimerActive = false, formattedTime = '00:00', onResendCode = onSendCode, isLoading = false }: Props) {
+export default function EmailSection({ state, onChange, isModalVisible, setIsModalVisible, onSendCode, onVerify, timeLeft = 0, isTimerActive = false, formattedTime = '00:00', onResendCode = onSendCode, isLoading = false, requiresNewCode = false }: Props) {
   const { colors } = useThemeColors();
   const fieldColors = useSignupFieldColors();
   const [focused, setFocused] = useState(false);
@@ -49,7 +50,7 @@ export default function EmailSection({ state, onChange, isModalVisible, setIsMod
         {isLoading ? <ActivityIndicator color={colors.brand.accent} size="small" /> : <Text style={[styles.actionText, { color: canSend ? colors.brand.accent : colors.text.muted }]}>{label}</Text>}
       </Pressable>
     </View>
-    <EmailVerificationModal isVisible={isModalVisible} email={state.email} onClose={() => setIsModalVisible(false)} onVerify={onVerify} timeLeft={timeLeft} formattedTime={formattedTime} onResend={onResendCode} isLoading={isLoading} />
+    <EmailVerificationModal isVisible={isModalVisible} email={state.email} onClose={() => setIsModalVisible(false)} onVerify={onVerify} timeLeft={timeLeft} formattedTime={formattedTime} onResend={onResendCode} isLoading={isLoading} requiresNewCode={requiresNewCode} />
   </View>;
 }
 const styles = StyleSheet.create({

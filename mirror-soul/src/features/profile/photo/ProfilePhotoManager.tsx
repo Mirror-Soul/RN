@@ -114,9 +114,9 @@ export function ProfilePhotoManager({ name, signup = false, disabled = false, co
   };
   return (
     <View style={compact ? [styles.compact, { borderColor: colors.border.primary }] : [styles.card, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
-      {!compact && <View style={styles.row}>
+      {!compact && <View style={[styles.row, stackActions && styles.stackedRow]}>
         <ProfilePhoto key={`${currentUrl ?? 'empty'}:${imageAttempt}`} uri={currentUrl} previewUri={previewUri} name={name} size={64} onLoadStateChange={setImageState} onRetry={retryImage} onPress={() => setViewerOpen(true)} />
-        <View style={styles.copy}>
+        <View style={[styles.copy, stackActions && styles.stackedCopy]}>
           <View style={styles.titleRow}>
             <Text style={[styles.title, { color: colors.text.primary }]}>프로필 사진</Text>
             {signup && <View style={[styles.badge, { backgroundColor: colors.background.glass }]}><Text style={[styles.badgeText, { color: colors.text.secondary }]}>선택</Text></View>}
@@ -165,6 +165,8 @@ const styles = StyleSheet.create({
   compact: { width: '100%', marginTop: Spacing.lg, paddingTop: Spacing.lg, borderTopWidth: StyleSheet.hairlineWidth, gap: Spacing.md },
   card: { width: '100%', padding: Spacing.xl, gap: Spacing.lg, borderWidth: 1, borderRadius: Radii.lg },
   row: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md }, copy: { flex: 1, gap: Spacing.sm },
+  stackedRow: { flexDirection: 'column', alignItems: 'stretch' },
+  stackedCopy: { flex: 0, width: '100%' },
   status: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
   retryNotice: { gap: Spacing.xs },
   titleRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: Spacing.sm },
@@ -172,7 +174,7 @@ const styles = StyleSheet.create({
   badge: { paddingHorizontal: Spacing.sm, paddingVertical: Spacing.xxs, borderRadius: Radii.full },
   badgeText: { fontFamily: FontFamily.sans, fontSize: FontSize.sm, lineHeight: 18, fontWeight: FontWeight.medium },
   help: { fontFamily: FontFamily.sans, fontSize: FontSize.base, lineHeight: 22 },
-  caption: { fontFamily: FontFamily.sans, fontSize: 13, lineHeight: 20 },
+  caption: { fontFamily: FontFamily.sans, fontSize: 13, lineHeight: 20, flexShrink: 1 },
   notice: { flexDirection: 'row', gap: Spacing.sm, paddingTop: Spacing.lg, borderTopWidth: StyleSheet.hairlineWidth },
   noticeIcon: { marginTop: 3 }, noticeCopy: { flex: 1, gap: Spacing.xs },
   actions: { width: '100%', flexDirection: 'row', flexWrap: 'wrap', alignItems: 'stretch', gap: Spacing.md },

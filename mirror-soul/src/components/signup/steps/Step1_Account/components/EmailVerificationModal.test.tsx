@@ -40,6 +40,15 @@ it('requires resending an expired code rather than submitting it', () => {
   expect(props.onVerify).not.toHaveBeenCalled();
 });
 
+it('explains the verification limit separately from timer expiry', () => {
+  const screen = render(<EmailVerificationModal {...props} timeLeft={0} requiresNewCode />);
+  expect(screen.getByText('새 코드 필요')).toBeTruthy();
+  expect(screen.getByText('코드를 여러 번 확인하지 못했어요. 새 코드를 받아주세요.')).toBeTruthy();
+  fireEvent.press(screen.getByRole('button', { name: '인증 코드 다시 받기' }));
+  expect(props.onResend).toHaveBeenCalledTimes(1);
+  expect(props.onVerify).not.toHaveBeenCalled();
+});
+
 it('does not close a reopened modal with an old verification response', async () => {
   let finish!: (success: boolean) => void;
   props.onVerify.mockImplementation(() => new Promise(resolve => { finish = resolve; }));

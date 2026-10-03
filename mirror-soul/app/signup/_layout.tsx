@@ -7,7 +7,7 @@ import { useLayout } from '@/src/hooks/useLayout';
 import { Slot, usePathname } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function SignupLayout() {
@@ -25,9 +25,11 @@ export default function SignupLayout() {
       <SignupBackground />
 
       <View style={styles.container}>
-        <View style={[styles.stepsWrapper, contentContainerStyle, { paddingHorizontal: screenPadding, borderBottomColor: colors.border.primary }]}>
-          <OnboardingSteps currentStep={getCurrentStep()} />
-        </View>
+        <ScrollView style={styles.stepsScroll} contentContainerStyle={styles.stepsContent} keyboardShouldPersistTaps="handled" nestedScrollEnabled>
+          <View style={[styles.stepsWrapper, contentContainerStyle, { paddingHorizontal: screenPadding, borderBottomColor: colors.border.primary }]}>
+            <OnboardingSteps currentStep={getCurrentStep()} />
+          </View>
+        </ScrollView>
 
         {/* 하위 페이지(index, profile 등)가 렌더링될 영역 */}
         <Slot />
@@ -52,4 +54,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     zIndex: 10,
   },
+  stepsScroll: { flexGrow: 0, flexShrink: 1, maxHeight: '30%' },
+  stepsContent: { flexGrow: 0 },
 });

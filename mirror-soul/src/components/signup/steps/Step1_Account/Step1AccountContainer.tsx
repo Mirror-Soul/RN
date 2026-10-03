@@ -55,7 +55,7 @@ export default function Step1AccountContainer() {
     <SignupSection title="로그인 정보" icon="key">
       <EmailSection state={state} onChange={updateState} isModalVisible={form.isModalVisible} setIsModalVisible={form.setIsModalVisible}
         onSendCode={form.handleSendEmailCode} onVerify={form.handleVerifyEmail} timeLeft={form.timeLeft} isTimerActive={form.isTimerActive}
-        formattedTime={form.formattedTime} onResendCode={form.handleResendCode} isLoading={form.isEmailActionLoading} />
+        formattedTime={form.formattedTime} onResendCode={form.handleResendCode} isLoading={form.isEmailActionLoading} requiresNewCode={form.requiresNewCode} />
       <PasswordSection state={state} onChange={updateState} />
     </SignupSection>
     <SignupSection compact title="이용 전 확인해주세요" description="필수 항목에 동의하면 가입을 계속할 수 있어요. 마케팅 수신은 선택이에요.">

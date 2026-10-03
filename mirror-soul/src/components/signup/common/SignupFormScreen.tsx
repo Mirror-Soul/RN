@@ -33,7 +33,7 @@ export default function SignupFormScreen({ children, title, hint, disabled, isSu
         <View pointerEvents={isSubmitting ? 'none' : 'auto'} style={styles.fields}>{children}</View>
       </View>
     </ScrollView>
-    {!keyboardVisible && <View style={[styles.footer, { borderColor: colors.border.primary, backgroundColor: colors.background.primary }]}>
+    {!keyboardVisible && <ScrollView style={[styles.footer, { borderColor: colors.border.primary, backgroundColor: colors.background.primary }]} contentContainerStyle={styles.footerScrollContent} keyboardShouldPersistTaps="handled">
       <View style={[contentContainerStyle, styles.footerContent, { paddingHorizontal: screenPadding }]}>
         <Text style={[styles.hint, { color: colors.text.secondary }]}>{isSubmitting ? submittingLabel : hint}</Text>
         <Pressable accessibilityRole="button" accessibilityLabel={title} accessibilityState={{ disabled: blocked, busy: isSubmitting }} disabled={blocked}
@@ -45,7 +45,7 @@ export default function SignupFormScreen({ children, title, hint, disabled, isSu
           </>}
         </Pressable>
       </View>
-    </View>}
+    </ScrollView>}
     {Platform.OS === 'ios' && <InputAccessoryView nativeID={SIGNUP_KEYBOARD_ACCESSORY_ID} backgroundColor={colors.background.elevated}>
       <View style={[styles.accessory, { borderColor: colors.border.primary }]}>
         <Pressable accessibilityRole="button" accessibilityLabel="키보드 닫기" onPress={() => Keyboard.dismiss()} style={styles.done}>
@@ -61,7 +61,8 @@ const styles = StyleSheet.create({
   scroll: { flexGrow: 1 },
   content: { paddingTop: Spacing.xxl, paddingBottom: Spacing.xxl, gap: Spacing.xxl },
   fields: { gap: Spacing.xxl },
-  footer: { borderTopWidth: 1, paddingVertical: Spacing.md },
+  footer: { flexGrow: 0, flexShrink: 0, maxHeight: '40%', borderTopWidth: 1 },
+  footerScrollContent: { paddingVertical: Spacing.md },
   footerContent: { gap: Spacing.sm },
   hint: { fontFamily: FontFamily.sans, fontSize: FontSize.base, lineHeight: 21 },
   button: { minHeight: 56, paddingHorizontal: Spacing.lg, paddingVertical: Spacing.lg, borderRadius: Radii.lg, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.sm },
