@@ -1,14 +1,17 @@
 import { Feather } from '@expo/vector-icons';
 import React, { useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Keyboard, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import FormLabel from '@/src/components/signup/common/FormLabel';
 import { FontFamily, FontSize, Radii, Spacing } from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { isValidPassword } from '@/src/utils/validation';
 import { SectionProps } from '../types/step1';
+import { SIGNUP_KEYBOARD_ACCESSORY_ID } from '@/src/components/signup/common/SignupFormScreen';
+import { useSignupFieldColors } from '@/src/components/signup/common/useSignupFieldColors';
 
 export default function PasswordSection({ state, onChange }: SectionProps) {
   const { colors } = useThemeColors();
+  const fieldColors = useSignupFieldColors();
   const [focused, setFocused] = useState<string | null>(null);
   const [touched, setTouched] = useState({ password: false, confirm: false });
   const valid = isValidPassword(state.password);
@@ -21,18 +24,19 @@ export default function PasswordSection({ state, onChange }: SectionProps) {
   ];
   return <View style={styles.container}>{fields.map(field => <View key={field.key} style={styles.field}>
     <FormLabel label={field.label} optional={false} />
-    <View style={[styles.inputRow, { backgroundColor: colors.background.glass, borderColor: field.invalid ? colors.state.danger : focused === field.key ? colors.brand.accent : colors.border.primary }]}>
+    <View style={[styles.inputRow, { backgroundColor: fieldColors.inputBackground, borderColor: field.invalid ? colors.state.danger : focused === field.key ? colors.brand.accent : fieldColors.border }]}>
       <TextInput accessibilityLabel={field.label} style={[styles.input, { color: colors.text.primary }]} value={field.value}
         onChangeText={text => onChange(field.key === 'password' ? { password: text } : { passwordConfirm: text })}
-        placeholder={field.key === 'password' ? '영문·숫자 포함 8~20자' : '비밀번호를 다시 입력해주세요'} placeholderTextColor={colors.text.muted}
+        placeholder={field.key === 'password' ? '영문·숫자 포함 8~20자' : '비밀번호를 다시 입력해주세요'} placeholderTextColor={fieldColors.placeholder}
         secureTextEntry={!field.visible} autoCapitalize="none" autoCorrect={false} textContentType="newPassword" autoComplete="new-password" editable={!state.isLoading}
+        inputAccessoryViewID={Platform.OS === 'ios' ? SIGNUP_KEYBOARD_ACCESSORY_ID : undefined} returnKeyType="done" onSubmitEditing={() => Keyboard.dismiss()}
         onFocus={() => setFocused(field.key)} onBlur={() => { setFocused(null); setTouched(previous => ({ ...previous, [field.key]: true })); }} />
       <Pressable accessibilityRole="button" accessibilityLabel={`${field.label} ${field.visible ? '숨기기' : '보기'}`} disabled={state.isLoading}
         onPress={() => onChange(field.key === 'password' ? { isPasswordVisible: !field.visible } : { isPasswordConfirmVisible: !field.visible })} style={styles.toggle}>
         <Feather name={field.visible ? 'eye-off' : 'eye'} size={20} color={colors.text.secondary} />
       </Pressable>
     </View>
-    <Text style={[styles.hint, { color: field.invalid ? colors.state.danger : (field.key === 'password' ? valid : match) ? colors.state.success : colors.text.secondary }]}>
+    <Text style={[styles.hint, { color: field.invalid ? colors.state.danger : (field.key === 'password' ? valid : match) ? colors.state.success : fieldColors.hint }]}>
       {field.invalid ? field.key === 'password' ? '영문과 숫자를 포함해 8~20자로 입력해주세요.' : '비밀번호가 달라요. 다시 확인해주세요.' : field.hint}
     </Text>
   </View>)}</View>;

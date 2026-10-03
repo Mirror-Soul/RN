@@ -1,11 +1,17 @@
 import React from 'react';
 import { act, fireEvent, render } from '@testing-library/react-native';
+import { Keyboard } from 'react-native';
 import EmailVerificationModal from './EmailVerificationModal';
 
 jest.mock('@expo/vector-icons', () => ({ Feather: () => null }));
+jest.mock('react-native-safe-area-context', () => ({
+  ...jest.requireActual('react-native-safe-area-context'),
+  useSafeAreaInsets: () => ({ top: 0, left: 0, right: 0, bottom: 34 }),
+}));
 jest.mock('@/src/hooks/useThemeColors', () => ({ useThemeColors: () => ({ colors: jest.requireActual('@/src/constants/theme').lightTheme }) }));
 const props = { isVisible: true, email: 'me@example.com', onClose: jest.fn(), onVerify: jest.fn(), onResend: jest.fn(), timeLeft: 180 };
 beforeEach(() => { jest.clearAllMocks(); props.onVerify.mockResolvedValue(true); });
+afterEach(() => jest.restoreAllMocks());
 
 it('disables code entry and confirmation until sending finishes', () => {
   const screen = render(<EmailVerificationModal {...props} isLoading />);
@@ -45,4 +51,39 @@ it('does not close a reopened modal with an old verification response', async ()
   await act(async () => { finish(true); });
   expect(props.onClose).not.toHaveBeenCalled();
   expect(screen.getByLabelText('이메일 인증 코드 6자리').props.value).toBe('');
+});
+
+it('dismisses the number pad after six digits without verifying automatically', () => {
+  const dismiss = jest.spyOn(Keyboard, 'dismiss');
+  const screen = render(<EmailVerificationModal {...props} />);
+  fireEvent.changeText(screen.getByLabelText('이메일 인증 코드 6자리'), '12345');
+  expect(dismiss).not.toHaveBeenCalled();
+  fireEvent.changeText(screen.getByLabelText('이메일 인증 코드 6자리'), '123 456');
+  expect(dismiss).toHaveBeenCalledTimes(1);
+  expect(screen.getByLabelText('이메일 인증 코드 6자리').props.value).toBe('123456');
+  expect(screen.getByRole('button', { name: '이메일 인증하기' }).props.accessibilityState.disabled).toBe(false);
+  expect(props.onVerify).not.toHaveBeenCalled();
+});
+
+it('dismisses the keyboard when closing an unfinished verification', () => {
+  const dismiss = jest.spyOn(Keyboard, 'dismiss');
+  const screen = render(<EmailVerificationModal {...props} />);
+  fireEvent.changeText(screen.getByLabelText('이메일 인증 코드 6자리'), '123');
+  fireEvent.press(screen.getByRole('button', { name: '인증 창 닫기' }));
+  expect(dismiss).toHaveBeenCalledTimes(1);
+  expect(props.onClose).toHaveBeenCalledTimes(1);
+  expect(props.onVerify).not.toHaveBeenCalled();
+});
+
+it('keeps the code and allows retrying after verification fails', async () => {
+  props.onVerify.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
+  const screen = render(<EmailVerificationModal {...props} />);
+  fireEvent.changeText(screen.getByLabelText('이메일 인증 코드 6자리'), '654321');
+  await act(async () => { fireEvent.press(screen.getByRole('button', { name: '이메일 인증하기' })); });
+  expect(screen.getByRole('alert')).toBeTruthy();
+  expect(screen.getByLabelText('이메일 인증 코드 6자리').props.value).toBe('654321');
+  expect(props.onClose).not.toHaveBeenCalled();
+  await act(async () => { fireEvent.press(screen.getByRole('button', { name: '이메일 인증하기' })); });
+  expect(props.onVerify).toHaveBeenCalledTimes(2);
+  expect(props.onClose).toHaveBeenCalledTimes(1);
 });

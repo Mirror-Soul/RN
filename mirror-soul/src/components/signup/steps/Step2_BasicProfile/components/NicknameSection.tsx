@@ -1,10 +1,11 @@
 import { Feather } from '@expo/vector-icons';
 import React, { useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Keyboard, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import FormLabel from '@/src/components/signup/common/FormLabel';
 import { FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { SectionProps } from '../types/step2';
+import { SIGNUP_KEYBOARD_ACCESSORY_ID } from '@/src/components/signup/common/SignupFormScreen';
 
 interface Props extends SectionProps { onCheck: () => void; isChecking: boolean }
 export default function NicknameSection({ state, onChange, onCheck, isChecking }: Props) {
@@ -15,6 +16,7 @@ export default function NicknameSection({ state, onChange, onCheck, isChecking }
     <FormLabel label="닉네임" optional={false} />
     <TextInput accessibilityLabel="상대에게 보여줄 닉네임" style={[styles.input, { color: colors.text.primary, backgroundColor: colors.background.glass, borderColor: focused ? colors.brand.accent : colors.border.primary }]}
       value={state.nickname} onChangeText={nickname => onChange({ nickname, isNicknameVerified: false })} placeholder="2자 이상 입력해주세요" placeholderTextColor={colors.text.muted}
+      inputAccessoryViewID={Platform.OS === 'ios' ? SIGNUP_KEYBOARD_ACCESSORY_ID : undefined} returnKeyType="done" onSubmitEditing={() => Keyboard.dismiss()}
       autoCapitalize="none" autoCorrect={false} editable={!isChecking} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} />
     <View style={styles.actions}>
       <View style={styles.message}>

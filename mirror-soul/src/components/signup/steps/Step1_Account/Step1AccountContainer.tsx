@@ -52,7 +52,7 @@ export default function Step1AccountContainer() {
 
   return <SignupFormScreen title="계정 만들고 계속" hint={hint} disabled={!isFormValid} isSubmitting={state.isLoading} submittingLabel="계정을 만들고 있어요…" onContinue={() => void handleContinue()}>
     <Step1Header />
-    <SignupSection title="로그인 정보">
+    <SignupSection title="로그인 정보" icon="key">
       <EmailSection state={state} onChange={updateState} isModalVisible={form.isModalVisible} setIsModalVisible={form.setIsModalVisible}
         onSendCode={form.handleSendEmailCode} onVerify={form.handleVerifyEmail} timeLeft={form.timeLeft} isTimerActive={form.isTimerActive}
         formattedTime={form.formattedTime} onResendCode={form.handleResendCode} isLoading={form.isEmailActionLoading} />

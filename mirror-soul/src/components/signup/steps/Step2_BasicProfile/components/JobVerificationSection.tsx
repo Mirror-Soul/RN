@@ -1,6 +1,6 @@
 import { Feather } from '@expo/vector-icons';
 import React, { useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, Keyboard, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import FormLabel from '@/src/components/signup/common/FormLabel';
@@ -12,6 +12,7 @@ import { getErrorDisplayMessage } from '@/src/utils/apiErrorCode';
 import JobCategoryDropdown from '../Professional/JobCategoryDropdown';
 import { SectionProps } from '../types/step2';
 import { jobCategories } from '../Professional/jobData';
+import { SIGNUP_KEYBOARD_ACCESSORY_ID } from '@/src/components/signup/common/SignupFormScreen';
 
 interface Props extends SectionProps { onVerify: (fileUri: string, contentType: string, fileName: string) => Promise<void> }
 export default function JobVerificationSection({ state, onChange, onVerify }: Props) {
@@ -57,6 +58,7 @@ export default function JobVerificationSection({ state, onChange, onVerify }: Pr
     {isOpen && anchor && <JobCategoryDropdown anchor={anchor} onSelect={job => { if (job !== state.jobCategory) onChange({ jobCategory: job, isJobVerified: false, jobCertificationObjectKey: null }); setIsOpen(false); }} onClose={() => setIsOpen(false)} />}
     <FormLabel label="하는 일 한 줄" optional />
     <TextInput accessibilityLabel="하는 일 한 줄, 선택" style={[styles.input, { color: colors.text.primary, borderColor: colors.border.primary, backgroundColor: colors.background.glass }]} value={state.jobTitle}
+      inputAccessoryViewID={Platform.OS === 'ios' ? SIGNUP_KEYBOARD_ACCESSORY_ID : undefined} returnKeyType="done" onSubmitEditing={() => Keyboard.dismiss()}
       onChangeText={jobTitle => onChange({ jobTitle })} placeholder="예: 작은 브랜드를 디자인해요" placeholderTextColor={colors.text.muted} />
     <View style={[styles.optional, { borderColor: colors.border.primary }]}>
       <Pressable accessibilityRole="button" accessibilityLabel="직업 확인 서류, 선택" accessibilityState={{ expanded: detailsVisible, disabled: blocked }} disabled={blocked} onPress={() => setExpanded(value => !value)} style={styles.optionalHeading}>
