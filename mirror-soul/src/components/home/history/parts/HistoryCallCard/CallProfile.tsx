@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
-import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
+import { Colors, FontFamily, FontSize, FontWeight, Radii } from '@/src/constants/theme';
 import { Feather } from '@expo/vector-icons';
 
 interface CallAvatarProps {
   name: string;
-  profileImageUrl?: string;
+  profileImageUrl?: string | null;
   direction: 'SENT' | 'RECEIVED';
 }
 
@@ -16,6 +16,8 @@ interface CallAvatarProps {
  * - SENT(보냄): vividPurple 배경 + arrow-up-right
  */
 export default function CallAvatar({ name, profileImageUrl, direction }: CallAvatarProps) {
+  const [failed, setFailed] = useState(false);
+  useEffect(() => { setFailed(false); }, [profileImageUrl]);
   const isReceived = direction === 'RECEIVED';
   const badgeColor = isReceived ? Colors.primary.electricCyan : Colors.primary.vividPurple;
   const arrowIcon = isReceived ? 'arrow-down-left' : 'arrow-up-right';
@@ -23,8 +25,8 @@ export default function CallAvatar({ name, profileImageUrl, direction }: CallAva
   return (
     <View style={styles.wrapper}>
       {/* 프로필 이미지 또는 이니셜 */}
-      {profileImageUrl ? (
-        <Image source={{ uri: profileImageUrl }} style={styles.avatar} />
+      {profileImageUrl && !failed ? (
+        <Image source={{ uri: profileImageUrl }} style={styles.avatar} onError={() => setFailed(true)} />
       ) : (
         <View style={styles.avatarPlaceholder}>
           <Text style={styles.initialText}>{name[0]}</Text>

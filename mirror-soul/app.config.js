@@ -33,7 +33,8 @@ module.exports = {
       infoPlist: {
         NSSpeechRecognitionUsageDescription: 'Mirror Soul에서 실시간 음성 인식을 위해 권한이 필요합니다.',
         NSMicrophoneUsageDescription: 'Mirror Soul에서 음성 인터뷰를 위해 마이크 접근이 필요합니다.',
-        NSCameraUsageDescription: 'Mirror Soul에서 3D 얼굴 스캔 및 영상통화 중 내 모습을 보여주기 위해 카메라 접근이 필요합니다.',
+        NSCameraUsageDescription: 'Mirror Soul에서 프로필 사진 촬영, 3D 얼굴 스캔 및 영상통화를 위해 카메라 접근이 필요합니다.',
+        NSPhotoLibraryUsageDescription: '공개 프로필에 사용할 사진을 선택하기 위해 사진 접근이 필요합니다.',
       },
       bundleIdentifier: 'com.mirrorsoul64.app',
       privacyManifests: {
@@ -86,6 +87,11 @@ module.exports = {
         },
       ],
       'expo-audio',
+      ['expo-image-picker', {
+        photosPermission: '공개 프로필에 사용할 사진을 선택하기 위해 사진 접근이 필요합니다.',
+        cameraPermission: 'Mirror Soul에서 프로필 사진 촬영, 3D 얼굴 스캔 및 영상통화를 위해 카메라 접근이 필요합니다.',
+        microphonePermission: 'Mirror Soul에서 음성 인터뷰를 위해 마이크 접근이 필요합니다.',
+      }],
       [
         'expo-speech-recognition',
         {
@@ -96,7 +102,7 @@ module.exports = {
       [
         'react-native-vision-camera',
         {
-          cameraPermissionText: 'Mirror Soul에서 3D 얼굴 스캔 및 영상통화 중 내 모습을 보여주기 위해 카메라 접근이 필요합니다.',
+          cameraPermissionText: 'Mirror Soul에서 프로필 사진 촬영, 3D 얼굴 스캔 및 영상통화를 위해 카메라 접근이 필요합니다.',
         },
       ],
       [

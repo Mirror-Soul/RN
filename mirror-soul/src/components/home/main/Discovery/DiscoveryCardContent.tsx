@@ -6,7 +6,7 @@ import { JOB_LABEL } from '@/src/constants/jobLabels';
 import type { Recommendation } from '@/src/types/api/home';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 interface DiscoveryCardContentProps {
@@ -42,6 +42,7 @@ export default function DiscoveryCardContent({
 }: DiscoveryCardContentProps) {
   const { colors } = useThemeColors();
   const [imageFailed, setImageFailed] = useState(false);
+  useEffect(() => { setImageFailed(false); }, [match.profileImageUrl]);
   const [isSummaryTruncated, setIsSummaryTruncated] = useState(false);
   const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
   const isScoreKnown = Number.isFinite(match.recommendationScore);
@@ -62,11 +63,11 @@ export default function DiscoveryCardContent({
       >
         {imageFailed || !match.profileImageUrl ? (
           <LinearGradient colors={Colors.gradient.avatarPlaceholder} style={styles.photo}>
-            <View style={styles.photoFallbackContent} accessible accessibilityLabel="프로필 사진을 준비 중입니다">
+            <View style={styles.photoFallbackContent} accessible accessibilityLabel={match.profileImageUrl ? '사진을 불러올 수 없습니다' : '프로필 사진이 없습니다'}>
               <View style={styles.photoFallbackAvatar}>
                 <Feather name="user" size={30} color={Colors.neutral.pureWhite} />
               </View>
-              <Text style={styles.photoFallbackText}>프로필 사진을 준비 중이에요</Text>
+              <Text style={styles.photoFallbackText}>{match.profileImageUrl ? '사진을 불러올 수 없어요' : '프로필 사진이 없어요'}</Text>
             </View>
           </LinearGradient>
         ) : (

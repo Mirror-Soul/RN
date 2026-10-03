@@ -30,7 +30,7 @@ export default function JobVerificationSection({ state, onChange, onVerify }: Jo
   const handlePickDocument = async () => {
     Alert.alert(
       '직업 인증',
-      '인증 서류를 어떻게 업로드하시겠습니까?',
+      '서류를 촬영하거나 저장된 파일을 선택해 주세요.',
       [
         {
           text: '카메라로 촬영',
@@ -90,7 +90,7 @@ export default function JobVerificationSection({ state, onChange, onVerify }: Jo
       <View style={styles.dropdownWrapper} ref={triggerRef}>
         <StepSelectDropdown
           label=""
-          placeholder={jobCategories.find(j => j.value === state.jobCategory)?.label || "직군을 선택하세요"}
+          placeholder={jobCategories.find(j => j.value === state.jobCategory)?.label || "직군을 선택해 주세요"}
           hasValue={!!state.jobCategory}
           onPress={handleToggle}
           isOpen={isOpen}
@@ -116,7 +116,7 @@ export default function JobVerificationSection({ state, onChange, onVerify }: Jo
           style={[styles.jobTitleInput, { color: colors.text.primary }]}
           value={state.jobTitle}
           onChangeText={(text) => onChange({ jobTitle: text })}
-          placeholder="상세 직무를 입력해주세요 (선택 사항)"
+          placeholder="어떤 일을 하시나요? (선택)"
           placeholderTextColor={colors.text.muted}
           autoCapitalize="none"
         />
@@ -135,12 +135,12 @@ export default function JobVerificationSection({ state, onChange, onVerify }: Jo
             </View>
             <View style={styles.verifyTitleGroup}>
               <Text style={[styles.verifyTitle, { color: colors.text.primary }]}>
-                {state.isJobVerified ? '인증 완료 ✓' : '선택 사항 (권장)'}
+                {state.isJobVerified ? '직업 인증 완료' : '직업 인증 · 선택'}
               </Text>
-              <Text style={[styles.verifySubtitle, { color: colors.text.muted }]}>
+              <Text style={[styles.verifySubtitle, { color: colors.text.secondary }]}>
                 {state.isJobVerified
-                  ? '직업 인증이 완료되었습니다.'
-                  : '3배 더 많은 고품질 매칭을 보장합니다'}
+                  ? '인증 서류가 등록됐어요.'
+                  : '지금은 건너뛰어도 괜찮아요.'}
               </Text>
             </View>
           </View>
@@ -164,10 +164,10 @@ export default function JobVerificationSection({ state, onChange, onVerify }: Jo
           )}
         </View>
 
-        <Text style={[styles.verifyDescription, { color: colors.text.muted }]}>
+        <Text style={[styles.verifyDescription, { color: colors.text.secondary }]}>
           {state.isJobVerified
-            ? '신뢰도와 매칭 품질이 향상되었습니다.'
-            : '재직증명서나 LinkedIn 프로필을 업로드하여 인증하세요. 인증된 프로필은 3배 더 많은 고품질 매칭을 받습니다.'}
+            ? '등록한 서류를 바탕으로 직업 정보를 확인해요.'
+            : '재직증명서 등 직업을 확인할 수 있는 서류를 올려주세요. 인증 없이도 가입을 계속할 수 있어요.'}
         </Text>
       </View>
     </View>
@@ -190,16 +190,17 @@ const styles = StyleSheet.create({
   jobTitleInput: {
     width: '100%',
     padding: 0,
+    minHeight: 44,
     fontFamily: FontFamily.sans,
     fontSize: FontSize.md,
     fontWeight: FontWeight.regular,
   },
   verifyCard: {
     width: '100%',
-    marginTop: 10,
+    marginTop: Spacing.lg,
     padding: Spacing.lg,
     borderRadius: Radii.lg,
-    borderWidth: 0.612,
+    borderWidth: 1,
     gap: Spacing.md,
   },
   verifyHeaderRow: {
@@ -207,8 +208,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     width: '100%',
+    gap: Spacing.md,
   },
   verifyHeaderLeft: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.md,
@@ -222,7 +225,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   verifyTitleGroup: {
+    flex: 1,
     flexDirection: 'column',
+    gap: Spacing.xs,
   },
   verifyTitle: {
     fontFamily: FontFamily.sans,
@@ -233,11 +238,13 @@ const styles = StyleSheet.create({
   },
   verifySubtitle: {
     fontFamily: FontFamily.sans,
-    fontSize: FontSize.sm,
+    fontSize: 13,
     fontWeight: FontWeight.regular,
-    lineHeight: 16,
+    lineHeight: 20,
   },
   verifyButton: {
+    minHeight: 44,
+    flexShrink: 0,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -259,8 +266,8 @@ const styles = StyleSheet.create({
   },
   verifyDescription: {
     fontFamily: FontFamily.sans,
-    fontSize: FontSize.sm,
+    fontSize: FontSize.base,
     fontWeight: FontWeight.regular,
-    lineHeight: 18,
+    lineHeight: 22,
   }
 });

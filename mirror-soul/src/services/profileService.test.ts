@@ -11,7 +11,11 @@ import {
   modifyAlarmSetting,
   modifyNickname,
   updateAudioSettings,
+  modifyProfileImage,
+  deleteProfileImage,
 } from './profileService';
+
+jest.mock('../utils/logger', () => ({ logger: { debug: jest.fn(), info: jest.fn(), error: jest.fn() } }));
 
 // babel-plugin-jest-hoist가 이 호출을 파일 최상단(import보다 위)으로 끌어올려주므로
 // 실행 순서상 문제는 없다 — import/first 린트 규칙과의 충돌을 피하려고 물리적 위치만 아래에 둔다.
@@ -41,6 +45,15 @@ beforeEach(() => {
 });
 
 describe('profileService', () => {
+  it('registers the uploaded key and removes only the profile image', async () => {
+    mockedApiClient.patch.mockResolvedValueOnce(okResponse({ profileImageUrl: 'https://example.com/photo.jpg' }));
+    const response = await modifyProfileImage('profile-images/me/photo.jpg');
+    expect(mockedApiClient.patch).toHaveBeenCalledWith('/my-page/profile-image', { objectKey: 'profile-images/me/photo.jpg' });
+    expect(response.result.profileImageUrl).toBe('https://example.com/photo.jpg');
+    mockedApiClient.delete.mockResolvedValueOnce(okResponse(null));
+    await deleteProfileImage();
+    expect(mockedApiClient.delete).toHaveBeenCalledWith('/my-page/profile-image');
+  });
   it('getMyProfile calls GET /my-page', async () => {
     mockedApiClient.get.mockResolvedValueOnce(okResponse({ name: '김소울', email: 'a@b.com' }));
     const response = await getMyProfile();

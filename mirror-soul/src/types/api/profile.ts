@@ -12,11 +12,24 @@ export type SpeechSpeed = 'SLOW' | 'NORMAL' | 'FAST';
 // GET /my-page
 // ─────────────────────────────────────────────
 export interface MyProfileResult {
-  name: string;
+  name: string | null;
   email: string;
+  profileImageUrl: string | null;
 }
 
 export type MyProfileResponse = ApiResponse<MyProfileResult>;
+
+// ── PATCH /my-page/profile-image ──
+export interface ModifyProfileImageRequest {
+  objectKey: string;
+}
+export interface ModifyProfileImageResult {
+  profileImageUrl: string;
+}
+export type ModifyProfileImageResponse = ApiResponse<ModifyProfileImageResult>;
+
+// ── DELETE /my-page/profile-image ──
+export type DeleteProfileImageResponse = ApiResponse<null>;
 
 // ─────────────────────────────────────────────
 // GET /my-page/profile

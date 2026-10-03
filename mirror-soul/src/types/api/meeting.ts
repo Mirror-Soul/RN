@@ -15,7 +15,7 @@ export interface MeetingRequestItem {
   senderUserUuid: string;
   name: string;
   age: number | null;
-  profileImageUrl: string;
+  profileImageUrl: string | null;
   lastActiveAt: string | null;
   /** CallMatchAnalysis가 COMPLETED 상태로 분석되기 전까지는 아래 3개 필드 전부 비어있다(null/빈 배열). */
   twinSimilarity: number | null;

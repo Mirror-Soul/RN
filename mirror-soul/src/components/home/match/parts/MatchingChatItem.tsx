@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import {Colors, FontFamily, Radii, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
@@ -18,6 +18,7 @@ export default function MatchingChatItem({ data, onPress }: MatchingChatItemProp
   const { colors } = useThemeColors();
   const router = useRouter();
   const [imageFailed, setImageFailed] = useState(false);
+  useEffect(() => { setImageFailed(false); }, [data.partner.profileImageUrl]);
 
   const { partner, lastMessage, unreadCount } = data;
   const isUnread = unreadCount > 0;
