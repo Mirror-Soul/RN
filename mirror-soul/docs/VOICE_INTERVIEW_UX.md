@@ -51,10 +51,10 @@
 
 실제 iOS/Android의 녹음·재생·권한과 작은 화면/큰 글씨/키보드 배치는 기기 확인이 필요하다. Apple Silicon iOS 시뮬레이터와 앱 전체 웹 실행은 저장소에 기록된 native 의존성 제한 때문에 검증 경로로 사용하지 않았다.
 
-기존 개발 앱에서 확인할 때 현재 브랜치의 RN 디렉터리에서 Metro를 실행한다. 이미 다른 작업의 Metro가 실행 중이면 별도 포트를 사용한다.
+기존 개발 앱에서 확인할 때 저장소 루트에서 아래 명령으로 현재 브랜치의 RN 디렉터리에 들어가 Metro를 실행한다. 이미 다른 작업의 Metro가 실행 중이면 별도 포트를 사용한다.
 
 ```bash
-cd /Users/shinwookkang/Developer/mirror-soul-new/mirror-soul
+cd mirror-soul
 npx expo start --dev-client --port 8082
 ```
 
