@@ -1,22 +1,45 @@
 import React, { useState } from 'react';
 import { act, fireEvent, render } from '@testing-library/react-native';
-import { AppState } from 'react-native';
+import { AppState, View } from 'react-native';
 import { setAudioModeAsync } from 'expo-audio';
 import InterviewAnswerBox from './InterviewAnswerBox';
 
 const mockPlayer = { play: jest.fn(), pause: jest.fn(), seekTo: jest.fn() };
+let mockReleased = false;
+let mockReleaseOnUnmount = false;
+const mockFocus: { exit?: () => void } = {};
 jest.mock('@expo/vector-icons', () => ({ Feather: () => null }));
 jest.mock('expo-audio', () => ({
   setAudioModeAsync: jest.fn(),
-  useAudioPlayer: () => mockPlayer,
+  useAudioPlayer: () => {
+    jest.requireActual('react').useEffect(() => () => {
+      if (mockReleaseOnUnmount) mockReleased = true;
+    }, []);
+    return mockPlayer;
+  },
   useAudioPlayerStatus: () => ({ playing: false, didJustFinish: false, duration: 18, currentTime: 0 }),
 }));
 jest.mock('expo-router', () => ({
-  useFocusEffect: (callback: () => () => void) => { jest.requireActual('react').useEffect(callback, [callback]); },
+  useFocusEffect: (callback: () => () => void) => {
+    jest.requireActual('react').useEffect(() => {
+      const exit = callback();
+      mockFocus.exit = exit;
+      return exit;
+    }, [callback]);
+  },
 }));
 jest.mock('@/src/hooks/useThemeColors', () => ({ useThemeColors: () => ({ colors: jest.requireActual('@/src/constants/theme').lightTheme }) }));
 const props = { isRecording: false, isBusy: false, isListening: false, transcript: '내가 말한 답변', recordingUri: 'file:///answer.wav', durationMs: 18000, onChangeText: jest.fn() };
-beforeEach(() => { jest.clearAllMocks(); Object.defineProperty(AppState, 'currentState', { configurable: true, writable: true, value: 'active' }); });
+beforeEach(() => {
+  jest.clearAllMocks();
+  mockReleased = false;
+  mockReleaseOnUnmount = false;
+  (setAudioModeAsync as jest.Mock).mockResolvedValue(undefined);
+  mockPlayer.pause.mockImplementation(() => {
+    if (mockReleased) throw new Error('Unable to find the native shared object associated with given JavaScript object');
+  });
+  Object.defineProperty(AppState, 'currentState', { configurable: true, writable: true, value: 'active' });
+});
 afterEach(() => jest.restoreAllMocks());
 
 it('shows the answer without requiring edit or playback, and editing preserves the spoken content', () => {
@@ -45,6 +68,34 @@ it('keeps live captions optional while recording and shows elapsed time', () => 
 it('shows a rerecording recommendation for an uncertain transcript', () => {
   const screen = render(<InterviewAnswerBox {...props} recognitionIssue="일부 말을 인식하지 못했어요." />);
   expect(screen.getByText('재녹음을 권해요. 내용이 맞다면 확인 후 저장할 수 있어요.')).toBeTruthy();
+});
+
+it.each(['next question', 'record again'])('does not pause a released player when switching to %s', next => {
+  mockReleaseOnUnmount = true;
+  const screen = render(<InterviewAnswerBox {...props} />);
+  mockPlayer.pause.mockClear();
+  expect(() => screen.rerender(next === 'next question' ? <View /> : <InterviewAnswerBox {...props} isRecording />)).not.toThrow();
+  expect(mockReleased).toBe(true);
+  expect(mockPlayer.pause).not.toHaveBeenCalled();
+});
+
+it('still pauses a live player when the interview loses focus', () => {
+  render(<InterviewAnswerBox {...props} />);
+  mockPlayer.pause.mockClear();
+  act(() => { mockFocus.exit?.(); });
+  expect(mockPlayer.pause).toHaveBeenCalledTimes(1);
+});
+
+it('does not play a released recording after delayed audio preparation', async () => {
+  mockReleaseOnUnmount = true;
+  let finish!: () => void;
+  (setAudioModeAsync as jest.Mock).mockImplementation(() => new Promise<void>(resolve => { finish = resolve; }));
+  const screen = render(<InterviewAnswerBox {...props} />);
+  fireEvent.press(screen.getByRole('button', { name: '녹음 듣기' }));
+  screen.rerender(<View />);
+  await act(async () => { finish(); });
+  expect(mockReleased).toBe(true);
+  expect(mockPlayer.play).not.toHaveBeenCalled();
 });
 
 it('does not start delayed playback after the user starts saving', async () => {

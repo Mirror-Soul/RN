@@ -7,17 +7,18 @@ import { uploadFileToS3 } from '@/src/services/s3Service';
 import { saveInterviewAnswer } from '@/src/services/onboardingService';
 import { useAuthStore } from '@/src/store/useAuthStore';
 
-type Answer = { uri: string; questionId: number; answerText: string; userUuid: string };
+type Answer = { recordingId: string; uri: string; questionId: number; answerText: string; userUuid: string };
 export type InterviewSaveStage = 'idle' | 'address' | 'upload' | 'save';
 export function useInterviewUpload() {
   const [stage, setStage] = useState<InterviewSaveStage>('idle');
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const lock = useRef(false);
-  const uploaded = useRef<{ uri: string; questionId: number; userUuid: string; key: string } | null>(null);
+  const uploaded = useRef<{ recordingId: string; uri: string; questionId: number; userUuid: string; key: string } | null>(null);
   const mutation = useMutation({
     retry: false,
     mutationFn: async (answer: Answer) => {
       if (!answer.answerText.trim()) throw new Error('인식된 답변을 확인하거나 다시 녹음해주세요.');
+      if (!answer.recordingId) throw new Error('녹음 정보를 확인하지 못했어요. 다시 녹음해주세요.');
       if (!Number.isInteger(answer.questionId) || answer.questionId <= 0) throw new Error('질문을 다시 불러와주세요.');
       let sessionEnded = false;
       const unsubscribe = useAuthStore.subscribe(state => {
@@ -33,7 +34,7 @@ export function useInterviewUpload() {
         const info = await FileSystem.getInfoAsync(answer.uri);
         if (!info.exists || info.isDirectory || !Number.isFinite(info.size) || info.size <= 0) throw new Error('녹음 파일을 읽지 못했어요. 다시 녹음해주세요.');
         assertSession();
-        if (uploaded.current?.uri !== answer.uri || uploaded.current.questionId !== answer.questionId || uploaded.current.userUuid !== answer.userUuid) {
+        if (uploaded.current?.recordingId !== answer.recordingId || uploaded.current.uri !== answer.uri || uploaded.current.questionId !== answer.questionId || uploaded.current.userUuid !== answer.userUuid) {
           const extension = Platform.OS === 'ios' ? 'wav' : 'm4a';
           const contentType = Platform.OS === 'ios' ? 'audio/wav' : 'audio/mp4';
           setStage('address');
@@ -50,7 +51,7 @@ export function useInterviewUpload() {
           } finally { sending = false; }
           assertSession();
           setUploadProgress(1);
-          uploaded.current = { uri: answer.uri, questionId: answer.questionId, userUuid: answer.userUuid, key: response.result.objectKey };
+          uploaded.current = { recordingId: answer.recordingId, uri: answer.uri, questionId: answer.questionId, userUuid: answer.userUuid, key: response.result.objectKey };
         }
         setStage('save');
         assertSession();

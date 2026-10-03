@@ -8,6 +8,9 @@ const mockStopRecording = jest.fn();
 const mockStartListening = jest.fn();
 const mockStopListening = jest.fn();
 const mockSave = jest.fn();
+let mockSession: { isLoggedIn: boolean; userUuid: string; accessToken?: string } = { isLoggedIn: true, userUuid: 'me' };
+let mockSessionListener: ((state: typeof mockSession) => void) | undefined;
+let mockRecordingSequence = 0;
 const mockFocus: { enter?: () => () => void; exit?: () => void } = {};
 const mockSpeech = {
   startRecording: mockStartRecording, stopRecording: mockStopRecording,
@@ -22,7 +25,8 @@ const mockSTT = {
 jest.mock('./useInterviewSpeech', () => ({ useInterviewSpeech: () => mockSpeech }));
 jest.mock('@/src/hooks/useSTT', () => ({ useSTT: () => mockSTT }));
 jest.mock('./useInterviewUpload', () => ({ useInterviewUpload: () => ({ saveAnswer: mockSave, stage: 'idle', uploadProgress: null }) }));
-jest.mock('@/src/store/useAuthStore', () => ({ useAuthStore: { getState: jest.fn() } }));
+jest.mock('@/src/store/useAuthStore', () => ({ useAuthStore: { getState: jest.fn(), subscribe: jest.fn() } }));
+jest.mock('expo-crypto', () => ({ randomUUID: () => `recording-${++mockRecordingSequence}` }));
 jest.mock('expo-router', () => ({
   useFocusEffect: (callback: () => () => void) => {
     jest.requireActual('react').useEffect(() => {
@@ -42,7 +46,13 @@ async function recorded(result: ReturnType<typeof setup>['result']) {
 beforeEach(() => {
   jest.clearAllMocks();
   Object.defineProperty(AppState, 'currentState', { configurable: true, writable: true, value: 'active' });
-  (useAuthStore.getState as jest.Mock).mockReturnValue({ isLoggedIn: true, userUuid: 'me' });
+  mockRecordingSequence = 0;
+  mockSession = { isLoggedIn: true, userUuid: 'me' };
+  (useAuthStore.getState as jest.Mock).mockImplementation(() => mockSession);
+  (useAuthStore.subscribe as jest.Mock).mockImplementation(listener => {
+    mockSessionListener = listener;
+    return () => { mockSessionListener = undefined; };
+  });
   mockStartRecording.mockResolvedValue(undefined);
   mockStartListening.mockResolvedValue(undefined);
   mockStopRecording.mockResolvedValue({ uri: 'file:///answer.wav', durationMs: 18000 });
@@ -53,6 +63,10 @@ beforeEach(() => {
   onSaved.mockResolvedValue(undefined);
 });
 afterEach(() => jest.restoreAllMocks());
+function changeSession(next: typeof mockSession) {
+  mockSession = next;
+  mockSessionListener?.(next);
+}
 
 it('finishes audio and recognition once, then requires a separate save', async () => {
   const { result } = setup();
@@ -97,10 +111,13 @@ it('recommends recording again on recognition issues but allows confirmed text t
 it('keeps the previous answer if rerecording cannot start', async () => {
   const { result } = setup();
   await recorded(result);
+  const previous = result.current.draft;
   mockStartListening.mockRejectedValueOnce(new Error('인식을 시작하지 못했어요.'));
+  mockStopRecording.mockResolvedValueOnce({ uri: 'file:///failed-replacement.wav', durationMs: 0 });
   await act(async () => { await result.current.beginRecording(); });
   expect(result.current.phase).toBe('review');
   expect(result.current.draft?.uri).toBe('file:///answer.wav');
+  expect(result.current.draft).toEqual(previous);
 });
 
 it('prevents edits and repeated save while the original snapshot is saving', async () => {
@@ -155,4 +172,84 @@ it('advances once on return if the answer finished saving while the screen was a
   expect(onSaved).toHaveBeenCalledTimes(1);
   await act(async () => { mockFocus.enter?.(); });
   expect(onSaved).toHaveBeenCalledTimes(1);
+});
+
+it('assigns a new recording identity only when a replacement take is completed', async () => {
+  const { result } = setup();
+  await recorded(result);
+  const previous = result.current.draft;
+  await act(async () => { await result.current.beginRecording(); });
+  expect(result.current.draft).toEqual(previous);
+  await act(async () => { await result.current.finishRecording(); });
+  expect(result.current.draft?.recordingId).not.toBe(previous?.recordingId);
+});
+
+it('leaves stopping and discards the old draft when the account changes during stop', async () => {
+  let finish!: (audio: { uri: string; durationMs: number }) => void;
+  mockStopRecording.mockImplementationOnce(() => new Promise(resolve => { finish = resolve; }));
+  const { result } = setup();
+  await act(async () => { await result.current.beginRecording(); });
+  let stopping!: Promise<void>;
+  act(() => { stopping = result.current.finishRecording(); });
+  act(() => { changeSession({ isLoggedIn: true, userUuid: 'other' }); });
+  expect(result.current.isBusy).toBe(false);
+  expect(result.current.needsLoginCheck).toBe(true);
+  await act(async () => { finish({ uri: 'file:///old.wav', durationMs: 18000 }); await stopping; });
+  expect(result.current.phase).toBe('ready');
+  expect(result.current.draft).toBeNull();
+  expect(mockSave).not.toHaveBeenCalled();
+});
+
+it.each(['resolve', 'reject'])('leaves saving and ignores a stale upload that will %s', async outcome => {
+  let finish!: () => void;
+  mockSave.mockImplementationOnce(() => new Promise((resolve, reject) => {
+    finish = () => outcome === 'resolve' ? resolve(true) : reject(new Error('old upload'));
+  }));
+  const { result } = setup();
+  await recorded(result);
+  let saving!: Promise<void>;
+  act(() => { saving = result.current.saveAnswer(); });
+  act(() => { changeSession({ isLoggedIn: false, userUuid: '' }); changeSession({ isLoggedIn: true, userUuid: 'me' }); });
+  expect(result.current.isBusy).toBe(false);
+  await act(async () => { finish(); await saving; });
+  expect(result.current.draft).toBeNull();
+  expect(result.current.needsLoginCheck).toBe(true);
+  expect(onSaved).not.toHaveBeenCalled();
+});
+
+it('stops a capture initialized after its session was replaced without starting STT', async () => {
+  let finish!: () => void;
+  mockStartRecording.mockImplementationOnce(() => new Promise<void>(resolve => { finish = resolve; }));
+  const { result } = setup();
+  let starting!: Promise<void>;
+  act(() => { starting = result.current.beginRecording(); });
+  act(() => { changeSession({ isLoggedIn: true, userUuid: 'other' }); });
+  await act(async () => { finish(); await starting; });
+  expect(mockStopRecording).toHaveBeenCalledTimes(1);
+  expect(mockStartListening).not.toHaveBeenCalled();
+  expect(result.current.phase).toBe('ready');
+  expect(result.current.needsLoginCheck).toBe(true);
+});
+
+it('does not interrupt recording when the same account refreshes its token', async () => {
+  const { result } = setup();
+  await act(async () => { await result.current.beginRecording(); });
+  act(() => { changeSession({ ...mockSession, accessToken: 'refreshed-token' }); });
+  expect(result.current.phase).toBe('recording');
+  expect(mockStopRecording).not.toHaveBeenCalled();
+  await act(async () => { await result.current.finishRecording(); await result.current.saveAnswer(); });
+  expect(onSaved).toHaveBeenCalledTimes(1);
+});
+
+it('stops both capture engines and blocks saving when the account changes during recording', async () => {
+  const { result } = setup();
+  await act(async () => { await result.current.beginRecording(); });
+  await act(async () => { changeSession({ isLoggedIn: true, userUuid: 'other' }); });
+  expect(mockStopListening).toHaveBeenCalledTimes(1);
+  expect(mockStopRecording).toHaveBeenCalledTimes(1);
+  expect(result.current.phase).toBe('ready');
+  expect(result.current.needsLoginCheck).toBe(true);
+  expect(result.current.draft).toBeNull();
+  await act(async () => { await result.current.saveAnswer(); });
+  expect(mockSave).not.toHaveBeenCalled();
 });

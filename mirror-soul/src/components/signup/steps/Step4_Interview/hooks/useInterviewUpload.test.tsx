@@ -13,7 +13,7 @@ jest.mock('@/src/services/fileService', () => ({ getPresignedUrl: jest.fn() }));
 jest.mock('@/src/services/s3Service', () => ({ uploadFileToS3: jest.fn() }));
 jest.mock('@/src/services/onboardingService', () => ({ saveInterviewAnswer: jest.fn() }));
 jest.mock('@/src/store/useAuthStore', () => ({ useAuthStore: { getState: jest.fn(), subscribe: jest.fn() } }));
-const answer = { uri: 'file:///answer.wav', questionId: 17, userUuid: 'me', answerText: '의견을 듣고 제 생각을 말해요. 감정적으로 말하지 않으려고요.' };
+const answer = { recordingId: 'take-1', uri: 'file:///answer.wav', questionId: 17, userUuid: 'me', answerText: '의견을 듣고 제 생각을 말해요. 감정적으로 말하지 않으려고요.' };
 let client: QueryClient;
 function setup() {
   client = new QueryClient({ defaultOptions: { mutations: { retry: false, gcTime: Infinity } } });
@@ -78,4 +78,16 @@ it('never registers the old user recording after the account changes during PUT'
   const { result } = setup();
   await act(async () => { await expect(result.current.saveAnswer(answer)).rejects.toThrow('로그인'); });
   expect(saveInterviewAnswer).not.toHaveBeenCalled();
+});
+
+it('uploads a new take after a registration failure even if its file path was reused', async () => {
+  (saveInterviewAnswer as jest.Mock).mockRejectedValueOnce(new Error('timeout'));
+  const { result } = setup();
+  await act(async () => { await expect(result.current.saveAnswer(answer)).rejects.toThrow('timeout'); });
+  (FileSystem.getInfoAsync as jest.Mock).mockResolvedValue({ exists: true, size: 20000 });
+  (getPresignedUrl as jest.Mock).mockResolvedValue({ isSuccess: true, result: { presignedUrl: 'signed-new', objectKey: 'interviews/me/new.wav' } });
+  await act(async () => { await result.current.saveAnswer({ ...answer, recordingId: 'take-2', answerText: '다시 녹음한 답변' }); });
+  expect(uploadFileToS3).toHaveBeenCalledTimes(2);
+  expect(uploadFileToS3).toHaveBeenLastCalledWith('signed-new', answer.uri, 'audio/wav', expect.any(Function));
+  expect(saveInterviewAnswer).toHaveBeenLastCalledWith({ interviewId: 17, answerAudioObjectKey: 'interviews/me/new.wav', answerText: '다시 녹음한 답변' });
 });

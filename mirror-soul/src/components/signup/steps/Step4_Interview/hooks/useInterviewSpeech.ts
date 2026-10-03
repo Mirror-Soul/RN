@@ -48,8 +48,14 @@ export function useInterviewSpeech() {
     if (!await readPermission()) throw new Error('녹음하려면 마이크와 음성 인식 권한이 필요해요.');
     await setAudioModeAsync({ playsInSilentMode: true, allowsRecording: true });
     setRecordingError(null);
-    await audioRecorder.prepareToRecordAsync();
-    audioRecorder.record();
+    // Explicit options create a fresh iOS recorder URL instead of overwriting the previous take.
+    await audioRecorder.prepareToRecordAsync(RECORDING_OPTIONS);
+    try { audioRecorder.record(); }
+    catch (failure) {
+      // Android keeps the prepared recorder until stop(), even when record() fails.
+      try { await audioRecorder.stop(); } catch { /* Preserve the original start failure. */ }
+      throw failure;
+    }
   }, [audioRecorder, readPermission]);
 
   const stopRecording = useCallback(async () => {

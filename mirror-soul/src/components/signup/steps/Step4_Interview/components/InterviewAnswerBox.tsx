@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Feather } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
@@ -69,30 +69,37 @@ function RecordingPlayback({ uri, disabled }: { uri: string; disabled: boolean }
   const { colors } = useThemeColors();
   const player = useAudioPlayer(uri);
   const status = useAudioPlayerStatus(player);
+  const lifecycle = useMemo(() => ({ player, mounted: false, focused: false }), [player]);
   const lock = useRef(false);
-  const alive = useRef(true);
   const disabledRef = useRef(disabled);
   disabledRef.current = disabled;
+  useLayoutEffect(() => {
+    lifecycle.mounted = true;
+    // useAudioPlayer releases its native object in passive cleanup. Mark it inactive first.
+    return () => { lifecycle.mounted = false; lifecycle.focused = false; };
+  }, [lifecycle]);
+  const pauseIfMounted = useCallback(() => {
+    if (lifecycle.mounted) lifecycle.player.pause();
+  }, [lifecycle]);
   useEffect(() => {
-    alive.current = true;
-    const subscription = AppState.addEventListener('change', next => { if (next !== 'active') player.pause(); });
-    return () => { alive.current = false; subscription.remove(); };
-  }, [player]);
+    const subscription = AppState.addEventListener('change', next => { if (next !== 'active') pauseIfMounted(); });
+    return () => subscription.remove();
+  }, [pauseIfMounted]);
   useFocusEffect(useCallback(() => {
-    alive.current = true;
-    return () => { alive.current = false; player.pause(); };
-  }, [player]));
-  useEffect(() => { if (disabled) player.pause(); }, [disabled, player]);
+    lifecycle.focused = true;
+    return () => { lifecycle.focused = false; pauseIfMounted(); };
+  }, [lifecycle, pauseIfMounted]));
+  useEffect(() => { if (disabled) pauseIfMounted(); }, [disabled, pauseIfMounted]);
   const toggle = async () => {
-    if (lock.current || disabled) return;
+    if (lock.current || disabled || !lifecycle.mounted || !lifecycle.focused) return;
     lock.current = true;
     try {
-      if (status.playing) { player.pause(); return; }
+      if (status.playing) { pauseIfMounted(); return; }
       await setAudioModeAsync({ playsInSilentMode: true, allowsRecording: false });
-      if (!alive.current || disabledRef.current || AppState.currentState !== 'active') return;
+      if (!lifecycle.mounted || !lifecycle.focused || disabledRef.current || AppState.currentState !== 'active') return;
       if (status.didJustFinish || (status.duration > 0 && status.currentTime >= status.duration)) await player.seekTo(0);
-      if (alive.current && !disabledRef.current && AppState.currentState === 'active') player.play();
-    } catch { Alert.alert('녹음을 재생하지 못했어요', '잠시 후 다시 눌러주세요.'); }
+      if (lifecycle.mounted && lifecycle.focused && !disabledRef.current && AppState.currentState === 'active') player.play();
+    } catch { if (lifecycle.mounted && lifecycle.focused) Alert.alert('녹음을 재생하지 못했어요', '잠시 후 다시 눌러주세요.'); }
     finally { lock.current = false; }
   };
   return <Pressable accessibilityRole="button" accessibilityState={{ disabled }} accessibilityLabel={status.playing ? '녹음 일시정지' : '녹음 듣기'} disabled={disabled} onPress={() => void toggle()} style={styles.action}>

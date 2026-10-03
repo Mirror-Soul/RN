@@ -29,6 +29,14 @@ export default function VoiceUpdateScreen() {
   const [elapsed, setElapsed] = useState(0);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const lock = useRef(false);
+  const mounted = useRef(true);
+  const operation = useRef(0);
+  const statusRef = useRef<VoiceUpdateStatus>('idle');
+  const transition = (next: VoiceUpdateStatus) => {
+    statusRef.current = next;
+    if (mounted.current) setStatus(next);
+  };
 
   const sentenceQuery = useVoiceTrainingSentenceQuery();
   const voiceRecording = useVoiceRecording();
@@ -57,90 +65,95 @@ export default function VoiceUpdateScreen() {
   }, [sentenceQuery.isError]);
 
   const handlePress = () => {
-    if (status === 'idle') startRecording();
-    else if (status === 'recording') stopRecording();
+    if (statusRef.current === 'idle') void startRecording();
+    else if (statusRef.current === 'recording') void stopRecording();
   };
 
   const startRecording = async () => {
-    if (!sentenceQuery.data) return; // 문장 로딩 전에는 시작 불가
-
+    if (lock.current || statusRef.current !== 'idle' || !sentenceQuery.data || isInCooldown || twinSyncQuery.isPending || twinSyncQuery.isError) return;
+    lock.current = true;
+    const attempt = ++operation.current;
+    let audioStarted = false;
+    transition('starting');
     try {
       setElapsed(0);
 
       if (!voiceRecording.hasPermission) {
         const granted = await voiceRecording.requestPermission();
+        if (!mounted.current || attempt !== operation.current) return;
         if (!granted) {
+          transition('idle');
           Alert.alert('마이크 권한 필요', '설정에서 마이크 권한을 허용해주세요.');
           return;
         }
       }
 
       await voiceRecording.startRecording();
+      audioStarted = true;
+      if (!mounted.current || attempt !== operation.current) throw new Error('녹음 화면을 벗어났어요.');
       await startListening();
-      setStatus('recording');
+      if (!mounted.current || attempt !== operation.current) throw new Error('녹음 화면을 벗어났어요.');
+      transition('recording');
 
       timerRef.current = setInterval(() => {
         setElapsed((prev) => prev + 0.1);
       }, 100);
     } catch (error) {
+      if (audioStarted) await Promise.allSettled([stopListening(), voiceRecording.stopRecording()]);
+      if (!mounted.current || attempt !== operation.current) return;
       logger.error('녹음 시작 실패:', error);
-      setStatus('idle');
+      transition('idle');
       Alert.alert('녹음을 시작하지 못했습니다', '잠시 후 다시 시도해주세요.');
-    }
+    } finally { if (attempt === operation.current) lock.current = false; }
   };
 
   const stopRecording = async () => {
+    if (lock.current || statusRef.current !== 'recording') return;
+    lock.current = true;
+    const attempt = ++operation.current;
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
-    setStatus('analyzing');
-
-    const [finalTranscript, recordingResult] = await Promise.all([
-      stopListening(),
-      voiceRecording.stopRecording(),
-    ]);
-
-    if (!finalTranscript.trim() || !recordingResult.uri) {
-      setStatus('idle');
-      Alert.alert('알림', '인식된 목소리가 없습니다.\n다시 시도해 주세요.');
-      return;
-    }
-
-    if (!sentenceQuery.data) {
-      setStatus('idle');
-      Alert.alert('알림', '문장 정보를 불러오지 못했습니다.\n다시 시도해 주세요.');
-      return;
-    }
-
+    transition('analyzing');
+    let registering = false;
     try {
+      const [textResult, audioResult] = await Promise.allSettled([stopListening(), voiceRecording.stopRecording()]);
+      if (!mounted.current || attempt !== operation.current) return;
+      if (textResult.status === 'rejected' || audioResult.status === 'rejected') throw new Error('녹음을 마무리하지 못했어요. 다시 녹음해주세요.');
+      const finalTranscript = textResult.value;
+      const recordingResult = audioResult.value;
+      if (!finalTranscript.trim() || !recordingResult.uri) throw new Error('인식된 목소리가 없습니다. 다시 녹음해주세요.');
+      if (!sentenceQuery.data) throw new Error('문장 정보를 불러오지 못했습니다. 다시 시도해주세요.');
+      registering = true;
       await completeMutation.mutateAsync({
         sentenceId: sentenceQuery.data.sentenceId,
         recordingUri: recordingResult.uri,
         durationSeconds: recordingResult.durationSeconds,
       });
-      setStatus('done');
+      if (mounted.current && attempt === operation.current) transition('done');
     } catch (error) {
-      setStatus('idle');
-      Alert.alert('학습 저장 실패', getErrorDisplayMessage(error, '잠시 후 다시 시도해주세요.'));
-    }
+      if (!mounted.current || attempt !== operation.current) return;
+      transition('idle');
+      Alert.alert(registering ? '학습 저장 실패' : '녹음을 마무리하지 못했어요', getErrorDisplayMessage(error, '다시 녹음해주세요.'));
+    } finally { if (attempt === operation.current) lock.current = false; }
   };
 
   const handleRetry = () => {
-    setStatus('idle');
+    if (lock.current) return;
+    transition('idle');
     setElapsed(0);
     resetTranscript();
     completeMutation.reset();
     sentenceQuery.refetch();
   };
 
-  // 컴포넌트 언마운트 시 타이머 정리.
-  // stopListening은 isListening/transcript가 바뀔 때마다(녹음 중 거의 매 순간) 참조가
-  // 바뀌는 콜백이라, 의존성 배열에 넣으면 언마운트가 아니라 녹음 중 자막이 갱신될 때마다
-  // cleanup이 재실행되어 네이티브 STT의 stop()이 반복 호출된다. STT 쪽 정리는 useSTT
-  // 내부의 자체 언마운트 effect가 이미 담당하므로 여기서는 타이머만 정리한다.
+  // Native resources are owned by their hooks. Ignore pending work after this screen is removed.
   useEffect(() => {
+    mounted.current = true;
     return () => {
+      mounted.current = false;
+      operation.current += 1;
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, []);

@@ -78,3 +78,18 @@ it('times out safely and refuses a new session while native stop is still pendin
   await act(async () => { await expect(result.current.startListening()).rejects.toThrow('정리하고'); });
   expect(ExpoSpeechRecognitionModule.start).toHaveBeenCalledTimes(1);
 });
+
+it.each([false, true])('clears listening state and retains partial words if stop throws (abort throws: %s)', async abortThrows => {
+  const { result } = renderHook(() => useSTT());
+  await act(async () => { await result.current.startListening(); });
+  act(() => { mockListeners.start(); mockListeners.result(resultEvent('내가 말한 내용', false)); });
+  (ExpoSpeechRecognitionModule.stop as jest.Mock).mockImplementationOnce(() => { throw new Error('native stop failed'); });
+  if (abortThrows) (ExpoSpeechRecognitionModule.abort as jest.Mock).mockImplementationOnce(() => { throw new Error('native already stopped'); });
+  await act(async () => { await expect(result.current.stopListening()).resolves.toBe('내가 말한 내용'); });
+  expect(result.current.isListening).toBe(false);
+  expect(result.current.recognitionEnded).toBe(true);
+  expect(result.current.recognitionIssue).toContain('마무리하지');
+  expect(ExpoSpeechRecognitionModule.abort).toHaveBeenCalledTimes(1);
+  act(() => { mockListeners.result(resultEvent('늦은 결과')); mockListeners.end(); });
+  expect(result.current.transcript).toBe('내가 말한 내용');
+});

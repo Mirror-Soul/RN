@@ -39,6 +39,17 @@ export function useSTT(lang: SupportedLanguage = 'ko-KR') {
     resolver.current = null;
     pending.current = null;
   }, []);
+  const abortRecognition = useCallback((message: string) => {
+    active.current = false;
+    if (mounted.current) {
+      setIsListening(false);
+      setRecognitionEnded(true);
+      reportIssue(message);
+    }
+    try { ExpoSpeechRecognitionModule.abort(); }
+    catch { /* The native recognizer may already have stopped. */ }
+    finally { settle(); }
+  }, [reportIssue, settle]);
 
   useSpeechRecognitionEvent('start', () => {
     if (active.current && mounted.current) setIsListening(true);
@@ -102,24 +113,14 @@ export function useSTT(lang: SupportedLanguage = 'ko-KR') {
     const promise = new Promise<string>(resolve => { resolver.current = () => resolve(readText()); });
     pending.current = promise;
     timeout.current = setTimeout(() => {
-      active.current = false;
-      if (mounted.current) {
-        setIsListening(false);
-        reportIssue('답변의 끝부분을 인식하지 못했을 수 있어요. 내용을 확인해주세요.');
-        setRecognitionEnded(true);
-      }
-      try { ExpoSpeechRecognitionModule.abort(); }
-      catch { /* The native recognizer may already have stopped. */ }
-      finally { settle(); }
+      abortRecognition('답변의 끝부분을 인식하지 못했을 수 있어요. 내용을 확인해주세요.');
     }, STOP_TIMEOUT_MS);
     try { ExpoSpeechRecognitionModule.stop(); }
     catch {
-      active.current = false;
-      if (mounted.current) reportIssue('음성 인식을 마무리하지 못했어요. 내용을 확인해주세요.');
-      settle();
+      abortRecognition('음성 인식을 마무리하지 못했어요. 내용을 확인해주세요.');
     }
     return promise;
-  }, [readText, reportIssue, settle]);
+  }, [abortRecognition, readText]);
 
   const resetTranscript = useCallback(() => {
     if (active.current) return;
