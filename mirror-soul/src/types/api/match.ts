@@ -1,11 +1,10 @@
 import { ApiResponse } from './common';
+import type { CallMediaType } from './call';
 
 /**
  * 매칭(Match) 도메인 API 타입 정의
  * 백엔드 MatchController(`/match`) 기준
  */
-
-export type CallMediaType = 'VOICE' | 'VIDEO';
 
 // ─────────────────────────────────────────────
 // GET /match/twins

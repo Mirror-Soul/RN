@@ -4,18 +4,21 @@ import { ApiResponse } from './common';
  * 통화(Call) 도메인 API 타입 정의
  */
 
+/** 백엔드의 CallMediaType enum과 일치해야 하는 통화 매체 타입. */
+export type CallMediaType = 'VOICE' | 'VIDEO';
+
 // ─────────────────────────────────────────────
 // POST /calls/clones/{clone-user-uuid}
 // ─────────────────────────────────────────────
 export interface InitiateCallRequest {
   /** 호출자는 Bearer 토큰에서 서버가 식별한다. */
-  mediaType: 'VOICE';
+  mediaType: CallMediaType;
 }
 
 export interface InitiateCallResult {
   callId: number;
   roomId: string;
-  mediaType: 'VOICE';
+  mediaType: CallMediaType;
   status: string;
   callerSignalId: string;
   aiSignalId: string;

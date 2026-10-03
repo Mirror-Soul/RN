@@ -11,10 +11,12 @@ import { logger } from '../utils/logger';
 import { queryClient } from '../services/queryClient';
 import { getErrorDisplayMessage } from '../utils/apiErrorCode';
 import type { SignalingMessage, AnswerData, IceData, OfferData, CallRejectData, SignalingErrorData } from '../types/signaling';
-import type { EndCallResult } from '../types/api/call';
+import type { CallMediaType, EndCallResult } from '../types/api/call';
 
 const WS_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL?.replace('https://', 'wss://').replace('http://', 'ws://');
 const INVITE_TIMEOUT_MS = 10000; // 10초 AI 응답 대기
+// 사용자의 카메라 전송 없이, AI가 생성한 Ditto 비디오 트랙만 수신하는 영상 통화다.
+const AI_TWIN_CALL_MEDIA_TYPE: CallMediaType = 'VIDEO';
 
 export type CallStatus =
   | 'idle'        // 대기
@@ -34,7 +36,7 @@ export type CompletedCall = EndCallResult;
  *
  * 외부로 노출되는 인터페이스:
  * - callStatus: 현재 통화 단계
- * - remoteStream: AI 트윈 음성 스트림
+ * - remoteStream: AI 트윈 오디오·비디오 스트림
  * - startCall(): 통화 시작
  * - hangUp(): 통화 종료
  * - error: 에러 메시지
@@ -71,6 +73,7 @@ export function useAICallFlow(targetUserUuid?: string) {
     roomId: string;
     callerSignalId: string;
     aiSignalId: string;
+    mediaType: CallMediaType;
   } | null>(null);
 
   // WebSocket 단일 인스턴스 (Ref로 관리하여 re-render 시 중복 생성 방지)
@@ -163,7 +166,7 @@ export function useAICallFlow(targetUserUuid?: string) {
       // 기본 라우팅은 OS/InCallManager 자동 선택에 맡긴다. 이 경로는 유선·블루투스
       // 기기가 연결됐을 때 해당 장치로 오디오를 보내며, 스피커는 아래 토글로 사용자가
       // 명시적으로 선택했을 때만 강제한다.
-      InCallManager.start({ media: 'audio', auto: true });
+      InCallManager.start({ media: session.mediaType === 'VIDEO' ? 'video' : 'audio', auto: true });
 
       setCallInProgress(session.callId).catch((err) => {
         logger.error('[useAICallFlow] setCallInProgress failed:', err);
@@ -282,12 +285,15 @@ export function useAICallFlow(targetUserUuid?: string) {
         logger.info('[useAICallFlow] JOINED received. Sending CALL_INVITE...');
         setCallStatus('inviting');
 
+        // 백엔드 시그널링 검증(Backend #185)은 CALL_INVITE.data에 callId만 허용한다 — 필드가 하나라도
+        // 더 있으면 SIGNALING_ERROR(INVALID_MESSAGE)로 거부된다. 클론·mediaType은 AI 서버가 callId로
+        // 백엔드 내부 API에서 직접 조회하므로 여기서 보내지 않는다.
         sendMessage({
           type: 'CALL_INVITE',
           roomId: session.roomId,
           from: session.callerSignalId,
           to: session.aiSignalId,
-          data: { callId: session.callId, cloneUserUuid: calleeUuid, mediaType: 'VOICE' },
+          data: { callId: session.callId },
         });
 
         inviteTimeoutRef.current = setTimeout(() => {
@@ -414,7 +420,7 @@ export function useAICallFlow(targetUserUuid?: string) {
       default:
         logger.debug('[useAICallFlow] Unhandled message type:', msg.type);
     }
-  }, [createOffer, createAnswer, applyAnswer, applyOffer, applyIceCandidate, sendMessage, calleeUuid]);
+  }, [createOffer, createAnswer, applyAnswer, applyOffer, applyIceCandidate, sendMessage]);
 
   // ─────────────────────────────────────────────
   // 내부 정리 함수
@@ -569,7 +575,7 @@ export function useAICallFlow(targetUserUuid?: string) {
       // 통화방을 정리(보상 종료)할 방법이 없어진다.
       const [initiateResult, webrtcResult] = await Promise.allSettled([
         initiateCall(calleeUuid, {
-          mediaType: 'VOICE',
+          mediaType: AI_TWIN_CALL_MEDIA_TYPE,
         }),
         initWebRTC(),
       ]);
@@ -580,7 +586,7 @@ export function useAICallFlow(targetUserUuid?: string) {
       const response = initiateResult.value;
       if (!response.isSuccess) throw new Error(response.message);
 
-      const { callId, roomId, callerSignalId, aiSignalId } = response.result;
+      const { callId, roomId, callerSignalId, aiSignalId, mediaType } = response.result;
 
       // 이 시도가 REST/WebRTC 초기화를 기다리는 동안 사용자가 취소했거나(hangUp) 화면이
       // 언마운트됐다면(_cleanup이 attemptId를 무효화) 서버엔 이미 방이 생겼으니 로컬 연결을
@@ -601,7 +607,7 @@ export function useAICallFlow(targetUserUuid?: string) {
         return;
       }
 
-      callSessionRef.current = { callId, roomId, callerSignalId, aiSignalId };
+      callSessionRef.current = { callId, roomId, callerSignalId, aiSignalId, mediaType };
 
       if (webrtcResult.status === 'rejected') {
         // REST 세션은 이미 만들어졌으니 로컬 정리만으론 부족하다 — catch 블록에서
