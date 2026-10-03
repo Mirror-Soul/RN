@@ -44,7 +44,7 @@ export default function JobVerificationSection({ state, onChange, onVerify }: Pr
       Alert.alert('서류를 선택하지 못했어요', getErrorDisplayMessage(error, '잠시 후 다시 시도해주세요.'));
     } finally { pickingLock.current = false; setPicking(false); }
   };
-  const chooseSource = () => Alert.alert('직업 확인 서류 추가', '서류를 촬영하거나 저장된 파일을 선택해주세요.', [
+  const chooseSource = () => Alert.alert('직업 확인 서류 추가', '주민등록번호·주소·급여 등 불필요한 정보는 가려주세요. 가린 서류를 촬영하거나 사진·PDF 파일을 선택해주세요.', [
     { text: '카메라로 촬영', onPress: () => void pick('camera') },
     { text: '파일에서 선택', onPress: () => void pick('file') },
     { text: '취소', style: 'cancel' },
@@ -70,6 +70,23 @@ export default function JobVerificationSection({ state, onChange, onVerify }: Pr
       </Pressable>
       {detailsVisible && <View style={styles.details}>
         <Text style={[styles.copy, { color: colors.text.secondary }]}>{state.isJobVerified ? '서류를 올렸어요. 프로필을 저장하면 함께 등록돼요. 다른 직군으로 바꾸면 다시 추가해주세요.' : '재직증명서 등 직업을 확인할 수 있는 사진이나 PDF를 추가해주세요.'}</Text>
+        <View style={[styles.guidance, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
+          <View style={styles.guidanceRow}>
+            <Feather name="file-text" size={17} color={colors.text.secondary} style={styles.guidanceIcon} />
+            <View style={styles.guidanceCopy}>
+              <Text style={[styles.title, { color: colors.text.primary }]}>상대에게는 ‘서류 제출’로 보여요</Text>
+              <Text style={[styles.copy, { color: colors.text.secondary }]}>프로필을 저장하면 표시돼요. 서류 사진이나 파일은 상대방 프로필에 노출되지 않아요.</Text>
+            </View>
+          </View>
+          <View style={styles.guidanceRow}>
+            <Feather name="clock" size={17} color={colors.text.secondary} style={styles.guidanceIcon} />
+            <View style={styles.guidanceCopy}>
+              <Text style={[styles.title, { color: colors.text.primary }]}>담당자가 직접 확인해요</Text>
+              <Text style={[styles.copy, { color: colors.text.secondary }]}>확인에는 시간이 걸릴 수 있어요. 서류 제출만으로 직업 인증이 완료되지는 않아요.</Text>
+            </View>
+          </View>
+        </View>
+        {!state.isJobVerified && <Text style={[styles.copy, { color: colors.text.secondary }]}>주민등록번호·주소·급여 등 직업 확인에 필요 없는 정보는 가린 뒤 추가해주세요.</Text>}
         {!state.isJobVerified && <Pressable accessibilityRole="button" accessibilityState={{ disabled: blocked, busy: blocked }} disabled={blocked} onPress={chooseSource}
           style={[styles.addButton, { borderColor: colors.brand.accent }]}>
           {blocked ? <ActivityIndicator size="small" color={colors.brand.accent} /> : <Feather name="upload" size={17} color={colors.brand.accent} />}
@@ -88,5 +105,9 @@ const styles = StyleSheet.create({
   title: { fontFamily: FontFamily.sans, fontSize: FontSize.base, fontWeight: FontWeight.medium, lineHeight: 22 },
   copy: { fontFamily: FontFamily.sans, fontSize: FontSize.base, lineHeight: 22 },
   details: { gap: Spacing.md, marginTop: Spacing.md },
+  guidance: { padding: Spacing.md, gap: Spacing.md, borderWidth: 1, borderRadius: Radii.md },
+  guidanceRow: { flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.sm },
+  guidanceIcon: { marginTop: 3 },
+  guidanceCopy: { flex: 1, gap: Spacing.xs },
   addButton: { minHeight: 44, padding: Spacing.sm, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: Spacing.sm, borderWidth: 1, borderRadius: Radii.md },
 });
