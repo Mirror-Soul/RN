@@ -1,6 +1,7 @@
 import * as FileSystem from 'expo-file-system/legacy';
 
 const UPLOAD_TIMEOUT_MS = 60000;
+export interface UploadProgress { bytesSent: number; totalBytes: number }
 
 /**
  * S3Service
@@ -19,7 +20,8 @@ const UPLOAD_TIMEOUT_MS = 60000;
 export const uploadFileToS3 = async (
   presignedUrl: string,
   fileUri: string,
-  contentType: string
+  contentType: string,
+  onProgress?: (progress: UploadProgress) => void
 ): Promise<void> => {
   const uploadTask = FileSystem.createUploadTask(presignedUrl, fileUri, {
     httpMethod: 'PUT',
@@ -27,7 +29,7 @@ export const uploadFileToS3 = async (
     headers: {
       'Content-Type': contentType,
     },
-  });
+  }, onProgress ? progress => onProgress({ bytesSent: progress.totalBytesSent, totalBytes: progress.totalBytesExpectedToSend }) : undefined);
 
   let timedOut = false;
   const timeoutId = setTimeout(() => {

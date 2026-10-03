@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Image, Text, View, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
@@ -26,6 +26,8 @@ export default function CallDetailHeaderLeft({
   description,
   callNumber,
 }: CallDetailHeaderLeftProps) {
+  const [failed, setFailed] = useState(false);
+  useEffect(() => { setFailed(false); }, [profileImageUrl]);
   const { colors } = useThemeColors();
   const hasCallNumber = callNumber != null;
   // name[0]은 빈 문자열이면 undefined, 이모지 등 서로게이트 페어로 시작하면 깨진 문자를 반환한다 —
@@ -35,8 +37,8 @@ export default function CallDetailHeaderLeft({
   return (
     <View style={styles.container}>
       <View style={styles.avatarWrapper}>
-        {profileImageUrl ? (
-          <Image source={{ uri: profileImageUrl }} style={styles.avatar} accessible={false} />
+        {profileImageUrl && !failed ? (
+          <Image source={{ uri: profileImageUrl }} style={styles.avatar} accessible={false} onError={() => setFailed(true)} />
         ) : (
           <LinearGradient
             colors={Colors.gradient.twinCallButton}

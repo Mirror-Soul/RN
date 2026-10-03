@@ -10,7 +10,7 @@ export type ChatMessageType = 'TEXT';
 export interface ChatPartner {
   userUuid: string;
   name: string;
-  profileImageUrl: string;
+  profileImageUrl: string | null;
   age: number | null;
   twinSimilarity: number | null;
   lastActiveAt: string | null;

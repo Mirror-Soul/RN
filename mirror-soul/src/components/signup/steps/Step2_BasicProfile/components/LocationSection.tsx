@@ -39,7 +39,7 @@ export default function LocationSection({ state, onChange, sigunguCache, eupmyeo
           placeholder={
             state.sidoName
               ? `${state.sidoName} ${state.sigunguName} ${state.eupmyeondongName}`
-              : "거주 중인 지역을 선택하세요"
+              : "살고 있는 지역을 선택해 주세요"
           }
           hasValue={!!state.sidoName}
           onPress={handleToggle}

@@ -5,7 +5,7 @@ import { ApiResponse } from './common';
  */
 
 /** 백엔드 FileService의 UploadDirectory 허용값과 일치해야 한다. */
-export type FileType = 'interviews' | 'face-videos' | 'job-certifications' | 'voice-updates';
+export type FileType = 'interviews' | 'face-videos' | 'job-certifications' | 'voice-updates' | 'profile-images';
 
 // ─────────────────────────────────────────────
 // POST /files/presigned-url

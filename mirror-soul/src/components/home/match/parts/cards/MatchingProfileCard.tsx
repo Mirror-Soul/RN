@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import {Colors, FontFamily, Radii, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -20,6 +20,7 @@ interface MatchingProfileCardProps {
 export default function MatchingProfileCard({ data, index, scrollX, itemWidth }: MatchingProfileCardProps) {
   const { colors } = useThemeColors();
   const [imageFailed, setImageFailed] = useState(false);
+  useEffect(() => { setImageFailed(false); }, [data.profileImageUrl]);
 
   // 중앙화된 애니메이션 훅 사용 (로직 깔끔하게 분리)
   const { animatedStyle } = useCarousel({ scrollX, index, itemWidth });
@@ -88,7 +89,7 @@ export default function MatchingProfileCard({ data, index, scrollX, itemWidth }:
             <Text style={[styles.sectionTitle, { color: colors.text.muted }]}>초대 메시지</Text>
           </View>
           <Text style={[styles.italicMessage, { color: colors.text.primary }]}>
-            "{data.message}"
+            “{data.message}”
           </Text>
 
           {isAnalysisReady && data.summaryPoints.length > 0 && (
@@ -111,7 +112,7 @@ export default function MatchingProfileCard({ data, index, scrollX, itemWidth }:
           <View style={[styles.infoBox, { borderColor: colors.border.primary, backgroundColor: colors.background.glass }]}>
             <Ionicons name="information-circle-outline" size={16} color={Colors.primary.electricCyan} style={{ marginTop: Spacing.xxs }} />
             <Text style={[styles.infoText, { color: colors.text.secondary }]}>
-              'Twin Call'을 통해 상대방의 디지털 트윈(AI)과 미리 대화하며 서로의 가치관을 확인할 수 있습니다.
+              ‘Twin Call’을 통해 상대방의 디지털 트윈(AI)과 미리 대화하며 서로의 가치관을 확인할 수 있습니다.
             </Text>
           </View>
         </View>

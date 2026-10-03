@@ -8,7 +8,7 @@ import { formatDurationLabel } from '@/src/utils/formatCallTime';
 import { jobCategories } from '@/src/components/signup/steps/Step2_BasicProfile/Professional/jobData';
 import { MBTI_AXES } from './mbtiAxes';
 import { getMockRecommendationDetail, isMockRecommendationUuid } from './mockRecommendations';
-import type { Recommendation, VoicePreview } from '@/src/types/api/home';
+import type { Recommendation, RecommendationDetailResult, VoicePreview } from '@/src/types/api/home';
 import { BlurView } from 'expo-blur';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -23,7 +23,6 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  useWindowDimensions,
   View,
 } from 'react-native';
 import ReAnimated, { FadeInUp } from 'react-native-reanimated';
@@ -35,6 +34,11 @@ interface PartnerProfileModalProps {
   /** 닫힘 애니메이션 완료 뒤 호출 — 다음 native Modal을 이어 열 때 전환 겹침을 막는다. */
   onDismiss?: () => void;
   onConnectNow?: (match: Recommendation) => void;
+  /** 본인 데이터로 공개 레이아웃만 보여준다. 추천 API 조회/통화 버튼은 제공하지 않는다. */
+  previewDetail?: RecommendationDetailResult;
+  ownPreview?: boolean;
+  /** 이미 열린 미리보기 Modal 안에서 표시할 때 native Modal을 중첩하지 않는다. */
+  embedded?: boolean;
 }
 
 /**
@@ -43,12 +47,9 @@ interface PartnerProfileModalProps {
  * SelectDropdownModal.tsx와 동일한 Modal(transparent)+Animated.View 진입 애니메이션 패턴을
  * 세로 슬라이드(하단→전체 화면)로 응용합니다.
  */
-export default function PartnerProfileModal({ match, onClose, onDismiss, onConnectNow }: PartnerProfileModalProps) {
+export default function PartnerProfileModal({ match, onClose, onDismiss, onConnectNow, previewDetail, ownPreview = false, embedded = false }: PartnerProfileModalProps) {
   const { colors } = useThemeColors();
   const insets = useSafeAreaInsets();
-  const { height: windowHeight } = useWindowDimensions();
-  // 고정 480px 대신 화면 높이 비율로 — 작은 기기에서 과도하게 크거나 큰 기기에서 작아 보이는 문제 방지
-  const heroHeight = Math.min(Math.max(windowHeight * 0.52, 380), 560);
   const progress = useRef(new Animated.Value(0)).current;
   const [imageFailed, setImageFailed] = useState(false);
   // match가 null이 되어도 닫힘 애니메이션이 끝날 때까지 마지막 match를 계속 렌더링하기 위한 상태
@@ -66,8 +67,10 @@ export default function PartnerProfileModal({ match, onClose, onDismiss, onConne
     isError: isDetailError,
     isFetching: isDetailFetching,
     refetch: refetchDetail,
-  } = useRecommendationDetailQuery(isMockMatch ? null : (displayedUserUuid ?? null));
-  const detail = mockDetail ?? apiDetail;
+  } = useRecommendationDetailQuery(ownPreview || isMockMatch ? null : (displayedUserUuid ?? null));
+  const detail = ownPreview ? previewDetail : (mockDetail ?? apiDetail);
+
+  useEffect(() => { setImageFailed(false); }, [displayedMatch?.profileImageUrl, detail?.profileImageUrl]);
 
   useEffect(() => {
     if (match) {
@@ -119,7 +122,7 @@ export default function PartnerProfileModal({ match, onClose, onDismiss, onConne
     : getErrorDisplayMessage(detailError, '상세 정보를 불러오지 못했어요. 잠시 후 다시 시도해주세요.');
 
   return (
-    <Modal visible transparent animationType="none" statusBarTranslucent onRequestClose={onClose}>
+    <ProfileModalContainer embedded={embedded} onClose={onClose}>
       <Animated.View
         style={[
           styles.container,
@@ -127,21 +130,21 @@ export default function PartnerProfileModal({ match, onClose, onDismiss, onConne
           {
             transform: [
               {
-                translateY: progress.interpolate({ inputRange: [0, 1], outputRange: [600, 0] }),
+                translateY: embedded ? 0 : progress.interpolate({ inputRange: [0, 1], outputRange: [600, 0] }),
               },
             ],
           },
         ]}
       >
         <ScrollView showsVerticalScrollIndicator={false} bounces={false}>
-          <View style={[styles.hero, { height: heroHeight }]}>
+          <View style={[styles.hero, { aspectRatio: 4 / 5 }]}>
             {imageFailed || !profileImageUrl ? (
               <LinearGradient colors={Colors.gradient.avatarPlaceholder} style={styles.heroImage}>
-                <View style={styles.heroImageFallbackContent} accessible accessibilityLabel="프로필 사진을 준비 중입니다">
+                <View style={styles.heroImageFallbackContent} accessible accessibilityLabel={profileImageUrl ? '사진을 불러올 수 없습니다' : '프로필 사진이 없습니다'}>
                   <View style={styles.heroImageFallbackAvatar}>
                     <Feather name="user" size={46} color={Colors.neutral.pureWhite} />
                   </View>
-                  <Text style={styles.heroImageFallbackText}>프로필 사진을 준비 중이에요</Text>
+                  <Text style={styles.heroImageFallbackText}>{profileImageUrl ? '사진을 불러올 수 없어요' : '프로필 사진이 없어요'}</Text>
                 </View>
               </LinearGradient>
             ) : (
@@ -173,6 +176,8 @@ export default function PartnerProfileModal({ match, onClose, onDismiss, onConne
                 <Feather name="x" size={20} color={Colors.neutral.pureWhite} />
               </BlurView>
             </TouchableOpacity>
+
+            {ownPreview && <View style={{ position: 'absolute', top: insets.top + Spacing.md, left: Spacing.xl, right: insets.right + Spacing.xl + 56, padding: Spacing.md, borderRadius: Radii.md, backgroundColor: 'rgba(0,0,0,0.65)' }}><Text style={{ color: Colors.neutral.pureWhite }}>상대에게 보이는 내 프로필</Text></View>}
 
             <View style={styles.heroInfo}>
               <View style={styles.badgeRow}>
@@ -319,7 +324,7 @@ export default function PartnerProfileModal({ match, onClose, onDismiss, onConne
           </View>
         </ScrollView>
 
-        <View
+        {!ownPreview && <View
           style={[styles.floatingBar, { paddingBottom: Math.max(insets.bottom, Spacing.xxl) }]}
           pointerEvents="box-none"
         >
@@ -348,10 +353,14 @@ export default function PartnerProfileModal({ match, onClose, onDismiss, onConne
               <Text style={styles.connectNowText}>{isRecommendationUnavailable ? '통화할 수 없어요' : '통화하기'}</Text>
             </LinearGradient>
           </TouchableOpacity>
-        </View>
+        </View>}
       </Animated.View>
-    </Modal>
+    </ProfileModalContainer>
   );
+}
+
+function ProfileModalContainer({ embedded, onClose, children }: { embedded: boolean; onClose: () => void; children: React.ReactNode }) {
+  return embedded ? <>{children}</> : <Modal visible transparent animationType="none" statusBarTranslucent onRequestClose={onClose}>{children}</Modal>;
 }
 
 /**

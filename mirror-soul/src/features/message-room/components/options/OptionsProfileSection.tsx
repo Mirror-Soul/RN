@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Pressable, View, Text, StyleSheet } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -16,6 +16,7 @@ interface OptionsProfileSectionProps {
 export function OptionsProfileSection({ room, onPress }: OptionsProfileSectionProps) {
   const { partner } = room;
   const [imageFailed, setImageFailed] = useState(false);
+  useEffect(() => { setImageFailed(false); }, [partner.profileImageUrl]);
   const { colors } = useThemeColors();
 
   return (

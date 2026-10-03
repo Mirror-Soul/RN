@@ -12,6 +12,8 @@ import {
   MyIntroductionResponse,
   MyProfileResponse,
   TimeStatusResponse,
+  ModifyProfileImageResponse,
+  DeleteProfileImageResponse,
 } from '../types/api/profile';
 import { logger } from '../utils/logger';
 
@@ -41,6 +43,30 @@ export const getMyIntroduction = async (): Promise<MyIntroductionResponse> => {
     return response.data;
   } catch (error: unknown) {
     logger.error('getMyIntroduction ERROR:', { message: error instanceof Error ? error.message : String(error) });
+    throw error;
+  }
+};
+
+/** S3 업로드가 끝난 본인 사진을 공개 프로필에 연결한다. */
+export const modifyProfileImage = async (objectKey: string): Promise<ModifyProfileImageResponse> => {
+  try {
+    const response = await apiClient.patch<ModifyProfileImageResponse>('/my-page/profile-image', { objectKey });
+    logger.info('modifyProfileImage SUCCESS');
+    return response.data;
+  } catch (error: unknown) {
+    logger.error('modifyProfileImage ERROR:', { message: error instanceof Error ? error.message : String(error) });
+    throw error;
+  }
+};
+
+/** 공개 프로필에서 사진 연결을 제거한다. */
+export const deleteProfileImage = async (): Promise<DeleteProfileImageResponse> => {
+  try {
+    const response = await apiClient.delete<DeleteProfileImageResponse>('/my-page/profile-image');
+    logger.info('deleteProfileImage SUCCESS');
+    return response.data;
+  } catch (error: unknown) {
+    logger.error('deleteProfileImage ERROR:', { message: error instanceof Error ? error.message : String(error) });
     throw error;
   }
 };

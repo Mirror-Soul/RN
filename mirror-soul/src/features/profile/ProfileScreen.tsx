@@ -1,6 +1,6 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -13,6 +13,9 @@ import { formatCallTime } from '@/src/utils/formatCallTime';
 import { TimeRefillBottomSheet } from './components/TimeRefillBottomSheet';
 import { useProfileQuery } from './hooks/useProfileQuery';
 import { useTimeStatusQuery } from './hooks/useTimeStatusQuery';
+import { ProfilePhoto } from './photo/ProfilePhoto';
+import { ProfilePhotoManager } from './photo/ProfilePhotoManager';
+import { PublicProfilePreview } from './photo/PublicProfilePreview';
 
 type SettingLinkProps = {
   icon: React.ComponentProps<typeof Feather>['name'];
@@ -65,6 +68,8 @@ const SettingLink = ({
  * 서버가 제공하지 않는 나이, MBTI, 직업, Twin 유사도 등은 임의의 목업으로 표시하지 않는다.
  */
 export const ProfileScreen = () => {
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [photoViewerOpen, setPhotoViewerOpen] = useState(false);
   const router = useRouter();
   const { width: windowWidth } = useWindowDimensions();
   const insets = useSafeAreaInsets();
@@ -72,16 +77,18 @@ export const ProfileScreen = () => {
   const { data: profile, isLoading: isProfileLoading, isError: isProfileError, refetch: refetchProfile } = useProfileQuery();
   const { data: timeStatus, isLoading: isTimeLoading, isError: isTimeError, refetch: refetchTime } = useTimeStatusQuery();
   const [isRefillSheetOpen, setIsRefillSheetOpen] = useState(false);
+  useEffect(() => { if (!profile?.profileImageUrl) setPhotoViewerOpen(false); }, [profile?.profileImageUrl]);
+
+  useFocusEffect(useCallback(() => { void refetchProfile(); void refetchTime(); }, [refetchProfile, refetchTime]));
 
   const displayName = profile?.name?.trim() || '내 프로필';
-  const avatarInitial = useMemo(() => displayName.charAt(0).toUpperCase(), [displayName]);
   const remainingTime = formatCallTime(timeStatus?.remainingTalkTime ?? 0);
   // 작은 기기에서는 기존 크기를 유지해, 한 줄 시간 카드가 줄바꿈·겹침 없이 유지된다.
   const timeValueFontSize = windowWidth < 370 ? FontSize.xl : FontSize.xxl;
   const timeValueLineHeight = windowWidth < 370 ? 25 : 28;
 
   const handleOpenAccount = useCallback(() => router.push('/(main)/account'), [router]);
-  const handleOpenIntroduction = useCallback(() => router.push('/(main)/profile-introduction'), [router]);
+  const handleOpenTwinStatus = useCallback(() => router.push('/(main)/profile-introduction'), [router]);
   const handleOpenVoiceAudio = useCallback(() => router.push('/(main)/voice-audio'), [router]);
   const handleOpenNotification = useCallback(() => router.push('/(main)/notification'), [router]);
   const handleOpenCustomerCenter = useCallback(() => router.push('/(main)/customer-center'), [router]);
@@ -110,14 +117,7 @@ export const ProfileScreen = () => {
               pointerEvents="none"
             />
             <View style={styles.identityRow}>
-              <LinearGradient
-                colors={Colors.gradient.cyanToPurple}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.avatar}
-              >
-                <Text style={styles.avatarInitial}>{avatarInitial}</Text>
-              </LinearGradient>
+              <ProfilePhoto uri={profile?.profileImageUrl} name={displayName} size={64} onPress={() => setPhotoViewerOpen(true)} />
               <View style={styles.identityCopy}>
                 {isProfileLoading ? (
                   <ActivityIndicator color={colors.brand.accent} />
@@ -127,21 +127,33 @@ export const ProfileScreen = () => {
                   </Pressable>
                 ) : (
                   <>
-                    <Text style={[styles.profileName, { color: colors.text.primary }]} numberOfLines={1}>{displayName}</Text>
+                    <Text style={[styles.profileName, { color: colors.text.primary }]} numberOfLines={2}>{displayName}</Text>
                     <Text style={[styles.profileEmail, { color: colors.text.secondary }]} numberOfLines={1}>{profile?.email}</Text>
                   </>
                 )}
               </View>
             </View>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="내 소개 열기"
-              onPress={handleOpenIntroduction}
-              style={({ pressed }) => [styles.accountButton, { borderColor: colors.border.strong }, pressed && { opacity: 0.7 }]}
-            >
-              <Text style={[styles.accountButtonText, { color: colors.text.primary }]}>내 소개 보기</Text>
-              <Feather name="arrow-up-right" size={15} color={colors.text.primary} />
-            </Pressable>
+            <ProfilePhotoManager compact name={displayName} photoViewerOpen={photoViewerOpen} onPhotoViewerClose={() => setPhotoViewerOpen(false)} />
+            <View style={styles.profileLinks}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="상대에게 보이는 내 프로필 미리보기"
+                onPress={() => setPreviewOpen(true)}
+                style={({ pressed }) => [styles.accountButton, { borderColor: colors.border.strong }, pressed && { opacity: 0.7 }]}
+              >
+                <Feather name="eye" size={16} color={colors.text.primary} />
+                <Text style={[styles.accountButtonText, { color: colors.text.primary }]}>내 프로필 미리보기</Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="트윈 상태 열기"
+                onPress={handleOpenTwinStatus}
+                style={({ pressed }) => [styles.accountButton, { borderColor: colors.border.strong }, pressed && { opacity: 0.7 }]}
+              >
+                <Feather name="arrow-up-right" size={16} color={colors.text.primary} />
+                <Text style={[styles.accountButtonText, { color: colors.text.primary }]}>트윈 상태 보기</Text>
+              </Pressable>
+            </View>
           </Animated.View>
 
           <Animated.View
@@ -232,6 +244,7 @@ export const ProfileScreen = () => {
         </View>
       </ScreenLayout>
 
+      {previewOpen && <PublicProfilePreview onClose={() => setPreviewOpen(false)} />}
       <TimeRefillBottomSheet isOpen={isRefillSheetOpen} onClose={() => setIsRefillSheetOpen(false)} />
     </>
   );
@@ -246,18 +259,17 @@ const styles = StyleSheet.create({
   },
   identityCard: { borderWidth: 1, borderRadius: Radii.xl, padding: Spacing.lg, overflow: 'hidden' },
   identityRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
-  avatar: { width: 58, height: 58, borderRadius: Radii.full, alignItems: 'center', justifyContent: 'center' },
-  avatarInitial: { color: Colors.primary.soulBlack, fontFamily: FontFamily.sans, fontWeight: FontWeight.bold, fontSize: FontSize.xxl },
   identityCopy: { flex: 1, minHeight: 44, justifyContent: 'center' },
-  profileName: { fontFamily: FontFamily.sans, fontWeight: FontWeight.bold, fontSize: FontSize.xl, lineHeight: 24, letterSpacing: -0.35 },
+  profileName: { fontFamily: FontFamily.sans, fontWeight: FontWeight.bold, fontSize: FontSize.xxl, lineHeight: 28, letterSpacing: -0.35 },
   profileEmail: { fontFamily: FontFamily.sans, fontWeight: FontWeight.regular, fontSize: FontSize.sm, lineHeight: 18, marginTop: Spacing.xxs },
   profileError: { fontFamily: FontFamily.sans, fontWeight: FontWeight.medium, fontSize: FontSize.sm, textDecorationLine: 'underline' },
+  profileLinks: { marginTop: Spacing.lg, gap: Spacing.sm },
   accountButton: {
-    minHeight: 38, borderWidth: 1, borderRadius: Radii.md, marginTop: Spacing.lg, paddingHorizontal: Spacing.md,
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.xs,
+    minHeight: 48, borderWidth: 1, borderRadius: Radii.md, paddingHorizontal: Spacing.md, paddingVertical: Spacing.md,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.sm,
   },
-  accountButtonText: { fontFamily: FontFamily.sans, fontWeight: FontWeight.medium, fontSize: FontSize.sm },
-  timeCard: { borderWidth: 1, borderRadius: Radii.xl, padding: Spacing.lg, marginTop: Spacing.md },
+  accountButtonText: { fontFamily: FontFamily.sans, fontWeight: FontWeight.medium, fontSize: FontSize.base, lineHeight: 22, flexShrink: 1, textAlign: 'center' },
+  timeCard: { borderWidth: 1, borderRadius: Radii.xl, padding: Spacing.lg, marginTop: Spacing.xl },
   timeHeadingRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
   timeLabelGroup: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, minWidth: 0 },
   timeIcon: { width: 30, height: 30, borderRadius: Radii.md, alignItems: 'center', justifyContent: 'center' },

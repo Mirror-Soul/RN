@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Image } from 'expo-image';
@@ -14,6 +14,7 @@ interface MessageRoomHeaderLeftProps {
 export function MessageRoomHeaderLeft({ room }: MessageRoomHeaderLeftProps) {
   const { partner } = room;
   const [imageFailed, setImageFailed] = useState(false);
+  useEffect(() => { setImageFailed(false); }, [partner.profileImageUrl]);
   const { colors } = useThemeColors();
 
   return (

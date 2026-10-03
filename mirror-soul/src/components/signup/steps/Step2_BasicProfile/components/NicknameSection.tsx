@@ -26,7 +26,7 @@ export default function NicknameSection({ state, onChange, onCheck, isChecking }
           style={[styles.textInput, { color: colors.text.primary }]}
           value={state.nickname}
           onChangeText={(text) => onChange({ nickname: text, isNicknameVerified: false })}
-          placeholder="2자 이상 입력해주세요"
+          placeholder="상대에게 보여줄 이름 (2자 이상)"
           placeholderTextColor={colors.text.muted}
           autoCapitalize="none"
           editable={!isChecking}
@@ -60,7 +60,7 @@ export default function NicknameSection({ state, onChange, onCheck, isChecking }
         <View style={styles.successContainer}>
           <VerificationSuccessIcon width={16} height={16} />
           <View style={styles.infoContent}>
-            <Text style={styles.successText}>사용 가능한 닉네임입니다</Text>
+            <Text style={styles.successText}>사용할 수 있는 닉네임이에요</Text>
           </View>
         </View>
       )}
@@ -82,17 +82,20 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
     alignSelf: 'stretch',
     borderBottomWidth: 1,
-    paddingBottom: 10,
+    paddingBottom: Spacing.sm,
   },
   textInput: {
     flex: 1,
+    minHeight: 44,
     padding: 0,
     fontFamily: FontFamily.sans,
-    fontSize: FontSize.md,
+    fontSize: FontSize.lg,
     fontWeight: FontWeight.regular,
   },
   checkButton: {
     flexShrink: 0,
+    minHeight: 44,
+    justifyContent: 'center',
     paddingHorizontal: Spacing.md,
     paddingVertical: 7,
     borderRadius: Radii.full,
@@ -100,7 +103,7 @@ const styles = StyleSheet.create({
   },
   checkButtonText: {
     fontFamily: FontFamily.sans,
-    fontSize: FontSize.sm,
+    fontSize: FontSize.base,
     fontWeight: FontWeight.medium,
     color: Colors.primary.electricCyan,
   },
@@ -116,8 +119,8 @@ const styles = StyleSheet.create({
   successText: {
     color: Colors.primary.successGreen,
     fontFamily: FontFamily.sans,
-    fontSize: FontSize.sm,
+    fontSize: FontSize.base,
+    lineHeight: 22,
     fontWeight: FontWeight.regular,
   },
 });
-

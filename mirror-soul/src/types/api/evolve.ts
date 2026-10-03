@@ -9,7 +9,8 @@ import { ApiResponse } from './common';
 // GET /evolve
 // ─────────────────────────────────────────────
 export interface TwinSyncResult {
-  syncRate: number;
+  /** 트윈 READY 이전에는 null이다. */
+  syncRate: number | null;
   /** 누적 목소리 정밀 학습(음성 업데이트) 횟수 */
   voiceTrainingCount: number;
   /** 마지막 목소리 정밀 학습 시각. 한 번도 학습한 적 없으면 null. */

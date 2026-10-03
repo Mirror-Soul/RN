@@ -14,7 +14,7 @@ export interface Twin {
   cloneUserUuid: string;
   name: string;
   age: number | null;
-  profileImageUrl: string;
+  profileImageUrl: string | null;
   twinAvatarImageUrl: string;
   twinSyncRate: number | null;
   twinSummary: string | null;

@@ -13,7 +13,7 @@ export default function Step2Header() {
   return (
     <View style={styles.header}>
       <Text style={[styles.title, { color: colors.text.primary }]}>기본 프로필</Text>
-      <Text style={[styles.subtitle, { color: colors.text.secondary }]}>당신에게 맞는 완벽한 매칭을 찾아드릴게요</Text>
+      <Text style={[styles.subtitle, { color: colors.text.secondary }]}>상대에게 보여줄 나의 정보를 알려주세요.</Text>
     </View>
   );
 }
@@ -26,14 +26,15 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: FontFamily.sans,
-    fontSize: 26,
+    fontSize: FontSize.xxxl,
     fontWeight: FontWeight.semibold,
+    lineHeight: 32,
     letterSpacing: -0.3,
   },
   subtitle: {
     fontFamily: FontFamily.sans,
-    fontSize: FontSize.base,
+    fontSize: FontSize.md,
     fontWeight: FontWeight.regular,
-    lineHeight: 20,
+    lineHeight: 23,
   },
 });

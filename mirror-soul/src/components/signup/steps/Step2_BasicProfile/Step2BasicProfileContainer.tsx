@@ -3,7 +3,7 @@ import GradientButton from '@/src/components/common/GradientButton';
 import { SIGNUP_ROUTES } from '@/src/constants/routes/signupRoutes';
 import {Colors, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View, Alert, ActivityIndicator, Text } from 'react-native';
 import Animated, { FadeInDown, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useLayout } from '@/src/hooks/useLayout';
@@ -21,6 +21,7 @@ import { saveProfile } from '@/src/services/onboardingService';
 import { useAuthStore } from '@/src/store/useAuthStore';
 import { JobEnum } from '@/src/types/api/onboarding';
 import { jobCategories } from './Professional/jobData';
+import { ProfilePhotoManager } from '@/src/features/profile/photo/ProfilePhotoManager';
 
 /**
  * Step2BasicProfileContainer 컴포넌트
@@ -31,6 +32,7 @@ export default function Step2BasicProfileContainer() {
   const { colors } = useThemeColors();
   const { contentContainerStyle, screenPadding } = useLayout();
   const [isSaving, setIsSaving] = useState(false);
+  const savingLock = useRef(false);
 
   const {
     state,
@@ -51,7 +53,7 @@ export default function Step2BasicProfileContainer() {
   const handleContinue = async () => {
     // 1. 유효성 검증 (JobEnum 안전성 확보 및 방어 코드)
     const isValidJob = jobCategories.some((j) => j.value === state.jobCategory);
-    if (!isFormValid || !isValidJob || isSaving) {
+    if (!isFormValid || !isValidJob || savingLock.current) {
       if (!isValidJob && state.jobCategory !== '') {
         Alert.alert('오류', '유효하지 않은 직군입니다.');
       }
@@ -59,6 +61,7 @@ export default function Step2BasicProfileContainer() {
     }
 
     try {
+      savingLock.current = true;
       setIsSaving(true);
       overlayOpacity.value = withTiming(1, { duration: 200 });
 
@@ -87,6 +90,7 @@ export default function Step2BasicProfileContainer() {
     } finally {
       overlayOpacity.value = withTiming(0, { duration: 200 });
       setIsSaving(false);
+      savingLock.current = false;
     }
   };
 
@@ -108,6 +112,7 @@ export default function Step2BasicProfileContainer() {
             </Animated.View>
 
             <Animated.View entering={FadeInDown.delay(100).duration(400).springify()} style={styles.formContainer}>
+              <ProfilePhotoManager signup name={state.nickname} disabled={isSaving} />
               <NicknameSection
                 state={state}
                 onChange={updateState}
@@ -154,7 +159,7 @@ export default function Step2BasicProfileContainer() {
         >
           <View style={styles.loadingContent}>
             <ActivityIndicator size="large" color={Colors.primary.electricCyan} />
-            <Text style={[styles.loadingText, { color: colors.text.primary }]}>프로필을 저장하고 있습니다...</Text>
+            <Text style={[styles.loadingText, { color: colors.text.primary }]}>기본 정보를 저장하고 있어요…</Text>
           </View>
         </Animated.View>
       )}
@@ -176,21 +181,22 @@ const styles = StyleSheet.create({
   },
   container: {
     alignItems: 'center',
-    marginTop: 25,
+    marginTop: Spacing.xxl,
   },
   headerWrapper: {
-    marginBottom: Spacing.giant,
+    width: '100%',
+    marginBottom: Spacing.xxl,
   },
   formContainer: {
     width: '100%',
-    gap: Spacing.xl, // Adjusted for spacing
+    gap: Spacing.xxxl,
   },
   buttonWrapper: {
-    marginTop: Spacing.xl,
+    marginTop: Spacing.sm,
     width: '100%',
   },
   footerContainer: {
-    marginTop: Spacing.giant,
+    marginTop: Spacing.xxl,
     width: '100%',
     alignItems: 'center',
   },
