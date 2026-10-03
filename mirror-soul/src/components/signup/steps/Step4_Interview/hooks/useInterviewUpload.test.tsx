@@ -13,7 +13,7 @@ jest.mock('@/src/services/fileService', () => ({ getPresignedUrl: jest.fn() }));
 jest.mock('@/src/services/s3Service', () => ({ uploadFileToS3: jest.fn() }));
 jest.mock('@/src/services/onboardingService', () => ({ saveInterviewAnswer: jest.fn() }));
 jest.mock('@/src/store/useAuthStore', () => ({ useAuthStore: { getState: jest.fn(), subscribe: jest.fn() } }));
-const answer = { recordingId: 'take-1', uri: 'file:///answer.wav', questionId: 17, userUuid: 'me', answerText: '의견을 듣고 제 생각을 말해요. 감정적으로 말하지 않으려고요.' };
+const answer = { recordingId: 'take-1', uri: 'file:///answer.wav', questionId: 17, userUuid: 'me', recognizedTranscript: '의견을 듣고 제 생각을 말해요. 감정적으로 말하지 않으려고요.', answerText: '의견을 듣고 제 생각을 말해요. 감정적으로 말하지 않으려고요.' };
 let client: QueryClient;
 function setup() {
   client = new QueryClient({ defaultOptions: { mutations: { retry: false, gcTime: Infinity } } });
@@ -29,6 +29,18 @@ beforeEach(() => {
   (saveInterviewAnswer as jest.Mock).mockResolvedValue({ isSuccess: true, result: { saved: true, interviewId: 17 } });
 });
 afterEach(() => client?.clear());
+
+it.each(['', '   ', undefined])('rejects manually filled text without recognized speech before any upload (%j)', async recognizedTranscript => {
+  const { result } = setup();
+  await act(async () => {
+    await expect(result.current.saveAnswer({ ...answer, recognizedTranscript: recognizedTranscript as string, answerText: '직접 입력한 답변' })).rejects.toThrow('다시 녹음');
+    await new Promise(resolve => setTimeout(resolve, 0));
+  });
+  expect(FileSystem.getInfoAsync).not.toHaveBeenCalled();
+  expect(getPresignedUrl).not.toHaveBeenCalled();
+  expect(uploadFileToS3).not.toHaveBeenCalled();
+  expect(saveInterviewAnswer).not.toHaveBeenCalled();
+});
 
 it('retries only answer registration after a successful PUT, using corrected text', async () => {
   (saveInterviewAnswer as jest.Mock).mockRejectedValueOnce(new Error('timeout'));

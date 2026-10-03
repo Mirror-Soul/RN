@@ -11,7 +11,7 @@ import { useInterviewUpload } from './useInterviewUpload';
 export type InterviewPhase = 'ready' | 'starting' | 'recording' | 'stopping' | 'review' | 'saving';
 type Target = { userUuid: string; questionId: number; generation: number };
 type Capture = Target & { recordingId: string };
-type Draft = Capture & { uri: string; transcript: string; durationMs: number; notice: string | null };
+type Draft = Capture & { uri: string; recognizedTranscript: string; transcript: string; durationMs: number; notice: string | null };
 export function useInterviewFlow(questionId: number | undefined, onSaved: () => Promise<void>) {
   const speech = useInterviewSpeech();
   const stt = useSTT('ko-KR');
@@ -29,8 +29,6 @@ export function useInterviewFlow(questionId: number | undefined, onSaved: () => 
   const generation = useRef(0);
   const currentQuestion = useRef(questionId);
   currentQuestion.current = questionId;
-  const latestTranscript = useRef(stt.transcript);
-  latestTranscript.current = stt.transcript;
   const lock = useRef(false);
   const mounted = useRef(true);
   const focused = useRef(true);
@@ -81,10 +79,12 @@ export function useInterviewFlow(questionId: number | undefined, onSaved: () => 
       const [textResult, audioResult] = await Promise.allSettled([stopListening(), stopRecording()]);
       if (!isCurrent(target)) { discardStale(target); return; }
       if (audioResult.status !== 'fulfilled' || !audioResult.value.uri) throw new Error('녹음을 마무리하지 못했어요. 다시 녹음해주세요.');
-      const answerText = textResult.status === 'fulfilled' ? textResult.value : latestTranscript.current;
+      // Only this take's finalized recognition can establish a spoken answer.
+      // Edited text and captions left over from an earlier take cannot do so.
+      const answerText = textResult.status === 'fulfilled' ? textResult.value.trim() : '';
       updateDraft({
         ...target, uri: audioResult.value.uri, durationMs: audioResult.value.durationMs,
-        transcript: answerText.trim(),
+        recognizedTranscript: answerText, transcript: answerText,
         notice: notice || getRecognitionIssue() || (textResult.status === 'rejected' ? '일부 말을 인식하지 못했어요. 내용을 확인해주세요.' : null),
       });
       transition('review');
@@ -125,7 +125,7 @@ export function useInterviewFlow(questionId: number | undefined, onSaved: () => 
 
   const saveAnswer = async () => {
     const answer = draftRef.current;
-    if (lock.current || needsLogin.current || phaseRef.current !== 'review' || !answer?.transcript.trim() || !isCurrent(answer)) return;
+    if (lock.current || needsLogin.current || phaseRef.current !== 'review' || !answer?.recognizedTranscript.trim() || !answer.transcript.trim() || !isCurrent(answer)) return;
     lock.current = true;
     transition('saving');
     setError(null);
@@ -154,7 +154,7 @@ export function useInterviewFlow(questionId: number | undefined, onSaved: () => 
     } finally { if (generation.current === answer.generation) lock.current = false; }
   };
   const changeText = (text: string) => {
-    if (phaseRef.current === 'review' && draftRef.current) updateDraft({ ...draftRef.current, transcript: text });
+    if (phaseRef.current === 'review' && draftRef.current?.recognizedTranscript.trim()) updateDraft({ ...draftRef.current, transcript: text });
   };
   useEffect(() => {
     if (phase === 'recording' && (stt.recognitionEnded || speech.recordingError)) {
@@ -192,6 +192,8 @@ export function useInterviewFlow(questionId: number | undefined, onSaved: () => 
   }, [stopListening, stopRecording]);
   return {
     phase, draft, error, needsLoginCheck, beginRecording, finishRecording, saveAnswer, changeText,
+    hasRecognizedSpeech: !!draft?.recognizedTranscript.trim(),
+    canSaveAnswer: !!draft?.recognizedTranscript.trim() && !!draft.transcript.trim() && !needsLoginCheck,
     isBusy: ['starting', 'stopping', 'saving'].includes(phase),
     isListening: stt.isListening, transcript: stt.transcript, durationMs: speech.durationMs, metering: speech.metering,
     hasPermission: speech.hasPermission, canAskAgain: speech.canAskAgain, requestPermission: speech.requestPermission,

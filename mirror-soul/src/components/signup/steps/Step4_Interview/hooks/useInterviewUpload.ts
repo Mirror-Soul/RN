@@ -7,7 +7,7 @@ import { uploadFileToS3 } from '@/src/services/s3Service';
 import { saveInterviewAnswer } from '@/src/services/onboardingService';
 import { useAuthStore } from '@/src/store/useAuthStore';
 
-type Answer = { recordingId: string; uri: string; questionId: number; answerText: string; userUuid: string };
+type Answer = { recordingId: string; uri: string; questionId: number; recognizedTranscript: string; answerText: string; userUuid: string };
 export type InterviewSaveStage = 'idle' | 'address' | 'upload' | 'save';
 export function useInterviewUpload() {
   const [stage, setStage] = useState<InterviewSaveStage>('idle');
@@ -17,6 +17,7 @@ export function useInterviewUpload() {
   const mutation = useMutation({
     retry: false,
     mutationFn: async (answer: Answer) => {
+      if (!answer.recognizedTranscript?.trim()) throw new Error('말한 내용을 인식하지 못했어요. 조용한 곳에서 다시 녹음해주세요.');
       if (!answer.answerText.trim()) throw new Error('인식된 답변을 확인하거나 다시 녹음해주세요.');
       if (!answer.recordingId) throw new Error('녹음 정보를 확인하지 못했어요. 다시 녹음해주세요.');
       if (!Number.isInteger(answer.questionId) || answer.questionId <= 0) throw new Error('질문을 다시 불러와주세요.');

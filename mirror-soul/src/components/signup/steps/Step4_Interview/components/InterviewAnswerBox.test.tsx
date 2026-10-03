@@ -29,7 +29,7 @@ jest.mock('expo-router', () => ({
   },
 }));
 jest.mock('@/src/hooks/useThemeColors', () => ({ useThemeColors: () => ({ colors: jest.requireActual('@/src/constants/theme').lightTheme }) }));
-const props = { isRecording: false, isBusy: false, isListening: false, transcript: '내가 말한 답변', recordingUri: 'file:///answer.wav', durationMs: 18000, onChangeText: jest.fn() };
+const props = { isRecording: false, isBusy: false, isListening: false, hasRecognizedSpeech: true, transcript: '내가 말한 답변', recordingUri: 'file:///answer.wav', durationMs: 18000, onChangeText: jest.fn() };
 beforeEach(() => {
   jest.clearAllMocks();
   mockReleased = false;
@@ -41,6 +41,25 @@ beforeEach(() => {
   Object.defineProperty(AppState, 'currentState', { configurable: true, writable: true, value: 'active' });
 });
 afterEach(() => jest.restoreAllMocks());
+
+it('requires rerecording instead of text entry when no speech was recognized', () => {
+  const screen = render(<InterviewAnswerBox {...props} hasRecognizedSpeech={false} transcript="" recognitionIssue="말소리가 없어요." />);
+  expect(screen.getByText('말한 내용을 인식하지 못했어요. 조용한 곳에서 휴대폰을 가까이 두고 다시 녹음해주세요.')).toBeTruthy();
+  expect(screen.queryByRole('button', { name: '문장 수정' })).toBeNull();
+  expect(screen.queryByLabelText('인식된 답변 수정')).toBeNull();
+  expect(screen.queryByText('재녹음을 권해요. 내용이 맞다면 확인 후 저장할 수 있어요.')).toBeNull();
+  expect(screen.getByRole('button', { name: '녹음 듣기' })).toBeTruthy();
+});
+
+it('removes an open editor if the new take has no recognized speech', () => {
+  const screen = render(<InterviewAnswerBox {...props} />);
+  fireEvent.press(screen.getByRole('button', { name: '문장 수정' }));
+  expect(screen.getByLabelText('인식된 답변 수정')).toBeTruthy();
+  screen.rerender(<InterviewAnswerBox {...props} hasRecognizedSpeech={false} transcript="직접 입력한 답변" />);
+  expect(screen.queryByLabelText('인식된 답변 수정')).toBeNull();
+  expect(screen.queryByRole('button', { name: '문장 수정' })).toBeNull();
+  expect(screen.queryByText('직접 입력한 답변')).toBeNull();
+});
 
 it('shows the answer without requiring edit or playback, and editing preserves the spoken content', () => {
   function Review() {

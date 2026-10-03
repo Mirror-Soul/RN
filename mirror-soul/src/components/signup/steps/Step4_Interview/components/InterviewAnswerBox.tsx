@@ -16,13 +16,14 @@ interface Props {
   isBusy: boolean;
   isListening: boolean;
   transcript: string;
+  hasRecognizedSpeech: boolean;
   recordingUri?: string;
   durationMs: number;
   metering?: number;
   recognitionIssue?: string | null;
   onChangeText: (text: string) => void;
 }
-export default function InterviewAnswerBox({ isRecording, isBusy, isListening, transcript, recordingUri, durationMs, metering, recognitionIssue, onChangeText }: Props) {
+export default function InterviewAnswerBox({ isRecording, isBusy, isListening, transcript, hasRecognizedSpeech, recordingUri, durationMs, metering, recognitionIssue, onChangeText }: Props) {
   const { colors } = useThemeColors();
   const [isEditing, setIsEditing] = useState(false);
   const [showCaptions, setShowCaptions] = useState(false);
@@ -41,24 +42,28 @@ export default function InterviewAnswerBox({ isRecording, isBusy, isListening, t
       </Pressable>
       {showCaptions && <Text style={[styles.answer, { color: colors.text.primary }]}>{transcript || (isListening ? '말씀하시면 여기에 나타나요.' : '음성 인식을 준비하고 있어요…')}</Text>}
     </> : <>
-      <Text style={[styles.copy, { color: colors.text.secondary }]}>내가 말한 내용이 맞으면 바로 저장해주세요. 다르게 적힌 부분만 고쳐도 좋아요.</Text>
+      <Text style={[styles.copy, { color: colors.text.secondary }]}>{hasRecognizedSpeech
+        ? '내가 말한 내용이 맞으면 바로 저장해주세요. 다르게 적힌 부분만 고쳐도 좋아요.'
+        : '목소리로 답변해주셔야 다음으로 넘어갈 수 있어요. 아래에서 다시 녹음해주세요.'}</Text>
       {recognitionIssue && <View accessibilityLiveRegion="polite" style={[styles.notice, { backgroundColor: colors.background.glass }]}>
         <Text style={[styles.copy, { color: colors.text.primary }]}>{recognitionIssue}</Text>
-        <Text style={[styles.copy, { color: colors.text.secondary }]}>재녹음을 권해요. 내용이 맞다면 확인 후 저장할 수 있어요.</Text>
+        {hasRecognizedSpeech && <Text style={[styles.copy, { color: colors.text.secondary }]}>재녹음을 권해요. 내용이 맞다면 확인 후 저장할 수 있어요.</Text>}
       </View>}
-      {isEditing ? <>
+      {isEditing && hasRecognizedSpeech ? <>
         <TextInput accessibilityLabel="인식된 답변 수정" multiline value={transcript} onChangeText={onChangeText} editable={!isBusy} autoFocus
           placeholder="녹음에서 말한 내용을 적어주세요." placeholderTextColor={colors.text.muted}
           style={[styles.input, { color: colors.text.primary, borderColor: colors.border.strong, backgroundColor: colors.background.glass }]} />
         <Text style={[styles.copy, { color: colors.text.secondary }]}>문장을 고쳐도 녹음은 바뀌지 않아요. 주변 대화가 섞였다면 다시 녹음해주세요.</Text>
       </> : <Text selectable style={[styles.answer, { color: transcript ? colors.text.primary : colors.text.secondary }]}>
-        {transcript || '말한 내용을 인식하지 못했어요. 다시 녹음하거나 녹음을 듣고 문장을 적어주세요.'}
+        {hasRecognizedSpeech
+          ? transcript || '답변이 비어 있어요. 녹음에서 말한 내용을 확인해주세요.'
+          : '말한 내용을 인식하지 못했어요. 조용한 곳에서 휴대폰을 가까이 두고 다시 녹음해주세요.'}
       </Text>}
       <View style={styles.actions}>
-        <Pressable accessibilityRole="button" disabled={isBusy} accessibilityState={{ disabled: isBusy }} onPress={() => setIsEditing(value => !value)} style={styles.action}>
+        {hasRecognizedSpeech && <Pressable accessibilityRole="button" disabled={isBusy} accessibilityState={{ disabled: isBusy }} onPress={() => setIsEditing(value => !value)} style={styles.action}>
           <Feather name={isEditing ? 'check' : 'edit-3'} size={17} color={colors.text.secondary} />
           <Text style={[styles.actionText, { color: colors.text.secondary }]}>{isEditing ? '수정 마치기' : '문장 수정'}</Text>
-        </Pressable>
+        </Pressable>}
         {recordingUri && <RecordingPlayback uri={recordingUri} disabled={isBusy} />}
       </View>
     </>}

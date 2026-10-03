@@ -108,6 +108,67 @@ it('recommends recording again on recognition issues but allows confirmed text t
   expect(onSaved).toHaveBeenCalledTimes(1);
 });
 
+it.each(['', '   '])('blocks editing and saving when the recording has no recognized speech (%j)', async recognized => {
+  mockStopListening.mockResolvedValueOnce(recognized);
+  const { result } = setup();
+  await recorded(result);
+  expect(result.current.phase).toBe('review');
+  expect(result.current.draft?.uri).toBe('file:///answer.wav');
+  expect(result.current.hasRecognizedSpeech).toBe(false);
+  expect(result.current.canSaveAnswer).toBe(false);
+  act(() => result.current.changeText('녹음하지 않고 직접 적은 답변'));
+  expect(result.current.draft?.transcript).toBe('');
+  await act(async () => { await result.current.saveAnswer(); });
+  expect(mockSave).not.toHaveBeenCalled();
+  expect(onSaved).not.toHaveBeenCalled();
+});
+
+it('does not use captions from an earlier take when recognition finalization fails', async () => {
+  mockStopListening.mockRejectedValueOnce(new Error('인식 종료 실패'));
+  const { result } = setup();
+  await recorded(result);
+  expect(result.current.draft?.recognizedTranscript).toBe('');
+  expect(result.current.canSaveAnswer).toBe(false);
+  act(() => result.current.changeText('입력만 한 문장'));
+  await act(async () => { await result.current.saveAnswer(); });
+  expect(mockSave).not.toHaveBeenCalled();
+});
+
+it('requires new recognized speech after a silent rerecording and recovers on a spoken take', async () => {
+  const { result } = setup();
+  await recorded(result);
+  expect(result.current.canSaveAnswer).toBe(true);
+  mockStopListening.mockResolvedValueOnce('');
+  await recorded(result);
+  expect(result.current.hasRecognizedSpeech).toBe(false);
+  await act(async () => { await result.current.saveAnswer(); });
+  expect(mockSave).not.toHaveBeenCalled();
+  mockStopListening.mockResolvedValueOnce('저는 먼저 상대의 이야기를 들어요.');
+  await recorded(result);
+  expect(result.current.canSaveAnswer).toBe(true);
+  await act(async () => { await result.current.saveAnswer(); });
+  expect(mockSave).toHaveBeenCalledWith(expect.objectContaining({
+    recordingId: 'recording-3', recognizedTranscript: '저는 먼저 상대의 이야기를 들어요.',
+  }));
+  expect(onSaved).toHaveBeenCalledTimes(1);
+});
+
+it('keeps the spoken original when corrected text is cleared and restored', async () => {
+  const { result } = setup();
+  await recorded(result);
+  const original = result.current.draft?.recognizedTranscript;
+  act(() => result.current.changeText(''));
+  expect(result.current.hasRecognizedSpeech).toBe(true);
+  expect(result.current.canSaveAnswer).toBe(false);
+  await act(async () => { await result.current.saveAnswer(); });
+  expect(mockSave).not.toHaveBeenCalled();
+  act(() => result.current.changeText('인식된 내용의 오타를 고쳤어요.'));
+  expect(result.current.draft?.recognizedTranscript).toBe(original);
+  expect(result.current.canSaveAnswer).toBe(true);
+  await act(async () => { await result.current.saveAnswer(); });
+  expect(onSaved).toHaveBeenCalledTimes(1);
+});
+
 it('keeps the previous answer if rerecording cannot start', async () => {
   const { result } = setup();
   await recorded(result);

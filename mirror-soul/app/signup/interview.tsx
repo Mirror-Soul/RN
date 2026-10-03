@@ -99,9 +99,11 @@ export default function InterviewScreen() {
           <InterviewAIBox key={questions.currentQuestion.id} question={questions.currentQuestion.question} />
           {flow.phase === 'recording' ? <InterviewAnswerBox
             key="recording" isRecording isBusy={false} isListening={flow.isListening} transcript={flow.transcript}
+            hasRecognizedSpeech={false}
             durationMs={flow.durationMs} metering={flow.metering} onChangeText={flow.changeText}
           /> : review ? <InterviewAnswerBox
             key={review.uri} isRecording={false} isBusy={flow.isBusy || checkingLogin} isListening={false} transcript={review.transcript}
+            hasRecognizedSpeech={flow.hasRecognizedSpeech}
             recordingUri={review.uri} durationMs={review.durationMs} recognitionIssue={review.notice} onChangeText={flow.changeText}
           /> : flow.phase === 'ready' ? <Text style={[styles.copy, { color: colors.text.secondary }]}>
             조용한 곳에서 휴대폰을 가까이 두고 말해주세요. 주변 대화가 함께 들어가지 않도록 해주세요.
@@ -120,7 +122,7 @@ export default function InterviewScreen() {
       <View style={[contentContainerStyle, styles.actionContent, { paddingHorizontal: screenPadding }]}>
         <InterviewControls
           isRecording={flow.phase === 'recording' || flow.phase === 'stopping'} hasRecording={!!review}
-          isBusy={flow.isBusy || checkingLogin} isNextDisabled={!review?.transcript.trim() || flow.needsLoginCheck}
+          isBusy={flow.isBusy || checkingLogin} isNextDisabled={!flow.canSaveAnswer}
           isRecordDisabled={flow.needsLoginCheck}
           isLastQuestion={questions.isLastQuestion} busyLabel={busyLabel} needsConfirmation={!!review?.notice}
           onRecordPress={handleRecord} onNextPress={() => { Keyboard.dismiss(); void flow.saveAnswer(); }}
