@@ -1,161 +1,55 @@
-import {Colors, Radii, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import React from 'react';
-import { Linking, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Feather } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
+import { useLayout } from '@/src/hooks/useLayout';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 
-interface MicPermissionModalProps {
+interface Props {
   visible: boolean;
+  canAskAgain: boolean;
+  isBusy: boolean;
+  error?: string | null;
   onRequestPermission: () => void;
+  onOpenSettings: () => void;
   onClose: () => void;
 }
-
-/**
- * 마이크 접근 권한이 거부되었을 때 표시되는 모달.
- * 사용자에게 권한의 필요성을 설명하고 설정 화면으로 이동할 수 있도록 안내합니다.
- */
-export default function MicPermissionModal({
-  visible,
-  onRequestPermission,
-  onClose,
-}: MicPermissionModalProps) {
-  const { colors } = useThemeColors();
-  const handleOpenSettings = () => {
-    Linking.openSettings();
-    onClose();
-  };
-
-  return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      statusBarTranslucent
-    >
-      <View style={[styles.overlay, { backgroundColor: colors.background.overlay }]}>
-        <View style={[styles.container, { borderColor: colors.border.primary, backgroundColor: colors.background.card }]}>
-          {/* 아이콘 영역 */}
-          <View style={styles.iconCircle}>
-            <Text style={styles.iconText}>🎤</Text>
-          </View>
-
-          {/* 텍스트 영역 */}
-          <Text style={[styles.title, { color: colors.text.primary }]}>마이크 접근 권한 필요</Text>
+export default function MicPermissionModal({ visible, canAskAgain, isBusy, error, onRequestPermission, onOpenSettings, onClose }: Props) {
+  const { colors, isDark } = useThemeColors();
+  const { contentContainerStyle, screenPadding } = useLayout();
+  const { top, bottom } = useSafeAreaInsets();
+  return <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+    <View style={[styles.overlay, { backgroundColor: colors.background.overlay, paddingHorizontal: screenPadding, paddingTop: top, paddingBottom: bottom }]}>
+      <ScrollView style={[contentContainerStyle, styles.scroll]} contentContainerStyle={styles.scrollContent} bounces={false}>
+        <View accessibilityViewIsModal style={[styles.card, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
+          <Feather name="mic" size={28} color={colors.brand.accent} />
+          <Text style={[styles.title, { color: colors.text.primary }]}>내 목소리로 답변하려면</Text>
           <Text style={[styles.description, { color: colors.text.secondary }]}>
-            AI 인터뷰 녹음을 위해 마이크 접근 권한이 필요합니다.{'\n'}
-            음성 데이터는 안전하게 보호됩니다.
+            마이크와 음성 인식 권한이 필요해요. 말한 내용을 녹음하고 글로 보여드려요.
           </Text>
-
-          {/* 버튼 영역 */}
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              style={styles.primaryButton}
-              activeOpacity={0.8}
-              onPress={onRequestPermission}
-            >
-              <Text style={styles.primaryButtonText}>권한 허용하기</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.secondaryButton, { borderColor: colors.border.strong }]}
-              activeOpacity={0.8}
-              onPress={handleOpenSettings}
-            >
-              <Text style={[styles.secondaryButtonText, { color: colors.text.primary }]}>설정에서 변경</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.cancelButton}
-              activeOpacity={0.8}
-              onPress={onClose}
-            >
-              <Text style={[styles.cancelButtonText, { color: colors.text.muted }]}>나중에 하기</Text>
-            </TouchableOpacity>
-          </View>
+          {!canAskAgain && <Text style={[styles.description, { color: colors.text.secondary }]}>휴대폰 설정에서 허용한 뒤 돌아와주세요.</Text>}
+          {error && <Text accessibilityLiveRegion="polite" style={[styles.description, { color: colors.text.danger }]}>{error}</Text>}
+          <Pressable accessibilityRole="button" accessibilityState={{ disabled: isBusy, busy: isBusy }} disabled={isBusy}
+            onPress={canAskAgain ? onRequestPermission : onOpenSettings} style={[styles.button, { backgroundColor: colors.brand.accent, opacity: isBusy ? 0.5 : 1 }]}>
+            {isBusy && <ActivityIndicator color={isDark ? Colors.primary.soulBlack : Colors.neutral.pureWhite} />}
+            <Text style={[styles.buttonText, { color: isDark ? Colors.primary.soulBlack : Colors.neutral.pureWhite }]}>{canAskAgain ? '권한 허용하고 녹음하기' : '휴대폰 설정 열기'}</Text>
+          </Pressable>
+          <Pressable accessibilityRole="button" disabled={isBusy} onPress={onClose} style={styles.button}>
+            <Text style={[styles.description, { color: colors.text.secondary }]}>지금은 닫기</Text>
+          </Pressable>
         </View>
-      </View>
-    </Modal>
-  );
+      </ScrollView>
+    </View>
+  </Modal>;
 }
-
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  container: {
-    width: '85%',
-    maxWidth: 340,
-    borderRadius: Radii.xl,
-    borderWidth: 0.612,
-    padding: Spacing.xxxl,
-    alignItems: 'center',
-    gap: Spacing.lg,
-  },
-  iconCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: Radii.xxl,
-    backgroundColor: Colors.glass.cyan10,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: Spacing.sm,
-  },
-  iconText: {
-    fontSize: 28,
-  },
-  title: {
-    fontSize: FontSize.xxl,
-    fontWeight: FontWeight.bold,
-    lineHeight: 28,
-    textAlign: 'center',
-  },
-  description: {
-    fontSize: FontSize.base,
-    fontWeight: FontWeight.regular,
-    lineHeight: 22,
-    textAlign: 'center',
-    letterSpacing: -0.15,
-  },
-  buttonContainer: {
-    width: '100%',
-    gap: 10,
-    marginTop: Spacing.sm,
-  },
-  primaryButton: {
-    width: '100%',
-    height: 48,
-    borderRadius: Radii.md2,
-    backgroundColor: Colors.primary.electricCyan,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  primaryButtonText: {
-    color: Colors.primary.soulBlack,
-    fontSize: FontSize.lg,
-    fontWeight: FontWeight.semibold,
-  },
-  secondaryButton: {
-    width: '100%',
-    height: 48,
-    borderRadius: Radii.md2,
-    borderWidth: 1,
-    backgroundColor: 'transparent',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  secondaryButtonText: {
-    fontSize: FontSize.lg,
-    fontWeight: FontWeight.medium,
-  },
-  cancelButton: {
-    width: '100%',
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  cancelButtonText: {
-    fontSize: FontSize.base,
-    fontWeight: FontWeight.regular,
-  },
+  overlay: { flex: 1, justifyContent: 'center' },
+  scroll: { flexGrow: 0 },
+  scrollContent: { paddingVertical: Spacing.xxl },
+  card: { padding: Spacing.xxl, borderWidth: 1, borderRadius: Radii.xl, gap: Spacing.lg },
+  title: { fontFamily: FontFamily.sans, fontSize: FontSize.xxl, fontWeight: FontWeight.semibold, lineHeight: 30 },
+  description: { fontFamily: FontFamily.sans, fontSize: FontSize.md, lineHeight: 24 },
+  button: { minHeight: 48, padding: Spacing.md, borderRadius: Radii.md, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: Spacing.sm },
+  buttonText: { fontFamily: FontFamily.sans, fontSize: FontSize.lg, fontWeight: FontWeight.semibold, lineHeight: 24, flexShrink: 1, textAlign: 'center' },
 });

@@ -44,16 +44,22 @@ export function useVoiceRecording() {
     if (!status.granted) {
       throw new Error('마이크 권한이 필요합니다.');
     }
-    await audioRecorder.prepareToRecordAsync();
-    audioRecorder.record();
+    await setAudioModeAsync({ playsInSilentMode: true, allowsRecording: true });
+    await audioRecorder.prepareToRecordAsync(INTERVIEW_RECORDING_PRESET);
+    try { audioRecorder.record(); }
+    catch (failure) {
+      try { await audioRecorder.stop(); } catch { /* Preserve the original start failure. */ }
+      throw failure;
+    }
   }, [audioRecorder]);
 
   /** 녹음을 멈추고 파일 URI + 녹음 길이(초)를 반환한다. */
   const stopRecording = useCallback(async () => {
-    const durationSeconds = recorderState.durationMillis ? recorderState.durationMillis / 1000 : undefined;
+    const durationMs = audioRecorder.getStatus().durationMillis;
+    const durationSeconds = durationMs > 0 ? durationMs / 1000 : undefined;
     await audioRecorder.stop();
     return { uri: audioRecorder.uri, durationSeconds };
-  }, [audioRecorder, recorderState.durationMillis]);
+  }, [audioRecorder]);
 
   return {
     isRecording: recorderState.isRecording,

@@ -11,7 +11,7 @@ import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 
-export type VoiceUpdateStatus = 'idle' | 'recording' | 'analyzing' | 'done';
+export type VoiceUpdateStatus = 'idle' | 'starting' | 'recording' | 'analyzing' | 'done';
 
 interface VoiceUpdateButtonProps {
   status: VoiceUpdateStatus;
@@ -52,6 +52,7 @@ export default function VoiceUpdateButton({
   const dynamicButtonSize = Math.max(80, Math.min(width * 0.244, 112));
 
   const isIdle = status === 'idle';
+  const isStarting = status === 'starting';
   const isRecording = status === 'recording';
   const isAnalyzing = status === 'analyzing';
   const isDone = status === 'done';
@@ -71,13 +72,13 @@ export default function VoiceUpdateButton({
   const isCoolingDown = isIdle && idleStatus !== 'ready';
 
   // 상태별 그라디언트 및 그림자 스타일 결정
-  const gradientColors = isIdle
+  const gradientColors = isIdle || isStarting
     ? Colors.gradient.voiceStart
     : isRecording
       ? Colors.gradient.recording
       : Colors.gradient.done; // analyzing과 done 모두 초록색 사용
 
-  const shadowStyle = isIdle
+  const shadowStyle = isIdle || isStarting
     ? Colors.shadow.voiceStart
     : isRecording
       ? Colors.shadow.recording
@@ -115,7 +116,7 @@ export default function VoiceUpdateButton({
             { width: dynamicButtonSize, height: dynamicButtonSize }, // 동적 사이즈 적용
             isCoolingDown && styles.buttonCoolingDown,
           ]}
-          disabled={isAnalyzing || isCoolingDown}
+          disabled={isStarting || isAnalyzing || isCoolingDown}
         >
           <LinearGradient
             colors={gradientColors}
@@ -123,7 +124,7 @@ export default function VoiceUpdateButton({
             end={{ x: 1, y: 1 }}
             style={styles.button}
           >
-            {isIdle && <VoiceIcon width={32} height={32} />}
+            {(isIdle || isStarting) && <VoiceIcon width={32} height={32} />}
             {isRecording && <StopIcon width={32} height={32} />}
             {isAnalyzing && <CompleteIcon width={32} height={32} />}
           </LinearGradient>
@@ -132,6 +133,7 @@ export default function VoiceUpdateButton({
 
       {/* 2. 하단 정보 및 액션 영역 */}
       <View style={styles.infoArea}>
+        {isStarting && <Text style={[styles.statusText, { color: colors.text.secondary }]}>녹음을 준비하고 있어요…</Text>}
         {isIdle && (
           <VoiceUpdateIdleStatus
             status={idleStatus}
@@ -244,4 +246,3 @@ const styles = StyleSheet.create({
     paddingTop: 10,
   },
 });
-
