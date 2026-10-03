@@ -1,263 +1,161 @@
-import {Colors, Spacing} from '@/src/constants/theme';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Alert, Keyboard, KeyboardAvoidingView, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
 import { useLayout } from '@/src/hooks/useLayout';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
-import { useRouter } from 'expo-router';
-import React, { useEffect } from 'react';
-import { Alert, KeyboardAvoidingView, Linking, Platform, ScrollView, StyleSheet, View, ActivityIndicator } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
-
-// Step 4 Components
+import { useAuthStore } from '@/src/store/useAuthStore';
+import { performLogout } from '@/src/services/authService';
 import InterviewAIBox from '@/src/components/signup/steps/Step4_Interview/components/InterviewAIBox';
 import InterviewAnswerBox from '@/src/components/signup/steps/Step4_Interview/components/InterviewAnswerBox';
-import InterviewVisualizer from '@/src/components/signup/steps/Step4_Interview/components/InterviewVisualizer';
 import InterviewControls from '@/src/components/signup/steps/Step4_Interview/components/InterviewControls';
 import InterviewFooter from '@/src/components/signup/steps/Step4_Interview/components/InterviewFooter';
 import InterviewHeader from '@/src/components/signup/steps/Step4_Interview/components/InterviewHeader';
-import MovingBackground from '@/src/components/signup/steps/Step4_Interview/components/parts/MovingBackground';
-
-import { useInterviewSpeech } from '@/src/components/signup/steps/Step4_Interview/hooks/useInterviewSpeech';
-import { useSTT } from '@/src/hooks/useSTT';
-import { useInterviewQuestions } from '@/src/components/signup/steps/Step4_Interview/hooks/useInterviewQuestions';
-import { useInterviewUpload } from '@/src/components/signup/steps/Step4_Interview/hooks/useInterviewUpload';
 import MicPermissionModal from '@/src/components/signup/steps/Step4_Interview/components/parts/MicPermissionModal';
-import { useAuthStore } from '@/src/store/useAuthStore';
+import { useInterviewQuestions } from '@/src/components/signup/steps/Step4_Interview/hooks/useInterviewQuestions';
+import { useInterviewFlow } from '@/src/components/signup/steps/Step4_Interview/hooks/useInterviewFlow';
 
 export default function InterviewScreen() {
   const { contentContainerStyle, screenPadding } = useLayout();
   const { colors } = useThemeColors();
+  const { top } = useSafeAreaInsets();
   const router = useRouter();
-
-  const {
-    isRecording,
-    recordingUri,
-    hasPermission,
-    requestPermission,
-    startRecording,
-    stopRecording,
-    resetRecording,
-  } = useInterviewSpeech();
-
-  const { transcript, startListening, stopListening, resetTranscript } = useSTT('ko-KR');
-  const { 
-    currentQuestion, 
-    currentQuestionIndex, 
-    totalQuestions, 
-    isLastQuestion, 
-    goToNextQuestion,
-    isLoading,
-    isError,
-    refetch 
-  } = useInterviewQuestions();
-  const { uploadInterviewAudio, isUploading } = useInterviewUpload();
-
-  const [showPermissionModal, setShowPermissionModal] = React.useState(false);
-
-  useEffect(() => {
-    resetTranscript();
-    resetRecording();
-  }, [currentQuestionIndex, resetTranscript, resetRecording]);
-
-  useEffect(() => {
-    if (isError) {
-      Alert.alert(
-        '오류 발생',
-        '데이터를 불러오지 못했습니다. 다시 시도하시겠습니까?',
-        [
-          { text: '취소', style: 'cancel' },
-          { text: '다시 시도', onPress: () => refetch() }
-        ]
-      );
-    }
-  }, [isError, refetch]);
-
-  if (isLoading) {
-    return (
-      <View style={[styles.keyboardView, styles.loadingContainer, { backgroundColor: colors.background.primary }]}>
-        <ActivityIndicator size="large" color={Colors.primary.electricCyan} />
-      </View>
-    );
-  }
-
-  const handleRecordPress = async () => {
-    if (!hasPermission) {
-      setShowPermissionModal(true);
-      return;
-    }
-
-    try {
-      if (isRecording) {
-        await stopListening();
-        await stopRecording();
-      } else {
-        await startRecording();
-        startListening();
-      }
-    } catch (error) {
-      console.error('녹음 제어 오류:', error);
-      Alert.alert('녹음 오류', error instanceof Error ? error.message : '오디오 시스템에 문제가 발생했습니다.');
-    }
-  };
-
-  const handleRequestPermission = async () => {
-    const granted = await requestPermission();
-    if (granted) {
-      setShowPermissionModal(false);
+  const scroll = useRef<ScrollView>(null);
+  const questions = useInterviewQuestions();
+  const { isLastQuestion, goToNextQuestion } = questions;
+  const onSaved = useCallback(async () => {
+    if (isLastQuestion) {
+      await useAuthStore.getState().updateUserStatus('ONBOARD_D');
+      router.replace('/signup/face-scan');
     } else {
-      Linking.openSettings();
-      setShowPermissionModal(false);
+      goToNextQuestion();
+      scroll.current?.scrollTo({ y: 0, animated: true });
     }
+  }, [isLastQuestion, goToNextQuestion, router]);
+  const flow = useInterviewFlow(questions.currentQuestion?.id, onSaved);
+  const [showPermissionModal, setShowPermissionModal] = useState(false);
+  const [permissionBusy, setPermissionBusy] = useState(false);
+  const [permissionError, setPermissionError] = useState<string | null>(null);
+  const permissionLock = useRef(false);
+  const [checkingLogin, setCheckingLogin] = useState(false);
+  const loginLock = useRef(false);
+  useEffect(() => {
+    if (flow.error) scroll.current?.scrollToEnd({ animated: true });
+  }, [flow.error]);
+
+  const handleRecord = () => {
+    Keyboard.dismiss();
+    if (flow.isBusy || checkingLogin) return;
+    if (flow.phase === 'recording') { void flow.finishRecording(); return; }
+    if (!flow.hasPermission) { setShowPermissionModal(true); return; }
+    void flow.beginRecording();
   };
-
-  const handleNextPress = async () => {
-    if (isUploading) return;
-
+  const requestPermission = async () => {
+    if (permissionLock.current) return;
+    permissionLock.current = true;
+    setPermissionBusy(true);
+    setPermissionError(null);
     try {
-      const targetQuestionId = currentQuestion.id;
-      let finalUri = recordingUri;
-      let finalTranscript = '';
-
-      if (isRecording) {
-        finalTranscript = await stopListening();
-        finalUri = await stopRecording();
-      }
-
-      if (!finalTranscript && !transcript) {
-        Alert.alert('알림', '답변 녹음을 완료한 후 다음 단계로 진행해주세요.');
-        return;
-      }
-
-      if (!finalUri) {
-        Alert.alert('녹음 오류', '답변 오디오를 찾을 수 없습니다. 다시 녹음해주세요.');
-        return;
-      }
-
-      const isSuccess = await uploadInterviewAudio(finalUri, targetQuestionId, finalTranscript || transcript);
-      if (!isSuccess) return;
-
-      if (isLastQuestion) {
-        // 마지막 답변 저장 성공 시 백엔드는 ONBOARD_D로 전환한다.
-        await useAuthStore.getState().updateUserStatus('ONBOARD_D');
-        router.replace('/signup/face-scan');
+      const granted = await flow.requestPermission();
+      if (granted) {
+        setShowPermissionModal(false);
+        await flow.beginRecording();
       } else {
-        goToNextQuestion();
+        setPermissionError('녹음하려면 마이크와 음성 인식 권한이 필요해요. 다시 허용하거나 휴대폰 설정을 확인해주세요.');
       }
-    } catch (error: any) {
-      console.error('다음 단계 이동 중 오류:', error);
-      if (error?.code === 'AUTH_4030') {
-        Alert.alert('접근 권한 없음', '이전 단계가 정상적으로 완료되지 않았습니다.');
-      } else {
-        Alert.alert('오류 발생', '답변을 처리하는 중 문제가 발생했습니다.');
-      }
-    }
+    } catch { setPermissionError('권한을 확인하지 못했어요. 잠시 후 다시 눌러주세요.'); }
+    finally { permissionLock.current = false; setPermissionBusy(false); }
   };
-
-  return (
-    <View style={[styles.mainContainer, { backgroundColor: colors.background.primary }]}>
-      <MovingBackground />
-      
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardView}
-      >
-        <ScrollView
-          contentContainerStyle={styles.scrollContainer}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
-          <View style={[styles.container, contentContainerStyle, { paddingHorizontal: screenPadding }]}>
-            <Animated.View entering={FadeInDown.delay(0).duration(400).springify()} style={styles.headerWrapper}>
-              <InterviewHeader
-                currentQuestion={currentQuestionIndex + 1}
-                totalQuestions={totalQuestions}
-              />
-            </Animated.View>
-
-            {/* AI Visualizer (프리미엄 루핑 애니메이션) */}
-            <Animated.View entering={FadeInDown.delay(80).duration(400).springify()} style={styles.visualizerWrapper}>
-              <InterviewVisualizer isRecording={isRecording} />
-            </Animated.View>
-
-            <Animated.View entering={FadeInDown.delay(160).duration(400).springify()} style={styles.body}>
-              <InterviewAIBox
-                question={currentQuestion.question}
-              />
-
-              <View style={styles.answerWrapper}>
-                <InterviewAnswerBox isRecording={isRecording} transcript={transcript} />
-              </View>
-
-              <View style={styles.controlsWrapper}>
-                <InterviewControls
-                  isRecording={isRecording}
-                  isLastQuestion={isLastQuestion}
-                  isNextDisabled={isUploading}
-                  onRecordPress={handleRecordPress}
-                  onNextPress={handleNextPress}
-                />
-              </View>
-            </Animated.View>
-
-            <Animated.View entering={FadeInDown.delay(240).duration(400).springify()} style={styles.footerWrapper}>
-              <InterviewFooter />
-            </Animated.View>
-          </View>
-        </ScrollView>
-
-        <MicPermissionModal
-          visible={showPermissionModal}
-          onRequestPermission={handleRequestPermission}
-          onClose={() => setShowPermissionModal(false)}
+  const checkLogin = async () => {
+    if (loginLock.current) return;
+    loginLock.current = true;
+    setCheckingLogin(true);
+    try { await performLogout(); router.replace('/login'); }
+    catch { Alert.alert('진행 상태를 확인하지 못했어요', '잠시 후 다시 눌러주세요.'); }
+    finally { loginLock.current = false; setCheckingLogin(false); }
+  };
+  const review = flow.draft && ['review', 'saving'].includes(flow.phase) ? flow.draft : null;
+  const busyLabel = flow.phase === 'starting' ? '녹음을 준비하고 있어요…'
+    : flow.phase === 'stopping' ? '말씀하신 내용을 정리하고 있어요…'
+    : flow.saveStage === 'address' ? '녹음 전송을 준비하고 있어요…'
+    : flow.saveStage === 'upload' ? flow.uploadProgress == null ? '녹음을 전송하고 있어요…' : `녹음 전송 ${Math.round(flow.uploadProgress * 100)}%`
+    : '답변을 저장하고 있어요…';
+  const canAnswer = !questions.isLoading && !questions.isError && !!questions.currentQuestion;
+  return <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={top} style={[styles.screen, { backgroundColor: colors.background.primary }]}>
+    <ScrollView ref={scroll} contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" showsVerticalScrollIndicator={false}>
+      <View style={[contentContainerStyle, styles.content, { paddingHorizontal: screenPadding }]}>
+        {questions.isLoading ? <View style={styles.empty}>
+          <ActivityIndicator color={colors.brand.accent} size="large" />
+          <Text style={[styles.copy, { color: colors.text.secondary }]}>나눌 이야기를 준비하고 있어요…</Text>
+        </View> : questions.isError || !questions.currentQuestion ? <View style={styles.empty}>
+          <Text style={[styles.emptyTitle, { color: colors.text.primary }]}>질문을 불러오지 못했어요</Text>
+          <Text style={[styles.copy, { color: colors.text.secondary }]}>연결 상태를 확인하고 다시 불러와주세요.</Text>
+          <Pressable accessibilityRole="button" onPress={() => void questions.refetch()} style={[styles.retry, { borderColor: colors.border.strong }]}>
+            <Text style={[styles.copy, { color: colors.text.primary }]}>질문 다시 불러오기</Text>
+          </Pressable>
+        </View> : <>
+          <InterviewHeader currentQuestion={questions.currentQuestionIndex + 1} totalQuestions={questions.totalQuestions} />
+          <InterviewAIBox key={questions.currentQuestion.id} question={questions.currentQuestion.question} />
+          {flow.phase === 'recording' ? <InterviewAnswerBox
+            key="recording" isRecording isBusy={false} isListening={flow.isListening} transcript={flow.transcript}
+            durationMs={flow.durationMs} metering={flow.metering} onChangeText={flow.changeText}
+          /> : review ? <InterviewAnswerBox
+            key={review.uri} isRecording={false} isBusy={flow.isBusy || checkingLogin} isListening={false} transcript={review.transcript}
+            recordingUri={review.uri} durationMs={review.durationMs} recognitionIssue={review.notice} onChangeText={flow.changeText}
+          /> : flow.phase === 'ready' ? <Text style={[styles.copy, { color: colors.text.secondary }]}>
+            조용한 곳에서 휴대폰을 가까이 두고 말해주세요. 주변 대화가 함께 들어가지 않도록 해주세요.
+          </Text> : null}
+          {flow.error && <View accessibilityRole="alert" accessibilityLiveRegion="polite" style={[styles.notice, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
+            <Text style={[styles.copy, { color: colors.text.primary }]}>{flow.error}</Text>
+            {flow.needsLoginCheck && <Pressable accessibilityRole="button" disabled={checkingLogin} onPress={() => void checkLogin()} style={styles.retry}>
+              <Text style={[styles.copy, { color: colors.text.primary }]}>{checkingLogin ? '진행 상태 확인을 준비하고 있어요…' : '로그인으로 진행 상태 확인'}</Text>
+            </Pressable>}
+          </View>}
+          <InterviewFooter />
+        </>}
+      </View>
+    </ScrollView>
+    {canAnswer && <View style={[styles.actionBar, { backgroundColor: colors.background.primary, borderColor: colors.border.primary }]}>
+      <View style={[contentContainerStyle, styles.actionContent, { paddingHorizontal: screenPadding }]}>
+        <InterviewControls
+          isRecording={flow.phase === 'recording' || flow.phase === 'stopping'} hasRecording={!!review}
+          isBusy={flow.isBusy || checkingLogin} isNextDisabled={!review?.transcript.trim() || flow.needsLoginCheck}
+          isRecordDisabled={flow.needsLoginCheck}
+          isLastQuestion={questions.isLastQuestion} busyLabel={busyLabel} needsConfirmation={!!review?.notice}
+          onRecordPress={handleRecord} onNextPress={() => { Keyboard.dismiss(); void flow.saveAnswer(); }}
         />
-      </KeyboardAvoidingView>
-    </View>
-  );
+        {flow.saveStage === 'upload' && flow.uploadProgress != null && <View accessibilityRole="progressbar" accessibilityLabel="녹음 전송" accessibilityValue={{ min: 0, max: 100, now: Math.round(flow.uploadProgress * 100) }} style={[styles.track, { backgroundColor: colors.border.primary }]}>
+          <View style={[styles.fill, { backgroundColor: colors.brand.accent, width: `${flow.uploadProgress * 100}%` }]} />
+        </View>}
+      </View>
+    </View>}
+    <MicPermissionModal
+      visible={showPermissionModal} canAskAgain={flow.canAskAgain} isBusy={permissionBusy}
+      onRequestPermission={() => void requestPermission()}
+      onOpenSettings={() => {
+        setShowPermissionModal(false);
+        void Linking.openSettings().catch(() => {
+          setPermissionError('휴대폰 설정을 열지 못했어요. 설정에서 마이크와 음성 인식을 허용해주세요.');
+          setShowPermissionModal(true);
+        });
+      }}
+      onClose={() => { if (!permissionLock.current) setShowPermissionModal(false); }}
+      error={permissionError}
+    />
+  </KeyboardAvoidingView>;
 }
-
 const styles = StyleSheet.create({
-  mainContainer: {
-    flex: 1,
-  },
-  keyboardView: {
-    flex: 1,
-  },
-  scrollContainer: {
-    flexGrow: 1,
-    alignItems: 'center',
-    paddingBottom: 50,
-  },
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    marginTop: Spacing.xl,
-  },
-  headerWrapper: {
-    marginBottom: Spacing.xl,
-  },
-  visualizerWrapper: {
-    width: '100%',
-    height: 180,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: Spacing.xl,
-  },
-  body: {
-    width: '100%',
-    alignItems: 'center',
-  },
-  answerWrapper: {
-    width: '100%',
-    marginTop: Spacing.lg,
-  },
-  controlsWrapper: {
-    width: '100%',
-    marginTop: Spacing.xl,
-  },
-  footerWrapper: {
-    width: '100%',
-    marginTop: Spacing.xxxl,
-  },
-  loadingContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+  screen: { flex: 1 },
+  scroll: { flexGrow: 1, paddingBottom: Spacing.xxl },
+  content: { paddingTop: Spacing.lg, gap: Spacing.xl },
+  actionBar: { borderTopWidth: 1, paddingVertical: Spacing.md },
+  actionContent: { gap: Spacing.sm },
+  copy: { fontFamily: FontFamily.sans, fontSize: FontSize.base, lineHeight: 22 },
+  empty: { minHeight: 240, alignItems: 'center', justifyContent: 'center', gap: Spacing.lg },
+  emptyTitle: { fontFamily: FontFamily.sans, fontSize: FontSize.xl, fontWeight: FontWeight.semibold, lineHeight: 28, textAlign: 'center' },
+  retry: { minHeight: 44, justifyContent: 'center', alignItems: 'center', padding: Spacing.md, borderWidth: 1, borderRadius: Radii.md },
+  notice: { borderWidth: 1, padding: Spacing.lg, borderRadius: Radii.lg, gap: Spacing.md },
+  track: { height: 4, borderRadius: 2, overflow: 'hidden' },
+  fill: { height: '100%', borderRadius: 2 },
 });
