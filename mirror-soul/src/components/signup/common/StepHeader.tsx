@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import {Colors, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
+import {FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface Props {
   title: string;
@@ -11,13 +12,14 @@ interface Props {
  * 회원가입 각 단계의 제목과 부제목을 렌더링하는 공통 헤더
  */
 export default function StepHeader({ title, subtitle }: Props) {
+  const { colors } = useThemeColors();
   return (
     <View style={styles.container}>
       <View style={styles.titleWrapper}>
-        <Text style={styles.title}>{title}</Text>
+        <Text accessibilityRole="header" style={[styles.title, { color: colors.text.primary }]}>{title}</Text>
       </View>
       <View style={styles.subtitleWrapper}>
-        <Text style={styles.subtitle}>{subtitle}</Text>
+        <Text style={[styles.subtitle, { color: colors.text.secondary }]}>{subtitle}</Text>
       </View>
     </View>
   );
@@ -28,27 +30,24 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'flex-start',
     gap: Spacing.sm,
-    marginTop: Spacing.giant,
   },
   titleWrapper: {
     width: '100%',
   },
   title: {
-    color: Colors.neutral.pureWhite,
-    fontSize: 30,
-    fontWeight: FontWeight.medium,
-    lineHeight: 36,
-    letterSpacing: 0.396,
+    fontFamily: FontFamily.sans,
+    fontSize: FontSize.xxxl,
+    fontWeight: FontWeight.semibold,
+    lineHeight: 34,
   },
   subtitleWrapper: {
     width: '100%',
     flexShrink: 1,
   },
   subtitle: {
-    color: Colors.neutral.lightGray,
+    fontFamily: FontFamily.sans,
     fontSize: FontSize.base,
     fontWeight: FontWeight.regular,
-    lineHeight: 20,
-    letterSpacing: -0.15,
+    lineHeight: 24,
   }
 });

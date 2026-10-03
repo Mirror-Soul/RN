@@ -1,4 +1,4 @@
-import CompleteIcon from '@/assets/images/common/Complete.svg';
+import { Feather } from '@expo/vector-icons';
 import { Colors, Radii, FontFamily, FontSize, FontWeight, Spacing } from '@/src/constants/theme';
 import React, { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -28,20 +28,21 @@ interface CheckboxProps {
 }
 
 function Checkbox({ checked, onToggle, accessibilityLabel }: CheckboxProps) {
-  const { colors } = useThemeColors();
+  const { colors, isDark } = useThemeColors();
 
   return (
     <TouchableOpacity
       style={[styles.checkboxWrapper, { borderColor: colors.border.primary, backgroundColor: colors.background.glass }]}
       onPress={onToggle}
       activeOpacity={0.8}
+      hitSlop={12}
       accessibilityRole="checkbox"
       accessibilityState={{ checked }}
       accessibilityLabel={accessibilityLabel}
     >
       {checked ? (
-        <View style={styles.checkedBox}>
-          <CompleteIcon width={12} height={12} />
+        <View style={[styles.checkedBox, { backgroundColor: colors.brand.accent }]}>
+          <Feather name="check" size={14} color={isDark ? Colors.primary.soulBlack : Colors.neutral.pureWhite} />
         </View>
       ) : (
         <View style={styles.emptyCheck} />
@@ -68,6 +69,7 @@ function AgreementRow({
   viewDetailLabel,
   children,
 }: AgreementRowProps) {
+  const { colors } = useThemeColors();
   return (
     <View style={styles.row}>
       <Checkbox checked={checked} onToggle={onToggle} accessibilityLabel={accessibilityLabel} />
@@ -77,12 +79,13 @@ function AgreementRow({
       </TouchableOpacity>
 
       <TouchableOpacity
+        style={styles.detailButton}
         onPress={onViewDetail}
         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         accessibilityRole="button"
         accessibilityLabel={viewDetailLabel}
       >
-        <Text style={styles.viewDetailText}>보기</Text>
+        <Text style={[styles.viewDetailText, { color: colors.brand.accent }]}>보기</Text>
       </TouchableOpacity>
     </View>
   );
@@ -132,7 +135,7 @@ export default function AgreementSection({ state, onChange }: SectionProps) {
         onViewDetail={() => setActiveSheet('terms')}
         viewDetailLabel="서비스 이용약관 자세히 보기"
       >
-        <Text style={[styles.baseText, { color: colors.text.secondary }]}>서비스 이용약관에 동의합니다. (필수)</Text>
+        <Text style={[styles.baseText, { color: colors.text.secondary }]}>서비스 이용약관 동의 (필수)</Text>
       </AgreementRow>
 
       <AgreementRow
@@ -142,7 +145,7 @@ export default function AgreementSection({ state, onChange }: SectionProps) {
         onViewDetail={() => setActiveSheet('privacy')}
         viewDetailLabel="개인정보 처리방침 자세히 보기"
       >
-        <Text style={[styles.baseText, { color: colors.text.secondary }]}>개인정보 처리방침에 동의합니다. (필수)</Text>
+        <Text style={[styles.baseText, { color: colors.text.secondary }]}>개인정보 처리방침 동의 (필수)</Text>
       </AgreementRow>
 
       <AgreementRow
@@ -153,9 +156,7 @@ export default function AgreementSection({ state, onChange }: SectionProps) {
         viewDetailLabel="생체정보 수집 및 AI 트윈 활용 동의 자세히 보기"
       >
         <Text style={[styles.baseText, { color: colors.text.secondary }]}>
-          얼굴 영상, 음성 등{' '}
-          <Text style={[styles.emphasisText, { color: colors.text.primary }]}>생체정보 수집 및 AI 트윈 생성·활용</Text>에 동의합니다.
-          (필수)
+          얼굴·음성 등 <Text style={[styles.emphasisText, { color: colors.text.primary }]}>생체정보 수집 및 AI 트윈 생성·활용</Text> 동의 (필수)
         </Text>
       </AgreementRow>
 
@@ -168,7 +169,7 @@ export default function AgreementSection({ state, onChange }: SectionProps) {
         onViewDetail={() => setActiveSheet('marketing')}
         viewDetailLabel="마케팅 정보 수신 동의 자세히 보기"
       >
-        <Text style={[styles.baseText, { color: colors.text.secondary }]}>이벤트·혜택 등 마케팅 정보 수신에 동의합니다. (선택)</Text>
+        <Text style={[styles.baseText, { color: colors.text.secondary }]}>이벤트·혜택 등 마케팅 수신 (선택)</Text>
       </AgreementRow>
 
       <ConsentDetailSheet
@@ -189,6 +190,7 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
   },
   row: {
+    minHeight: 44,
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.md,
@@ -221,18 +223,20 @@ const styles = StyleSheet.create({
   },
   textContainer: {
     flex: 1,
+    minHeight: 44,
+    justifyContent: 'center',
   },
   baseText: {
     fontFamily: FontFamily.sans,
     fontSize: FontSize.base,
     fontWeight: FontWeight.regular,
-    lineHeight: 20,
+    lineHeight: 24,
   },
   emphasisText: {
     fontFamily: FontFamily.sans,
     fontSize: FontSize.base,
     fontWeight: FontWeight.medium,
-    lineHeight: 20,
+    lineHeight: 24,
   },
   viewDetailText: {
     color: Colors.primary.electricCyan,
@@ -241,4 +245,5 @@ const styles = StyleSheet.create({
     fontWeight: FontWeight.medium,
     textDecorationLine: 'underline',
   },
+  detailButton: { minHeight: 44, minWidth: 44, justifyContent: 'center', alignItems: 'center' },
 });

@@ -1,5 +1,5 @@
-import { useRef, useEffect } from 'react';
-import { PanResponder, Animated } from 'react-native';
+import { useRef, useEffect, useCallback } from 'react';
+import { PanResponder, Animated, View } from 'react-native';
 import * as Haptics from 'expo-haptics';
 
 interface UseMbtiSliderProps {
@@ -19,6 +19,8 @@ export const useMbtiSlider = ({
   const containerXRef = useRef(0);
   const valueRef = useRef(value);
   const lastHapticValueRef = useRef(value);
+  const containerRef = useRef<View | null>(null);
+  const mounted = useRef(true);
 
   // ── 콜백을 ref로 래핑: PanResponder 클로저에서 항상 최신 함수를 참조 ──
   const onChangeRef = useRef(onChange);
@@ -27,6 +29,10 @@ export const useMbtiSlider = ({
   onChangeRef.current = onChange;
   onDragStartRef.current = onDragStart;
   onDragEndRef.current = onDragEnd;
+  useEffect(() => {
+    mounted.current = true;
+    return () => { mounted.current = false; onDragEndRef.current?.(); };
+  }, []);
 
   // Handle position animation (0 to 100)
   const animValue = useRef(new Animated.Value(value)).current;
@@ -45,7 +51,7 @@ export const useMbtiSlider = ({
     const atEnd = (newVal === 0 || newVal === 100) && prev !== newVal;
 
     if (passingCenter || atEnd) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
     }
     lastHapticValueRef.current = newVal;
   };
@@ -83,17 +89,10 @@ export const useMbtiSlider = ({
 
   const setSliderWidth = (width: number) => {
     sliderWidthRef.current = width;
+    containerRef.current?.measureInWindow(x => { if (mounted.current) containerXRef.current = x; });
   };
 
-  const measureContainer = (ref: any) => {
-    if (ref) {
-      setTimeout(() => {
-        ref.measureInWindow((x: number) => {
-          containerXRef.current = x;
-        });
-      }, 100);
-    }
-  };
+  const measureContainer = useCallback((ref: View | null) => { containerRef.current = ref; }, []);
 
   return {
     panResponder,

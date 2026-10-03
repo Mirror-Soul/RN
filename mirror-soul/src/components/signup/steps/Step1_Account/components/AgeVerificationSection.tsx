@@ -1,4 +1,4 @@
-import CompleteIcon from '@/assets/images/common/Complete.svg';
+import { Feather } from '@expo/vector-icons';
 import { Colors, Radii, FontFamily, FontSize, FontWeight, Spacing } from '@/src/constants/theme';
 import React, { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -19,7 +19,7 @@ import { useThemeColors } from '@/src/hooks/useThemeColors';
  * 무엇에 동의하는지 모른 채 누르게 된다.
  */
 export default function AgeVerificationSection({ state, onChange }: SectionProps) {
-  const { colors } = useThemeColors();
+  const { colors, isDark } = useThemeColors();
   const [isDetailVisible, setIsDetailVisible] = useState(false);
 
   const toggleAdultConfirmed = () => {
@@ -32,13 +32,14 @@ export default function AgeVerificationSection({ state, onChange }: SectionProps
         style={[styles.checkboxWrapper, { borderColor: colors.border.primary, backgroundColor: colors.background.glass }]}
         onPress={toggleAdultConfirmed}
         activeOpacity={0.8}
+        hitSlop={12}
         accessibilityRole="checkbox"
         accessibilityState={{ checked: state.isAdultConfirmed }}
         accessibilityLabel="만 19세 이상 확인"
       >
         {state.isAdultConfirmed ? (
-          <View style={styles.checkedBox}>
-            <CompleteIcon width={12} height={12} />
+          <View style={[styles.checkedBox, { backgroundColor: colors.brand.accent }]}>
+            <Feather name="check" size={14} color={isDark ? Colors.primary.soulBlack : Colors.neutral.pureWhite} />
           </View>
         ) : (
           <View style={styles.emptyCheck} />
@@ -50,16 +51,17 @@ export default function AgeVerificationSection({ state, onChange }: SectionProps
         onPress={toggleAdultConfirmed}
         activeOpacity={0.7}
       >
-        <Text style={[styles.baseText, { color: colors.text.secondary }]}>만 19세 이상이며, 본 서비스 이용 자격을 충족합니다. (필수)</Text>
+        <Text style={[styles.baseText, { color: colors.text.primary }]}>만 19세 이상이에요. (필수)</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
+        style={styles.detailButton}
         onPress={() => setIsDetailVisible(true)}
         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         accessibilityRole="button"
         accessibilityLabel="연령 확인 안내 자세히 보기"
       >
-        <Text style={styles.viewDetailText}>보기</Text>
+        <Text style={[styles.viewDetailText, { color: colors.brand.accent }]}>보기</Text>
       </TouchableOpacity>
 
       <ConsentDetailSheet
@@ -75,6 +77,7 @@ export default function AgeVerificationSection({ state, onChange }: SectionProps
 
 const styles = StyleSheet.create({
   row: {
+    minHeight: 44,
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.md,
@@ -108,7 +111,7 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.sans,
     fontSize: FontSize.base,
     fontWeight: FontWeight.regular,
-    lineHeight: 20,
+    lineHeight: 24,
   },
   viewDetailText: {
     color: Colors.primary.electricCyan,
@@ -117,4 +120,5 @@ const styles = StyleSheet.create({
     fontWeight: FontWeight.medium,
     textDecorationLine: 'underline',
   },
+  detailButton: { minHeight: 44, minWidth: 44, justifyContent: 'center', alignItems: 'center' },
 });

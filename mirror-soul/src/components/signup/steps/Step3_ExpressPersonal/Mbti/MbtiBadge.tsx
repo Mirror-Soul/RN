@@ -15,7 +15,7 @@ export default function MbtiBadge({ mbti }: Props) {
 
   return (
     <View style={[styles.container, { borderColor: colors.border.primary }]}>
-      <Text style={styles.text}>{mbti}</Text>
+      <Text accessibilityLabel={mbti.includes('-') ? '성향 선택 중' : `선택한 성격 유형 ${mbti}`} style={[styles.text, { color: colors.brand.accent }]}>{mbti}</Text>
     </View>
   );
 }

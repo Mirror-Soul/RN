@@ -41,13 +41,18 @@ export function useStep1Form() {
 
   // 폼 업데이트 함수
   const updateState = useCallback((updates: Partial<Step1State>) => {
+    if (updates.email !== undefined) {
+      resetTimer();
+      setIsModalVisible(false);
+      setVerifyAttemptCount(0);
+    }
     setState((prev) => ({
       ...prev,
       ...updates,
       // 이메일을 다시 수정하면 이전 시도의 인라인 에러(예: 중복 이메일)는 더 이상 유효하지 않다.
-      ...(updates.email !== undefined ? { emailError: undefined } : null),
+      ...(updates.email !== undefined ? { emailError: undefined, isEmailVerified: false } : null),
     }));
-  }, []);
+  }, [resetTimer]);
 
   // ─────────────────────────────────────────────
   // 이메일 인증 코드 발송 (Optimistic UI 패턴)
