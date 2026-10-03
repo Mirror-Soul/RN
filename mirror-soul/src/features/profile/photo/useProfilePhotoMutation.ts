@@ -8,6 +8,7 @@ import { useAuthStore } from '@/src/store/useAuthStore';
 import { MAX_PROFILE_PHOTO_BYTES } from './photoGeometry';
 import type { PreparedProfilePhoto } from './prepareProfilePhoto';
 import { mergeProfilePhotoCache } from './profilePhotoCache';
+import { copyRegisteredPhotoPreview, discardRegisteredPhotoPreview, registeredPhotoPreviewKey, type RegisteredPhotoPreview } from './registeredPhotoPreview';
 
 export type PhotoSaveStage = 'idle' | 'address' | 'upload' | 'save' | 'delete';
 const activeUsers = new Set<string>();
@@ -95,7 +96,14 @@ export function useProfilePhotoMutation() {
         assertSession();
         await client.cancelQueries({ queryKey: ['profile'] });
         assertSession();
+        const previewKey = registeredPhotoPreviewKey(userUuid);
+        const previousPreview = client.getQueryData<RegisteredPhotoPreview | null>(previewKey);
+        const localUri = photo && url ? await copyRegisteredPhotoPreview(photo.uri) : null;
+        try { assertSession(); }
+        catch (error) { await discardRegisteredPhotoPreview(localUri); throw error; }
+        client.setQueryData<RegisteredPhotoPreview | null>(previewKey, localUri && url ? { uri: localUri, url } : null);
         mergeProfilePhotoCache(client, url);
+        void discardRegisteredPhotoPreview(previousPreview?.uri);
         void client.invalidateQueries({ queryKey: ['profile', 'me'] });
         void client.invalidateQueries({ queryKey: ['profile', 'introduction'] });
         uploaded.current = null;

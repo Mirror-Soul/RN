@@ -1,7 +1,8 @@
 import React from 'react';
-import { Alert, PanResponder } from 'react-native';
+import { Alert, PanResponder, StyleSheet } from 'react-native';
+import * as ReactNative from 'react-native';
 import type { PanResponderCallbacks } from 'react-native';
-import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, render, waitFor, within } from '@testing-library/react-native';
 import { prepareProfilePhoto, rotateSelectedPhoto } from './prepareProfilePhoto';
 import { useProfilePhotoMutation } from './useProfilePhotoMutation';
 import { ProfilePhotoEditor } from './ProfilePhotoEditor';
@@ -137,4 +138,57 @@ it('keeps the original photo and returns to editing from the preview', async () 
   expect(screen.getByText('사진을 맞춰볼까요?')).toBeTruthy();
   expect(screen.getByLabelText('프로필 사진 크롭 영역')).toBeTruthy();
   expect(save).not.toHaveBeenCalled();
+});
+
+it('captures a vertical crop drag, keeps stable handlers, and restores scrolling after release', () => {
+  const screen = render(<ProfilePhotoEditor photo={photo} name="소울" onClose={jest.fn()} />);
+  fireEvent.press(screen.getByLabelText('사진 확대'));
+  const initialCrop = screen.UNSAFE_getAllByType(CroppedPhotoPreview)[0].props.crop;
+  const handlers = pan;
+  expect(handlers.onStartShouldSetPanResponderCapture?.({} as never, {} as never)).toBe(true);
+  expect(handlers.onShouldBlockNativeResponder?.({} as never, {} as never)).toBe(true);
+  act(() => handlers.onPanResponderGrant?.({ nativeEvent: { touches: [{ pageX: 100, pageY: 100 }] } } as never, {} as never));
+  expect(screen.getByTestId('photo-editor-scroll').props.scrollEnabled).toBe(false);
+  act(() => handlers.onPanResponderMove?.({ nativeEvent: { touches: [{ pageX: 100, pageY: 130 }] } } as never, {} as never));
+  expect(screen.UNSAFE_getAllByType(CroppedPhotoPreview)[0].props.crop.originY).toBeLessThan(initialCrop.originY);
+  expect(PanResponder.create).toHaveBeenCalledTimes(1);
+  act(() => handlers.onPanResponderRelease?.({} as never, {} as never));
+  expect(screen.getByTestId('photo-editor-scroll').props.scrollEnabled).toBe(true);
+});
+
+it('restores the surrounding scroll after a crop gesture is interrupted', () => {
+  const screen = render(<ProfilePhotoEditor photo={photo} name="소울" onClose={jest.fn()} />);
+  act(() => pan.onPanResponderGrant?.({ nativeEvent: { touches: [{ pageX: 100, pageY: 100 }] } } as never, {} as never));
+  expect(screen.getByTestId('photo-editor-scroll').props.scrollEnabled).toBe(false);
+  act(() => pan.onPanResponderTerminate?.({} as never, {} as never));
+  expect(screen.getByTestId('photo-editor-scroll').props.scrollEnabled).toBe(true);
+});
+
+it('sizes the crop from measured text and tool heights, keeping the footer outside the scroll', () => {
+  const screen = render(<ProfilePhotoEditor photo={photo} name="소울" onClose={jest.fn()} />);
+  fireEvent(screen.getByTestId('photo-editor-scroll'), 'layout', { nativeEvent: { layout: { width: 320, height: 410 } } });
+  fireEvent(screen.getByTestId('photo-editor-top'), 'layout', { nativeEvent: { layout: { height: 44 } } });
+  fireEvent(screen.getByTestId('photo-editor-bottom'), 'layout', { nativeEvent: { layout: { height: 136 } } });
+  const style = StyleSheet.flatten(screen.getByTestId('photo-editor-frame').props.style);
+  expect(style.height + 44 + 136 + 40).toBeLessThanOrEqual(410);
+  const scroll = screen.getByTestId('photo-editor-scroll');
+  expect(within(scroll).queryByRole('button', { name: '미리보기 확인' })).toBeNull();
+  expect(screen.getByRole('button', { name: '미리보기 확인' })).toBeEnabled();
+});
+
+it('keeps preview actions available with large text on a short screen', async () => {
+  jest.spyOn(ReactNative, 'useWindowDimensions').mockReturnValue({ width: 320, height: 568, scale: 2, fontScale: 2 });
+  const screen = render(<ProfilePhotoEditor photo={photo} name="소울" onClose={jest.fn()} />);
+  fireEvent.press(screen.getByText('미리보기 확인'));
+  await waitFor(() => expect(screen.getByText('사진 등록')).toBeTruthy());
+  fireEvent(screen.getByTestId('photo-editor-scroll'), 'layout', { nativeEvent: { layout: { width: 320, height: 220 } } });
+  fireEvent(screen.getByTestId('photo-editor-top'), 'layout', { nativeEvent: { layout: { height: 140 } } });
+  fireEvent(screen.getByTestId('photo-editor-bottom'), 'layout', { nativeEvent: { layout: { height: 230 } } });
+  expect(screen.getByTestId('photo-editor-scroll').props.scrollEnabled).toBe(true);
+  for (const name of ['사진 등록', '구도 다시 맞추기']) {
+    const button = screen.getByRole('button', { name });
+    expect(button).toBeEnabled();
+    expect(StyleSheet.flatten(button.props.style).flexBasis).toBe('auto');
+    expect(within(screen.getByTestId('photo-editor-scroll')).queryByRole('button', { name })).toBeNull();
+  }
 });

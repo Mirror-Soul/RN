@@ -7,6 +7,8 @@ import { ProfilePhotoManager } from './ProfilePhotoManager';
 import { useProfileQuery } from '../hooks/useProfileQuery';
 import { useProfilePhotoMutation } from './useProfilePhotoMutation';
 import { useToast } from '@/src/components/common/Toast/ToastProvider';
+import { useRegisteredPhotoPreview } from './registeredPhotoPreview';
+import { ProfilePhoto } from './ProfilePhoto';
 
 jest.mock('expo-image-picker', () => ({ launchImageLibraryAsync: jest.fn() }));
 jest.mock('expo-file-system/legacy', () => ({ deleteAsync: jest.fn() }));
@@ -14,6 +16,7 @@ jest.mock('@expo/vector-icons', () => ({ Feather: () => null }));
 jest.mock('@/src/hooks/useThemeColors', () => ({ useThemeColors: () => ({ colors: jest.requireActual('@/src/constants/theme').lightTheme }) }));
 jest.mock('../hooks/useProfileQuery', () => ({ useProfileQuery: jest.fn() }));
 jest.mock('./useProfilePhotoMutation', () => ({ useProfilePhotoMutation: jest.fn() }));
+jest.mock('./registeredPhotoPreview', () => ({ useRegisteredPhotoPreview: jest.fn() }));
 jest.mock('@/src/components/common/Toast/ToastProvider', () => ({ useToast: jest.fn() }));
 jest.mock('@/src/store/useAuthStore', () => ({ useAuthStore: { getState: () => ({ userUuid: 'me', isLoggedIn: true }), subscribe: () => jest.fn() } }));
 jest.mock('@/src/utils/logger', () => ({ logger: { warn: jest.fn() } }));
@@ -31,14 +34,46 @@ jest.mock('./prepareProfilePhoto', () => ({ ...jest.requireActual('./prepareProf
 
 const toast = jest.fn();
 const remove = jest.fn();
+const refetch = jest.fn();
 beforeEach(() => {
   jest.clearAllMocks();
-  (useProfileQuery as jest.Mock).mockReturnValue({ data: { profileImageUrl: null }, isError: false, isLoading: false });
+  (useProfileQuery as jest.Mock).mockReturnValue({ data: { profileImageUrl: null }, isError: false, isLoading: false, refetch });
+  (useRegisteredPhotoPreview as jest.Mock).mockReturnValue(null);
   (useProfilePhotoMutation as jest.Mock).mockReturnValue({ isPending: false, remove });
   (useToast as jest.Mock).mockReturnValue({ showToast: toast });
   (assertPhotoEditorAvailable as jest.Mock).mockResolvedValue(undefined);
   (normalizeSelectedPhoto as jest.Mock).mockResolvedValue({ uri: 'file:///normalized.jpg', width: 800, height: 1000 });
   jest.spyOn(Alert, 'alert').mockImplementation(() => {});
+});
+
+it('shows the confirmed local preview when initial profile data is still unavailable', () => {
+  (useProfileQuery as jest.Mock).mockReturnValue({ data: undefined, isError: false, isLoading: true, refetch });
+  (useRegisteredPhotoPreview as jest.Mock).mockReturnValue({ url: 'https://bucket/new.jpg', uri: 'file:///registered.jpg' });
+  const screen = render(<ProfilePhotoManager signup name="소울" />);
+  expect(screen.getByText('사진 등록됨')).toBeTruthy();
+  expect(screen.UNSAFE_getByType(ProfilePhoto).props).toMatchObject({ uri: 'https://bucket/new.jpg', previewUri: 'file:///registered.jpg' });
+});
+
+it('does not show a local copy after the server reports a deletion or a different photo', () => {
+  (useRegisteredPhotoPreview as jest.Mock).mockReturnValue({ url: 'https://bucket/old.jpg', uri: 'file:///old.jpg' });
+  const screen = render(<ProfilePhotoManager signup name="소울" />);
+  expect(screen.UNSAFE_getByType(ProfilePhoto).props.previewUri).toBeNull();
+  expect(screen.queryByText('사진 등록됨')).toBeNull();
+  (useProfileQuery as jest.Mock).mockReturnValue({ data: { profileImageUrl: 'https://bucket/new.jpg' }, refetch });
+  screen.rerender(<ProfilePhotoManager signup name="소울" />);
+  expect(screen.UNSAFE_getByType(ProfilePhoto).props.previewUri).toBeNull();
+});
+
+it('refreshes the server URL and retries the image explicitly without blocking change or delete', () => {
+  (useProfileQuery as jest.Mock).mockReturnValue({ data: { profileImageUrl: 'https://bucket/photo.jpg' }, isError: true, isLoading: false, refetch });
+  const screen = render(<ProfilePhotoManager signup name="소울" />);
+  const first = screen.UNSAFE_getByType(ProfilePhoto);
+  act(() => first.props.onLoadStateChange('error'));
+  fireEvent.press(screen.getByLabelText('등록된 프로필 사진 다시 불러오기'));
+  expect(refetch).toHaveBeenCalledTimes(1);
+  expect(screen.UNSAFE_getByType(ProfilePhoto)).not.toBe(first);
+  expect(screen.getByLabelText('프로필 사진 변경')).toBeEnabled();
+  expect(screen.getByLabelText('프로필 사진 삭제')).toBeEnabled();
 });
 afterEach(() => jest.restoreAllMocks());
 
