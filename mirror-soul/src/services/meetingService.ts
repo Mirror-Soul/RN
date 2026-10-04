@@ -13,10 +13,10 @@ import { logger } from '../utils/logger';
  */
 
 /** 받은 만남 신청 목록 조회 (PENDING만) */
-export const getReceivedMeetingRequests = async (): Promise<MeetingRequestListResponse> => {
+export const getReceivedMeetingRequests = async (signal?: AbortSignal): Promise<MeetingRequestListResponse> => {
   logger.debug('getReceivedMeetingRequests');
   try {
-    const response = await apiClient.get<MeetingRequestListResponse>('/match/meeting/requests');
+    const response = await apiClient.get<MeetingRequestListResponse>('/match/meeting/requests', { signal });
     logger.info('getReceivedMeetingRequests SUCCESS:', { count: response.data.result.requests.length });
     return response.data;
   } catch (error: unknown) {

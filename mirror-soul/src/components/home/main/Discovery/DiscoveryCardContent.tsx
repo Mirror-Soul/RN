@@ -1,5 +1,12 @@
 import { Feather } from '@expo/vector-icons';
-import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
+import {
+  Colors,
+  FontFamily,
+  FontSize,
+  FontWeight,
+  Radii,
+  Spacing,
+} from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { formatRegion } from '@/src/utils/formatRegion';
 import { JOB_LABEL } from '@/src/constants/jobLabels';
@@ -42,12 +49,16 @@ export default function DiscoveryCardContent({
 }: DiscoveryCardContentProps) {
   const { colors } = useThemeColors();
   const [imageFailed, setImageFailed] = useState(false);
-  useEffect(() => { setImageFailed(false); }, [match.profileImageUrl]);
+  useEffect(() => {
+    setImageFailed(false);
+  }, [match.profileImageUrl]);
   const [isSummaryTruncated, setIsSummaryTruncated] = useState(false);
   const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
   const isScoreKnown = Number.isFinite(match.recommendationScore);
-  const summary = match.selfIntroduction ?? '아직 자기소개를 준비 중이에요.';
-  const locationLabel = match.residence ? formatRegion(match.residence) : '활동 지역 미설정';
+  const summary = match.selfIntroduction?.trim() || '소개가 아직 없어요.';
+  const locationLabel = match.residence
+    ? formatRegion(match.residence)
+    : '활동 지역 미설정';
   const jobLabel = match.job ? JOB_LABEL[match.job] : '직업 정보 미등록';
 
   return (
@@ -62,12 +73,31 @@ export default function DiscoveryCardContent({
         accessibilityLabel="사진 크게 보기"
       >
         {imageFailed || !match.profileImageUrl ? (
-          <LinearGradient colors={Colors.gradient.avatarPlaceholder} style={styles.photo}>
-            <View style={styles.photoFallbackContent} accessible accessibilityLabel={match.profileImageUrl ? '사진을 불러올 수 없습니다' : '프로필 사진이 없습니다'}>
+          <LinearGradient
+            colors={Colors.gradient.avatarPlaceholder}
+            style={styles.photo}
+          >
+            <View
+              style={styles.photoFallbackContent}
+              accessible
+              accessibilityLabel={
+                match.profileImageUrl
+                  ? '사진을 불러올 수 없습니다'
+                  : '프로필 사진이 없습니다'
+              }
+            >
               <View style={styles.photoFallbackAvatar}>
-                <Feather name="user" size={30} color={Colors.neutral.pureWhite} />
+                <Feather
+                  name="user"
+                  size={30}
+                  color={Colors.neutral.pureWhite}
+                />
               </View>
-              <Text style={styles.photoFallbackText}>{match.profileImageUrl ? '사진을 불러올 수 없어요' : '프로필 사진이 없어요'}</Text>
+              <Text style={styles.photoFallbackText}>
+                {match.profileImageUrl
+                  ? '사진을 불러올 수 없어요'
+                  : '프로필 사진이 없어요'}
+              </Text>
             </View>
           </LinearGradient>
         ) : (
@@ -91,13 +121,23 @@ export default function DiscoveryCardContent({
               accessibilityRole="button"
               accessibilityLabel="상세 프로필 보기"
             >
-              <Feather name="chevron-right" size={20} color={Colors.neutral.pureWhite} />
+              <Feather
+                name="chevron-right"
+                size={20}
+                color={Colors.neutral.pureWhite}
+              />
             </TouchableOpacity>
 
             {isScoreKnown && (
               <View style={styles.scoreBadge}>
-                <Feather name="zap" size={11} color={Colors.primary.soulBlack} />
-                <Text style={styles.scoreBadgeText}>매칭적합도 {match.recommendationScore}%</Text>
+                <Feather
+                  name="zap"
+                  size={11}
+                  color={Colors.primary.soulBlack}
+                />
+                <Text style={styles.scoreBadgeText}>
+                  추천 점수 {match.recommendationScore}%
+                </Text>
               </View>
             )}
           </>
@@ -114,32 +154,56 @@ export default function DiscoveryCardContent({
         accessibilityLabel="상세 프로필 보기"
       >
         <View style={styles.nameRow}>
-          <Text style={[styles.nameText, { color: colors.text.primary }]} numberOfLines={1}>
+          <Text style={[styles.nameText, { color: colors.text.primary }]}>
             {match.name}
           </Text>
           {match.age !== null && (
-            <View style={[styles.chip, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
-              <Text style={[styles.chipText, { color: colors.text.secondary }]}>{match.age}세</Text>
+            <View
+              style={[
+                styles.chip,
+                {
+                  backgroundColor: colors.background.card,
+                  borderColor: colors.border.primary,
+                },
+              ]}
+            >
+              <Text style={[styles.chipText, { color: colors.text.secondary }]}>
+                {match.age}세
+              </Text>
             </View>
           )}
           {match.job && match.jobCertificationSubmitted ? (
-            <View style={styles.documentSubmittedBadge} accessible accessibilityLabel="직업 인증 서류 제출">
-              <Feather name="shield" size={13} color={Colors.primary.electricCyan} />
-              <Text style={styles.documentSubmittedText}>서류 제출</Text>
+            <View
+              style={styles.documentSubmittedBadge}
+              accessible
+              accessibilityLabel="직업 인증 서류 제출"
+            >
+              <Feather name="shield" size={13} color={colors.brand.accent} />
+              <Text
+                style={[
+                  styles.documentSubmittedText,
+                  { color: colors.brand.accent },
+                ]}
+              >
+                서류 제출
+              </Text>
             </View>
           ) : null}
         </View>
 
         <View style={styles.metaRow}>
-          <Feather name="map-pin" size={13} color={colors.text.muted} />
-          <Text style={[styles.metaText, { color: colors.text.muted }]} numberOfLines={1}>
-            {locationLabel}
-          </Text>
-          <View style={[styles.metaDivider, { backgroundColor: colors.border.primary }]} />
-          <Feather name="briefcase" size={13} color={colors.text.muted} />
-          <Text style={[styles.metaText, { color: colors.text.muted }]} numberOfLines={1}>
-            {jobLabel}
-          </Text>
+          <View style={styles.metaGroup}>
+            <Feather name="map-pin" size={13} color={colors.text.secondary} />
+            <Text style={[styles.metaText, { color: colors.text.secondary }]}>
+              {locationLabel}
+            </Text>
+          </View>
+          <View style={styles.metaGroup}>
+            <Feather name="briefcase" size={13} color={colors.text.secondary} />
+            <Text style={[styles.metaText, { color: colors.text.secondary }]}>
+              {jobLabel}
+            </Text>
+          </View>
         </View>
 
         {summaryExpandable ? (
@@ -157,7 +221,12 @@ export default function DiscoveryCardContent({
                 폭/폰트가 위 Text와 완전히 같아야(기기·폰트 크기와 무관하게) 정확히 측정된다. */}
             <Text
               style={[styles.summaryText, styles.summaryMeasure]}
-              onTextLayout={(e) => setIsSummaryTruncated(e.nativeEvent.lines.length > 2)}
+              accessible={false}
+              accessibilityElementsHidden
+              importantForAccessibility="no-hide-descendants"
+              onTextLayout={(e) =>
+                setIsSummaryTruncated(e.nativeEvent.lines.length > 2)
+              }
               pointerEvents="none"
             >
               &quot;{summary}&quot;
@@ -170,40 +239,72 @@ export default function DiscoveryCardContent({
                 onPress={() => setIsSummaryExpanded((prev) => !prev)}
                 activeOpacity={0.7}
                 accessibilityRole="button"
-                accessibilityLabel={isSummaryExpanded ? '자기소개 접기' : '자기소개 전체 보기'}
+                accessibilityLabel={
+                  isSummaryExpanded ? '자기소개 접기' : '자기소개 전체 보기'
+                }
+                style={{ minHeight: 48, justifyContent: 'center' }}
               >
-                <Text style={styles.moreText}>{isSummaryExpanded ? '접기' : '더보기'}</Text>
+                <Text style={styles.moreText}>
+                  {isSummaryExpanded ? '접기' : '더보기'}
+                </Text>
               </TouchableOpacity>
             )}
           </View>
         ) : (
-          <Text style={[styles.summaryText, { color: colors.text.secondary }]} numberOfLines={1} ellipsizeMode="tail">
+          <Text
+            style={[styles.summaryText, { color: colors.text.secondary }]}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
             &quot;{summary}&quot;
           </Text>
         )}
 
         <View style={styles.tagRow}>
           {match.mbti ? (
-            <View style={[styles.chip, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
-              <Text style={[styles.chipText, { color: Colors.primary.electricCyan }]}>{match.mbti}</Text>
+            <View
+              style={[
+                styles.chip,
+                {
+                  backgroundColor: colors.background.card,
+                  borderColor: colors.border.primary,
+                },
+              ]}
+            >
+              <Text style={[styles.chipText, { color: colors.brand.accent }]}>
+                {match.mbti}
+              </Text>
             </View>
           ) : null}
           {match.personalityTags.slice(0, 2).map((tag) => (
-            <View key={tag} style={[styles.chip, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
-              <Text style={[styles.chipText, { color: colors.text.secondary }]}>#{tag}</Text>
+            <View
+              key={tag}
+              style={[
+                styles.chip,
+                {
+                  backgroundColor: colors.background.card,
+                  borderColor: colors.border.primary,
+                },
+              ]}
+            >
+              <Text style={[styles.chipText, { color: colors.text.secondary }]}>
+                #{tag}
+              </Text>
             </View>
           ))}
         </View>
       </TouchableOpacity>
 
-      <View style={[styles.buttonRow, { borderTopColor: colors.border.primary }]}>
+      <View
+        style={[styles.buttonRow, { borderTopColor: colors.border.primary }]}
+      >
         <TouchableOpacity
           style={styles.connectButtonWrapper}
           onPress={onConnectPress}
           disabled={!onConnectPress}
           activeOpacity={0.85}
           accessibilityRole="button"
-          accessibilityLabel="통화하기"
+          accessibilityLabel="트윈과 통화하기"
         >
           <LinearGradient
             colors={[Colors.primary.electricCyan, Colors.primary.vividPurple]}
@@ -211,8 +312,10 @@ export default function DiscoveryCardContent({
             end={{ x: 1, y: 0 }}
             style={styles.connectButton}
           >
-            <Feather name="phone" size={14} color={Colors.primary.soulBlack} />
-            <Text style={[styles.buttonText, styles.connectButtonText]}>통화하기</Text>
+            <Feather name="phone" size={18} color={Colors.primary.soulBlack} />
+            <Text style={[styles.buttonText, styles.connectButtonText]}>
+              트윈과 통화하기
+            </Text>
           </LinearGradient>
         </TouchableOpacity>
       </View>
@@ -257,8 +360,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: Spacing.lg,
     right: Spacing.lg,
-    width: 40,
-    height: 40,
+    width: 48,
+    height: 48,
     borderRadius: Radii.full,
     backgroundColor: Colors.glass.black40,
     borderWidth: 1,
@@ -293,6 +396,7 @@ const styles = StyleSheet.create({
   },
   nameRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     alignItems: 'center',
     gap: Spacing.xs,
   },
@@ -313,21 +417,30 @@ const styles = StyleSheet.create({
   },
   nameText: {
     flex: 1,
+    minWidth: 80,
     fontFamily: FontFamily.sans,
-    fontSize: FontSize.xl,
-    fontWeight: FontWeight.black,
+    fontSize: FontSize.xxxl,
+    fontWeight: FontWeight.bold,
+    lineHeight: 32,
     letterSpacing: -0.3,
   },
   metaRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     alignItems: 'center',
     gap: Spacing.xs,
   },
   metaText: {
     fontFamily: FontFamily.sans,
-    fontSize: FontSize.sm,
+    fontSize: FontSize.base,
     fontWeight: FontWeight.semibold,
     flexShrink: 1,
+  },
+  metaGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+    maxWidth: '100%',
   },
   metaDivider: {
     width: 1,
@@ -336,9 +449,9 @@ const styles = StyleSheet.create({
   },
   summaryText: {
     fontFamily: FontFamily.sans,
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.medium,
-    lineHeight: 20,
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.regular,
+    lineHeight: 25,
   },
   // 실제 줄 수 측정 전용 — 화면에 보이지 않고 레이아웃 흐름에도 영향을 주지 않는다.
   // left/right:0으로 위 summaryText와 폭을 맞춰야 줄바꿈 지점이 동일하게 측정된다.
@@ -371,8 +484,8 @@ const styles = StyleSheet.create({
   },
   chipText: {
     fontFamily: FontFamily.sans,
-    fontSize: 10,
-    fontWeight: FontWeight.bold,
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.medium,
     letterSpacing: 0.3,
   },
   buttonRow: {
@@ -384,8 +497,8 @@ const styles = StyleSheet.create({
   },
   connectButtonWrapper: {
     flex: 1,
-    height: 56,
-    borderRadius: Radii.xl,
+    minHeight: 52,
+    borderRadius: Radii.full,
     shadowColor: Colors.primary.electricCyan,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
@@ -398,12 +511,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.xs,
-    borderRadius: Radii.xl,
+    borderRadius: Radii.full,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.lg,
   },
   buttonText: {
     fontFamily: FontFamily.sans,
     fontWeight: FontWeight.bold,
-    fontSize: FontSize.sm,
+    fontSize: FontSize.md,
+    lineHeight: 24,
+    flexShrink: 1,
+    textAlign: 'center',
     letterSpacing: 0.2,
   },
   connectButtonText: {
