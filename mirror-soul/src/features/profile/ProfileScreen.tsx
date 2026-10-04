@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -15,6 +15,9 @@ import { useProfileQuery } from './hooks/useProfileQuery';
 import { useTimeStatusQuery } from './hooks/useTimeStatusQuery';
 import { ProfilePhoto } from './photo/ProfilePhoto';
 import { ProfilePhotoManager } from './photo/ProfilePhotoManager';
+import { useProfileRefresh } from './hooks/useProfileRefresh';
+import { useRegisteredPhotoPreview, registeredPhotoPreviewUri } from './photo/registeredPhotoPreview';
+import type { ProfilePhotoLoadState } from './photo/ProfilePhoto';
 import { PublicProfilePreview } from './photo/PublicProfilePreview';
 
 type SettingLinkProps = {
@@ -79,7 +82,14 @@ export const ProfileScreen = () => {
   const [isRefillSheetOpen, setIsRefillSheetOpen] = useState(false);
   useEffect(() => { if (!profile?.profileImageUrl) setPhotoViewerOpen(false); }, [profile?.profileImageUrl]);
 
-  useFocusEffect(useCallback(() => { void refetchProfile(); void refetchTime(); }, [refetchProfile, refetchTime]));
+  const refresh = useCallback(() => Promise.allSettled([refetchProfile(), refetchTime()]), [refetchProfile, refetchTime]);
+  useProfileRefresh(refresh, false, !previewOpen);
+
+  const registeredPreview = useRegisteredPhotoPreview();
+  const previewUri = registeredPhotoPreviewUri(registeredPreview, profile?.profileImageUrl);
+  const [photoAttempt, setPhotoAttempt] = useState(0);
+  const retryPhoto = () => { setPhotoAttempt(value => value + 1); void refetchProfile(); };
+  const [photoState, setPhotoState] = useState<ProfilePhotoLoadState>('empty');
 
   const displayName = profile?.name?.trim() || '내 프로필';
   const remainingTime = formatCallTime(timeStatus?.remainingTalkTime ?? 0);
@@ -117,7 +127,7 @@ export const ProfileScreen = () => {
               pointerEvents="none"
             />
             <View style={styles.identityRow}>
-              <ProfilePhoto uri={profile?.profileImageUrl} name={displayName} size={64} onPress={() => setPhotoViewerOpen(true)} />
+              <ProfilePhoto key={`${profile?.profileImageUrl}:${photoAttempt}`} uri={profile?.profileImageUrl} name={displayName} size={64} previewUri={previewUri} onLoadStateChange={setPhotoState} onRetry={retryPhoto} onPress={() => setPhotoViewerOpen(true)} />
               <View style={styles.identityCopy}>
                 {isProfileLoading ? (
                   <ActivityIndicator color={colors.brand.accent} />
@@ -133,6 +143,9 @@ export const ProfileScreen = () => {
                 )}
               </View>
             </View>
+            {photoState === 'error' && profile?.profileImageUrl && <Pressable onPress={retryPhoto} accessibilityRole="button" accessibilityLabel="프로필 사진 URL 다시 조회" style={{ minHeight: 44, justifyContent: 'center' }}>
+              <Text style={[styles.profileEmail, { color: colors.text.secondary }]}>사진은 등록되어 있어요. 불러오지 못하면 사진을 눌러 다시 시도해 주세요.</Text>
+            </Pressable>}
             <ProfilePhotoManager compact name={displayName} photoViewerOpen={photoViewerOpen} onPhotoViewerClose={() => setPhotoViewerOpen(false)} />
             <View style={styles.profileLinks}>
               <Pressable
@@ -203,8 +216,8 @@ export const ProfileScreen = () => {
                 icon="mic"
                 iconColor={Colors.primary.vividPurple}
                 iconBackground="rgba(194, 122, 255, 0.12)"
-                label="음성 및 오디오"
-                description="통화 음량과 재생 속도"
+                label="통화 소리 설정"
+                description="목소리 크기와 통화 전 소리 확인"
                 onPress={handleOpenVoiceAudio}
               />
               <SettingLink
@@ -212,7 +225,7 @@ export const ProfileScreen = () => {
                 iconColor={Colors.primary.mirrorOrange}
                 iconBackground="rgba(255, 137, 4, 0.12)"
                 label="알림 설정"
-                description="부재중 통화와 잔여 시간 알림"
+                description="메시지·통화·대화 시간 알림"
                 onPress={handleOpenNotification}
                 isLast={true}
               />

@@ -5,6 +5,7 @@ import type { MediaStream } from 'react-native-webrtc';
 import { AudioModule, setAudioModeAsync } from 'expo-audio';
 import { useAuthStore } from '../store/useAuthStore';
 import { initiateCall, setCallInProgress, endCall } from '../services/callService';
+import { useRemoteAudioVolume } from '@/src/features/voice-audio/hooks/useRemoteAudioVolume';
 import { useWebRTCCall } from './useWebRTCCall';
 import { useCallRecording } from './useCallRecording';
 import { logger } from '../utils/logger';
@@ -52,6 +53,7 @@ export function useAICallFlow(targetUserUuid?: string) {
   // 기본 경로는 시스템에 맡긴다. 유선/블루투스 기기가 연결되어 있으면 그 기기가 우선되어야
   // 하며, 사용자가 스피커를 직접 선택했을 때만 강제로 스피커로 전환한다.
   const [isSpeakerOn, setIsSpeakerOn] = useState(false);
+  const speakerForcedRef = useRef(false);
   const [isMuted, setIsMuted] = useState(false);
   // 카메라는 기본 off — 마이크와 달리 통화 시작 시점이 아니라 사용자가 실제로 켤 때만
   // 권한을 요청한다(불필요하게 미리 요청하지 않기 위함).
@@ -109,6 +111,7 @@ export function useAICallFlow(targetUserUuid?: string) {
     applyIceCandidate,
     close: closeWebRTC,
   } = useWebRTCCall();
+  useRemoteAudioVolume(remoteStream);
 
   const { startRecording, stopAndUpload } = useCallRecording();
 
@@ -172,8 +175,15 @@ export function useAICallFlow(targetUserUuid?: string) {
         logger.error('[useAICallFlow] setCallInProgress failed:', err);
       });
 
-      startRecording().catch((err) => {
+      const isCurrent = () => callSessionRef.current === session && !isHangingUpRef.current;
+      startRecording({ isCurrent, managesAudioSession: true }).catch((err) => {
         logger.error('[useAICallFlow] startRecording failed:', err);
+      }).finally(() => {
+        // Expo iOS recorder.prepare는 mode를 .default로 바꾼다. 준비 성공/실패 모두
+        // 영상통화 모드를 복구하되, 늦은 완료로 종료된 통화의 오디오를 건드리지 않는다.
+        if (isCurrent()) {
+          (InCallManager.setForceSpeakerphoneOn as (flag: boolean | null) => void)(speakerForcedRef.current ? true : null);
+        }
       });
     }
   }, [iceConnectionState, callStatus, startRecording]);
@@ -198,18 +208,11 @@ export function useAICallFlow(targetUserUuid?: string) {
   // 스피커/음소거 토글 (공개 API)
   // ─────────────────────────────────────────────
   const toggleSpeaker = useCallback(() => {
-    setIsSpeakerOn((prev) => {
-      const next = !prev;
-      if (next) {
-        InCallManager.setForceSpeakerphoneOn(true);
-      } else {
-        // 라이브러리 JS 구현은 null을 "미디어 타입에 따른 기본 라우팅"으로 변환한다.
-        // 타입 선언은 boolean만 허용하지만, native API의 0 플래그를 사용해야 외부 기기
-        // 연결 시 이어피스를 강제하지 않고 시스템 라우팅으로 되돌릴 수 있다.
-        (InCallManager.setForceSpeakerphoneOn as (flag: boolean | null) => void)(null);
-      }
-      return next;
-    });
+    const next = !speakerForcedRef.current;
+    speakerForcedRef.current = next;
+    setIsSpeakerOn(next);
+    // 자동 출력은 이어폰 우선 및 VIDEO 기본 스피커 경로를 유지한다.
+    (InCallManager.setForceSpeakerphoneOn as (flag: boolean | null) => void)(next ? true : null);
   }, []);
 
   const toggleMute = useCallback(() => {
@@ -449,6 +452,7 @@ export function useAICallFlow(targetUserUuid?: string) {
 
     closeWebRTC(); // 카메라 스트림 트랙 정지까지 포함
     InCallManager.stop();
+    speakerForcedRef.current = false;
     setIsSpeakerOn(false);
     setIsMuted(false);
     setIsCameraOn(false);

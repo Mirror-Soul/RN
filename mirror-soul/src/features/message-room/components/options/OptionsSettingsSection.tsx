@@ -1,119 +1,29 @@
 import React from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
-import { Feather } from '@expo/vector-icons';
-import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
-import { AnimatedSwitch } from '@/src/components/common/AnimatedSwitch';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
 import { useChatNotificationSettings } from '@/src/features/chat/hooks/useChatNotificationSettings';
+import { NotificationItem } from '@/src/features/notification/components/NotificationItem';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 
-interface OptionsSettingsSectionProps {
-  roomId: number;
-  isActive: boolean;
-}
-
-export function OptionsSettingsSection({ roomId, isActive }: OptionsSettingsSectionProps) {
-  const { enabled, handleToggle, isLoading, isError, refetch } = useChatNotificationSettings(roomId, isActive);
+export function OptionsSettingsSection({ roomId, isActive }: { roomId: number; isActive: boolean }) {
+  const { enabled, handleToggle, isLoading, isSaving, isError, refetch, saveError } = useChatNotificationSettings(roomId, isActive);
   const { colors } = useThemeColors();
-
   return (
-    <View style={styles.menuSection}>
-      <Text style={[styles.sectionLabel, { color: colors.text.muted }]}>대화 설정</Text>
-
-      <View style={[styles.settingCard, { backgroundColor: colors.background.glass }]}>
-        <View style={styles.settingRow}>
-          <View style={styles.menuItemLeft}>
-            <View style={[styles.iconBox, { backgroundColor: Colors.glass.purple10 }]}>
-              <Feather name="bell" size={16} color={Colors.primary.vividPurple} />
-            </View>
-            <View style={styles.copyContainer}>
-              <Text style={[styles.menuItemText, { color: colors.text.primary }]}>메시지 알림</Text>
-              <Text style={[styles.menuItemDescription, { color: colors.text.secondary }]}>
-                {isError ? '설정을 불러오지 못했어요.' : enabled ? '새 메시지를 바로 알려드려요.' : '이 대화방 알림이 꺼져 있어요.'}
-              </Text>
-            </View>
-          </View>
-          {isError ? (
-            <Pressable
-              style={[styles.retryButton, { backgroundColor: colors.background.card }]}
-              onPress={() => void refetch()}
-              accessibilityRole="button"
-              accessibilityLabel="알림 설정 다시 불러오기"
-            >
-              <Text style={[styles.retryText, { color: colors.text.secondary }]}>다시 시도</Text>
-            </Pressable>
-          ) : isLoading || !isActive ? (
-            <ActivityIndicator size="small" color={Colors.primary.vividPurple} />
-          ) : (
-            <AnimatedSwitch value={enabled} onToggle={handleToggle} disabled={isLoading} />
-          )}
-        </View>
+    <View>
+      <Text style={[styles.sectionLabel, { color: colors.text.secondary }]}>대화 설정</Text>
+      <View style={[styles.card, { backgroundColor: colors.background.glass }]}>
+        <NotificationItem title="메시지 알림" description="이 대화방의 새 메시지가 오면 알려드려요." value={enabled} onToggle={handleToggle} disabled={!isActive || isLoading || isSaving || enabled === null} isSaving={isSaving} isLoading={isLoading} isLast />
+        {saveError && <Text accessibilityRole="alert" style={[styles.error, styles.copy, { color: colors.state.danger }]}>{saveError}</Text>}
+        {isError && <View style={styles.error}><Text accessibilityRole="alert" style={[styles.copy, { color: colors.state.danger }]}>설정을 불러오지 못했어요.</Text><Pressable onPress={() => { void refetch(); }} accessibilityRole="button" accessibilityLabel="알림 설정 다시 불러오기" style={styles.retry}><Text style={[styles.copy, { color: colors.brand.accent }]}>다시 불러오기</Text></Pressable></View>}
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  menuSection: {
-    alignSelf: 'stretch',
-  },
-  sectionLabel: {
-    fontFamily: FontFamily.sans,
-    fontWeight: FontWeight.bold,
-    fontSize: FontSize.xs,
-    lineHeight: 15,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-    paddingHorizontal: Spacing.xs,
-  },
-  settingCard: {
-    marginTop: Spacing.md,
-    borderRadius: Radii.lg,
-    padding: Spacing.md,
-  },
-  settingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: Spacing.sm,
-  },
-  menuItemLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-    flex: 1,
-  },
-  iconBox: {
-    width: 34,
-    height: 34,
-    borderRadius: Radii.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  copyContainer: {
-    flex: 1,
-  },
-  menuItemText: {
-    fontFamily: FontFamily.sans,
-    fontWeight: FontWeight.medium,
-    fontSize: FontSize.base,
-    lineHeight: 20,
-    letterSpacing: -0.15,
-  },
-  menuItemDescription: {
-    marginTop: Spacing.xxs,
-    fontFamily: FontFamily.sans,
-    fontWeight: FontWeight.regular,
-    fontSize: FontSize.xs,
-    lineHeight: 16,
-  },
-  retryButton: {
-    borderRadius: Radii.full,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
-  },
-  retryText: {
-    fontFamily: FontFamily.sans,
-    fontWeight: FontWeight.bold,
-    fontSize: FontSize.xs,
-  },
+  sectionLabel: { fontFamily: FontFamily.sans, fontWeight: FontWeight.bold, fontSize: FontSize.xs, lineHeight: 18, paddingHorizontal: Spacing.xs },
+  card: { marginTop: Spacing.md, borderRadius: Radii.lg },
+  error: { paddingHorizontal: Spacing.lg, paddingBottom: Spacing.sm },
+  copy: { fontFamily: FontFamily.sans, fontSize: FontSize.sm, lineHeight: 21 },
+  retry: { minHeight: 48, justifyContent: 'center' },
 });

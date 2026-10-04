@@ -1,76 +1,29 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import { FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
-import {Colors, FontFamily, FontSize, FontWeight, Radii, Spacing} from '@/src/constants/theme';
 
 export const DeleteWarningSection = () => {
   const { colors } = useThemeColors();
-
-  return (
-    <Animated.View 
-      entering={FadeInDown.delay(100).duration(500).springify()}
-      style={styles.container}
-    >
-      <View style={styles.titleRow}>
-        <View style={styles.iconBox}>
-          <Feather name="alert-triangle" size={24} color={Colors.primary.recordingRed} />
-        </View>
-        <Text style={[styles.title, { color: colors.text.primary }]}>
-          정말 떠나시나요?
-        </Text>
-      </View>
-
-      <View style={[styles.warningBox, { backgroundColor: 'rgba(251, 44, 54, 0.05)', borderColor: 'rgba(251, 44, 54, 0.15)' }]}>
-        <Text style={[styles.warningText, { color: 'rgba(248, 113, 113, 0.9)' }]}>
-          탈퇴를 진행하시면 계정이 즉시 <Text style={styles.boldText}>비활성화(Soft Delete)</Text>되며, <Text style={styles.boldText}>30일의 유예 기간</Text>이 주어집니다.{'\n\n'}
-          유예 기간 내에는 로그인하여 계정을 복구할 수 있으나, <Text style={styles.boldText}>30일이 경과하면 이름, 이메일 등 개인 정보가 비식별 처리되어 더 이상 본인 확인이 불가능</Text>해집니다.
-        </Text>
-      </View>
-    </Animated.View>
-  );
+  return <View style={styles.content}>
+    <Text accessibilityRole="header" style={[styles.title, { color: colors.text.primary }]}>탈퇴 전에 확인해 주세요</Text>
+    <Text style={[styles.copy, { color: colors.text.secondary }]}>계정에 어떤 변화가 생기는지 안내해 드릴게요.</Text>
+    <View style={[styles.card, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
+      {[
+        ['계정 이용이 중단돼요', '탈퇴하면 계정이 즉시 비활성화되고 로그아웃돼요.'],
+        ['30일 이내에 복구할 수 있어요', '탈퇴 후 30일이 지나기 전에 기존 이메일과 비밀번호로 로그인하면 계정이 복구돼요.'],
+        ['복구 기간이 지나면 되돌릴 수 없어요', '이름·이메일 등 계정 정보가 비식별 처리되어 기존 계정으로 로그인하거나 복구할 수 없어요.'],
+      ].map(([title, description], index) => <View key={title} style={styles.row}><Feather name={index === 2 ? 'alert-circle' : 'info'} size={20} color={index === 2 ? colors.state.danger : colors.brand.accent} /><View style={styles.rowCopy}><Text style={[styles.rowTitle, { color: colors.text.primary }]}>{title}</Text><Text style={[styles.copy, { color: colors.text.secondary }]}>{description}</Text></View></View>)}
+    </View>
+  </View>;
 };
-
 const styles = StyleSheet.create({
-  container: {
-    paddingHorizontal: Spacing.xxl,
-    marginBottom: Spacing.giant,
-  },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: Spacing.xl,
-    gap: Spacing.md,
-  },
-  iconBox: {
-    width: 48,
-    height: 48,
-    backgroundColor: 'rgba(251, 44, 54, 0.1)',
-    borderRadius: Radii.lg,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  title: {
-    fontFamily: FontFamily.sans,
-    fontWeight: FontWeight.medium,
-    fontSize: FontSize.xxl,
-    letterSpacing: -0.45,
-  },
-  warningBox: {
-    padding: Spacing.xl,
-    borderWidth: 0.61,
-    borderRadius: Radii.lg,
-  },
-  warningText: {
-    fontFamily: FontFamily.sans,
-    fontWeight: FontWeight.regular,
-    fontSize: FontSize.base,
-    lineHeight: 23,
-    letterSpacing: -0.15,
-  },
-  boldText: {
-    fontWeight: FontWeight.semibold,
-    color: Colors.primary.activeRedText,
-  },
+  content: { paddingHorizontal: Spacing.xl, gap: Spacing.md, marginBottom: Spacing.xl },
+  title: { fontFamily: FontFamily.sans, fontSize: FontSize.xxl, fontWeight: FontWeight.semibold, lineHeight: 29 },
+  copy: { fontFamily: FontFamily.sans, fontSize: FontSize.base, lineHeight: 23 },
+  card: { padding: Spacing.lg, borderWidth: 1, borderRadius: Radii.lg, gap: Spacing.xl },
+  row: { flexDirection: 'row', gap: Spacing.md, alignItems: 'flex-start' },
+  rowCopy: { flex: 1, gap: Spacing.sm },
+  rowTitle: { fontFamily: FontFamily.sans, fontSize: FontSize.lg, fontWeight: FontWeight.medium, lineHeight: 25 },
 });

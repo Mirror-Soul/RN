@@ -6,20 +6,20 @@ import { introductionPreview } from '../constants/introductionPreview';
 it('preserves identity/detail fields on replacement and deletion', () => {
   const client = new QueryClient();
   const profile = { name: '소울', email: 'soul@example.com', profileImageUrl: 'old' };
-  client.setQueryData(['profile', 'me'], profile);
-  client.setQueryData(['profile', 'introduction'], { ...introductionPreview });
-  mergeProfilePhotoCache(client, 'new');
-  expect(client.getQueryData(['profile', 'me'])).toEqual({ ...profile, profileImageUrl: 'new' });
-  expect(client.getQueryData(['profile', 'introduction'])).toEqual({ ...introductionPreview, profileImageUrl: 'new' });
-  mergeProfilePhotoCache(client, null);
-  expect(client.getQueryData(['profile', 'me'])).toEqual({ ...profile, profileImageUrl: null });
+  client.setQueryData(['profile', 'me', 'me'], profile);
+  client.setQueryData(['profile', 'introduction', 'me'], { ...introductionPreview });
+  mergeProfilePhotoCache(client, 'new', 'me');
+  expect(client.getQueryData(['profile', 'me', 'me'])).toEqual({ ...profile, profileImageUrl: 'new' });
+  expect(client.getQueryData(['profile', 'introduction', 'me'])).toEqual({ ...introductionPreview, profileImageUrl: 'new' });
+  mergeProfilePhotoCache(client, null, 'me');
+  expect(client.getQueryData(['profile', 'me', 'me'])).toEqual({ ...profile, profileImageUrl: null });
   client.clear();
 });
 it('does not create incomplete cache entries', () => {
   const client = new QueryClient();
-  mergeProfilePhotoCache(client, 'new');
-  expect(client.getQueryData(['profile', 'me'])).toBeUndefined();
-  expect(client.getQueryData(['profile', 'introduction'])).toBeUndefined();
+  mergeProfilePhotoCache(client, 'new', 'me');
+  expect(client.getQueryData(['profile', 'me', 'me'])).toBeUndefined();
+  expect(client.getQueryData(['profile', 'introduction', 'me'])).toBeUndefined();
 });
 it('excludes private fields from the public preview', () => {
   const { match, detail } = toPublicProfilePreview(introductionPreview);

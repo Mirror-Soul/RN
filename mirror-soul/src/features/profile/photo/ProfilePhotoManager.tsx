@@ -16,7 +16,7 @@ import { assertPhotoEditorAvailable, getPhotoPreparationErrorMessage, normalizeS
 import { logger } from '@/src/utils/logger';
 import { useToast } from '@/src/components/common/Toast/ToastProvider';
 import { ProfilePhotoViewer } from './ProfilePhotoViewer';
-import { useRegisteredPhotoPreview } from './registeredPhotoPreview';
+import { useRegisteredPhotoPreview, registeredPhotoPreviewUri } from './registeredPhotoPreview';
 
 export function ProfilePhotoManager({ name, signup = false, disabled = false, compact = false, photoViewerOpen = false, onPhotoViewerClose }: {
   name: string; signup?: boolean; disabled?: boolean; compact?: boolean; photoViewerOpen?: boolean; onPhotoViewerClose?: () => void;
@@ -39,7 +39,7 @@ export function ProfilePhotoManager({ name, signup = false, disabled = false, co
   const alive = useRef(true);
   useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
   const currentUrl = profile.data ? profile.data.profileImageUrl : registeredPreview?.url;
-  const previewUri = currentUrl && registeredPreview?.url === currentUrl ? registeredPreview.uri : null;
+  const previewUri = registeredPhotoPreviewUri(registeredPreview, currentUrl);
   useEffect(() => { if (!currentUrl) setViewerOpen(false); }, [currentUrl]);
   const busy = picking || mutation.isPending || disabled;
   const retryImage = () => { setImageAttempt(value => value + 1); void profile.refetch(); };
@@ -156,7 +156,7 @@ export function ProfilePhotoManager({ name, signup = false, disabled = false, co
         </Pressable>}
       </View>}
       {error && <Text accessibilityRole="alert" style={[styles.help, { color: colors.state.danger }]}>{error}</Text>}
-      {!!currentUrl && (viewerOpen || photoViewerOpen) && <ProfilePhotoViewer key={currentUrl} uri={currentUrl} previewUri={previewUri} name={name} disabled={busy} onClose={closeViewer} onChange={openMenu} onDelete={remove} />}
+      {!!currentUrl && (viewerOpen || photoViewerOpen) && <ProfilePhotoViewer key={currentUrl} uri={currentUrl} previewUri={previewUri} onRetry={retryImage} name={name} disabled={busy} onClose={closeViewer} onChange={openMenu} onDelete={remove} />}
       {photo && <ProfilePhotoEditor photo={photo} name={name} onClose={() => setPhoto(null)} onSaved={() => showToast('프로필 사진을 등록했어요.', 'success')} />}
     </View>
   );

@@ -1,10 +1,9 @@
 import type { QueryClient } from '@tanstack/react-query';
 import type { MyIntroductionResult, MyProfileResult } from '@/src/types/api/profile';
-import { introductionPreview } from '../constants/introductionPreview';
+import { profileQueryKeys } from '../hooks/profileQueryKeys';
 
-export function mergeProfilePhotoCache(client: QueryClient, profileImageUrl: string | null) {
-  // PATCH가 돌려주는 사진 필드로 이름/이메일/소개를 덮어쓰지 않는다.
-  client.setQueryData<MyProfileResult>(['profile', 'me'], old => old ? { ...old, profileImageUrl } : undefined);
-  // 개발용 fallback의 객체 정체성을 유지해 실제 공개 프로필로 오인하지 않게 한다.
-  client.setQueryData<MyIntroductionResult>(['profile', 'introduction'], old => old && old !== introductionPreview ? { ...old, profileImageUrl } : old);
+export function mergeProfilePhotoCache(client: QueryClient, profileImageUrl: string | null, userUuid: string) {
+  // 사진 외 필드와 다른 계정의 캐시를 유지한다.
+  client.setQueryData<MyProfileResult>(profileQueryKeys.me(userUuid), old => old ? { ...old, profileImageUrl } : undefined);
+  client.setQueryData<MyIntroductionResult>(profileQueryKeys.introduction(userUuid), old => old ? { ...old, profileImageUrl } : undefined);
 }

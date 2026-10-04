@@ -1,72 +1,43 @@
 import React from 'react';
-import {FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
-
-import { View, StyleSheet } from 'react-native';
-import Animated from 'react-native-reanimated';
-import { AnimatedSwitch } from '@/src/components/common/AnimatedSwitch';
-import { useAnimatedTheme } from '@/src/hooks/useAnimatedTheme';
+import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { FontFamily, FontSize, FontWeight, Spacing } from '@/src/constants/theme';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
+import { NotificationToggle } from './NotificationToggle';
 
 interface NotificationItemProps {
   title: string;
   description: string;
-  value: boolean;
+  value: boolean | null;
   onToggle: () => void;
   isLast?: boolean;
   disabled?: boolean;
+  isSaving?: boolean;
+  isLoading?: boolean;
 }
 
-export const NotificationItem = ({
-  title,
-  description,
-  value,
-  onToggle,
-  isLast = false,
-  disabled = false,
-}: NotificationItemProps) => {
-  const { animatedText, animatedTextMuted, animatedBorder } = useAnimatedTheme();
-
+export function NotificationItem({ title, description, value, onToggle, isLast = false, disabled = false, isSaving = false, isLoading = false }: NotificationItemProps) {
+  const { colors } = useThemeColors();
+  const { width, fontScale } = useWindowDimensions();
+  const stacked = width < 360 || fontScale > 1.3;
   return (
-    <Animated.View style={[styles.container, !isLast && styles.borderBottom, !isLast && animatedBorder, disabled && styles.disabled]}>
-      <View style={styles.textContainer}>
-        <Animated.Text style={[styles.title, animatedText]}>{title}</Animated.Text>
-        <Animated.Text style={[styles.description, animatedTextMuted]}>{description}</Animated.Text>
+    <View style={[styles.container, !isLast && { borderBottomWidth: 1, borderBottomColor: colors.border.primary }]}>
+      <View style={[styles.row, stacked && styles.stacked]}>
+        <View style={[styles.copy, stacked && styles.stackedCopy]}>
+          <Text style={[styles.title, { color: colors.text.primary }]}>{title}</Text>
+          <Text style={[styles.description, { color: colors.text.secondary }]}>{description}</Text>
+        </View>
+        <NotificationToggle value={value} onToggle={onToggle} label={title} disabled={disabled} isSaving={isSaving} isLoading={isLoading} />
       </View>
-
-      <AnimatedSwitch value={value} onToggle={onToggle} disabled={disabled} accessibilityLabel={title} />
-    </Animated.View>
+    </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: Spacing.lg,
-    paddingHorizontal: Spacing.xl,
-    gap: Spacing.lg,
-  },
-  borderBottom: {
-    borderBottomWidth: 0.61,
-  },
-  textContainer: {
-    flex: 1,
-    gap: Spacing.xxs,
-  },
-  title: {
-    fontFamily: FontFamily.sans,
-    fontWeight: FontWeight.regular,
-    fontSize: FontSize.base,
-    lineHeight: 20,
-    letterSpacing: -0.15,
-  },
-  description: {
-    fontFamily: FontFamily.sans,
-    fontWeight: FontWeight.regular,
-    fontSize: FontSize.sm,
-    lineHeight: 20,
-    marginTop: Spacing.xxs,
-  },
-  disabled: {
-    opacity: 0.5,
-  },
+  container: { paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm },
+  row: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
+  stacked: { flexDirection: 'column', alignItems: 'stretch', gap: Spacing.xs },
+  copy: { flex: 1, minWidth: 0, gap: Spacing.xs },
+  stackedCopy: { flex: 0 },
+  title: { fontFamily: FontFamily.sans, fontWeight: FontWeight.semibold, fontSize: FontSize.base, lineHeight: 23 },
+  description: { fontFamily: FontFamily.sans, fontSize: FontSize.sm, lineHeight: 20 },
 });

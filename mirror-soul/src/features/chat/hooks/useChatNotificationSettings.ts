@@ -1,56 +1,29 @@
-import { useCallback } from 'react';
-import { Alert } from 'react-native';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { getNotificationSetting, updateNotificationSetting } from '@/src/services/chatService';
-import { getErrorDisplayMessage } from '@/src/utils/apiErrorCode';
-import type { ChatRoomListResult } from '@/src/types/api/chat';
+import { useQuery } from '@tanstack/react-query';
+import { getNotificationSetting } from '@/src/services/chatService';
+import { useAuthStore } from '@/src/store/useAuthStore';
+import { useChatNotificationMutation } from '@/src/features/notification/hooks/useChatNotificationMutation';
+import { notificationQueryKeys } from '@/src/features/notification/hooks/notificationQueryKeys';
 
-/** GET/PATCH /chat/rooms/{room-id}/notification 결합형 훅(useVoiceAudioSettings.ts 패턴). */
+/** 대화방 옵션과 알림 관리 화면에서 같은 서버 설정을 사용한다. */
 export const useChatNotificationSettings = (roomId: number, isActive = true) => {
-  const queryClient = useQueryClient();
-
+  const userUuid = useAuthStore(s => s.userUuid);
+  const isLoggedIn = useAuthStore(s => s.isLoggedIn);
   const query = useQuery({
-    queryKey: ['chat', 'notification', roomId],
-    queryFn: async () => (await getNotificationSetting(roomId)).result,
-    // 옵션 패널을 실제로 열었을 때만 조회한다. 채팅방 진입만으로 별도의 설정 API가
-    // 호출되면 화면을 보지도 않은 사용자에게 불필요한 네트워크 요청이 발생한다.
-    enabled: isActive,
-  });
-
-  const mutation = useMutation({
-    mutationFn: (enabled: boolean) => updateNotificationSetting(roomId, enabled),
-    onSuccess: (response) => {
-      queryClient.setQueryData(['chat', 'notification', roomId], response.result);
-      // GET /chat/rooms도 같은 notificationEnabled 필드를 내려준다. 옵션 패널에서 바꾼
-      // 값이 뒤로 가기 전 목록에도 즉시 반영되도록 두 캐시를 함께 동기화한다.
-      queryClient.setQueryData<ChatRoomListResult>(['chat', 'rooms'], (old) => {
-        if (!old) return old;
-        return {
-          ...old,
-          rooms: old.rooms.map((room) =>
-            room.chatRoomId === roomId
-              ? { ...room, notificationEnabled: response.result.enabled }
-              : room
-          ),
-        };
-      });
+    queryKey: notificationQueryKeys.chatRoom(userUuid, roomId),
+    queryFn: async ({ signal }) => {
+      const session = useAuthStore.getState();
+      if (!userUuid || !session.isLoggedIn || session.userUuid !== userUuid) throw new Error('다시 로그인해 주세요.');
+      return (await getNotificationSetting(roomId, signal)).result;
     },
-    onError: (error) => {
-      Alert.alert('설정 변경 실패', getErrorDisplayMessage(error, '알림 설정을 변경하지 못했습니다.'));
-    },
+    enabled: isActive && isLoggedIn && !!userUuid,
   });
-
-  const handleToggle = useCallback(() => {
-    if (!isActive || !query.data) return; // 조회 완료 전에는 변경 자체를 막는다.
-    mutation.mutate(!query.data.enabled);
-  }, [isActive, mutation, query.data]);
-
+  const mutation = useChatNotificationMutation();
   return {
-    enabled: query.data?.enabled ?? false,
-    handleToggle,
-    // query.isLoading || !query.data로 두면 조회가 실패했을 때도(data가 계속 없으므로)
-    // 영원히 로딩 상태로 보여 스위치가 원인 표시 없이 계속 비활성화된 채로 남는다.
+    enabled: query.data?.enabled ?? null,
+    handleToggle: () => { if (isActive && query.data) mutation.change(roomId, !query.data.enabled, userUuid); },
     isLoading: isActive && query.isLoading,
+    isSaving: mutation.isSaving,
+    saveError: mutation.saveError,
     isError: isActive && query.isError,
     refetch: query.refetch,
   };

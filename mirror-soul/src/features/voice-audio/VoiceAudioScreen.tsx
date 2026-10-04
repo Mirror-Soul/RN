@@ -1,86 +1,57 @@
-import React from 'react';
-import {FontFamily, FontSize, FontWeight, Radii, Spacing} from '@/src/constants/theme';
-
-import { StyleSheet, View } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
-
-import { SpeedSegmentControl } from './components/SpeedSegmentControl';
-import { useVoiceAudioSettings } from './hooks/useVoiceAudioSettings';
+import React, { useCallback } from 'react';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import { Feather } from '@expo/vector-icons';
+import { FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { Header } from '@/src/components/common/Header';
 import { ScreenLayout } from '@/src/components/common/ScreenLayout';
-import { useRouter } from 'expo-router';
+import { useProfileRefresh } from '@/src/features/profile/hooks/useProfileRefresh';
+import { useVoiceAudioSettings } from './hooks/useVoiceAudioSettings';
+import { AudioCheck } from './components/AudioCheck';
+import { MicrophonePermission } from './components/MicrophonePermission';
 
 export const VoiceAudioScreen = () => {
   const router = useRouter();
-  const { speechSpeed, handleSpeedChange, isLoading } = useVoiceAudioSettings();
+  const { volume, handleVolumeChange, isLoading, isError, isSaving, refetch } = useVoiceAudioSettings();
   const { colors } = useThemeColors();
-
-  return (
-    <ScreenLayout withScroll={true}>
-      <Header title="음성/오디오 설정" delay={0} onBackPress={() => (router.canGoBack() ? router.back() : router.replace('/(main)/profile'))} />
-
-      <View style={styles.contentPadding}>
-        <Animated.View
-          entering={FadeInDown.delay(120).duration(550).springify()}
-          style={[styles.card, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
-        >
-          <View style={styles.cardHeader}>
-            <Animated.Text style={[styles.cardTitle, { color: colors.text.primary }]}>상대방 말하기 속도</Animated.Text>
-          </View>
-
-          <View style={styles.cardDescription}>
-            <Animated.Text style={[styles.descriptionText, { color: colors.text.muted }]}>
-              자연스러운 대화 흐름에 맞게 속도를 조절하세요.
-            </Animated.Text>
-          </View>
-
-          <View style={styles.segmentWrapper}>
-            <SpeedSegmentControl
-              selectedSpeed={speechSpeed}
-              onSelect={handleSpeedChange}
-              disabled={isLoading}
-            />
-          </View>
-        </Animated.View>
+  useProfileRefresh(useCallback(() => refetch(), [refetch]));
+  const disabled = volume == null || isSaving;
+  const card = [styles.card, { backgroundColor: colors.background.card, borderColor: colors.border.primary }];
+  return <ScreenLayout withScroll>
+    <Header title="통화 소리 설정" delay={0} onBackPress={() => router.canGoBack() ? router.back() : router.replace('/(main)/profile')} />
+    <View style={styles.content}>
+      <Text style={[styles.copy, { color: colors.text.secondary }]}>내게 편한 소리로 대화해 보세요.</Text>
+      <View style={card}>
+        <View style={styles.heading}><Feather name="volume-2" size={20} color={colors.brand.accent} /><Text style={[styles.title, { color: colors.text.primary }]}>상대 목소리 크기</Text></View>
+        <Text style={[styles.copy, { color: colors.text.secondary }]}>통화와 프로필 미리듣기에 적용돼요. 내 마이크 소리에는 영향을 주지 않아요.</Text>
+        {isLoading ? <ActivityIndicator color={colors.brand.accent} /> : volume != null && <View style={styles.volumeRow}>
+          <Pressable disabled={disabled || volume <= 0} onPress={() => handleVolumeChange(volume - 10)} accessibilityRole="button" accessibilityLabel="목소리 크기 줄이기" style={[styles.step, { borderColor: colors.border.primary, opacity: disabled || volume <= 0 ? 0.4 : 1 }]}><Feather name="minus" size={20} color={colors.text.primary} /></Pressable>
+          <Text accessibilityLiveRegion="polite" style={[styles.value, { color: colors.text.primary }]}>{volume === 0 ? '소리 끔' : `${volume}%`}</Text>
+          <Pressable disabled={disabled || volume >= 100} onPress={() => handleVolumeChange(volume + 10)} accessibilityRole="button" accessibilityLabel="목소리 크기 키우기" style={[styles.step, { borderColor: colors.border.primary, opacity: disabled || volume >= 100 ? 0.4 : 1 }]}><Feather name="plus" size={20} color={colors.text.primary} /></Pressable>
+        </View>}
+        {isError && <View style={styles.error}><Text accessibilityRole="alert" style={[styles.copy, { color: colors.state.danger }]}>소리 설정을 불러오지 못했어요.</Text><Pressable onPress={() => { void refetch(); }} accessibilityRole="button" accessibilityLabel="소리 설정 다시 불러오기" style={styles.retry}><Text style={[styles.copy, { color: colors.brand.accent }]}>다시 불러오기</Text></Pressable></View>}
+        <View style={styles.presets}>
+          {([{ value: 25, label: '작게' }, { value: 50, label: '보통' }, { value: 100, label: '크게' }] as const).map(option => <Pressable key={option.value} disabled={disabled} onPress={() => handleVolumeChange(option.value)} accessibilityRole="radio" accessibilityLabel={`목소리 ${option.label}`} accessibilityState={{ selected: volume === option.value, disabled }} style={[styles.preset, { borderColor: volume === option.value ? colors.brand.accent : colors.border.primary, backgroundColor: colors.background.glass, opacity: disabled ? 0.5 : 1 }]}><Text style={[styles.copy, { color: volume === option.value ? colors.brand.accent : colors.text.primary }]}>{option.label}</Text></Pressable>)}
+        </View>
+        {isSaving && <Text accessibilityLiveRegion="polite" style={[styles.copy, { color: colors.text.muted }]}>목소리 크기를 저장하고 있어요…</Text>}
       </View>
-    </ScreenLayout>
-  );
+      <View style={card}><View style={styles.heading}><Feather name="headphones" size={20} color={colors.brand.accent} /><Text style={[styles.title, { color: colors.text.primary }]}>소리 확인</Text></View><AudioCheck volume={volume} /></View>
+      <View style={card}><View style={styles.heading}><Feather name="mic" size={20} color={colors.brand.accent} /><Text style={[styles.title, { color: colors.text.primary }]}>마이크 사용</Text></View><MicrophonePermission /></View>
+    </View>
+  </ScreenLayout>;
 };
 
 const styles = StyleSheet.create({
-  contentPadding: {
-    paddingHorizontal: Spacing.xxl,
-  },
-  card: {
-    borderWidth: 0.61,
-    borderRadius: Radii.lg,
-    padding: Spacing.xl,
-    width: '100%',
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: Spacing.xxs,
-  },
-  cardTitle: {
-    fontFamily: FontFamily.sans,
-    fontWeight: FontWeight.regular,
-    fontSize: FontSize.base,
-    lineHeight: 20,
-    letterSpacing: -0.15,
-  },
-  cardDescription: {
-    marginBottom: Spacing.xl,
-  },
-  descriptionText: {
-    fontFamily: FontFamily.sans,
-    fontWeight: FontWeight.regular,
-    fontSize: FontSize.sm,
-    lineHeight: 16,
-  },
-  segmentWrapper: {
-    width: '100%',
-  },
+  content: { paddingHorizontal: Spacing.xl, gap: Spacing.lg },
+  card: { borderWidth: 1, borderRadius: Radii.lg, padding: Spacing.lg, gap: Spacing.md },
+  heading: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
+  title: { flex: 1, fontFamily: FontFamily.sans, fontSize: FontSize.lg, lineHeight: 25, fontWeight: FontWeight.semibold },
+  copy: { fontFamily: FontFamily.sans, fontSize: FontSize.sm, lineHeight: 21, flexShrink: 1 },
+  volumeRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
+  value: { flex: 1, textAlign: 'center', fontFamily: FontFamily.sans, fontSize: FontSize.xxl, lineHeight: 32, fontWeight: FontWeight.semibold },
+  step: { minHeight: 48, minWidth: 48, borderWidth: 1, borderRadius: Radii.md, alignItems: 'center', justifyContent: 'center' },
+  presets: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
+  preset: { flex: 1, minWidth: 64, minHeight: 48, borderWidth: 1, borderRadius: Radii.md, paddingHorizontal: Spacing.sm, paddingVertical: Spacing.sm, justifyContent: 'center', alignItems: 'center' },
+  error: { gap: Spacing.sm }, retry: { minHeight: 48, justifyContent: 'center' },
 });

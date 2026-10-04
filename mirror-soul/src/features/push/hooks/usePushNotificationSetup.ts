@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Platform } from 'react-native';
+import { AppState, Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import { router, useRootNavigationState } from 'expo-router';
 import { useAuthStore } from '@/src/store/useAuthStore';
@@ -46,6 +46,7 @@ async function ensureNotificationChannel() {
 
 export function usePushNotificationSetup() {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
+  const userUuid = useAuthStore(state => state.userUuid);
   const registerMutation = useRegisterPushDeviceMutation();
   const rootNavigationState = useRootNavigationState();
 
@@ -54,52 +55,52 @@ export function usePushNotificationSetup() {
     ensureNotificationChannel().catch((error) => logger.warn('푸시 알림 채널 생성 실패', error));
   }, []);
 
-  // 로그인 상태에서 권한 요청 → 기기 푸시 토큰 발급 → 서버 등록
+  // 로그인 때만 권한을 요청한다. 기기 설정에서 돌아올 때는 읽기만 하고,
+  // 새로 허용된 기기의 토큰을 서버에 등록한다.
   useEffect(() => {
-    if (!isLoggedIn || Platform.OS !== 'android') return;
+    if (!isLoggedIn || !userUuid || Platform.OS !== 'android') return;
     let cancelled = false;
-
-    (async () => {
+    let registering = false;
+    let registeredToken: string | null = null;
+    const currentSession = () => !cancelled && useAuthStore.getState().isLoggedIn && useAuthStore.getState().userUuid === userUuid;
+    const setup = async (askPermission: boolean) => {
+      if (registering || !currentSession()) return;
+      registering = true;
       try {
-        // 위 mount-time effect와 별개로, 이 effect가 먼저 실행될 수도 있어 다시 await한다 —
-        // 채널 생성이 토큰 발급보다 항상 먼저 완료되도록 보장(순서가 뒤바뀌면 안 됨).
         await ensureNotificationChannel();
-
+        if (!currentSession()) return;
         const current = await Notifications.getPermissionsAsync();
-        const granted = current.granted || (await Notifications.requestPermissionsAsync()).granted;
-        if (!granted || cancelled) return;
-
+        const granted = current.granted || (askPermission && current.canAskAgain && (await Notifications.requestPermissionsAsync()).granted);
+        if (!granted || !currentSession()) return;
         const token = await Notifications.getDevicePushTokenAsync();
-        if (cancelled) return;
-
+        if (!currentSession() || token.data === registeredToken) return;
         const installationId = await getOrCreateInstallationId();
-        await registerMutation.mutateAsync({
-          installationId,
-          pushToken: token.data as string,
-          platform: 'ANDROID',
-        });
+        if (!currentSession()) return;
+        await registerMutation.mutateAsync({ installationId, pushToken: token.data as string, platform: 'ANDROID' });
+        if (currentSession()) registeredToken = token.data as string;
       } catch (error) {
         logger.warn('푸시 알림 등록 실패 (무시하고 계속 진행)', error);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
+      } finally { registering = false; }
     };
-    // registerMutation은 mutateAsync 호출로 내부 상태(isPending 등)가 바뀔 때마다 새 객체가
-    // 되는 react-query 훅이라, deps에 넣으면 등록 자체가 이 effect를 재실행시켜 반복 호출된다.
-    // 로그인 상태가 바뀔 때만 실행하면 되므로 의도적으로 뺀다.
+    void setup(true);
+    const subscription = AppState.addEventListener('change', state => {
+      if (state === 'active') void setup(false);
+    });
+    return () => { cancelled = true; subscription.remove(); };
+    // mutation 객체는 저장 상태 변경마다 새로 만들어진다. 세션 변경에만 재등록한다.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoggedIn]);
+  }, [isLoggedIn, userUuid]);
 
   // 드물게 런타임 중 토큰이 롤링되는 경우 재등록 (expo-notifications 공식 권장 패턴)
   useEffect(() => {
     if (Platform.OS !== 'android') return;
 
     const subscription = Notifications.addPushTokenListener(async (token) => {
-      if (!useAuthStore.getState().isLoggedIn) return;
+      const sessionUuid = useAuthStore.getState().userUuid;
+      if (!useAuthStore.getState().isLoggedIn || !sessionUuid) return;
       try {
         const installationId = await getOrCreateInstallationId();
+        if (!useAuthStore.getState().isLoggedIn || useAuthStore.getState().userUuid !== sessionUuid) return;
         await registerMutation.mutateAsync({
           installationId,
           pushToken: token.data as string,

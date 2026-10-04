@@ -4,15 +4,14 @@ import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { useRecommendationDetailQuery } from '@/src/features/home/hooks/useRecommendationDetailQuery';
 import { getErrorCode, getErrorDisplayMessage } from '@/src/utils/apiErrorCode';
 import { formatRegion } from '@/src/utils/formatRegion';
-import { formatDurationLabel } from '@/src/utils/formatCallTime';
+import { VoicePreviewPlayer } from '@/src/features/profile/components/VoicePreviewPlayer';
 import { jobCategories } from '@/src/components/signup/steps/Step2_BasicProfile/Professional/jobData';
 import { MBTI_AXES } from './mbtiAxes';
 import { getMockRecommendationDetail, isMockRecommendationUuid } from './mockRecommendations';
-import type { Recommendation, RecommendationDetailResult, VoicePreview } from '@/src/types/api/home';
+import type { Recommendation, RecommendationDetailResult } from '@/src/types/api/home';
 import { BlurView } from 'expo-blur';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -37,6 +36,9 @@ interface PartnerProfileModalProps {
   /** 본인 데이터로 공개 레이아웃만 보여준다. 추천 API 조회/통화 버튼은 제공하지 않는다. */
   previewDetail?: RecommendationDetailResult;
   ownPreview?: boolean;
+  previewImageUri?: string | null;
+  onPreviewReload?: () => Promise<unknown>;
+  isPreviewReloading?: boolean;
   /** 이미 열린 미리보기 Modal 안에서 표시할 때 native Modal을 중첩하지 않는다. */
   embedded?: boolean;
 }
@@ -47,11 +49,14 @@ interface PartnerProfileModalProps {
  * SelectDropdownModal.tsx와 동일한 Modal(transparent)+Animated.View 진입 애니메이션 패턴을
  * 세로 슬라이드(하단→전체 화면)로 응용합니다.
  */
-export default function PartnerProfileModal({ match, onClose, onDismiss, onConnectNow, previewDetail, ownPreview = false, embedded = false }: PartnerProfileModalProps) {
+export default function PartnerProfileModal({ match, onClose, onDismiss, onConnectNow, previewDetail, ownPreview = false, embedded = false, previewImageUri, onPreviewReload, isPreviewReloading = false }: PartnerProfileModalProps) {
   const { colors } = useThemeColors();
   const insets = useSafeAreaInsets();
   const progress = useRef(new Animated.Value(0)).current;
   const [imageFailed, setImageFailed] = useState(false);
+  const [previewFailed, setPreviewFailed] = useState(false);
+  const [imageAttempt, setImageAttempt] = useState(0);
+  const imageIdentity = useRef('');
   // match가 null이 되어도 닫힘 애니메이션이 끝날 때까지 마지막 match를 계속 렌더링하기 위한 상태
   const [displayedMatch, setDisplayedMatch] = useState<Recommendation | null>(null);
   // displayedMatch(닫힘 애니메이션 동안에도 유지되는 값)를 키로 써야, match prop이 먼저 null이
@@ -70,7 +75,7 @@ export default function PartnerProfileModal({ match, onClose, onDismiss, onConne
   } = useRecommendationDetailQuery(ownPreview || isMockMatch ? null : (displayedUserUuid ?? null));
   const detail = ownPreview ? previewDetail : (mockDetail ?? apiDetail);
 
-  useEffect(() => { setImageFailed(false); }, [displayedMatch?.profileImageUrl, detail?.profileImageUrl]);
+  useEffect(() => { setImageFailed(false); setPreviewFailed(false); }, [displayedMatch?.profileImageUrl, detail?.profileImageUrl, previewImageUri]);
 
   useEffect(() => {
     if (match) {
@@ -110,6 +115,18 @@ export default function PartnerProfileModal({ match, onClose, onDismiss, onConne
   const profileName = detail?.name ?? displayedMatch.name;
   const profileAge = detail ? detail.age : displayedMatch.age;
   const profileImageUrl = detail ? detail.profileImageUrl : displayedMatch.profileImageUrl;
+  const photoUri = imageFailed && ownPreview && previewImageUri && !previewFailed ? previewImageUri : profileImageUrl;
+  const imageKey = `${displayedUserUuid}:${photoUri}:${imageAttempt}`;
+  imageIdentity.current = imageKey;
+  const showPhoto = !!photoUri && (!imageFailed || photoUri === previewImageUri);
+  const refreshProfile = ownPreview ? onPreviewReload : isMockMatch ? undefined : () => refetchDetail({ throwOnError: true });
+  const refreshing = ownPreview ? isPreviewReloading : isDetailFetching;
+  const retryPhoto = () => {
+    setImageAttempt(value => value + 1);
+    setImageFailed(false);
+    setPreviewFailed(false);
+    void refreshProfile?.().catch(() => {});
+  };
   const profileRegion = detail ? detail.region : displayedMatch.residence;
   const profileJob = detail ? detail.job : displayedMatch.job;
   const jobCertificationSubmitted = detail ? detail.jobCertificationSubmitted : displayedMatch.jobCertificationSubmitted;
@@ -138,7 +155,7 @@ export default function PartnerProfileModal({ match, onClose, onDismiss, onConne
       >
         <ScrollView showsVerticalScrollIndicator={false} bounces={false}>
           <View style={[styles.hero, { aspectRatio: 4 / 5 }]}>
-            {imageFailed || !profileImageUrl ? (
+            {!showPhoto ? (
               <LinearGradient colors={Colors.gradient.avatarPlaceholder} style={styles.heroImage}>
                 <View style={styles.heroImageFallbackContent} accessible accessibilityLabel={profileImageUrl ? '사진을 불러올 수 없습니다' : '프로필 사진이 없습니다'}>
                   <View style={styles.heroImageFallbackAvatar}>
@@ -149,12 +166,13 @@ export default function PartnerProfileModal({ match, onClose, onDismiss, onConne
               </LinearGradient>
             ) : (
               <Image
-                source={{ uri: profileImageUrl }}
+                key={imageKey}
+                source={{ uri: photoUri! }}
                 style={styles.heroImage}
                 contentFit="cover"
                 cachePolicy="disk"
                 transition={150}
-                onError={() => setImageFailed(true)}
+                onError={() => { if (imageIdentity.current !== imageKey) return; if (photoUri === previewImageUri) setPreviewFailed(true); else setImageFailed(true); }}
               />
             )}
             {/* heroInfo는 항상 흰 텍스트이므로 다크/라이트 테마 모두 Hero 하단을 어둡게 마감한다.
@@ -224,7 +242,11 @@ export default function PartnerProfileModal({ match, onClose, onDismiss, onConne
           </View>
 
           <View style={styles.content}>
-            {isDetailError && !isMockMatch ? (
+            {imageFailed && profileImageUrl && <View style={{ gap: Spacing.sm }}>
+              <Text style={[styles.emptyText, { color: colors.text.secondary }]}>{showPhoto ? '방금 등록한 사진을 보여드리고 있어요. 서버 사진은 다시 확인해 주세요.' : '사진은 등록되어 있지만 불러오지 못했어요.'}</Text>
+              <TouchableOpacity onPress={retryPhoto} disabled={refreshing} accessibilityRole="button" accessibilityLabel="프로필 사진 다시 불러오기" style={{ minHeight: 48, justifyContent: 'center' }}><Text style={[styles.emptyText, { color: colors.brand.accent }]}>사진 다시 불러오기</Text></TouchableOpacity>
+            </View>}
+            {isDetailError && !isMockMatch && !ownPreview ? (
               <DetailLoadError
                 message={detailErrorMessage}
                 unavailable={isRecommendationUnavailable}
@@ -243,7 +265,7 @@ export default function PartnerProfileModal({ match, onClose, onDismiss, onConne
                         성향이 느껴져요.
                       </>
                     ) : detail ? (
-                      'AI 트윈 분석 정보를 아직 준비하고 있어요.'
+                      '아직 표시할 트윈 분석 정보가 없어요.'
                     ) : (
                       'AI 트윈 분석 정보를 불러오는 중이에요.'
                     )}
@@ -257,7 +279,7 @@ export default function PartnerProfileModal({ match, onClose, onDismiss, onConne
                       ))}
                     </View>
                   ) : (
-                    <Text style={[styles.emptyText, { color: colors.text.muted }]}>AI 페르소나 분석을 준비하고 있어요.</Text>
+                    <Text style={[styles.emptyText, { color: colors.text.muted }]}>아직 표시할 트윈 성향이 없어요.</Text>
                   )}
                 </Section>
 
@@ -301,11 +323,11 @@ export default function PartnerProfileModal({ match, onClose, onDismiss, onConne
                       <VoicePreviewPlayer
                         key={detail.voicePreview.audioUrl}
                         voicePreview={detail.voicePreview}
-                        isReloading={isDetailFetching}
-                        onReload={isMockMatch ? undefined : () => refetchDetail()}
+                        isReloading={refreshing}
+                        onReload={refreshProfile}
                       />
                     ) : detail ? (
-                      <Text style={[styles.voiceStyleText, { color: colors.text.muted }]}>음성 미리듣기를 준비 중이에요.</Text>
+                      <View style={{ gap: Spacing.sm }}><Text style={[styles.voiceStyleText, { color: colors.text.muted }]}>아직 재생할 수 있는 미리듣기 음성이 없어요.</Text>{refreshProfile && <TouchableOpacity onPress={() => { void refreshProfile().catch(() => {}); }} disabled={refreshing} accessibilityRole="button" accessibilityLabel="음성 미리듣기 다시 확인" style={{ minHeight: 48, justifyContent: 'center' }}><Text style={[styles.voiceStyleText, { color: colors.brand.accent }]}>다시 확인</Text></TouchableOpacity>}</View>
                     ) : (
                       <ActivityIndicator color={colors.text.muted} />
                     )}
@@ -413,64 +435,6 @@ function withAlpha(hexColor: string, alpha: number): string {
   const g = parseInt(hexColor.slice(3, 5), 16);
   const b = parseInt(hexColor.slice(5, 7), 16);
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
-
-/**
- * VoicePreviewPlayer 컴포넌트
- * detail이 도착해서 voicePreview가 실제로 있을 때만 마운트된다 — 다른 카드로 전환되면
- * detail 쿼리 키가 바뀌면서 이 컴포넌트가 언마운트되고, expo-audio가 언마운트 시 내부적으로
- * 플레이어를 release하므로 이전 오디오가 자동으로 멈춘다(수동 정리 코드 불필요).
- */
-function VoicePreviewPlayer({
-  voicePreview,
-  onReload,
-  isReloading,
-}: {
-  voicePreview: VoicePreview;
-  onReload?: () => void;
-  isReloading: boolean;
-}) {
-  const { colors } = useThemeColors();
-  const player = useAudioPlayer(voicePreview.audioUrl);
-  const status = useAudioPlayerStatus(player);
-
-  return (
-    <>
-      <TouchableOpacity
-        style={styles.playButton}
-        onPress={() => (status.playing ? player.pause() : player.play())}
-        activeOpacity={0.85}
-        accessibilityRole="button"
-        accessibilityLabel={status.playing ? '일시정지' : '재생'}
-      >
-        <Feather name={status.playing ? 'pause' : 'play'} size={22} color={Colors.primary.soulBlack} />
-      </TouchableOpacity>
-      <View style={styles.voiceInfo}>
-        <Text style={[styles.voiceStyleText, { color: colors.text.primary }]}>
-          {formatDurationLabel(voicePreview.durationMs == null ? null : Math.round(voicePreview.durationMs / 1000))}
-        </Text>
-        {onReload ? (
-          <TouchableOpacity
-            onPress={onReload}
-            disabled={isReloading}
-            activeOpacity={0.7}
-            accessibilityRole="button"
-            accessibilityLabel="음성 미리듣기 다시 불러오기"
-            style={styles.voiceReloadButton}
-          >
-            {isReloading ? (
-              <ActivityIndicator size="small" color={Colors.primary.electricCyan} />
-            ) : (
-              <>
-                <Feather name="refresh-cw" size={12} color={Colors.primary.electricCyan} />
-                <Text style={styles.voiceReloadText}>재생이 안 되나요? 다시 불러오기</Text>
-              </>
-            )}
-          </TouchableOpacity>
-        ) : null}
-      </View>
-    </>
-  );
 }
 
 function DetailLoadError({

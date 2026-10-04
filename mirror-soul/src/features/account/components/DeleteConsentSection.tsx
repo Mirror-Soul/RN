@@ -1,169 +1,23 @@
-import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
-import Animated, { 
-  useSharedValue, 
-  useAnimatedStyle, 
-  withTiming, 
-  interpolateColor,
-  withSpring,
-  FadeInDown,
-} from 'react-native-reanimated';
+import React from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
-import {Colors, FontFamily, FontSize, FontWeight, Radii, Spacing} from '@/src/constants/theme';
 
-interface DeleteConsentSectionProps {
-  isAgreed: boolean;
-  onToggleAgree: () => void;
-  onSubmit: () => void;
-}
-
-export const DeleteConsentSection = ({ isAgreed, onToggleAgree, onSubmit }: DeleteConsentSectionProps) => {
+export const DeleteConsentSection = ({ isAgreed, onToggleAgree, onSubmit, disabled = false }: { isAgreed: boolean; onToggleAgree: () => void; onSubmit: () => void; disabled?: boolean }) => {
   const { colors } = useThemeColors();
-  
-  // Reanimated Shared Values
-  const progress = useSharedValue(isAgreed ? 1 : 0);
-
-  useEffect(() => {
-    progress.value = withTiming(isAgreed ? 1 : 0, { duration: 250 });
-  }, [isAgreed]);
-
-  // Checkbox Animations
-  const animatedCheckboxStyle = useAnimatedStyle(() => {
-    return {
-      backgroundColor: interpolateColor(
-        progress.value,
-        [0, 1],
-        [colors.background.glass, 'rgba(248, 113, 113, 0.2)']
-      ),
-      borderColor: interpolateColor(
-        progress.value,
-        [0, 1],
-        [colors.border.primary, 'rgba(248, 113, 113, 0.5)']
-      ),
-    };
-  });
-
-  const animatedCheckIconStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ scale: withSpring(progress.value, { damping: 12, stiffness: 100 }) }],
-      opacity: progress.value,
-    };
-  });
-
-  // Button Animations
-  const animatedButtonStyle = useAnimatedStyle(() => {
-    return {
-      backgroundColor: interpolateColor(
-        progress.value,
-        [0, 1],
-        ['rgba(150, 150, 150, 0.04)', 'rgba(220, 38, 38, 0.25)']
-      ),
-      borderColor: interpolateColor(
-        progress.value,
-        [0, 1],
-        ['rgba(150, 150, 150, 0.08)', 'rgba(220, 38, 38, 0.4)']
-      ),
-    };
-  });
-
-  const animatedButtonTextStyle = useAnimatedStyle(() => {
-    return {
-      color: interpolateColor(
-        progress.value,
-        [0, 1],
-        [colors.text.muted, 'rgba(248, 113, 113, 0.95)']
-      ),
-    };
-  });
-
-  return (
-    <Animated.View 
-      entering={FadeInDown.delay(200).duration(500).springify()}
-      style={styles.container}
-    >
-      <Pressable 
-        onPress={onToggleAgree} 
-        style={styles.checkboxRow}
-        accessibilityRole="checkbox"
-        accessibilityState={{ checked: isAgreed }}
-        accessibilityLabel="데이터 영구 삭제 동의"
-      >
-        <View style={styles.checkboxWrapper}>
-          <Animated.View style={[styles.checkbox, animatedCheckboxStyle]}>
-            <Animated.View style={animatedCheckIconStyle}>
-              <Feather name="check" size={14} color="rgba(248, 113, 113, 0.9)" />
-            </Animated.View>
-          </Animated.View>
-        </View>
-        <Text style={[styles.consentText, { color: colors.text.secondary }]}>
-          위 내용을 모두 확인하였으며, 30일 후 모든 데이터 영구 삭제에 동의합니다.
-        </Text>
-      </Pressable>
-
-      <View style={styles.buttonSpacer} />
-
-      <Pressable 
-        onPress={onSubmit} 
-        disabled={!isAgreed}
-        accessibilityRole="button"
-        accessibilityLabel="탈퇴하기"
-      >
-        <Animated.View style={[styles.submitButton, animatedButtonStyle]}>
-          <Animated.Text style={[styles.submitButtonText, animatedButtonTextStyle]}>
-            탈퇴하기
-          </Animated.Text>
-        </Animated.View>
-      </Pressable>
-    </Animated.View>
-  );
+  return <View style={styles.content}>
+    <Pressable disabled={disabled} onPress={onToggleAgree} accessibilityRole="checkbox" accessibilityState={{ checked: isAgreed, disabled }} accessibilityLabel="탈퇴 안내 및 복구 기간 확인" style={styles.checkboxRow}><View style={[styles.checkbox, { borderColor: isAgreed ? colors.state.danger : colors.border.strong, backgroundColor: colors.background.glass }]}>{isAgreed && <Feather name="check" size={18} color={colors.state.danger} />}</View><Text style={[styles.copy, { color: colors.text.primary }]}>탈퇴 안내와 복구 기간을 확인했어요.</Text></Pressable>
+    <Pressable disabled={!isAgreed || disabled} onPress={onSubmit} accessibilityRole="button" accessibilityLabel="회원 탈퇴 최종 확인" accessibilityState={{ disabled: !isAgreed || disabled }} style={[styles.button, { borderColor: isAgreed ? colors.state.danger : colors.border.primary, backgroundColor: colors.background.glass, opacity: !isAgreed || disabled ? 0.5 : 1 }]}><Text style={[styles.buttonText, { color: isAgreed ? colors.state.danger : colors.text.secondary }]}>회원 탈퇴 계속하기</Text></Pressable>
+    <Text style={[styles.hint, { color: colors.text.secondary }]}>다음 화면에서 한 번 더 확인해요.</Text>
+  </View>;
 };
-
 const styles = StyleSheet.create({
-  container: {
-    paddingHorizontal: Spacing.xxl,
-    flex: 1,
-    justifyContent: 'flex-start',
-  },
-  checkboxRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: Spacing.md,
-  },
-  checkboxWrapper: {
-    paddingTop: Spacing.xxs,
-  },
-  checkbox: {
-    width: 20,
-    height: 20,
-    borderWidth: 0.61,
-    borderRadius: Radii.sm,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  consentText: {
-    flex: 1,
-    fontFamily: FontFamily.sans,
-    fontWeight: FontWeight.medium,
-    fontSize: FontSize.base,
-    lineHeight: 23,
-    letterSpacing: -0.15,
-  },
-  buttonSpacer: {
-    flex: 1,
-  },
-  submitButton: {
-    height: 53.22,
-    borderWidth: 0.61,
-    borderRadius: Radii.lg,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: Spacing.giant,
-  },
-  submitButtonText: {
-    fontFamily: FontFamily.sans,
-    fontWeight: FontWeight.medium,
-    fontSize: FontSize.base,
-    letterSpacing: -0.15,
-  },
+  content: { paddingHorizontal: Spacing.xl, gap: Spacing.md },
+  checkboxRow: { minHeight: 48, flexDirection: 'row', gap: Spacing.md, alignItems: 'flex-start', paddingVertical: Spacing.sm },
+  checkbox: { width: 24, height: 24, borderWidth: 1, borderRadius: Radii.sm, justifyContent: 'center', alignItems: 'center' },
+  copy: { flex: 1, fontFamily: FontFamily.sans, fontSize: FontSize.base, lineHeight: 24 },
+  button: { minHeight: 52, borderWidth: 1, borderRadius: Radii.md, padding: Spacing.md, justifyContent: 'center', alignItems: 'center' },
+  buttonText: { fontFamily: FontFamily.sans, fontSize: FontSize.lg, fontWeight: FontWeight.medium, lineHeight: 25, textAlign: 'center' },
+  hint: { fontFamily: FontFamily.sans, fontSize: FontSize.base, lineHeight: 22, textAlign: 'center' },
 });
