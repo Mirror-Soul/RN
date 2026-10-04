@@ -1,118 +1,138 @@
 import React from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
-import {Colors, FontFamily, Radii, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
-import { Ionicons } from '@expo/vector-icons';
-import { useThemeColors } from '@/src/hooks/useThemeColors';
-
+import { Feather } from '@expo/vector-icons';
+import { Pressable, StyleSheet, View } from 'react-native';
+import {
+  FontFamily,
+  FontSize,
+  FontWeight,
+  Radii,
+  Spacing,
+} from '@/src/constants/theme';
+import {
+  useMatchingDesign,
+  MatchingText as Text,
+} from '@/src/features/match/components/MatchingDesign';
 export type MatchingTab = 'meet' | 'chat';
-
-interface MatchingActionButtonsProps {
+export default function MatchingActionButtons({
+  activeTab,
+  onChangeTab,
+  unreadCount = 0,
+  requestCount,
+}: {
   activeTab: MatchingTab;
   onChangeTab: (tab: MatchingTab) => void;
-  /** 전체 대화방 안 읽은 메시지 총합 — 0이면 배지를 숨긴다 */
   unreadCount?: number;
-}
-
-export default function MatchingActionButtons({ activeTab, onChangeTab, unreadCount = 0 }: MatchingActionButtonsProps) {
-  const { colors } = useThemeColors();
-
+  requestCount?: number;
+}) {
+  const { colors, palette } = useMatchingDesign();
   return (
-    <View style={[styles.container, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
-      {/* 만남 신청 버튼 */}
-      <Pressable 
-        style={[
-          styles.button, 
-          activeTab === 'meet' && [styles.activeButton, { backgroundColor: colors.background.glass, borderColor: colors.border.primary, shadowColor: Colors.primary.soulBlack }]
-        ]}
-        onPress={() => onChangeTab('meet')}
-      >
-        <Ionicons 
-          name="people-outline" 
-          size={16} 
-          color={activeTab === 'meet' ? Colors.primary.electricCyan : colors.text.muted} 
-        />
-        <Text style={[styles.buttonText, { color: activeTab === 'meet' ? Colors.primary.electricCyan : colors.text.muted }]}>
-          만남 신청
-        </Text>
-      </Pressable>
-
-      {/* 메시지방 버튼 */}
-      <Pressable 
-        style={[
-          styles.button, 
-          activeTab === 'chat' && [styles.activeButton, { backgroundColor: colors.background.glass, borderColor: colors.border.primary, shadowColor: Colors.primary.soulBlack }]
-        ]}
-        onPress={() => onChangeTab('chat')}
-      >
-        <Ionicons 
-          name="chatbubble-outline" 
-          size={16} 
-          color={activeTab === 'chat' ? Colors.primary.vividPurple : colors.text.muted} 
-        />
-        <View style={styles.textRow}>
-          <Text style={[styles.buttonText, { color: activeTab === 'chat' ? Colors.primary.vividPurple : colors.text.muted }]}>
-            메시지방
+    <View
+      style={[
+        styles.tabs,
+        {
+          backgroundColor: colors.background.card,
+          borderColor: colors.border.primary,
+        },
+      ]}
+    >
+      {(
+        [
+          { id: 'meet', label: '받은 신청', count: requestCount ?? 0 },
+          { id: 'chat', label: '메시지', count: unreadCount },
+        ] as const
+      ).map((tab) => (
+        <Pressable
+          key={tab.id}
+          onPress={() => onChangeTab(tab.id)}
+          accessibilityRole="tab"
+          accessibilityLabel={
+            tab.id === 'meet'
+              ? `받은 신청${requestCount == null ? '' : ` ${requestCount}건`}`
+              : `메시지${unreadCount > 0 ? `, 읽지 않은 메시지 ${unreadCount}개` : ''}`
+          }
+          accessibilityState={{ selected: activeTab === tab.id }}
+          style={[
+            styles.tab,
+            {
+              backgroundColor:
+                activeTab === tab.id ? palette.tint : 'transparent',
+              borderColor: 'transparent',
+            },
+          ]}
+        >
+          <Feather
+            name={tab.id === 'meet' ? 'heart' : 'message-circle'}
+            size={17}
+            color={
+              activeTab === tab.id ? colors.brand.accent : colors.text.secondary
+            }
+          />
+          <Text
+            style={[
+              styles.label,
+              {
+                color:
+                  activeTab === tab.id
+                    ? colors.brand.accent
+                    : colors.text.secondary,
+              },
+            ]}
+          >
+            {tab.label}
           </Text>
-          {/* 배지 */}
-          {unreadCount > 0 && (
-            <View style={[styles.badge, { backgroundColor: activeTab === 'chat' ? Colors.primary.vividPurple : Colors.primary.electricCyan }]}>
-              <Text style={[styles.badgeText, { color: Colors.primary.soulBlack }]}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
-            </View>
+          {tab.count > 0 && (
+            <Text
+              style={[
+                styles.badge,
+                {
+                  color: palette.onAccent,
+                  backgroundColor: colors.brand.accent,
+                },
+              ]}
+            >
+              {tab.count > 99 ? '99+' : tab.count}
+            </Text>
           )}
-        </View>
-      </Pressable>
+        </Pressable>
+      ))}
     </View>
   );
 }
-
 const styles = StyleSheet.create({
-  container: {
-    marginTop: Spacing.xxxl,
+  tabs: {
     flexDirection: 'row',
-    padding: 6,
-    gap: Spacing.sm,
+    gap: Spacing.xs,
+    padding: Spacing.xs,
     borderWidth: 1,
-    borderRadius: Radii.xl, 
-    height: 64,
+    borderRadius: Radii.xl,
   },
-  button: {
+  tab: {
     flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    borderRadius: Radii.lg, 
-    paddingVertical: 14,
-  },
-  activeButton: {
+    minHeight: 48,
+    padding: Spacing.sm,
+    borderRadius: Radii.lg2,
     borderWidth: 1,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  textRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: Spacing.xs,
   },
-  buttonText: {
+  label: {
+    flexShrink: 1,
     fontFamily: FontFamily.sans,
-    fontWeight: FontWeight.black,
-    fontSize: FontSize.sm,
-    letterSpacing: 1.2,
-    textTransform: 'uppercase',
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.semibold,
+    lineHeight: 23,
   },
   badge: {
-    borderRadius: Radii.full,
-    width: 20,
-    height: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  badgeText: {
     fontFamily: FontFamily.sans,
-    fontWeight: FontWeight.black,
-    fontSize: FontSize.xs,
+    fontSize: FontSize.sm,
+    lineHeight: 20,
+    fontWeight: FontWeight.semibold,
+    paddingHorizontal: Spacing.xs,
+    minWidth: 22,
+    textAlign: 'center',
+    borderRadius: Radii.full,
   },
 });

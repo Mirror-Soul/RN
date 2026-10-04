@@ -1,40 +1,58 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { acceptMeetingRequest } from '@/src/services/meetingService';
 import type { MeetingRequestListResult } from '@/src/types/api/meeting';
-import type { ChatRoomListResult } from '@/src/types/api/chat';
+import { useAuthStore } from '@/src/store/useAuthStore';
+import { matchQueryKeys } from './matchQueryKeys';
 
-/**
- * POST /match/meeting/requests/{id}/accept
- * 조회 목록(`GET /match/meeting/requests`)은 PENDING만 내려주므로, 성공 시 재조회 대신
- * 캐시에서 해당 항목만 걸러내 반영한다(응답에 갱신된 목록 전체가 오지 않음).
- */
 export const useAcceptMeetingRequestMutation = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (requestId: number) => acceptMeetingRequest(requestId),
-    onSuccess: async (response, requestId) => {
-      queryClient.setQueryData<MeetingRequestListResult>(['match', 'meetingRequests'], (old) =>
-        old
-          ? {
-              totalCount: old.totalCount - 1,
-              requests: old.requests.filter((r) => r.requestId !== requestId),
-            }
-          : old
+  const client = useQueryClient();
+  const userUuid = useAuthStore((s) => s.userUuid);
+  const mutation = useMutation({
+    mutationFn: ({
+      requestId,
+      userUuid,
+    }: {
+      requestId: number;
+      userUuid: string | null;
+    }) => {
+      if (
+        !userUuid ||
+        !useAuthStore.getState().isLoggedIn ||
+        useAuthStore.getState().userUuid !== userUuid
+      )
+        throw new Error('다시 로그인해 주세요.');
+      return acceptMeetingRequest(requestId);
+    },
+    onMutate: ({ userUuid }) =>
+      client.cancelQueries({ queryKey: matchQueryKeys.requests(userUuid) }),
+    onSuccess: async (_response, { requestId, userUuid }) => {
+      const currentSession = () =>
+        !!userUuid &&
+        useAuthStore.getState().isLoggedIn &&
+        useAuthStore.getState().userUuid === userUuid;
+      if (!currentSession()) return;
+      await client.cancelQueries({
+        queryKey: matchQueryKeys.requests(userUuid),
+      });
+      if (!currentSession()) return;
+      client.setQueryData<MeetingRequestListResult>(
+        matchQueryKeys.requests(userUuid),
+        (old) => {
+          if (!old) return old;
+          const requests = old.requests.filter(
+            (item) => item.requestId !== requestId,
+          );
+          return { totalCount: requests.length, requests };
+        },
       );
-      // match.tsx가 성공 직후 새로 생긴 채팅방으로 바로 딥링크한다 — 그 방이 실제로
-      // GET /chat/rooms 결과에 포함될 때까지 이 onSuccess가 끝나지 않도록 기다려서(useMutation은
-      // 훅 onSuccess가 async면 완료를 기다린 뒤에야 mutate() 호출부의 onSuccess를 실행한다),
-      // 화면 전환 시점엔 캐시가 이미 최신인 걸 보장한다.
-      await queryClient.invalidateQueries({ queryKey: ['chat', 'rooms'] });
-
-      // invalidateQueries는 재조회가 실패해도 reject하지 않으므로 위 await만으로는 새 방이
-      // 실제로 캐시에 들어왔다는 보장이 안 된다 — 없으면 한 번 더 명시적으로 재조회한다.
-      const chatRoomId = response.result.chatRoomId;
-      const rooms = queryClient.getQueryData<ChatRoomListResult>(['chat', 'rooms']);
-      if (!rooms?.rooms.some((room) => room.chatRoomId === chatRoomId)) {
-        await queryClient.refetchQueries({ queryKey: ['chat', 'rooms'] });
-      }
+      // 방 목록 재조회가 실패해도 서버가 반환한 chatRoomId로 바로 이동할 수 있다.
+      void client.invalidateQueries({ queryKey: ['chat', 'rooms'] });
     },
   });
+  return {
+    ...mutation,
+    mutateAsync: (requestId: number) =>
+      mutation.mutateAsync({ requestId, userUuid }),
+    mutate: (requestId: number) => mutation.mutate({ requestId, userUuid }),
+  };
 };

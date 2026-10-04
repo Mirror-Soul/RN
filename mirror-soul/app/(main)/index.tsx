@@ -1,11 +1,13 @@
 import AvailableTimeCard from '@/src/components/home/main/AvailableTimeCard';
 import DiscoveryMatchSection from '@/src/components/home/main/Discovery/DiscoveryMatchSection';
 import PartnerProfileModal from '@/src/components/home/main/Discovery/PartnerProfileModal';
-import CallStartConfirmSheet, { CallTarget } from '@/src/components/call/CallStartConfirmSheet';
+import CallStartConfirmSheet, {
+  CallTarget,
+} from '@/src/components/call/CallStartConfirmSheet';
 import LocationFilterBar from '@/src/components/home/main/LocationFilterBar';
 import MainHeader from '@/src/components/home/main/MainHeader';
 import ProfileQuickActionSheet from '@/src/components/home/main/ProfileQuickActionSheet';
-import SoulConnectTip from '@/src/components/home/main/SoulConnectTip';
+import MatchingActiveStatus from '@/src/components/home/match/parts/MatchingActiveStatus';
 import { Layout, Spacing } from '@/src/constants/theme';
 import { MAIN_ROUTES } from '@/src/constants/routes/mainRoutes';
 import { useLayout } from '@/src/hooks/useLayout';
@@ -16,9 +18,10 @@ import { usePreferredRegionQuery } from '@/src/features/home/hooks/usePreferredR
 import { useMatchingStatus } from '@/src/features/home/hooks/useMatchingStatus';
 import type { Recommendation } from '@/src/types/api/home';
 import { logger } from '@/src/utils/logger';
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useContext, useRef, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { FloatingTabBarInsetContext } from '@/src/components/common/FloatingTabBarInsetContext';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { router } from 'expo-router';
 
@@ -33,19 +36,24 @@ import { router } from 'expo-router';
  */
 export default function MainHomeScreen() {
   const insets = useSafeAreaInsets();
+  const tabBarInset = useContext(FloatingTabBarInsetContext);
   const { colors } = useThemeColors();
   const { contentContainerStyle, screenPadding } = useLayout();
 
   const [showRefillModal, setShowRefillModal] = useState(false);
   const [showQuickActions, setShowQuickActions] = useState(false);
-  const [selectedMatch, setSelectedMatch] = useState<Recommendation | null>(null);
-  const [callCandidate, setCallCandidate] = useState<Recommendation | null>(null);
+  const [selectedMatch, setSelectedMatch] = useState<Recommendation | null>(
+    null,
+  );
+  const [callCandidate, setCallCandidate] = useState<Recommendation | null>(
+    null,
+  );
   // 상세 모달의 닫힘 애니메이션이 끝난 뒤 통화 시작 시트를 열어, 두 native Modal이
   // 잠깐 겹쳐 보이는 전환을 피한다.
   const pendingCallCandidateRef = useRef<Recommendation | null>(null);
-  // MainHeader가 배지 자체 조회를 이미 하지만, AiStatusTicker도 같은 상태가 필요해 여기서도
-  // 구독한다 — react-query가 쿼리키(['match','status'])를 공유하므로 중복 요청은 없다.
-  const { matchingEnabled, isError: isMatchingStatusError } = useMatchingStatus();
+  // 추천 노출 컨트롤과 목록이 같은 계정별 쿼리를 구독하므로 중복 요청은 없다.
+  const { matchingEnabled, isError: isMatchingStatusError } =
+    useMatchingStatus();
 
   const {
     data: preferredRegion,
@@ -55,31 +63,27 @@ export default function MainHomeScreen() {
   } = usePreferredRegionQuery();
 
   const handleLogout = useCallback(() => {
-    Alert.alert(
-      '로그아웃',
-      '현재 기기에서 로그아웃 하시겠습니까?',
-      [
-        { text: '취소', style: 'cancel' },
-        {
-          text: '로그아웃',
-          style: 'destructive',
-          onPress: () => {
-            // iOS Alert 애니메이션이 끝난 후 실행 (씹히는 현상 방지)
-            setTimeout(async () => {
-              logger.debug('User clicked logout from Home quick actions');
-              // performLogout이 예상치 못한 이유로 실패하더라도 로그인 화면 이동은 항상 보장한다
-              try {
-                await performLogout();
-              } catch (localError) {
-                logger.error('Local logout failed', localError);
-              } finally {
-                router.replace('/login');
-              }
-            }, 100);
-          },
+    Alert.alert('로그아웃', '현재 기기에서 로그아웃 하시겠습니까?', [
+      { text: '취소', style: 'cancel' },
+      {
+        text: '로그아웃',
+        style: 'destructive',
+        onPress: () => {
+          // iOS Alert 애니메이션이 끝난 후 실행 (씹히는 현상 방지)
+          setTimeout(async () => {
+            logger.debug('User clicked logout from Home quick actions');
+            // performLogout이 예상치 못한 이유로 실패하더라도 로그인 화면 이동은 항상 보장한다
+            try {
+              await performLogout();
+            } catch (localError) {
+              logger.error('Local logout failed', localError);
+            } finally {
+              router.replace('/login');
+            }
+          }, 100);
         },
-      ],
-    );
+      },
+    ]);
   }, []);
 
   const handleViewProfile = useCallback(() => {
@@ -91,13 +95,17 @@ export default function MainHomeScreen() {
   }, []);
 
   const handleConnectNow = useCallback((match: Recommendation) => {
-    logger.debug('Call requested from profile detail', { matchId: match.userUuid });
+    logger.debug('Call requested from profile detail', {
+      matchId: match.userUuid,
+    });
     pendingCallCandidateRef.current = match;
     setSelectedMatch(null);
   }, []);
 
   const handleConnectPress = useCallback((match: Recommendation) => {
-    logger.debug('Call requested from discovery card', { matchId: match.userUuid });
+    logger.debug('Call requested from discovery card', {
+      matchId: match.userUuid,
+    });
     setCallCandidate(match);
   }, []);
 
@@ -108,24 +116,30 @@ export default function MainHomeScreen() {
     setCallCandidate(pendingMatch);
   }, []);
 
-  const handleStartCall = useCallback((match: CallTarget, isPreview: boolean, remainingSeconds?: number) => {
-    setCallCandidate(null);
-    // BottomSheet의 닫힘 애니메이션을 먼저 끝내야 새 화면을 native Modal이 덮지 않는다.
-    setTimeout(() => {
-      router.push(
-        isPreview
-          ? { pathname: '/ai-call', params: { preview: 'true', targetName: match.name } }
-          : {
-              pathname: '/ai-call',
-              params: {
-                targetUuid: match.userUuid,
-                targetName: match.name,
-                remainingSeconds: String(remainingSeconds ?? 0),
+  const handleStartCall = useCallback(
+    (match: CallTarget, isPreview: boolean, remainingSeconds?: number) => {
+      setCallCandidate(null);
+      // BottomSheet의 닫힘 애니메이션을 먼저 끝내야 새 화면을 native Modal이 덮지 않는다.
+      setTimeout(() => {
+        router.push(
+          isPreview
+            ? {
+                pathname: '/ai-call',
+                params: { preview: 'true', targetName: match.name },
+              }
+            : {
+                pathname: '/ai-call',
+                params: {
+                  targetUuid: match.userUuid,
+                  targetName: match.name,
+                  remainingSeconds: String(remainingSeconds ?? 0),
+                },
               },
-            },
-      );
-    }, 280);
-  }, []);
+        );
+      }, 280);
+    },
+    [],
+  );
 
   const handleRefillFromCall = useCallback(() => {
     setCallCandidate(null);
@@ -141,17 +155,36 @@ export default function MainHomeScreen() {
 
   return (
     <ScrollView
-      style={[styles.scrollView, { backgroundColor: colors.background.primary }]}
-      contentContainerStyle={styles.scrollContent}
+      style={[
+        styles.scrollView,
+        { backgroundColor: colors.background.primary },
+      ]}
+      contentContainerStyle={[
+        styles.scrollContent,
+        {
+          paddingBottom: Math.max(
+            insets.bottom + Layout.MAIN_TAB_CONTENTS_BOTTOM_PADDING,
+            tabBarInset + Spacing.lg,
+          ),
+        },
+      ]}
       showsVerticalScrollIndicator={false}
     >
       <Animated.View
         entering={FadeInUp.duration(400)}
-        style={[styles.dashboard, contentContainerStyle, { paddingTop: Math.max(insets.top + 12, Layout.SCREEN_PADDING), paddingHorizontal: screenPadding }]}
+        style={[
+          styles.dashboard,
+          contentContainerStyle,
+          {
+            paddingTop: Math.max(insets.top + 12, Layout.SCREEN_PADDING),
+            paddingHorizontal: screenPadding,
+          },
+        ]}
       >
         {/* 그룹 1: 헤더(매칭 상태 배지 포함) */}
         <View style={styles.groupSpacer}>
           <MainHeader onAvatarPress={() => setShowQuickActions(true)} />
+          <MatchingActiveStatus compact />
         </View>
 
         {/* 그룹 2: 내 계정/탐색 설정 — 시간충전 + 지역설정. 바로 아래(그룹3과의 경계)만
@@ -160,8 +193,10 @@ export default function MainHomeScreen() {
           <AvailableTimeCard onRefillPress={() => setShowRefillModal(true)} />
 
           <LocationFilterBar
-            // TODO(UI 단계): "OO동과 근처 N개 동" 형태의 요약 텍스트로 교체 예정 — 지금은 앵커 이름만 표시
-            selectedLocations={preferredRegion ? [preferredRegion.eupmyeondongName] : []}
+            selectedLocations={
+              preferredRegion ? [preferredRegion.eupmyeondongName] : []
+            }
+            nearbyCount={preferredRegion?.includedRegionIds.length}
             isLoading={isPreferredRegionLoading}
             isError={isPreferredRegionError}
             onRetry={() => refetchPreferredRegion()}
@@ -178,12 +213,12 @@ export default function MainHomeScreen() {
             isMatchingStatusError={isMatchingStatusError}
           />
         </View>
-
-        {/* 그룹 4: 하단 정보 카드 */}
-        <SoulConnectTip />
       </Animated.View>
 
-      <TimeRefillBottomSheet isOpen={showRefillModal} onClose={() => setShowRefillModal(false)} />
+      <TimeRefillBottomSheet
+        isOpen={showRefillModal}
+        onClose={() => setShowRefillModal(false)}
+      />
 
       <ProfileQuickActionSheet
         visible={showQuickActions}

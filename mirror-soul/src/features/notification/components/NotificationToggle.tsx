@@ -10,20 +10,22 @@ interface Props {
   disabled?: boolean;
   isSaving?: boolean;
   isLoading?: boolean;
+  accentColor?: string;
 }
 
 /** OS 표준 스위치와 상태 문구를 함께 사용해 색상만으로 상태를 구분하지 않는다. */
-export function NotificationToggle({ value, onToggle, label, disabled = false, isSaving = false, isLoading = false }: Props) {
+export function NotificationToggle({ value, onToggle, label, disabled = false, isSaving = false, isLoading = false, accentColor }: Props) {
   const { colors } = useThemeColors();
+  const accent = accentColor ?? colors.brand.accent;
   const blocked = disabled || value === null || isSaving;
   // 다른 항목의 저장으로 입력만 잠길 때는 이 스위치의 모습은 유지한다.
   const visuallyDisabled = value === null || isSaving;
   const stateLabel = isSaving ? '저장 중' : value === null ? isLoading ? '확인 중' : '확인 필요' : value ? '켜짐' : '꺼짐';
   return (
     <Pressable onPress={onToggle} disabled={blocked} accessibilityRole="switch" accessibilityLabel={label} accessibilityState={{ checked: value ?? undefined, disabled: blocked, busy: isSaving || isLoading }} style={[styles.control, visuallyDisabled && styles.disabled]}>
-      <Text style={[styles.state, { color: value ? colors.brand.accent : colors.text.secondary }]}>{stateLabel}</Text>
+      <Text style={[styles.state, { color: value ? accent : colors.text.secondary }]}>{stateLabel}</Text>
       <View pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-        {value === null && isLoading ? <ActivityIndicator style={styles.loading} color={colors.brand.accent} /> : <Switch accessible={false} value={value ?? false} disabled={visuallyDisabled} trackColor={{ false: colors.border.strong, true: colors.brand.accent }} thumbColor="#FFFFFF" ios_backgroundColor={colors.background.glass} />}
+        {value === null && isLoading ? <ActivityIndicator style={styles.loading} color={accent} /> : <Switch accessible={false} value={value ?? false} disabled={visuallyDisabled} trackColor={{ false: colors.border.strong, true: accent }} thumbColor="#FFFFFF" ios_backgroundColor={colors.background.glass} />}
       </View>
     </Pressable>
   );

@@ -51,11 +51,12 @@ export default function AICallScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { height: windowHeight, width: windowWidth } = useWindowDimensions();
-  const { targetUuid, targetName, remainingSeconds, preview } = useLocalSearchParams<{
+  const { targetUuid, targetName, remainingSeconds, preview, receivedRequestId } = useLocalSearchParams<{
     targetUuid?: string;
     targetName?: string;
     remainingSeconds?: string;
     preview?: string;
+    receivedRequestId?: string;
   }>();
   const isPreview = preview === 'true';
   const isPartnerCall = !isPreview && typeof targetUuid === 'string' && targetUuid.length > 0;
@@ -179,11 +180,12 @@ export default function AICallScreen() {
   if (isPartnerCall && callStatus === 'ended' && completedCall != null) {
     return (
       <CallEndMeetingPrompt
+        hasReceivedRequest={!!receivedRequestId}
         partnerName={targetName || '상대방'}
         partnerUserUuid={targetUuid}
         completedCall={completedCall}
         endedByTimeLimit={endedByTimeLimit}
-        onClose={() => router.back()}
+        onClose={() => receivedRequestId ? router.replace({ pathname: '/(main)/match', params: { receivedRequestId, receivedRequestReturnToken: String(completedCall.callId) } }) : router.back()}
       />
     );
   }
