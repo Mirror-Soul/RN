@@ -2,7 +2,7 @@ import React, { forwardRef } from 'react';
 import { StyleSheet, ViewStyle } from 'react-native';
 import { Camera, CameraProps } from 'react-native-vision-camera';
 
-interface FaceCameraViewProps extends Partial<CameraProps> {
+interface FaceCameraViewProps extends Omit<CameraProps, 'style' | 'video' | 'audio'> {
   isActive: boolean;
   style?: ViewStyle;
 }
@@ -27,6 +27,8 @@ const FaceCameraView = forwardRef<Camera, FaceCameraViewProps>(
     );
   }
 );
+
+FaceCameraView.displayName = 'FaceCameraView';
 
 const styles = StyleSheet.create({
   camera: {
