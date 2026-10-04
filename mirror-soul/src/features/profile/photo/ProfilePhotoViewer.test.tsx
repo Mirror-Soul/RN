@@ -51,3 +51,15 @@ it('opens deletion after Android closes the viewer', () => {
   expect(props.onClose).toHaveBeenCalledTimes(1);
   expect(props.onDelete).toHaveBeenCalledTimes(1);
 });
+
+it('keeps the registration preview visible without hiding the remote error or blocking actions', () => {
+  const screen = render(<ProfilePhotoViewer {...props} previewUri="file:///registered.jpg" />);
+  const remote = screen.UNSAFE_getAllByType(Image).find(image => image.props.source.uri === props.uri)!;
+  fireEvent(remote, 'error');
+  expect(screen.UNSAFE_getByType(Image).props.source.uri).toBe('file:///registered.jpg');
+  expect(screen.getByRole('alert')).toBeTruthy();
+  expect(screen.getByLabelText('등록한 프로필 사진 다시 불러오기')).toBeEnabled();
+  expect(screen.getByRole('button', { name: '사진 바꾸기' })).toBeEnabled();
+  fireEvent(screen.UNSAFE_getByType(Image), 'error');
+  expect(screen.getByText(/사진은 등록되어 있어요/)).toBeTruthy();
+});

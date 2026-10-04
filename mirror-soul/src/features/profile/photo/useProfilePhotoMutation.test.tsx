@@ -7,8 +7,9 @@ import { uploadFileToS3 } from '@/src/services/s3Service';
 import { deleteProfileImage, getMyProfile, modifyProfileImage } from '@/src/services/profileService';
 import { useAuthStore } from '@/src/store/useAuthStore';
 import { useProfilePhotoMutation } from './useProfilePhotoMutation';
+import { registeredPhotoPreviewKey } from './registeredPhotoPreview';
 
-jest.mock('expo-file-system/legacy', () => ({ getInfoAsync: jest.fn() }));
+jest.mock('expo-file-system/legacy', () => ({ getInfoAsync: jest.fn(), cacheDirectory: 'file:///cache/', copyAsync: jest.fn(), deleteAsync: jest.fn() }));
 jest.mock('@/src/services/fileService', () => ({ getPresignedUrl: jest.fn() }));
 jest.mock('@/src/services/s3Service', () => ({ uploadFileToS3: jest.fn() }));
 jest.mock('@/src/services/profileService', () => ({ deleteProfileImage: jest.fn(), getMyProfile: jest.fn(), modifyProfileImage: jest.fn() }));
@@ -29,11 +30,53 @@ beforeEach(() => {
   (useAuthStore.getState as jest.Mock).mockReturnValue({ userUuid: 'me', isLoggedIn: true });
   (useAuthStore.subscribe as jest.Mock).mockReturnValue(jest.fn());
   (FileSystem.getInfoAsync as jest.Mock).mockResolvedValue({ exists: true, isDirectory: false, size: photo.size });
+  (FileSystem.copyAsync as jest.Mock).mockResolvedValue(undefined);
+  (FileSystem.deleteAsync as jest.Mock).mockResolvedValue(undefined);
   (getPresignedUrl as jest.Mock).mockResolvedValue(ok({ presignedUrl: 'signed-put', objectKey: key }));
   (uploadFileToS3 as jest.Mock).mockResolvedValue(undefined);
   (modifyProfileImage as jest.Mock).mockResolvedValue(ok({ profileImageUrl: url }));
   (getMyProfile as jest.Mock).mockResolvedValue(ok({ profileImageUrl: 'old' }));
   (deleteProfileImage as jest.Mock).mockResolvedValue(ok(null));
+});
+
+it('keeps a separate local copy only after the server confirms the registration', async () => {
+  const { result } = setup();
+  await act(async () => { await result.current.save(photo); });
+  const preview = client.getQueryData<{ uri: string; url: string }>(registeredPhotoPreviewKey('me'))!;
+  expect(preview.url).toBe(url);
+  expect(preview.uri).not.toBe(photo.uri);
+  expect(FileSystem.copyAsync).toHaveBeenCalledWith({ from: photo.uri, to: preview.uri });
+  expect((FileSystem.copyAsync as jest.Mock).mock.invocationCallOrder[0]).toBeGreaterThan((modifyProfileImage as jest.Mock).mock.invocationCallOrder[0]);
+});
+
+it('does not treat a preview copy failure as a failed server registration', async () => {
+  (FileSystem.copyAsync as jest.Mock).mockRejectedValueOnce(new Error('disk full'));
+  const { result } = setup();
+  await act(async () => { expect(await result.current.save(photo)).toBe(url); });
+  expect(client.getQueryData(registeredPhotoPreviewKey('me'))).toBeNull();
+  expect(client.getQueryData(['profile', 'me'])).toHaveProperty('profileImageUrl', url);
+});
+
+it('removes the previous local copy on replacement and on deletion', async () => {
+  const { result } = setup();
+  client.setQueryData(registeredPhotoPreviewKey('me'), { url: 'old', uri: 'file:///cache/old.jpg' });
+  await act(async () => { await result.current.save(photo); });
+  expect(FileSystem.deleteAsync).toHaveBeenCalledWith('file:///cache/old.jpg', { idempotent: true });
+  const saved = client.getQueryData<{ uri: string }>(registeredPhotoPreviewKey('me'))!;
+  await act(async () => { await result.current.remove(); });
+  expect(client.getQueryData(registeredPhotoPreviewKey('me'))).toBeNull();
+  expect(FileSystem.deleteAsync).toHaveBeenCalledWith(saved.uri, { idempotent: true });
+});
+
+it('discards a copied preview if the account changes while copying it', async () => {
+  let listener!: (state: { isLoggedIn: boolean; userUuid: string | null }) => void;
+  (useAuthStore.subscribe as jest.Mock).mockImplementation(callback => { listener = callback; return jest.fn(); });
+  (FileSystem.copyAsync as jest.Mock).mockImplementation(async () => { listener({ isLoggedIn: true, userUuid: 'other' }); });
+  const { result } = setup();
+  await act(async () => { await expect(result.current.save(photo)).rejects.toThrow('로그인 상태'); });
+  expect(client.getQueryData(registeredPhotoPreviewKey('me'))).toBeUndefined();
+  expect(FileSystem.deleteAsync).toHaveBeenCalledWith(expect.stringMatching(/^file:\/\/\/cache\/registered-profile-/), { idempotent: true });
+  expect(client.getQueryData(['profile', 'me'])).toHaveProperty('profileImageUrl', 'old');
 });
 afterEach(() => client?.clear());
 

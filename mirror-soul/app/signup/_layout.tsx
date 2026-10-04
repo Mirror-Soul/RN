@@ -3,15 +3,17 @@ import SignupBackground from '@/src/components/signup/steps/Step1_Account/Signup
 import { SIGNUP_STEP_MAP } from '@/src/constants/routes/signupRoutes';
 import { Spacing } from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
+import { useLayout } from '@/src/hooks/useLayout';
 import { Slot, usePathname } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function SignupLayout() {
   const pathname = usePathname();
   const { colors, isDark } = useThemeColors();
+  const { contentContainerStyle, screenPadding } = useLayout();
 
   const getCurrentStep = () => {
     return SIGNUP_STEP_MAP[pathname] || 1;
@@ -23,9 +25,11 @@ export default function SignupLayout() {
       <SignupBackground />
 
       <View style={styles.container}>
-        <View style={[styles.stepsWrapper, { borderBottomColor: colors.border.primary }]}>
-          <OnboardingSteps currentStep={getCurrentStep()} />
-        </View>
+        <ScrollView style={styles.stepsScroll} contentContainerStyle={styles.stepsContent} keyboardShouldPersistTaps="handled" nestedScrollEnabled>
+          <View style={[styles.stepsWrapper, contentContainerStyle, { paddingHorizontal: screenPadding, borderBottomColor: colors.border.primary }]}>
+            <OnboardingSteps currentStep={getCurrentStep()} />
+          </View>
+        </ScrollView>
 
         {/* 하위 페이지(index, profile 등)가 렌더링될 영역 */}
         <Slot />
@@ -45,11 +49,11 @@ const styles = StyleSheet.create({
   stepsWrapper: {
     width: '100%',
     alignItems: 'center', // 내부 OnboardingSteps를 위해 센터링 유지
-    paddingTop: Spacing.xl,
-    paddingBottom: Spacing.lg,
-    paddingHorizontal: Spacing.xxl,
-    marginBottom: Spacing.sm,
+    paddingTop: Spacing.xs,
+    paddingBottom: Spacing.md,
     borderBottomWidth: 1,
     zIndex: 10,
   },
+  stepsScroll: { flexGrow: 0, flexShrink: 1, maxHeight: '30%' },
+  stepsContent: { flexGrow: 0 },
 });

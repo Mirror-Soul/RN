@@ -1,7 +1,9 @@
 import { Radii } from '@/src/constants/theme';
 import React, { useEffect, useRef } from 'react';
-import { Animated, Dimensions, Easing, Modal, Pressable, StyleSheet, ViewStyle, StyleProp } from 'react-native';
+import { Animated, Easing, Modal, Pressable, StyleSheet, ViewStyle, StyleProp, useWindowDimensions } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
+import { getDropdownLayout } from './dropdownLayout';
 
 export interface DropdownAnchor {
   x: number;
@@ -19,8 +21,6 @@ interface SelectDropdownModalProps {
 }
 
 const GAP = 8;
-const SCREEN_MARGIN = 16;
-const MIN_PANEL_HEIGHT = 120;
 
 /**
  * 선택형 드롭다운(지역/직군 등)을 위한 공통 모달 오버레이.
@@ -30,6 +30,8 @@ const MIN_PANEL_HEIGHT = 120;
  */
 export default function SelectDropdownModal({ onClose, children, panelStyle, anchor }: SelectDropdownModalProps) {
   const { colors } = useThemeColors();
+  const viewport = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const progress = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -41,21 +43,21 @@ export default function SelectDropdownModal({ onClose, children, panelStyle, anc
     }).start();
   }, [progress]);
 
-  const { height: screenHeight } = Dimensions.get('window');
-  const rawTop = anchor.y + anchor.height + GAP;
-  // 트리거가 화면 하단에 가까워 아래 공간이 부족하면, 패널이 화면 밖으로 넘치지 않도록
-  // top을 위로 clamp하여 최소 높이(MIN_PANEL_HEIGHT)가 항상 화면 안에 들어오게 합니다.
-  const top = Math.min(rawTop, Math.max(SCREEN_MARGIN, screenHeight - MIN_PANEL_HEIGHT - SCREEN_MARGIN));
-  const maxHeight = screenHeight - top - SCREEN_MARGIN;
+  const requested = StyleSheet.flatten(panelStyle);
+  const layout = getDropdownLayout(anchor, viewport, insets, {
+    height: typeof requested?.height === 'number' ? requested.height : undefined,
+    maxHeight: typeof requested?.maxHeight === 'number' ? requested.maxHeight : undefined,
+  });
 
   return (
-    <Modal visible transparent animationType="none" statusBarTranslucent onRequestClose={onClose}>
+    <Modal visible transparent animationType="none" statusBarTranslucent navigationBarTranslucent onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose} />
       <Animated.View
         style={[
           styles.panel,
-          { top, left: anchor.x, width: anchor.width, maxHeight, borderColor: colors.border.primary, backgroundColor: colors.background.card },
+          { borderColor: colors.border.primary, backgroundColor: colors.background.card },
           panelStyle,
+          layout,
           {
             opacity: progress,
             transform: [

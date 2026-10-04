@@ -1,70 +1,79 @@
-import { useState, useCallback } from 'react';
-import { Platform } from 'react-native';
+import { useState, useCallback, useEffect, useRef } from 'react';
+import * as FileSystem from 'expo-file-system/legacy';
 import { getPresignedUrl } from '@/src/services/fileService';
 import { uploadFileToS3 } from '@/src/services/s3Service';
 import { saveFaceScan } from '@/src/services/onboardingService';
+import { useAuthStore } from '@/src/store/useAuthStore';
+import { getErrorMessage } from '@/src/utils/errorUtils';
 
-import { logger } from '@/src/utils/logger';
-
-/**
- * 3D Face Scan 비디오 업로드 파이프라인 (SoC)
- * 영상 처리 완료 후 S3 업로드 및 백엔드 동기화를 담당합니다.
- */
 export function useFaceScanUpload() {
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const uploadFaceVideo = useCallback(async (videoUri: string) => {
-
-    setIsUploading(true);
-    setError(null);
-
-    try {
-      // OS별로 카메라 영상 확장자 및 Content-Type이 다름
-      const extension = Platform.OS === 'ios' ? 'mov' : 'mp4';
-      const contentType = Platform.OS === 'ios' ? 'video/quicktime' : 'video/mp4';
-      const fileName = `face-scan.${extension}`;
-
-      // 1. Presigned URL 발급
-      const presignedResponse = await getPresignedUrl({
-        fileName,
-        contentType,
-        directory: 'face-videos',
-      });
-
-      if (!presignedResponse.isSuccess) {
-        throw new Error(presignedResponse.message || '업로드 주소 발급에 실패했습니다.');
+  const [progress, setProgress] = useState<number | null>(null);
+  const [stage, setStage] = useState<'idle' | 'upload' | 'save'>('idle');
+  const [requiresLogin, setRequiresLogin] = useState(false);
+  const lock = useRef(false);
+  const mounted = useRef(true);
+  const uploaded = useRef<{ uri: string; owner: string; objectKey: string; fileUrl: string } | null>(null);
+  useEffect(() => {
+    mounted.current = true;
+    let owner = useAuthStore.getState().userUuid;
+    const unsubscribe = useAuthStore.subscribe(state => {
+      if (!state.isLoggedIn || state.userUuid !== owner) {
+        owner = state.userUuid; uploaded.current = null;
+        setError(null); setRequiresLogin(false); setProgress(null);
       }
-
-      const { presignedUrl, objectKey, fileUrl } = presignedResponse.result;
-
-      // 2. S3 직접 업로드
-      await uploadFileToS3(presignedUrl, videoUri, contentType);
-
-      // 3. 서버에 결과 최종 저장
-      logger.debug('Face scan upload payload before saving:', { objectKey });
-      const saveResponse = await saveFaceScan({
-        fileUrl,
-        objectKey,
-      });
-
-      if (!saveResponse.isSuccess) {
-        throw new Error(saveResponse.message || '얼굴 스캔 데이터 저장에 실패했습니다.');
-      }
-
-      return true;
-    } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : '업로드 중 오류가 발생했습니다.';
-      setError(errorMessage);
-      throw err;
-    } finally {
-      setIsUploading(false);
-    }
+    });
+    return () => { mounted.current = false; unsubscribe(); };
   }, []);
 
-  return {
-    uploadFaceVideo,
-    isUploading,
-    error,
-  };
+  const uploadFaceVideo = useCallback(async (uri: string) => {
+    if (lock.current) return false;
+    const owner = useAuthStore.getState().userUuid;
+    if (!owner || !useAuthStore.getState().isLoggedIn) throw new Error('다시 로그인해 주세요.');
+    lock.current = true;
+    setIsUploading(true); setError(null); setProgress(null); setRequiresLogin(false);
+    let ended = false;
+    const unsubscribe = useAuthStore.subscribe(state => {
+      if (!state.isLoggedIn || state.userUuid !== owner) ended = true;
+    });
+    const assertSession = () => { if (ended || !mounted.current) throw new Error('로그인 상태가 변경되어 영상 등록을 중단했어요.'); };
+    try {
+      const info = await FileSystem.getInfoAsync(uri);
+      assertSession();
+      if (!info.exists || info.isDirectory || !Number.isFinite(info.size) || info.size <= 0 || info.size > 100 * 1024 * 1024) throw new Error('영상을 읽을 수 없거나 용량이 커요. 다시 촬영해주세요.');
+      if (uploaded.current?.uri !== uri || uploaded.current.owner !== owner) {
+        setStage('upload');
+        const response = await getPresignedUrl({ fileName: 'face-capture.mp4', contentType: 'video/mp4', directory: 'face-videos' });
+        assertSession();
+        if (!response.isSuccess || !response.result?.objectKey || !response.result.presignedUrl) throw new Error(response.message || '업로드 주소를 받지 못했어요.');
+        let transferActive = true;
+        try {
+          await uploadFileToS3(response.result.presignedUrl, uri, 'video/mp4', ({ bytesSent, totalBytes }) => {
+            if (!transferActive || ended || !mounted.current || !Number.isFinite(totalBytes) || totalBytes <= 0 || !Number.isFinite(bytesSent) || bytesSent < 0) return;
+            setProgress(previous => Math.max(previous ?? 0, Math.min(1, bytesSent / totalBytes)));
+          });
+        } finally { transferActive = false; }
+        assertSession();
+        uploaded.current = { uri, owner, objectKey: response.result.objectKey, fileUrl: response.result.fileUrl };
+      }
+      setProgress(1); setStage('save');
+      const { objectKey, fileUrl } = uploaded.current;
+      const response = await saveFaceScan({ objectKey, fileUrl });
+      assertSession();
+      if (!response.isSuccess || !response.result?.saved || response.result.objectKey !== objectKey || response.result.userUuid !== owner) throw new Error(response.message || '영상 등록을 확인하지 못했어요. 다시 시도해주세요.');
+      return true;
+    } catch (cause) {
+      if (mounted.current && !ended) {
+        const forbidden = typeof cause === 'object' && cause !== null && 'code' in cause && cause.code === 'AUTH_4030';
+        setRequiresLogin(forbidden);
+        setError(forbidden ? '이미 등록됐거나 현재 단계에서 등록할 수 없어요. 다시 로그인하여 가입 완료 여부를 확인해주세요.' : getErrorMessage(cause, '영상 등록에 실패했어요. 네트워크를 확인해주세요.'));
+      }
+      throw cause;
+    } finally {
+      unsubscribe(); lock.current = false;
+      if (mounted.current) { setIsUploading(false); setStage('idle'); }
+    }
+  }, []);
+  return { uploadFaceVideo, isUploading, error, progress, stage, requiresLogin, clearError: () => { if (!lock.current) { setError(null); setRequiresLogin(false); } } };
 }

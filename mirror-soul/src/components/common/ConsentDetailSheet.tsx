@@ -1,10 +1,9 @@
 import React from 'react';
-import { Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BottomSheet } from './BottomSheet/BottomSheet';
 import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
-
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 interface ConsentDetailSheetProps {
   visible: boolean;
@@ -27,6 +26,8 @@ interface ConsentDetailSheetProps {
  */
 export function ConsentDetailSheet({ visible, onClose, onConfirm, title, content }: ConsentDetailSheetProps) {
   const { colors } = useThemeColors();
+  const { height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
 
   const handleConfirm = () => {
     onConfirm?.();
@@ -34,15 +35,14 @@ export function ConsentDetailSheet({ visible, onClose, onConfirm, title, content
   };
 
   return (
-    <BottomSheet isOpen={visible} onClose={onClose} height={SCREEN_HEIGHT * 0.75}>
-      <View style={styles.container}>
-        <Text style={[styles.title, { color: colors.text.primary }]}>{title}</Text>
-
+    <BottomSheet isOpen={visible} onClose={onClose} height={Math.min(height * 0.75, height - insets.top - Spacing.sm)} dragFromHandleOnly>
+      <View style={[styles.container, { paddingBottom: Spacing.lg + insets.bottom, paddingLeft: Spacing.xxl + insets.left, paddingRight: Spacing.xxl + insets.right }]}>
         <ScrollView
           style={styles.scroll}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator
         >
+          <Text accessibilityRole="header" style={[styles.title, { color: colors.text.primary }]}>{title}</Text>
           <Text style={[styles.body, { color: colors.text.secondary }]}>{content}</Text>
         </ScrollView>
 
@@ -84,7 +84,9 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   closeButton: {
-    height: 52,
+    minHeight: 52,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.md,
     borderRadius: Radii.lg,
     backgroundColor: Colors.primary.electricCyan,
     justifyContent: 'center',
@@ -96,5 +98,6 @@ const styles = StyleSheet.create({
     fontSize: FontSize.base,
     fontWeight: FontWeight.semibold,
     color: Colors.primary.soulBlack,
+    textAlign: 'center',
   },
 });

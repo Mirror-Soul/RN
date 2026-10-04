@@ -1,7 +1,8 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { Alert } from 'react-native';
 import { savePersonality } from '@/src/services/onboardingService';
 import { useAuthStore } from '@/src/store/useAuthStore';
+import { getErrorDisplayMessage } from '@/src/utils/apiErrorCode';
 
 import { MbtiScores } from '../Mbti/MbtiSelector';
 import { MbtiEnum } from '@/src/types/api/onboarding';
@@ -11,7 +12,7 @@ import { MbtiEnum } from '@/src/types/api/onboarding';
  * Step 3 (MBTI & 자기소개)의 상태 관리 및 API 통신 로직을 담당합니다. (SoC)
  * [보강] MBTI 상세 점수(ieScore, nsScore, ftScore, pjScore)를 포함합니다.
  */
-export function useStep3Form(initialMbti: string = 'ENFJ', initialDescription: string = '') {
+export function useStep3Form(initialMbti: string = '----', initialDescription: string = '') {
   const [mbti, setMbti] = useState(initialMbti);
   const [scores, setScores] = useState<MbtiScores>({
     ieScore: 50,
@@ -21,14 +22,16 @@ export function useStep3Form(initialMbti: string = 'ENFJ', initialDescription: s
   });
   const [description, setDescription] = useState(initialDescription);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const submitting = useRef(false);
 
 
   // 모든 MBTI가 선택되었고(하이픈 없음), 자기소개가 비어있지 않을 때만 활성화
-  const isFormValid = !mbti.includes('-') && description.trim().length > 0;
+  const isFormValid = /^[IE][NS][FT][PJ]$/.test(mbti) && description.trim().length > 0;
 
   const handleSubmit = useCallback(async (onSuccess: () => void) => {
 
-    if (!isFormValid || isSubmitting) return;
+    if (!isFormValid || submitting.current) return;
+    submitting.current = true;
 
     try {
       setIsSubmitting(true);
@@ -44,15 +47,15 @@ export function useStep3Form(initialMbti: string = 'ENFJ', initialDescription: s
         await useAuthStore.getState().updateUserStatus('ONBOARD_C');
         onSuccess();
       } else {
-        const errorDetail = response.code ? `\n[Error Code: ${response.code}]` : '';
-        Alert.alert('저장 실패', `${response.message || '정보 저장 중 오류가 발생했습니다.'}${errorDetail}`);
+        Alert.alert('소개를 저장하지 못했어요', response.message || '입력한 내용은 그대로 있어요. 다시 시도해주세요.');
       }
-    } catch (error: any) {
-      Alert.alert('오류', error?.message || '네트워크 통신 중 문제가 발생했습니다.');
+    } catch (error) {
+      Alert.alert('소개를 저장하지 못했어요', getErrorDisplayMessage(error, '입력한 내용은 그대로 있어요. 다시 시도해주세요.'));
     } finally {
+      submitting.current = false;
       setIsSubmitting(false);
     }
-  }, [mbti, scores, description, isFormValid, isSubmitting]);
+  }, [mbti, scores, description, isFormValid]);
 
   return {
     mbti,

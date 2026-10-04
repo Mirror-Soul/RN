@@ -16,6 +16,7 @@ import { assertPhotoEditorAvailable, getPhotoPreparationErrorMessage, normalizeS
 import { logger } from '@/src/utils/logger';
 import { useToast } from '@/src/components/common/Toast/ToastProvider';
 import { ProfilePhotoViewer } from './ProfilePhotoViewer';
+import { useRegisteredPhotoPreview } from './registeredPhotoPreview';
 
 export function ProfilePhotoManager({ name, signup = false, disabled = false, compact = false, photoViewerOpen = false, onPhotoViewerClose }: {
   name: string; signup?: boolean; disabled?: boolean; compact?: boolean; photoViewerOpen?: boolean; onPhotoViewerClose?: () => void;
@@ -25,19 +26,23 @@ export function ProfilePhotoManager({ name, signup = false, disabled = false, co
   const stackActions = fontScale > 1.3;
   const { showToast } = useToast();
   const profile = useProfileQuery();
+  const registeredPreview = useRegisteredPhotoPreview();
   const mutation = useProfilePhotoMutation();
   const [photo, setPhoto] = useState<EditableProfilePhoto | null>(null);
   const [picking, setPicking] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [imageState, setImageState] = useState<ProfilePhotoLoadState>('empty');
   const [viewerOpen, setViewerOpen] = useState(false);
+  const [imageAttempt, setImageAttempt] = useState(0);
   const closeViewer = () => { setViewerOpen(false); onPhotoViewerClose?.(); };
   const lock = useRef(false);
   const alive = useRef(true);
   useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
-  const currentUrl = profile.data?.profileImageUrl;
+  const currentUrl = profile.data ? profile.data.profileImageUrl : registeredPreview?.url;
+  const previewUri = currentUrl && registeredPreview?.url === currentUrl ? registeredPreview.uri : null;
   useEffect(() => { if (!currentUrl) setViewerOpen(false); }, [currentUrl]);
   const busy = picking || mutation.isPending || disabled;
+  const retryImage = () => { setImageAttempt(value => value + 1); void profile.refetch(); };
   const pick = async (camera: boolean) => {
     if (lock.current || busy) return;
     lock.current = true;
@@ -109,9 +114,9 @@ export function ProfilePhotoManager({ name, signup = false, disabled = false, co
   };
   return (
     <View style={compact ? [styles.compact, { borderColor: colors.border.primary }] : [styles.card, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
-      {!compact && <View style={styles.row}>
-        <ProfilePhoto uri={currentUrl} name={name} size={64} onLoadStateChange={setImageState} onPress={() => setViewerOpen(true)} />
-        <View style={styles.copy}>
+      {!compact && <View style={[styles.row, stackActions && styles.stackedRow]}>
+        <ProfilePhoto key={`${currentUrl ?? 'empty'}:${imageAttempt}`} uri={currentUrl} previewUri={previewUri} name={name} size={64} onLoadStateChange={setImageState} onRetry={retryImage} onPress={() => setViewerOpen(true)} />
+        <View style={[styles.copy, stackActions && styles.stackedCopy]}>
           <View style={styles.titleRow}>
             <Text style={[styles.title, { color: colors.text.primary }]}>프로필 사진</Text>
             {signup && <View style={[styles.badge, { backgroundColor: colors.background.glass }]}><Text style={[styles.badgeText, { color: colors.text.secondary }]}>선택</Text></View>}
@@ -123,7 +128,13 @@ export function ProfilePhotoManager({ name, signup = false, disabled = false, co
         <Feather name="check-circle" size={16} color={colors.state.success} />
         <Text style={[styles.caption, { color: colors.text.secondary }]}>사진 등록됨</Text>
       </View>}
-      {!!currentUrl && !compact && imageState === 'error' && <Text accessibilityRole="alert" style={[styles.caption, { color: colors.text.secondary }]}>등록된 사진을 불러오지 못했어요. 위의 사진을 눌러 다시 시도해 주세요.</Text>}
+      {!!currentUrl && !compact && imageState === 'error' && <View style={styles.retryNotice}>
+        <Text accessibilityRole="alert" style={[styles.caption, { color: colors.text.secondary }]}>{previewUri ? '방금 등록한 사진을 미리 보여드리고 있어요. 등록된 사진을 다시 불러와 확인해주세요.' : '등록된 사진을 불러오지 못했어요. 다시 불러오거나 사진을 바꿔주세요.'}</Text>
+        <Pressable onPress={retryImage} disabled={busy || profile.isFetching} accessibilityRole="button" accessibilityLabel="등록된 프로필 사진 다시 불러오기" accessibilityState={{ disabled: busy || profile.isFetching }} style={styles.action}>
+          {profile.isFetching ? <ActivityIndicator color={colors.brand.accent} /> : <Feather name="refresh-cw" size={16} color={colors.brand.accent} />}
+          <Text style={[styles.actionText, { color: colors.brand.accent }]}>사진 다시 불러오기</Text>
+        </Pressable>
+      </View>}
       {!compact && <View style={[styles.notice, { borderColor: colors.border.primary }]}>
         <Feather name="eye" size={16} color={colors.text.secondary} style={styles.noticeIcon} />
         <View style={styles.noticeCopy}>
@@ -132,7 +143,7 @@ export function ProfilePhotoManager({ name, signup = false, disabled = false, co
         </View>
       </View>}
       {compact && !currentUrl && <Text style={[styles.help, { color: colors.text.muted }]}>사진 없이도 이용할 수 있어요. 원할 때 추가해 주세요.</Text>}
-      {profile.isError ? (
+      {profile.isError && !currentUrl ? (
         <Pressable onPress={() => profile.refetch()} accessibilityRole="button" style={styles.action}><Text style={[styles.actionText, { color: colors.state.danger }]}>사진을 확인하지 못했어요 · 다시 시도</Text></Pressable>
       ) : <View style={[styles.actions, stackActions && styles.stackedActions]}>
         <Pressable disabled={busy || profile.isLoading} onPress={openMenu} accessibilityRole="button" accessibilityLabel={currentUrl ? '프로필 사진 변경' : '프로필 사진 추가'} accessibilityState={{ disabled: busy || profile.isLoading }} style={[styles.action, styles.addAction, stackActions && styles.stackedAction, { backgroundColor: colors.background.glass, borderColor: colors.border.primary, opacity: busy || profile.isLoading ? 0.5 : 1 }]}>
@@ -145,7 +156,7 @@ export function ProfilePhotoManager({ name, signup = false, disabled = false, co
         </Pressable>}
       </View>}
       {error && <Text accessibilityRole="alert" style={[styles.help, { color: colors.state.danger }]}>{error}</Text>}
-      {!!currentUrl && (viewerOpen || photoViewerOpen) && <ProfilePhotoViewer key={currentUrl} uri={currentUrl} name={name} disabled={busy} onClose={closeViewer} onChange={openMenu} onDelete={remove} />}
+      {!!currentUrl && (viewerOpen || photoViewerOpen) && <ProfilePhotoViewer key={currentUrl} uri={currentUrl} previewUri={previewUri} name={name} disabled={busy} onClose={closeViewer} onChange={openMenu} onDelete={remove} />}
       {photo && <ProfilePhotoEditor photo={photo} name={name} onClose={() => setPhoto(null)} onSaved={() => showToast('프로필 사진을 등록했어요.', 'success')} />}
     </View>
   );
@@ -154,13 +165,16 @@ const styles = StyleSheet.create({
   compact: { width: '100%', marginTop: Spacing.lg, paddingTop: Spacing.lg, borderTopWidth: StyleSheet.hairlineWidth, gap: Spacing.md },
   card: { width: '100%', padding: Spacing.xl, gap: Spacing.lg, borderWidth: 1, borderRadius: Radii.lg },
   row: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md }, copy: { flex: 1, gap: Spacing.sm },
+  stackedRow: { flexDirection: 'column', alignItems: 'stretch' },
+  stackedCopy: { flex: 0, width: '100%' },
   status: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
+  retryNotice: { gap: Spacing.xs },
   titleRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: Spacing.sm },
   title: { fontFamily: FontFamily.sans, fontSize: FontSize.lg, lineHeight: 24, fontWeight: FontWeight.semibold },
   badge: { paddingHorizontal: Spacing.sm, paddingVertical: Spacing.xxs, borderRadius: Radii.full },
   badgeText: { fontFamily: FontFamily.sans, fontSize: FontSize.sm, lineHeight: 18, fontWeight: FontWeight.medium },
   help: { fontFamily: FontFamily.sans, fontSize: FontSize.base, lineHeight: 22 },
-  caption: { fontFamily: FontFamily.sans, fontSize: 13, lineHeight: 20 },
+  caption: { fontFamily: FontFamily.sans, fontSize: 13, lineHeight: 20, flexShrink: 1 },
   notice: { flexDirection: 'row', gap: Spacing.sm, paddingTop: Spacing.lg, borderTopWidth: StyleSheet.hairlineWidth },
   noticeIcon: { marginTop: 3 }, noticeCopy: { flex: 1, gap: Spacing.xs },
   actions: { width: '100%', flexDirection: 'row', flexWrap: 'wrap', alignItems: 'stretch', gap: Spacing.md },

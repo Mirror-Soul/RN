@@ -2,7 +2,7 @@ import { useCountdown } from '@/src/hooks/useCountdown';
 import { sendVerificationCode, verifyCode } from '@/src/services/authService';
 import { getErrorDisplayMessage, isConflictError } from '@/src/utils/apiErrorCode';
 import { isValidEmail, isValidPassword } from '@/src/utils/validation';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert } from 'react-native';
 import { Step1State } from '../types/step1';
 
@@ -38,23 +38,38 @@ export function useStep1Form() {
   const [isEmailActionLoading, setIsEmailActionLoading] = useState(false);
   const [verifyAttemptCount, setVerifyAttemptCount] = useState(0);
   const { timeLeft, isActive: isTimerActive, start: startTimer, reset: resetTimer, formattedTime } = useCountdown(180);
+  const requestLock = useRef(false);
+  const generation = useRef(0);
+  const mounted = useRef(true);
+  const issuedEmail = useRef<string | null>(null);
+  useEffect(() => {
+    mounted.current = true;
+    return () => { mounted.current = false; generation.current += 1; };
+  }, []);
 
   // 폼 업데이트 함수
   const updateState = useCallback((updates: Partial<Step1State>) => {
+    if (updates.email !== undefined) {
+      generation.current += 1;
+      issuedEmail.current = null;
+      resetTimer();
+      setIsModalVisible(false);
+      setVerifyAttemptCount(0);
+    }
     setState((prev) => ({
       ...prev,
       ...updates,
       // 이메일을 다시 수정하면 이전 시도의 인라인 에러(예: 중복 이메일)는 더 이상 유효하지 않다.
-      ...(updates.email !== undefined ? { emailError: undefined } : null),
+      ...(updates.email !== undefined ? { emailError: undefined, isEmailVerified: false } : null),
     }));
-  }, []);
+  }, [resetTimer]);
 
   // ─────────────────────────────────────────────
   // 이메일 인증 코드 발송 (Optimistic UI 패턴)
   // 즉시 타이머 시작 + 모달 오픈, API 실패 시 롤백
   // ─────────────────────────────────────────────
   const handleSendEmailCode = useCallback(async () => {
-    if (isEmailActionLoading) return; // 이메일 인증 요청 중복 방지 Lock
+    if (requestLock.current || isEmailActionLoading) return;
 
     if (isValidEmail(state.email)) {
       if (isTimerActive && timeLeft > 0) {
@@ -69,12 +84,17 @@ export function useStep1Form() {
       setIsModalVisible(true);
       setVerifyAttemptCount(0); // 재발송 시 시도 횟수 초기화
       updateState({ emailError: undefined }); // 이전 시도의 인라인 에러 초기화
+      const session = generation.current;
+      requestLock.current = true;
+      issuedEmail.current = null;
 
       try {
         setIsEmailActionLoading(true);
         await sendVerificationCode({ email: state.email });
-        // 성공: 이미 타이머 + 모달 동작 중이므로 추가 처리 불필요
-      } catch (error: any) {
+        if (!mounted.current || session !== generation.current) return;
+        issuedEmail.current = state.email;
+      } catch (error) {
+        if (!mounted.current || session !== generation.current) return;
         // 실패: Optimistic UI 롤백
         resetTimer();
         setIsModalVisible(false);
@@ -84,11 +104,12 @@ export function useStep1Form() {
         } else {
           Alert.alert(
             '인증 코드 발송 실패',
-            error?.message || '잠시 후 다시 시도해주세요.'
+            getErrorDisplayMessage(error, '잠시 후 다시 시도해주세요.')
           );
         }
       } finally {
-        setIsEmailActionLoading(false);
+        requestLock.current = false;
+        if (mounted.current) setIsEmailActionLoading(false);
       }
     } else {
       if (__DEV__) {
@@ -101,7 +122,7 @@ export function useStep1Form() {
   // 이메일 인증 코드 확인 (5회 시도 제한)
   // ─────────────────────────────────────────────
   const handleVerifyEmail = useCallback(async (code: string): Promise<boolean> => {
-    if (isEmailActionLoading) return false;
+    if (requestLock.current || isEmailActionLoading || issuedEmail.current !== state.email || timeLeft <= 0 || !/^\d{6}$/.test(code)) return false;
 
     // 인증 시도 횟수 제한
     // TODO: 백엔드 엔지니어와 협의 후 횟수 및 초과 시 정책 확정 예정
@@ -113,9 +134,12 @@ export function useStep1Form() {
       return false;
     }
 
+    const session = generation.current;
+    requestLock.current = true;
     try {
       setIsEmailActionLoading(true);
       const response = await verifyCode({ code });
+      if (!mounted.current || session !== generation.current) return false;
 
       if (response.result.verifySuccess) {
         updateState({ isEmailVerified: true });
@@ -124,16 +148,19 @@ export function useStep1Form() {
       }
       // 명확한 인증 실패(불일치 등) 시에만 시도 횟수 증가
       setVerifyAttemptCount((prev) => prev + 1);
-      return false;
-    } catch (error: any) {
-      if (__DEV__) {
-        console.debug('Verify code error:', error?.message);
+      if (verifyAttemptCount + 1 >= MAX_VERIFY_ATTEMPTS) {
+        // Switch the dialog to its resend action instead of leaving an unusable code.
+        issuedEmail.current = null;
+        resetTimer(0);
       }
       return false;
+    } catch {
+      return false;
     } finally {
-      setIsEmailActionLoading(false);
+      requestLock.current = false;
+      if (mounted.current) setIsEmailActionLoading(false);
     }
-  }, [isEmailActionLoading, verifyAttemptCount, updateState, resetTimer]);
+  }, [state.email, timeLeft, isEmailActionLoading, verifyAttemptCount, updateState, resetTimer]);
 
   // PASS 본인인증 처리 (연동사 계약 전까지 "준비 중" 안내만 표시)
   // isFormValid에서 제외되어 있으므로 이 버튼은 가입을 막지 않으며,
@@ -169,6 +196,7 @@ export function useStep1Form() {
     formattedTime,
     handleResendCode: handleSendEmailCode,
     verifyAttemptCount,
+    requiresNewCode: verifyAttemptCount >= MAX_VERIFY_ATTEMPTS,
     isEmailActionLoading,
   };
 }

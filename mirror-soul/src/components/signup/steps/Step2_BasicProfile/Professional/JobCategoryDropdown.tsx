@@ -1,6 +1,6 @@
 import {Radii, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import React from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import { jobCategories } from './jobData';
 import SelectDropdownModal, { DropdownAnchor } from '@/src/components/signup/common/SelectDropdownModal';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
   },
   listItem: {
     width: '100%',
-    height: 48,
+    minHeight: 48,
     paddingVertical: 11.4,
     paddingHorizontal: Spacing.lg,
     borderRadius: Radii.md2,

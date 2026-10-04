@@ -1,273 +1,113 @@
-import VerificationSuccessIcon from '@/assets/images/common/Verification_sucess.svg';
-import VerifySendIcon from '@/assets/images/common/Verify_send.svg';
+import { Feather } from '@expo/vector-icons';
+import React, { useRef, useState } from 'react';
+import { ActivityIndicator, Alert, Keyboard, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import * as DocumentPicker from 'expo-document-picker';
+import * as ImagePicker from 'expo-image-picker';
 import FormLabel from '@/src/components/signup/common/FormLabel';
 import StepSelectDropdown from '@/src/components/signup/common/StepSelectDropdown';
 import { useDropdownAnchor } from '@/src/components/signup/common/useDropdownAnchor';
-import {Colors, Radii, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
-import React, { useState } from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View, ActivityIndicator, Alert } from 'react-native';
+import { FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
+import { getErrorDisplayMessage } from '@/src/utils/apiErrorCode';
 import JobCategoryDropdown from '../Professional/JobCategoryDropdown';
 import { SectionProps } from '../types/step2';
-import * as DocumentPicker from 'expo-document-picker';
-import * as ImagePicker from 'expo-image-picker';
 import { jobCategories } from '../Professional/jobData';
+import { SIGNUP_KEYBOARD_ACCESSORY_ID } from '@/src/components/signup/common/SignupFormScreen';
 
-interface JobVerificationSectionProps extends SectionProps {
-  onVerify: (fileUri: string, contentType: string, fileName: string) => Promise<void>;
-}
-
-/**
- * JobVerificationSection 컴포넌트 (SRP)
- * 직군 선택 및 직업 인증(S3 업로드) 로직을 관리합니다.
- */
-export default function JobVerificationSection({ state, onChange, onVerify }: JobVerificationSectionProps) {
+interface Props extends SectionProps { onVerify: (fileUri: string, contentType: string, fileName: string) => Promise<void> }
+export default function JobVerificationSection({ state, onChange, onVerify }: Props) {
   const { colors } = useThemeColors();
   const [isOpen, setIsOpen] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const [picking, setPicking] = useState(false);
+  const pickingLock = useRef(false);
   const { triggerRef, anchor, measureAndOpen } = useDropdownAnchor();
-
-  // 파일 선택 및 업로드 핸들러 (C안: 갤러리/파일 + 카메라)
-  const handlePickDocument = async () => {
-    Alert.alert(
-      '직업 인증',
-      '서류를 촬영하거나 저장된 파일을 선택해 주세요.',
-      [
-        {
-          text: '카메라로 촬영',
-          onPress: async () => {
-            const { status } = await ImagePicker.requestCameraPermissionsAsync();
-            if (status !== 'granted') {
-              Alert.alert('권한 필요', '카메라 접근 권한이 필요합니다.');
-              return;
-            }
-            const result = await ImagePicker.launchCameraAsync({
-              quality: 0.8,
-            });
-            if (!result.canceled && result.assets && result.assets.length > 0) {
-              const asset = result.assets[0];
-              await onVerify(
-                asset.uri, 
-                asset.mimeType || 'image/jpeg', 
-                asset.fileName || `camera_${Date.now()}.jpg`
-              );
-            }
-          }
-        },
-        {
-          text: '파일/갤러리에서 선택',
-          onPress: async () => {
-            const result = await DocumentPicker.getDocumentAsync({
-              type: ['image/*', 'application/pdf'],
-              copyToCacheDirectory: true,
-            });
-            if (!result.canceled && result.assets && result.assets.length > 0) {
-              const asset = result.assets[0];
-              await onVerify(
-                asset.uri, 
-                asset.mimeType || 'application/octet-stream', 
-                asset.name
-              );
-            }
-          }
-        },
-        { text: '취소', style: 'cancel' }
-      ]
-    );
+  const blocked = state.isJobVerifying || picking;
+  const detailsVisible = expanded || state.isJobVerifying;
+  const pick = async (source: 'camera' | 'file') => {
+    if (pickingLock.current || state.isJobVerifying) return;
+    pickingLock.current = true;
+    setPicking(true);
+    try {
+      if (source === 'camera') {
+        const permission = await ImagePicker.requestCameraPermissionsAsync();
+        if (permission.status !== 'granted') { Alert.alert('카메라 권한이 필요해요', '휴대폰 설정에서 카메라 접근을 허용해주세요.'); return; }
+        const result = await ImagePicker.launchCameraAsync({ quality: 0.8 });
+        const asset = !result.canceled ? result.assets?.[0] : undefined;
+        if (asset) await onVerify(asset.uri, asset.mimeType || 'image/jpeg', asset.fileName || `camera_${Date.now()}.jpg`);
+      } else {
+        const result = await DocumentPicker.getDocumentAsync({ type: ['image/*', 'application/pdf'], copyToCacheDirectory: true });
+        const asset = !result.canceled ? result.assets?.[0] : undefined;
+        if (asset) await onVerify(asset.uri, asset.mimeType || 'application/octet-stream', asset.name);
+      }
+    } catch (error) {
+      Alert.alert('서류를 선택하지 못했어요', getErrorDisplayMessage(error, '잠시 후 다시 시도해주세요.'));
+    } finally { pickingLock.current = false; setPicking(false); }
   };
-
-  const handleToggle = () => {
-    if (isOpen) {
-      setIsOpen(false);
-    } else {
-      measureAndOpen(() => setIsOpen(true));
-    }
-  };
-
-  return (
-    <View style={styles.container}>
-      <FormLabel label="직업" />
-
-      <View style={styles.dropdownWrapper} ref={triggerRef}>
-        <StepSelectDropdown
-          label=""
-          placeholder={jobCategories.find(j => j.value === state.jobCategory)?.label || "직군을 선택해 주세요"}
-          hasValue={!!state.jobCategory}
-          onPress={handleToggle}
-          isOpen={isOpen}
-        />
-      </View>
-
-      {isOpen && anchor && (
-        <JobCategoryDropdown
-          anchor={anchor}
-          onSelect={(job) => {
-            onChange({
-              jobCategory: job,
-              isJobVerified: false
-            });
-            setIsOpen(false);
-          }}
-          onClose={() => setIsOpen(false)}
-        />
-      )}
-
-      <View style={[styles.jobTitleRow, { borderBottomColor: colors.border.primary }]}>
-        <TextInput
-          style={[styles.jobTitleInput, { color: colors.text.primary }]}
-          value={state.jobTitle}
-          onChangeText={(text) => onChange({ jobTitle: text })}
-          placeholder="어떤 일을 하시나요? (선택)"
-          placeholderTextColor={colors.text.muted}
-          autoCapitalize="none"
-        />
-      </View>
-
-      {/* Verification Card */}
-      <View style={[styles.verifyCard, { borderColor: colors.border.primary, backgroundColor: colors.background.glass }]}>
-        <View style={styles.verifyHeaderRow}>
-          <View style={styles.verifyHeaderLeft}>
-            <View style={styles.iconCircle}>
-              {state.isJobVerifying ? (
-                <ActivityIndicator size="small" color={Colors.primary.electricCyan} />
-              ) : (
-                <VerificationSuccessIcon width={24} height={24} />
-              )}
-            </View>
-            <View style={styles.verifyTitleGroup}>
-              <Text style={[styles.verifyTitle, { color: colors.text.primary }]}>
-                {state.isJobVerified ? '직업 인증 완료' : '직업 인증 · 선택'}
-              </Text>
-              <Text style={[styles.verifySubtitle, { color: colors.text.secondary }]}>
-                {state.isJobVerified
-                  ? '인증 서류가 등록됐어요.'
-                  : '지금은 건너뛰어도 괜찮아요.'}
-              </Text>
+  const chooseSource = () => Alert.alert('직업 확인 서류 추가', '주민등록번호·주소·급여 등 불필요한 정보는 가려주세요. 가린 서류를 촬영하거나 사진·PDF 파일을 선택해주세요.', [
+    { text: '카메라로 촬영', onPress: () => void pick('camera') },
+    { text: '파일에서 선택', onPress: () => void pick('file') },
+    { text: '취소', style: 'cancel' },
+  ]);
+  return <View style={styles.container}>
+    <FormLabel label="직군" optional={false} />
+    <View ref={triggerRef}>
+      <StepSelectDropdown label="" placeholder={jobCategories.find(job => job.value === state.jobCategory)?.label || '가까운 직군을 선택해주세요'} hasValue={!!state.jobCategory}
+        disabled={blocked} isOpen={isOpen} onPress={() => isOpen ? setIsOpen(false) : measureAndOpen(() => setIsOpen(true))} />
+    </View>
+    {isOpen && anchor && <JobCategoryDropdown anchor={anchor} onSelect={job => { if (job !== state.jobCategory) onChange({ jobCategory: job, isJobVerified: false, jobCertificationObjectKey: null }); setIsOpen(false); }} onClose={() => setIsOpen(false)} />}
+    <FormLabel label="하는 일 한 줄" optional />
+    <TextInput accessibilityLabel="하는 일 한 줄, 선택" style={[styles.input, { color: colors.text.primary, borderColor: colors.border.primary, backgroundColor: colors.background.glass }]} value={state.jobTitle}
+      inputAccessoryViewID={Platform.OS === 'ios' ? SIGNUP_KEYBOARD_ACCESSORY_ID : undefined} returnKeyType="done" onSubmitEditing={() => Keyboard.dismiss()}
+      onChangeText={jobTitle => onChange({ jobTitle })} placeholder="예: 작은 브랜드를 디자인해요" placeholderTextColor={colors.text.muted} />
+    <View style={[styles.optional, { borderColor: colors.border.primary }]}>
+      <Pressable accessibilityRole="button" accessibilityLabel="직업 확인 서류, 선택" accessibilityState={{ expanded: detailsVisible, disabled: blocked }} disabled={blocked} onPress={() => setExpanded(value => !value)} style={styles.optionalHeading}>
+        <View style={styles.optionalCopy}>
+          <Text style={[styles.title, { color: state.isJobVerified ? colors.state.success : colors.text.primary }]}>{state.isJobVerified ? '직업 확인 서류 추가됨' : '직업 확인 서류 · 선택'}</Text>
+          <Text style={[styles.copy, { color: colors.text.secondary }]}>서류 없이도 가입을 계속할 수 있어요.</Text>
+        </View>
+        <Feather name={detailsVisible ? 'chevron-up' : 'chevron-down'} size={18} color={colors.text.secondary} />
+      </Pressable>
+      {detailsVisible && <View style={styles.details}>
+        <Text style={[styles.copy, { color: colors.text.secondary }]}>{state.isJobVerified ? '서류를 올렸어요. 프로필을 저장하면 함께 등록돼요. 다른 직군으로 바꾸면 다시 추가해주세요.' : '재직증명서 등 직업을 확인할 수 있는 사진이나 PDF를 추가해주세요.'}</Text>
+        <View style={[styles.guidance, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
+          <View style={styles.guidanceRow}>
+            <Feather name="file-text" size={17} color={colors.text.secondary} style={styles.guidanceIcon} />
+            <View style={styles.guidanceCopy}>
+              <Text style={[styles.title, { color: colors.text.primary }]}>상대에게는 ‘서류 제출’로 보여요</Text>
+              <Text style={[styles.copy, { color: colors.text.secondary }]}>프로필을 저장하면 표시돼요. 서류 사진이나 파일은 상대방 프로필에 노출되지 않아요.</Text>
             </View>
           </View>
-
-          {!state.isJobVerified && (
-            <TouchableOpacity 
-              activeOpacity={0.8} 
-              style={styles.verifyButton} 
-              onPress={handlePickDocument}
-              disabled={state.isJobVerifying}
-            >
-              {state.isJobVerifying ? (
-                <ActivityIndicator size="small" color={Colors.primary.vividPurple} />
-              ) : (
-                <>
-                  <VerifySendIcon width={16} height={16} />
-                  <Text style={styles.verifyButtonText}>인증하기</Text>
-                </>
-              )}
-            </TouchableOpacity>
-          )}
+          <View style={styles.guidanceRow}>
+            <Feather name="clock" size={17} color={colors.text.secondary} style={styles.guidanceIcon} />
+            <View style={styles.guidanceCopy}>
+              <Text style={[styles.title, { color: colors.text.primary }]}>담당자가 직접 확인해요</Text>
+              <Text style={[styles.copy, { color: colors.text.secondary }]}>확인에는 시간이 걸릴 수 있어요. 서류 제출만으로 직업 인증이 완료되지는 않아요.</Text>
+            </View>
+          </View>
         </View>
-
-        <Text style={[styles.verifyDescription, { color: colors.text.secondary }]}>
-          {state.isJobVerified
-            ? '등록한 서류를 바탕으로 직업 정보를 확인해요.'
-            : '재직증명서 등 직업을 확인할 수 있는 서류를 올려주세요. 인증 없이도 가입을 계속할 수 있어요.'}
-        </Text>
-      </View>
+        {!state.isJobVerified && <Text style={[styles.copy, { color: colors.text.secondary }]}>주민등록번호·주소·급여 등 직업 확인에 필요 없는 정보는 가린 뒤 추가해주세요.</Text>}
+        {!state.isJobVerified && <Pressable accessibilityRole="button" accessibilityState={{ disabled: blocked, busy: blocked }} disabled={blocked} onPress={chooseSource}
+          style={[styles.addButton, { borderColor: colors.brand.accent }]}>
+          {blocked ? <ActivityIndicator size="small" color={colors.brand.accent} /> : <Feather name="upload" size={17} color={colors.brand.accent} />}
+          <Text style={[styles.title, { color: colors.brand.accent }]}>{state.isJobVerifying ? '서류 올리는 중…' : picking ? '서류 선택 중…' : '서류 추가'}</Text>
+        </Pressable>}
+      </View>}
     </View>
-  );
+  </View>;
 }
-
 const styles = StyleSheet.create({
-  container: {
-    width: '100%',
-    alignSelf: 'stretch',
-  },
-  dropdownWrapper: {
-    width: '100%',
-  },
-  jobTitleRow: {
-    marginTop: Spacing.md,
-    borderBottomWidth: 1,
-    paddingBottom: 10,
-  },
-  jobTitleInput: {
-    width: '100%',
-    padding: 0,
-    minHeight: 44,
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.md,
-    fontWeight: FontWeight.regular,
-  },
-  verifyCard: {
-    width: '100%',
-    marginTop: Spacing.lg,
-    padding: Spacing.lg,
-    borderRadius: Radii.lg,
-    borderWidth: 1,
-    gap: Spacing.md,
-  },
-  verifyHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    width: '100%',
-    gap: Spacing.md,
-  },
-  verifyHeaderLeft: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-  },
-  iconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: Radii.lg2,
-    backgroundColor: 'rgba(5, 223, 114, 0.14)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  verifyTitleGroup: {
-    flex: 1,
-    flexDirection: 'column',
-    gap: Spacing.xs,
-  },
-  verifyTitle: {
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.base,
-    fontWeight: FontWeight.medium,
-    lineHeight: 20,
-    letterSpacing: -0.15,
-  },
-  verifySubtitle: {
-    fontFamily: FontFamily.sans,
-    fontSize: 13,
-    fontWeight: FontWeight.regular,
-    lineHeight: 20,
-  },
-  verifyButton: {
-    minHeight: 44,
-    flexShrink: 0,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 6,
-    gap: 6,
-    borderRadius: Radii.md,
-    borderWidth: 0.612,
-    borderColor: 'rgba(194, 122, 255, 0.3)',
-    backgroundColor: 'rgba(194, 122, 255, 0.1)',
-  },
-  verifyButtonText: {
-    color: Colors.primary.vividPurple,
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.base,
-    fontWeight: FontWeight.medium,
-    lineHeight: 20,
-    letterSpacing: -0.15,
-  },
-  verifyDescription: {
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.base,
-    fontWeight: FontWeight.regular,
-    lineHeight: 22,
-  }
+  container: { gap: Spacing.sm },
+  input: { minHeight: 52, padding: Spacing.md, borderWidth: 1, borderRadius: Radii.md, fontFamily: FontFamily.sans, fontSize: FontSize.lg, lineHeight: 24 },
+  optional: { borderTopWidth: 1, marginTop: Spacing.sm },
+  optionalHeading: { minHeight: 44, paddingTop: Spacing.md, flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
+  optionalCopy: { flex: 1, gap: Spacing.xs },
+  title: { fontFamily: FontFamily.sans, fontSize: FontSize.base, fontWeight: FontWeight.medium, lineHeight: 22 },
+  copy: { fontFamily: FontFamily.sans, fontSize: FontSize.base, lineHeight: 22 },
+  details: { gap: Spacing.md, marginTop: Spacing.md },
+  guidance: { padding: Spacing.md, gap: Spacing.md, borderWidth: 1, borderRadius: Radii.md },
+  guidanceRow: { flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.sm },
+  guidanceIcon: { marginTop: 3 },
+  guidanceCopy: { flex: 1, gap: Spacing.xs },
+  addButton: { minHeight: 44, padding: Spacing.sm, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: Spacing.sm, borderWidth: 1, borderRadius: Radii.md },
 });

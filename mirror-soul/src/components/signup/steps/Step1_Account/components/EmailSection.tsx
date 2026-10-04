@@ -1,13 +1,15 @@
+import React, { useState } from 'react';
+import { ActivityIndicator, Keyboard, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import FormLabel from '@/src/components/signup/common/FormLabel';
-import {Colors, FontFamily, FontSize, FontWeight, Radii, Spacing} from '@/src/constants/theme';
+import { FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
 import { isValidEmail } from '@/src/utils/validation';
-import React from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View, ActivityIndicator } from 'react-native';
-import { SectionProps } from '../types/step1';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
+import { SectionProps } from '../types/step1';
 import EmailVerificationModal from './EmailVerificationModal';
+import { SIGNUP_KEYBOARD_ACCESSORY_ID } from '@/src/components/signup/common/SignupFormScreen';
+import { useSignupFieldColors } from '@/src/components/signup/common/useSignupFieldColors';
 
-interface EmailSectionProps extends SectionProps {
+interface Props extends SectionProps {
   isModalVisible: boolean;
   setIsModalVisible: (visible: boolean) => void;
   onSendCode: () => void;
@@ -17,167 +19,45 @@ interface EmailSectionProps extends SectionProps {
   formattedTime?: string;
   onResendCode?: () => void;
   isLoading?: boolean;
+  requiresNewCode?: boolean;
 }
-
-/**
- * EmailSection 컴포넌트 (SRP)
- * 이메일 입력 및 인증 코드 발송 로직을 관리합니다.
- */
-export default function EmailSection({
-  state,
-  onChange,
-  isModalVisible,
-  setIsModalVisible,
-  onSendCode,
-  onVerify,
-  timeLeft = 0,
-  isTimerActive = false,
-  formattedTime = '00:00',
-  onResendCode = onSendCode,
-  isLoading = false
-}: EmailSectionProps) {
+export default function EmailSection({ state, onChange, isModalVisible, setIsModalVisible, onSendCode, onVerify, timeLeft = 0, isTimerActive = false, formattedTime = '00:00', onResendCode = onSendCode, isLoading = false, requiresNewCode = false }: Props) {
   const { colors } = useThemeColors();
-
-  // 버튼 텍스트 및 접근성 동기화를 위한 렌더링 전 상태 처리 (DRY/SRP 유지보수)
-  const sendButtonText = isTimerActive && timeLeft > 0
-    ? '인증 코드 입력'
-    : isTimerActive && timeLeft === 0
-      ? '재발송'
-      : '인증 코드 발송';
-
-  const sendButtonA11yHint = isTimerActive && timeLeft > 0
-    ? '다시 이메일 인증 코드를 입력할 수 있는 팝업 창을 엽니다'
-    : isTimerActive && timeLeft === 0
-      ? '유효시간이 초과되어 인증 코드를 다시 이메일로 발송합니다'
-      : '입력한 이메일 주소로 인증 코드를 전송합니다';
-
-  return (
-    <View style={styles.container}>
-      <FormLabel label="이메일" />
-
-      <View style={[styles.inputRow, { borderBottomColor: colors.border.primary }]}>
-        <TextInput
-          style={[styles.emailInput, { color: colors.text.primary }]}
-          value={state.email}
-          onChangeText={(text) => onChange({ email: text })}
-          placeholder="your@email.com"
-          placeholderTextColor={colors.text.muted}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          editable={!state.isEmailVerified}
-          accessibilityLabel="이메일 입력란"
-          accessibilityHint="가입에 사용할 유효한 이메일 주소를 입력해 주세요"
-          accessibilityState={{ disabled: state.isEmailVerified }}
-        />
-        {!state.isEmailVerified && (
-          <TouchableOpacity
-            style={[
-              styles.sendButton,
-              { borderColor: (!isValidEmail(state.email) || isLoading) ? colors.border.primary : Colors.primary.electricCyan },
-            ]}
-            onPress={isTimerActive && timeLeft === 0 ? onResendCode : onSendCode}
-            disabled={!isValidEmail(state.email) || isLoading}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            accessibilityRole="button"
-            accessibilityLabel={sendButtonText}
-            accessibilityHint={sendButtonA11yHint}
-            accessibilityState={{ disabled: !isValidEmail(state.email) || isLoading }}
-          >
-            {isLoading ? (
-              <ActivityIndicator size="small" color={Colors.primary.electricCyan} />
-            ) : (
-              <Text
-                numberOfLines={1}
-                style={[styles.sendButtonText, (!isValidEmail(state.email) || isLoading) && { color: colors.text.muted }]}
-              >
-                {sendButtonText}
-              </Text>
-            )}
-          </TouchableOpacity>
-        )}
-      </View>
-
-      <View style={styles.messageRow}>
-        {isTimerActive && timeLeft > 0 && !state.isEmailVerified && (
-          <Text style={styles.timerText}>남은 시간 {formattedTime}</Text>
-        )}
-        {!!state.emailError && !state.isEmailVerified && (
-          <Text style={[styles.errorText, { color: colors.state.danger }]}>{state.emailError}</Text>
-        )}
-        {state.isEmailVerified && (
-          <Text style={styles.successText}>이메일 인증이 완료되었습니다</Text>
-        )}
-      </View>
-
-      {/* Verification Modal */}
-      <EmailVerificationModal
-        isVisible={isModalVisible}
-        email={state.email}
-        onClose={() => setIsModalVisible(false)}
-        onVerify={onVerify}
-        timeLeft={timeLeft}
-        formattedTime={formattedTime}
-        onResend={onResendCode}
-      />
+  const fieldColors = useSignupFieldColors();
+  const [focused, setFocused] = useState(false);
+  const blocked = isLoading || state.isLoading;
+  const canSend = isValidEmail(state.email) && !blocked;
+  const label = state.isEmailVerified ? '이메일 변경' : isTimerActive && timeLeft > 0 ? '인증 코드 입력' : isTimerActive ? '코드 다시 받기' : '인증 코드 받기';
+  const send = () => {
+    Keyboard.dismiss();
+    if (state.isEmailVerified) onChange({ email: state.email });
+    else if (isTimerActive && timeLeft === 0) onResendCode();
+    else onSendCode();
+  };
+  return <View style={styles.container}>
+    <FormLabel label="이메일" optional={false} />
+    <TextInput accessibilityLabel="이메일 입력란" style={[styles.input, { color: colors.text.primary, backgroundColor: fieldColors.inputBackground, borderColor: state.emailError ? colors.state.danger : focused ? colors.brand.accent : fieldColors.border }]}
+      value={state.email} onChangeText={email => onChange({ email })} placeholder="name@example.com" placeholderTextColor={fieldColors.placeholder}
+      keyboardType="email-address" autoCapitalize="none" autoCorrect={false} autoComplete="email" textContentType="emailAddress"
+      inputAccessoryViewID={Platform.OS === 'ios' ? SIGNUP_KEYBOARD_ACCESSORY_ID : undefined} returnKeyType="done" onSubmitEditing={() => Keyboard.dismiss()}
+      onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} editable={!state.isEmailVerified && !blocked} />
+    <View style={styles.actions}>
+      <Text accessibilityLiveRegion="polite" style={[styles.message, { color: state.emailError ? colors.state.danger : state.isEmailVerified ? colors.state.success : fieldColors.hint }]}>
+        {state.emailError || (state.isEmailVerified ? '이메일 인증 완료' : isTimerActive && timeLeft > 0 ? `입력 시간 ${formattedTime}` : '로그인과 인증에 사용할 이메일이에요.')}
+      </Text>
+      <Pressable accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ disabled: !canSend, busy: isLoading }} disabled={!canSend} onPress={send}
+        style={[styles.action, { borderColor: canSend ? colors.brand.accent : colors.border.primary }]}>
+        {isLoading ? <ActivityIndicator color={colors.brand.accent} size="small" /> : <Text style={[styles.actionText, { color: canSend ? colors.brand.accent : colors.text.muted }]}>{label}</Text>}
+      </Pressable>
     </View>
-  );
+    <EmailVerificationModal isVisible={isModalVisible} email={state.email} onClose={() => setIsModalVisible(false)} onVerify={onVerify} timeLeft={timeLeft} formattedTime={formattedTime} onResend={onResendCode} isLoading={isLoading} requiresNewCode={requiresNewCode} />
+  </View>;
 }
-
 const styles = StyleSheet.create({
-  container: {
-    width: '100%',
-    flexDirection: 'column',
-    alignItems: 'flex-start',
-    gap: Spacing.sm,
-    alignSelf: 'stretch',
-  },
-  inputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-    alignSelf: 'stretch',
-    borderBottomWidth: 1,
-    paddingBottom: 10,
-  },
-  emailInput: {
-    flex: 1,
-    padding: 0,
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.md,
-    fontWeight: FontWeight.regular,
-  },
-  sendButton: {
-    flexShrink: 0,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 7,
-    borderRadius: Radii.full,
-    borderWidth: 1,
-  },
-  sendButtonText: {
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.medium,
-    color: Colors.primary.electricCyan,
-  },
-  messageRow: {
-    minHeight: 16,
-  },
-  successText: {
-    color: Colors.primary.successGreen,
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.sm,
-  },
-  errorText: {
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.sm,
-  },
-  timerText: {
-    color: Colors.primary.electricCyan,
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.regular,
-  },
+  container: { gap: Spacing.sm },
+  input: { minHeight: 52, paddingHorizontal: Spacing.md, paddingVertical: Spacing.md, borderRadius: Radii.md, borderWidth: 1, fontFamily: FontFamily.sans, fontSize: FontSize.lg, lineHeight: 24 },
+  actions: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: Spacing.sm },
+  message: { fontFamily: FontFamily.sans, fontSize: FontSize.base, lineHeight: 22, flexShrink: 1 },
+  action: { minHeight: 44, paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, borderRadius: Radii.md, borderWidth: 1, justifyContent: 'center' },
+  actionText: { fontFamily: FontFamily.sans, fontSize: FontSize.base, fontWeight: FontWeight.medium, lineHeight: 22 },
 });
-
-
-

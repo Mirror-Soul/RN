@@ -1,11 +1,11 @@
-import CompleteIcon from '@/assets/images/common/Complete.svg';
-import { Colors, Radii, FontFamily, FontSize, FontWeight, Spacing } from '@/src/constants/theme';
+import { Colors, FontFamily, FontSize, FontWeight } from '@/src/constants/theme';
 import React, { useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { SectionProps } from '../types/step1';
 import { ConsentDetailSheet } from '@/src/components/common/ConsentDetailSheet';
 import { AGE_VERIFICATION_CONTENT } from '@/src/constants/consentContent';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
+import SignupConsentRow from '@/src/components/signup/common/SignupConsentRow';
 
 /**
  * AgeVerificationSection 컴포넌트 (SRP)
@@ -27,40 +27,12 @@ export default function AgeVerificationSection({ state, onChange }: SectionProps
   };
 
   return (
-    <View style={styles.row}>
-      <TouchableOpacity
-        style={[styles.checkboxWrapper, { borderColor: colors.border.primary, backgroundColor: colors.background.glass }]}
-        onPress={toggleAdultConfirmed}
-        activeOpacity={0.8}
-        accessibilityRole="checkbox"
-        accessibilityState={{ checked: state.isAdultConfirmed }}
-        accessibilityLabel="만 19세 이상 확인"
-      >
-        {state.isAdultConfirmed ? (
-          <View style={styles.checkedBox}>
-            <CompleteIcon width={12} height={12} />
-          </View>
-        ) : (
-          <View style={styles.emptyCheck} />
-        )}
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={styles.textContainer}
-        onPress={toggleAdultConfirmed}
-        activeOpacity={0.7}
-      >
-        <Text style={[styles.baseText, { color: colors.text.secondary }]}>만 19세 이상이며, 본 서비스 이용 자격을 충족합니다. (필수)</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        onPress={() => setIsDetailVisible(true)}
-        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-        accessibilityRole="button"
-        accessibilityLabel="연령 확인 안내 자세히 보기"
-      >
-        <Text style={styles.viewDetailText}>보기</Text>
-      </TouchableOpacity>
+    <View>
+      <SignupConsentRow checked={state.isAdultConfirmed} onToggle={toggleAdultConfirmed} accessibilityLabel="만 19세 이상 확인"
+        onViewDetail={() => setIsDetailVisible(true)} viewDetailLabel="연령 확인 안내 자세히 보기"
+        detail={<Text style={[styles.viewDetailText, { color: colors.brand.accent }]}>보기</Text>}>
+        <Text style={[styles.baseText, { color: colors.text.primary }]}>만 19세 이상이에요. (필수)</Text>
+      </SignupConsentRow>
 
       <ConsentDetailSheet
         visible={isDetailVisible}
@@ -74,47 +46,6 @@ export default function AgeVerificationSection({ state, onChange }: SectionProps
 }
 
 const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-    alignSelf: 'stretch',
-  },
-  checkboxWrapper: {
-    width: 20,
-    height: 20,
-    borderRadius: Radii.xs,
-    borderWidth: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  checkedBox: {
-    width: 20,
-    height: 20,
-    borderRadius: Radii.xs,
-    backgroundColor: Colors.primary.electricCyan,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  emptyCheck: {
-    width: 14,
-    height: 14,
-    borderRadius: 2,
-  },
-  textContainer: {
-    flex: 1,
-  },
-  baseText: {
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.base,
-    fontWeight: FontWeight.regular,
-    lineHeight: 20,
-  },
-  viewDetailText: {
-    color: Colors.primary.electricCyan,
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.medium,
-    textDecorationLine: 'underline',
-  },
+  baseText: { fontFamily: FontFamily.sans, fontSize: FontSize.base, fontWeight: FontWeight.regular, lineHeight: 22 },
+  viewDetailText: { color: Colors.primary.electricCyan, fontFamily: FontFamily.sans, fontSize: FontSize.sm, fontWeight: FontWeight.medium, lineHeight: 18, textDecorationLine: 'underline' },
 });

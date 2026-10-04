@@ -1,6 +1,6 @@
 import {Colors, Radii, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
-import React, { useState, useEffect, useCallback } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View, ActivityIndicator, Alert } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View, ActivityIndicator } from 'react-native';
 import { getSidoList, getSigunguList, getEupmyeondongList } from '@/src/services/onboardingService';
 import SelectDropdownModal, { DropdownAnchor } from '@/src/components/signup/common/SelectDropdownModal';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
@@ -25,87 +25,47 @@ export default function LocationDropdown({ onSelect, onClose, sigunguCache, eupm
   const [selectedSido, setSelectedSido] = useState<string | null>(null);
   const [selectedSigungu, setSelectedSigungu] = useState<string | null>(null);
   
-  const [sidoList, setSidoList] = useState<string[]>([]);
+  const sidoCache = useRef<string[] | null>(null);
   const [currentList, setCurrentList] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
 
-  // 마운트 시 시도 목록 로드
   useEffect(() => {
-    loadSido();
-  }, []);
-
-  // 탭 변경 시 현재 목록 동기화
-  useEffect(() => {
-    if (activeTab === 0) {
-      setCurrentList(sidoList);
-    } else if (activeTab === 1 && selectedSido) {
-      loadSigungu(selectedSido);
-    } else if (activeTab === 2 && selectedSido && selectedSigungu) {
-      loadEupmyeondong(selectedSido, selectedSigungu);
-    }
-  }, [activeTab, selectedSido, selectedSigungu, sidoList]);
-
-  // 공통 API 데이터 로드 헬퍼 (DRY & Error Handling)
-  const fetchWithHandling = useCallback(async (
-    fetcher: () => Promise<any>, 
-    onSuccess: (data: string[]) => void,
-    cacheKey?: string,
-    cacheRef?: React.MutableRefObject<Map<string, string[]>>
-  ) => {
-    try {
-      setIsLoading(true);
-      const res = await fetcher();
-      if (res.isSuccess) {
-        onSuccess(res.result);
-        if (cacheKey && cacheRef) {
-          cacheRef.current.set(cacheKey, res.result);
+    let current = true;
+    setIsLoading(true);
+    setLoadFailed(false);
+    setCurrentList([]);
+    const cache = activeTab === 1 ? sigunguCache.current : eupmyeondongCache.current;
+    const key = activeTab === 1 ? selectedSido : `${selectedSido}_${selectedSigungu}`;
+    const cached = activeTab === 0 ? sidoCache.current : key ? cache.get(key) : null;
+    const load = async () => {
+      try {
+        let items = cached;
+        if (!items) {
+          const response = activeTab === 0 ? await getSidoList()
+            : activeTab === 1 ? await getSigunguList({ sidoName: selectedSido! })
+            : await getEupmyeondongList({ sidoName: selectedSido!, sigunguName: selectedSigungu! });
+          if (!current) return;
+          if (!response.isSuccess || !Array.isArray(response.result)) throw new Error('Invalid location list');
+          items = response.result;
+          if (activeTab === 0) sidoCache.current = items;
+          else if (key) cache.set(key, items);
         }
-      } else {
-        throw new Error(res.message || '데이터를 불러오지 못했습니다.');
+        if (current) setCurrentList(items);
+      } catch {
+        if (current) setLoadFailed(true);
+      } finally {
+        if (current) setIsLoading(false);
       }
-    } catch (error: any) {
-      Alert.alert('오류', '지역 정보를 불러오지 못했습니다. 다시 시도해주세요.');
-      console.error('[LocationDropdown] Fetch Error:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  const loadSido = () => {
-    fetchWithHandling(getSidoList, (data) => {
-      setSidoList(data);
-      setCurrentList(data);
-    });
-  };
-
-  const loadSigungu = (sido: string) => {
-    if (sigunguCache.current.has(sido)) {
-      setCurrentList(sigunguCache.current.get(sido)!);
-      return;
-    }
-    fetchWithHandling(
-      () => getSigunguList({ sidoName: sido }),
-      (data) => setCurrentList(data),
-      sido,
-      sigunguCache
-    );
-  };
-
-  const loadEupmyeondong = (sido: string, sigungu: string) => {
-    const key = `${sido}_${sigungu}`;
-    if (eupmyeondongCache.current.has(key)) {
-      setCurrentList(eupmyeondongCache.current.get(key)!);
-      return;
-    }
-    fetchWithHandling(
-      () => getEupmyeondongList({ sidoName: sido, sigunguName: sigungu }),
-      (data) => setCurrentList(data),
-      key,
-      eupmyeondongCache
-    );
-  };
+    };
+    void load();
+    return () => { current = false; };
+  }, [activeTab, selectedSido, selectedSigungu, sigunguCache, eupmyeondongCache, loadAttempt]);
 
   const handleSelect = (item: string) => {
+    if (isLoading || loadFailed) return;
+    if (activeTab < 2) { setCurrentList([]); setIsLoading(true); }
     if (activeTab === 0) {
       setSelectedSido(item);
       setSelectedSigungu(null);
@@ -135,7 +95,15 @@ export default function LocationDropdown({ onSelect, onClose, sigunguCache, eupm
         style={[styles.tabButton, isActive && styles.tabActive]}
         activeOpacity={canClick ? 0.8 : 1}
         disabled={!canClick}
-        onPress={() => setActiveTab(tabIndex)}
+        accessibilityRole="tab"
+        accessibilityLabel={title}
+        accessibilityState={{ selected: isActive, disabled: !canClick }}
+        onPress={() => {
+          if (tabIndex === activeTab) return;
+          setCurrentList([]);
+          setIsLoading(true);
+          setActiveTab(tabIndex);
+        }}
       >
         <Text style={[styles.tabText, { color: colors.text.muted }, isActive && styles.tabTextActive]}>{title}</Text>
       </TouchableOpacity>
@@ -144,39 +112,45 @@ export default function LocationDropdown({ onSelect, onClose, sigunguCache, eupm
 
   return (
     <SelectDropdownModal onClose={onClose} anchor={anchor} panelStyle={styles.dropdownPanel}>
-      <View style={[styles.tabHeader, { borderBottomColor: colors.border.primary, backgroundColor: colors.background.glass }]}>
-        {renderTab(0, '시/도')}
-        {renderTab(1, '시/구/군')}
-        {renderTab(2, '동/읍/면')}
-      </View>
-
-      {isLoading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator color={Colors.primary.electricCyan} />
+      <ScrollView style={styles.listContainer} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator>
+        <View style={[styles.tabHeader, { borderBottomColor: colors.border.primary, backgroundColor: colors.background.glass }]}>
+          {renderTab(0, '시/도')}
+          {renderTab(1, '시/구/군')}
+          {renderTab(2, '동/읍/면')}
         </View>
-      ) : (
-        <ScrollView
-          style={styles.listContainer}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
-          {currentList.map((item) => (
-            <TouchableOpacity
-              key={item}
-              style={styles.listItem}
-              onPress={() => handleSelect(item)}
-            >
-              <Text style={[styles.listItemText, { color: colors.text.primary }]}>{item}</Text>
+
+        {isLoading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator color={Colors.primary.electricCyan} />
+          </View>
+        ) : loadFailed ? (
+          <View style={styles.emptyContainer}>
+            <Text accessibilityRole="alert" style={[styles.emptyText, { color: colors.text.secondary }]}>지역을 불러오지 못했어요.</Text>
+            <TouchableOpacity accessibilityRole="button" accessibilityLabel="지역 목록 다시 불러오기" onPress={() => setLoadAttempt(value => value + 1)} style={styles.retryButton}>
+              <Text style={[styles.emptyText, { color: colors.brand.accent }]}>다시 불러오기</Text>
             </TouchableOpacity>
-          ))}
-          {currentList.length === 0 && (
-            <View style={styles.emptyContainer}>
-              <Text style={[styles.emptyText, { color: colors.text.muted }]}>데이터가 없습니다.</Text>
-            </View>
-          )}
-        </ScrollView>
-      )}
+          </View>
+        ) : (
+          <View style={styles.listContent}>
+            {currentList.map((item) => (
+              <TouchableOpacity
+                key={item}
+                accessibilityRole="button"
+                accessibilityLabel={item}
+                style={styles.listItem}
+                onPress={() => handleSelect(item)}
+              >
+                <Text style={[styles.listItemText, { color: colors.text.primary }]}>{item}</Text>
+              </TouchableOpacity>
+            ))}
+            {currentList.length === 0 && (
+              <View style={styles.emptyContainer}>
+                <Text style={[styles.emptyText, { color: colors.text.muted }]}>데이터가 없습니다.</Text>
+              </View>
+            )}
+          </View>
+        )}
+      </ScrollView>
     </SelectDropdownModal>
   );
 }
@@ -186,7 +160,7 @@ const styles = StyleSheet.create({
     height: 303.5,
   },
   tabHeader: {
-    height: 46.4,
+    minHeight: 46.4,
     width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
@@ -194,6 +168,8 @@ const styles = StyleSheet.create({
   },
   tabButton: {
     flex: 1,
+    minHeight: 44,
+    paddingHorizontal: Spacing.xs,
     paddingVertical: Spacing.md,
     justifyContent: 'center',
     alignItems: 'center',
@@ -207,6 +183,7 @@ const styles = StyleSheet.create({
   tabText: {
     fontSize: FontSize.base,
     fontWeight: FontWeight.medium,
+    textAlign: 'center',
   },
   tabTextActive: {
     color: Colors.primary.electricCyan,
@@ -239,6 +216,7 @@ const styles = StyleSheet.create({
     padding: Spacing.xxl,
     alignItems: 'center',
   },
+  retryButton: { minHeight: 44, padding: Spacing.sm, justifyContent: 'center' },
   emptyText: {
     fontSize: FontSize.base,
   }

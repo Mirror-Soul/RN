@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, Dimensions, TouchableWithoutFeedback, Modal } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { View, StyleSheet, TouchableWithoutFeedback, Modal, useWindowDimensions } from 'react-native';
+import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -12,32 +12,29 @@ import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { Spacing } from '@/src/constants/theme';
 
 
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+const springConfig = { damping: 20, stiffness: 200, mass: 0.8 };
 
 interface BottomSheetProps {
   isOpen: boolean;
   onClose: () => void;
   children: React.ReactNode;
   height?: number;
+  dragFromHandleOnly?: boolean;
 }
 
-export const BottomSheet = ({ isOpen, onClose, children, height = SCREEN_HEIGHT * 0.8 }: BottomSheetProps) => {
+export const BottomSheet = ({ isOpen, onClose, children, height: requestedHeight, dragFromHandleOnly = false }: BottomSheetProps) => {
   const { colors } = useThemeColors();
+  const { height: screenHeight } = useWindowDimensions();
+  const height = Math.min(requestedHeight ?? screenHeight * 0.8, screenHeight);
   const [isModalVisible, setIsModalVisible] = useState(isOpen);
-  const translateY = useSharedValue(SCREEN_HEIGHT);
+  const translateY = useSharedValue(screenHeight);
   const opacity = useSharedValue(0);
   
-  const springConfig = {
-    damping: 20,
-    stiffness: 200,
-    mass: 0.8,
-  };
-
   const closeSheet = () => {
     'worklet';
-    translateY.value = withSpring(SCREEN_HEIGHT, springConfig);
-    opacity.value = withTiming(0, { duration: 250 }, () => {
-      runOnJS(onClose)();
+    translateY.value = withSpring(screenHeight, springConfig);
+    opacity.value = withTiming(0, { duration: 250 }, finished => {
+      if (finished) runOnJS(onClose)();
     });
   };
 
@@ -47,12 +44,12 @@ export const BottomSheet = ({ isOpen, onClose, children, height = SCREEN_HEIGHT 
       translateY.value = withSpring(0, springConfig);
       opacity.value = withTiming(1, { duration: 300 });
     } else {
-      translateY.value = withSpring(SCREEN_HEIGHT, springConfig);
-      opacity.value = withTiming(0, { duration: 250 }, () => {
-        runOnJS(setIsModalVisible)(false);
+      translateY.value = withSpring(screenHeight, springConfig);
+      opacity.value = withTiming(0, { duration: 250 }, finished => {
+        if (finished) runOnJS(setIsModalVisible)(false);
       });
     }
-  }, [isOpen]);
+  }, [isOpen, screenHeight, opacity, translateY]);
 
   const panGesture = Gesture.Pan()
     .onUpdate((event) => {
@@ -76,25 +73,23 @@ export const BottomSheet = ({ isOpen, onClose, children, height = SCREEN_HEIGHT 
     transform: [{ translateY: translateY.value }],
   }));
 
+  const handle = <View style={styles.handleContainer}>
+    <View style={[styles.handle, { backgroundColor: colors.border.strong }]} />
+  </View>;
+  const sheet = <Animated.View style={[styles.sheet, animatedSheetStyle, { height, backgroundColor: colors.background.card, borderTopColor: colors.border.primary }]}>
+    {dragFromHandleOnly ? <GestureDetector gesture={panGesture}>{handle}</GestureDetector> : handle}
+    <View style={styles.contentContainer}>{children}</View>
+  </Animated.View>;
+
   return (
-    <Modal visible={isModalVisible} transparent animationType="none">
-      <View style={StyleSheet.absoluteFill}>
+    <Modal visible={isModalVisible} transparent animationType="none" onRequestClose={closeSheet}>
+      <GestureHandlerRootView style={StyleSheet.absoluteFill}>
         <TouchableWithoutFeedback onPress={() => closeSheet()}>
           <Animated.View style={[styles.backdrop, animatedBackdropStyle]} />
         </TouchableWithoutFeedback>
 
-        <GestureDetector gesture={panGesture}>
-          <Animated.View style={[styles.sheet, animatedSheetStyle, { height, backgroundColor: colors.background.card, borderTopColor: colors.border.primary }]}>
-            <View style={styles.handleContainer}>
-              <View style={[styles.handle, { backgroundColor: colors.border.strong }]} />
-            </View>
-            
-            <View style={styles.contentContainer}>
-              {children}
-            </View>
-          </Animated.View>
-        </GestureDetector>
-      </View>
+        {dragFromHandleOnly ? sheet : <GestureDetector gesture={panGesture}>{sheet}</GestureDetector>}
+      </GestureHandlerRootView>
     </Modal>
   );
 };

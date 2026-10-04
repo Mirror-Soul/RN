@@ -63,3 +63,21 @@ it('opens the registered photo on press and reserves a failed photo press for re
   fireEvent.press(screen.getByLabelText('소울의 프로필 사진 크게 보기'));
   expect(open).toHaveBeenCalledTimes(2);
 });
+
+it('keeps a confirmed local preview visible while reporting a remote download failure', () => {
+  const onState = jest.fn();
+  const screen = render(<ProfilePhoto name="소울" uri="https://bucket/photo.jpg" previewUri="file:///registered.jpg" onLoadStateChange={onState} />);
+  const remote = screen.UNSAFE_getAllByType(Image).find(image => image.props.source.uri === 'https://bucket/photo.jpg')!;
+  fireEvent(remote, 'error');
+  expect(screen.UNSAFE_getByType(Image).props.source.uri).toBe('file:///registered.jpg');
+  expect(onState).toHaveBeenLastCalledWith('error');
+  fireEvent(screen.UNSAFE_getByType(Image), 'error');
+  expect(screen.getByLabelText('프로필 사진 다시 불러오기')).toBeTruthy();
+});
+
+it('replaces the local preview with the actual downloaded photo', () => {
+  const screen = render(<ProfilePhoto name="소울" uri="https://bucket/photo.jpg" previewUri="file:///registered.jpg" />);
+  fireEvent(screen.UNSAFE_getAllByType(Image).find(image => image.props.source.uri === 'https://bucket/photo.jpg')!, 'load');
+  expect(screen.UNSAFE_getAllByType(Image)).toHaveLength(1);
+  expect(screen.UNSAFE_getByType(Image).props.source.uri).toBe('https://bucket/photo.jpg');
+});

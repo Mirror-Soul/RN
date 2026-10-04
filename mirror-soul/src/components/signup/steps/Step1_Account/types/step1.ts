@@ -1,4 +1,3 @@
-import { StyleProp, ViewStyle } from 'react-native';
 
 export interface Step1State {
   email: string;
@@ -28,6 +27,7 @@ export interface VerificationModalProps {
   formattedTime?: string;
   onResend?: () => void;
   isLoading?: boolean;
+  requiresNewCode?: boolean;
 }
 
 export interface SectionProps {

@@ -31,7 +31,7 @@ export default function LocationSection({ state, onChange, sigunguCache, eupmyeo
 
   return (
     <View style={styles.container}>
-      <FormLabel label="지역" />
+      <FormLabel label="사는 지역" optional={false} />
 
       <View style={styles.dropdownWrapper} ref={triggerRef}>
         <StepSelectDropdown
@@ -71,6 +71,7 @@ export default function LocationSection({ state, onChange, sigunguCache, eupmyeo
 const styles = StyleSheet.create({
   container: {
     width: '100%',
+    gap: Spacing.sm,
   },
   dropdownWrapper: {
     width: '100%',

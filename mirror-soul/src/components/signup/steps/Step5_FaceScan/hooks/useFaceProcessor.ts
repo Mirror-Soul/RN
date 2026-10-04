@@ -1,71 +1,33 @@
-import { logger } from '@/src/utils/logger';
 import { useEffect, useMemo, useRef } from 'react';
-import { useFrameProcessor } from 'react-native-vision-camera';
+import { runAtTargetFps, useFrameProcessor } from 'react-native-vision-camera';
 import { Face, useFaceDetector } from 'react-native-vision-camera-face-detector';
 import { Worklets } from 'react-native-worklets-core';
+import type { PreviewSize } from '../utils/captureQuality';
 
-interface UseFaceProcessorProps {
-  /** 얼굴 감지 시 실행할 JS 핸들러 */
+interface Props {
   onFaceDetected: (faces: Face[]) => void;
-  /** 현재 스캔이 활성화된 상태인지 여부 */
   isActive: boolean;
+  previewSize: PreviewSize;
 }
 
-/**
- * 전용 프레임 프로세서 엔진 훅
- *
- * [핵심 포인트 - Ref Pattern]
- * JS의 handleFaceDetection이 상태 변화(phase, index 등)로 인해 바뀔 때마다
- * runOnJs를 재성능하거나 프레임 프로세서를 재생성하지 않도록 보장합니다.
- * 이를 통해 'Stale Closure' 문제를 해결하고 카메라 무거운 작업을 안정적으로 수행합니다.
- */
-export function useFaceProcessor({ onFaceDetected, isActive }: UseFaceProcessorProps) {
-  // 최신 핸들러를 참조하기 위한 Ref
-  const onFaceDetectedRef = useRef(onFaceDetected);
-
-  // 핸들러가 바뀔 때마다 Ref 업데이트 (재렌더링 시점 동기화)
-  useEffect(() => {
-    onFaceDetectedRef.current = onFaceDetected;
-  }, [onFaceDetected]);
-
-  // 엔진 상태 모니터링 로그
-  useEffect(() => {
-    if (isActive) {
-      logger.debug('Face Detection Engine Activated');
-    } else {
-      logger.debug('Face Detection Engine Deactivated');
-    }
-  }, [isActive]);
-
-  // 얼굴 감지 엔진 초기화
-  const { detectFaces } = useFaceDetector({
-    performanceMode: 'fast',
-    classificationMode: 'none',
-    contourMode: 'none',
-  });
-
-  // JS 스레드 브릿칭 함수는 한 번만 생성
-  const runOnJs = useMemo(
-    () =>
-      Worklets.createRunOnJS((faces: Face[]) => {
-        // 항상 최신 Ref의 핸들러를 호출
-        onFaceDetectedRef.current(faces);
-      }),
-    []
-  );
-
-  // 프레임 처리 엔진 (Stable)
-  const frameProcessor = useFrameProcessor(
-    (frame) => {
+export function useFaceProcessor({ onFaceDetected, isActive, previewSize }: Props) {
+  const callback = useRef(onFaceDetected);
+  useEffect(() => { callback.current = onFaceDetected; }, [onFaceDetected]);
+  // 옵션 객체가 바뀔 때 플러그인이 생성되므로 크기 변경 시에만 다시 만든다.
+  const options = useMemo(() => ({
+    performanceMode: 'fast' as const, classificationMode: 'none' as const,
+    contourMode: 'none' as const, autoMode: true, cameraFacing: 'front' as const,
+    windowWidth: previewSize.width, windowHeight: previewSize.height,
+  }), [previewSize.width, previewSize.height]);
+  const { detectFaces } = useFaceDetector(options);
+  const runOnJs = useMemo(() => Worklets.createRunOnJS((faces: Face[]) => callback.current(faces)), []);
+  const frameProcessor = useFrameProcessor(frame => {
+    'worklet';
+    if (!isActive || previewSize.width <= 0 || previewSize.height <= 0) return;
+    runAtTargetFps(5, () => {
       'worklet';
-      if (!isActive) return;
-
-      const faces = detectFaces(frame);
-      // JS 스레드로 얼굴 데이터 전송
-      runOnJs(faces);
-    },
-    [isActive, detectFaces, runOnJs]
-  );
-
+      runOnJs(detectFaces(frame));
+    });
+  }, [isActive, previewSize.width, previewSize.height, detectFaces, runOnJs]);
   return { frameProcessor };
 }

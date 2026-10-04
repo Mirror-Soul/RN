@@ -37,7 +37,7 @@ export function useStep2Form() {
 
   // 닉네임 중복 확인 처리
   const handleNicknameCheck = useCallback(async () => {
-    if (state.nickname.length < 2) {
+    if (state.nickname.trim().length < 2) {
       Alert.alert('알림', '닉네임은 2자 이상 입력해주세요.');
       return;
     }
@@ -92,7 +92,7 @@ export function useStep2Form() {
         jobCertificationObjectKey: objectKey 
       });
       
-      Alert.alert('성공', '직업 인증 서류가 업로드되었습니다.');
+      Alert.alert('서류를 올렸어요', '프로필을 저장하면 선택한 직군에 서류가 함께 등록돼요.');
     } catch (error: any) {
       Alert.alert('업로드 실패', error?.message || '파일 업로드 중 오류가 발생했습니다.');
     } finally {
