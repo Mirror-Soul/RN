@@ -16,7 +16,7 @@ jest.mock('@expo/vector-icons', () => ({ Feather: () => null }));
 jest.mock('@/src/hooks/useThemeColors', () => ({ useThemeColors: () => ({ colors: jest.requireActual('@/src/constants/theme').lightTheme }) }));
 jest.mock('../hooks/useProfileQuery', () => ({ useProfileQuery: jest.fn() }));
 jest.mock('./useProfilePhotoMutation', () => ({ useProfilePhotoMutation: jest.fn() }));
-jest.mock('./registeredPhotoPreview', () => ({ useRegisteredPhotoPreview: jest.fn() }));
+jest.mock('./registeredPhotoPreview', () => ({ ...jest.requireActual('./registeredPhotoPreview'), useRegisteredPhotoPreview: jest.fn() }));
 jest.mock('@/src/components/common/Toast/ToastProvider', () => ({ useToast: jest.fn() }));
 jest.mock('@/src/store/useAuthStore', () => ({ useAuthStore: { getState: () => ({ userUuid: 'me', isLoggedIn: true }), subscribe: () => jest.fn() } }));
 jest.mock('@/src/utils/logger', () => ({ logger: { warn: jest.fn() } }));

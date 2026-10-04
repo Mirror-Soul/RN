@@ -15,10 +15,10 @@ import { logger } from '../utils/logger';
  */
 
 /** 내 채팅방 목록 조회 */
-export const getChatRooms = async (): Promise<ChatRoomListResponse> => {
+export const getChatRooms = async (signal?: AbortSignal): Promise<ChatRoomListResponse> => {
   logger.debug('getChatRooms');
   try {
-    const response = await apiClient.get<ChatRoomListResponse>('/chat/rooms');
+    const response = await (signal ? apiClient.get<ChatRoomListResponse>('/chat/rooms', { signal }) : apiClient.get<ChatRoomListResponse>('/chat/rooms'));
     logger.info('getChatRooms SUCCESS:', { count: response.data.result.rooms.length });
     return response.data;
   } catch (error: unknown) {
@@ -44,10 +44,10 @@ export const getChatMessages = async (
 };
 
 /** 채팅방 알림 설정 조회 */
-export const getNotificationSetting = async (roomId: number): Promise<NotificationSettingResponse> => {
+export const getNotificationSetting = async (roomId: number, signal?: AbortSignal): Promise<NotificationSettingResponse> => {
   logger.debug('getNotificationSetting:', { roomId });
   try {
-    const response = await apiClient.get<NotificationSettingResponse>(`/chat/rooms/${roomId}/notification`);
+    const response = await (signal ? apiClient.get<NotificationSettingResponse>(`/chat/rooms/${roomId}/notification`, { signal }) : apiClient.get<NotificationSettingResponse>(`/chat/rooms/${roomId}/notification`));
     logger.info('getNotificationSetting SUCCESS:', response.data);
     return response.data;
   } catch (error: unknown) {

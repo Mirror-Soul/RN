@@ -43,8 +43,9 @@ export const useCompleteVoiceTrainingMutation = () => {
       });
     },
     onSuccess: () => {
-      // 학습 완료 시 트윈 유사도가 바뀔 수 있으므로 재조회, 다음 낭독은 새 문장으로 진행되도록 무효화.
+      // 여기의 성공은 학습 작업 접수다. 소개·상태와 다음 낭독 문장을 갱신한다.
       queryClient.invalidateQueries({ queryKey: ['growth', 'twinSync'] });
+      queryClient.invalidateQueries({ queryKey: ['profile', 'introduction'] });
       queryClient.invalidateQueries({ queryKey: ['growth', 'voiceTrainingSentence'] });
     },
   });

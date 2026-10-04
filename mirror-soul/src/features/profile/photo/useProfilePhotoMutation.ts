@@ -102,7 +102,7 @@ export function useProfilePhotoMutation() {
         try { assertSession(); }
         catch (error) { await discardRegisteredPhotoPreview(localUri); throw error; }
         client.setQueryData<RegisteredPhotoPreview | null>(previewKey, localUri && url ? { uri: localUri, url } : null);
-        mergeProfilePhotoCache(client, url);
+        mergeProfilePhotoCache(client, url, userUuid);
         void discardRegisteredPhotoPreview(previousPreview?.uri);
         void client.invalidateQueries({ queryKey: ['profile', 'me'] });
         void client.invalidateQueries({ queryKey: ['profile', 'introduction'] });

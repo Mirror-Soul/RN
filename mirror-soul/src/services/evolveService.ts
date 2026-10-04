@@ -16,10 +16,12 @@ import { logger } from '../utils/logger';
  */
 
 /** 트윈 유사도(Sync Rate) 조회 */
-export const getTwinSync = async (): Promise<TwinSyncResponse> => {
+export const getTwinSync = async (signal?: AbortSignal): Promise<TwinSyncResponse> => {
   logger.debug('getTwinSync');
   try {
-    const response = await apiClient.get<TwinSyncResponse>('/evolve');
+    const response = await (signal
+      ? apiClient.get<TwinSyncResponse>('/evolve', { signal })
+      : apiClient.get<TwinSyncResponse>('/evolve'));
     logger.info('getTwinSync SUCCESS:', response.data);
     return response.data;
   } catch (error: unknown) {

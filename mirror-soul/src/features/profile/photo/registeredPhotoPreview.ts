@@ -31,3 +31,8 @@ export function useRegisteredPhotoPreview() {
     staleTime: Infinity,
   }).data;
 }
+
+/** 다운로드 서명만 갱신된 같은 객체에는 등록 직후 사본을 계속 사용할 수 있다. */
+export function registeredPhotoPreviewUri(preview: RegisteredPhotoPreview | null | undefined, url: string | null | undefined) {
+  return url && preview?.url.split('?')[0] === url.split('?')[0] ? preview.uri : null;
+}

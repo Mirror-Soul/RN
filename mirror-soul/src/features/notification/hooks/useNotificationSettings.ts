@@ -1,70 +1,65 @@
-import { useCallback } from 'react';
+import { useRef } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getAlarmSetting, modifyAlarmSetting } from '@/src/services/profileService';
 import type { AlarmSettingResult } from '@/src/types/api/profile';
-import { useNotificationStore } from '@/src/store/useNotificationStore';
 import { useAuthStore } from '@/src/store/useAuthStore';
+import { profileQueryKeys } from '@/src/features/profile/hooks/profileQueryKeys';
 import { useToast } from '@/src/components/common/Toast/ToastProvider';
 import { getErrorDisplayMessage } from '@/src/utils/apiErrorCode';
 
-/**
- * 알림 설정 훅
- *
- * timeLimitAlert(시간 소진 알림)는 GET/PATCH /my-page/alarm과 동기화되는 서버 상태라
- * react-query로 관리한다. missedCallNotificationEnabled는 FE에 토글 UI가 없는 숨김
- * 필드지만 PATCH 시 백엔드가 필수로 요구해 캐시의 현재 값을 그대로 함께 전송한다.
- * eventAlert는 백엔드에 대응 개념이 없어 useNotificationStore(로컬 전용)를 그대로 쓴다.
- */
+type AlarmField = keyof AlarmSettingResult;
+/** 서버의 두 알림 설정을 노출한다. 서버 계약이 없는 이벤트 수신 설정은 제공하지 않는다. */
 export const useNotificationSettings = () => {
-  const queryClient = useQueryClient();
+  const client = useQueryClient();
   const { showToast } = useToast();
-  const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
-  const eventAlert = useNotificationStore((s) => s.eventAlert);
-  const toggleEventAlert = useNotificationStore((s) => s.toggleEventAlert);
-
+  const userUuid = useAuthStore(s => s.userUuid);
+  const isLoggedIn = useAuthStore(s => s.isLoggedIn);
+  const lock = useRef(false);
   const query = useQuery({
-    queryKey: ['profile', 'alarmSettings'],
-    queryFn: async () => (await getAlarmSetting()).result,
+    queryKey: profileQueryKeys.alarmSettings(userUuid),
+    queryFn: async ({ signal }) => {
+      const session = useAuthStore.getState();
+      if (!userUuid || !session.isLoggedIn || session.userUuid !== userUuid) throw new Error('다시 로그인해 주세요.');
+      return (await getAlarmSetting(signal)).result;
+    },
     staleTime: 60_000,
-    enabled: isLoggedIn,
+    enabled: isLoggedIn && !!userUuid,
   });
-
   const mutation = useMutation({
-    mutationFn: (nextTimeLimitAlert: boolean) => {
-      // 캐시가 아직 없으면(조회 전) 숨김 필드값을 임의로 추측하지 않고 요청 자체를 막는다.
-      const current = queryClient.getQueryData<AlarmSettingResult>(['profile', 'alarmSettings']);
-      if (!current) {
-        return Promise.reject(new Error('알림 설정을 아직 불러오지 못했습니다.'));
-      }
+    onMutate: ({ userUuid }: { userUuid: string; field: AlarmField }) => client.cancelQueries({ queryKey: profileQueryKeys.alarmSettings(userUuid) }),
+    mutationFn: ({ userUuid, field }: { userUuid: string; field: AlarmField }) => {
+      const session = useAuthStore.getState();
+      if (!session.isLoggedIn || session.userUuid !== userUuid) throw new Error('다시 로그인해 주세요.');
+      const current = client.getQueryData<AlarmSettingResult>(profileQueryKeys.alarmSettings(userUuid));
+      if (!current) throw new Error('알림 설정을 먼저 불러와 주세요.');
       return modifyAlarmSetting({
-        lowTimeNotificationEnabled: nextTimeLimitAlert,
-        missedCallNotificationEnabled: current.missedCallNotificationEnabled,
+        lowTimeNotificationEnabled: field === 'lowTimeNotificationEnabled' ? !current.lowTimeNotificationEnabled : current.lowTimeNotificationEnabled,
+        missedCallNotificationEnabled: field === 'missedCallNotificationEnabled' ? !current.missedCallNotificationEnabled : current.missedCallNotificationEnabled,
       });
     },
-    onSuccess: (response) => {
-      queryClient.setQueryData(['profile', 'alarmSettings'], response.result);
+    onSuccess: async (response, { userUuid }) => {
+      if (useAuthStore.getState().userUuid !== userUuid || !useAuthStore.getState().isLoggedIn) return;
+      await client.cancelQueries({ queryKey: profileQueryKeys.alarmSettings(userUuid) });
+      if (useAuthStore.getState().isLoggedIn && useAuthStore.getState().userUuid === userUuid) client.setQueryData(profileQueryKeys.alarmSettings(userUuid), response.result);
     },
-    onError: (error) => {
-      showToast(getErrorDisplayMessage(error, '알림 설정 변경에 실패했습니다.'), 'error');
+    onError: (error, { userUuid }) => {
+      if (useAuthStore.getState().userUuid === userUuid) showToast(getErrorDisplayMessage(error, '알림 설정을 저장하지 못했어요.'), 'error');
     },
+    onSettled: () => { lock.current = false; },
   });
-
-  const timeLimitAlert = query.data?.lowTimeNotificationEnabled ?? true;
-
-  const handleToggleTimeLimit = useCallback(() => {
-    if (!query.data) return; // 조회 완료 전에는 토글 자체를 막는다.
-    mutation.mutate(!timeLimitAlert);
-  }, [mutation, timeLimitAlert, query.data]);
-
-  const handleToggleEvent = useCallback(() => {
-    toggleEventAlert();
-  }, [toggleEventAlert]);
-
+  const toggle = (field: AlarmField) => {
+    const session = useAuthStore.getState();
+    if (lock.current || !query.data || !userUuid || !session.isLoggedIn || session.userUuid !== userUuid) return;
+    lock.current = true;
+    mutation.mutate({ userUuid, field });
+  };
   return {
-    timeLimitAlert,
-    eventAlert,
-    handleToggleTimeLimit,
-    handleToggleEvent,
-    isTimeLimitLoading: query.isLoading || !query.data,
+    ...query,
+    timeLimitAlert: query.data?.lowTimeNotificationEnabled ?? false,
+    missedCallAlert: query.data?.missedCallNotificationEnabled ?? false,
+    handleToggleTimeLimit: () => toggle('lowTimeNotificationEnabled'),
+    handleToggleMissedCall: () => toggle('missedCallNotificationEnabled'),
+    isSaving: mutation.isPending,
+    savingField: mutation.isPending ? mutation.variables?.field : undefined,
   };
 };

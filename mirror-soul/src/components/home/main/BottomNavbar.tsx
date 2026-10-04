@@ -1,7 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import { Colors, FontFamily, Radii, FontSize, FontWeight, Spacing } from '@/src/constants/theme';
 import { BlurView } from 'expo-blur';
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
@@ -40,6 +40,7 @@ const TABS: TabItem[] = [
 interface BottomNavbarProps {
   activeTab?: BottomTabId;
   onTabPress?: (tab: BottomTabId) => void;
+  onObstructionHeightChange?: (height: number) => void;
 }
 
 /**
@@ -107,10 +108,15 @@ function TabItem({
  * 모든 메인 탭 화면에서 공유하는 부유형(Floating) 글래스모피즘 내비게이션 바.
  * 현재 활성 탭은 원형 액센트 배지로 강조합니다 (Common Navigation System 기준).
  */
-export default function BottomNavbar({ activeTab = 'discover', onTabPress }: BottomNavbarProps) {
+export default function BottomNavbar({ activeTab = 'discover', onTabPress, onObstructionHeightChange }: BottomNavbarProps) {
   const insets = useSafeAreaInsets();
   const { colors, isDark } = useThemeColors();
   const { sizeClass } = useLayout();
+  const [measuredHeight, setMeasuredHeight] = useState(0);
+
+  useEffect(() => {
+    if (measuredHeight > 0) onObstructionHeightChange?.(measuredHeight + insets.bottom + Spacing.lg);
+  }, [measuredHeight, insets.bottom, onObstructionHeightChange]);
 
   const handleTabPress = useCallback(
     (tab: BottomTabId) => onTabPress?.(tab),
@@ -118,7 +124,11 @@ export default function BottomNavbar({ activeTab = 'discover', onTabPress }: Bot
   );
 
   return (
-    <View style={[styles.wrapper, { maxWidth: NAV_BAR_MAX_WIDTH[sizeClass], bottom: insets.bottom + 16 }]}>
+    <View
+      pointerEvents="box-none"
+      onLayout={event => setMeasuredHeight(event.nativeEvent.layout.height)}
+      style={[styles.wrapper, { maxWidth: NAV_BAR_MAX_WIDTH[sizeClass], bottom: insets.bottom + Spacing.lg }]}
+    >
       {/* 그림자는 블러 클리핑(overflow: hidden)과 같은 레이어에 두면 안 보이므로 분리 */}
       <View style={[styles.shadowLayer, { shadowColor: colors.text.primary }]}>
         <BlurView

@@ -11,7 +11,10 @@ export const useRecommendationDetailQuery = (targetUserUuid: string | null) => {
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
   return useQuery({
     queryKey: ['home', 'recommendationDetail', targetUserUuid],
-    queryFn: async () => (await getRecommendationDetail(targetUserUuid!)).result,
+    queryFn: async () => {
+      if (!targetUserUuid) throw new Error('상대 프로필을 선택해 주세요.');
+      return (await getRecommendationDetail(targetUserUuid)).result;
+    },
     enabled: isLoggedIn && !!targetUserUuid,
     // 기본 재시도(3회)를 끈다 — RECOMMENDATION_TARGET_NOT_FOUND 등은 토큰 갱신으로 해결되지
     // 않는데, apiClient.ts 인터셉터가 401/403마다 매번 새로 토큰 갱신을 시도해서 재시도

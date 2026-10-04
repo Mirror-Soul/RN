@@ -18,7 +18,7 @@ export function useCallRecording() {
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const isRecordingRef = useRef(false);
 
-  const startRecording = async () => {
+  const startRecording = async ({ isCurrent = () => true, managesAudioSession = false }: { isCurrent?: () => boolean; managesAudioSession?: boolean } = {}) => {
     try {
       // 방어적 권한 확인: 이 훅이 독립적으로 재사용될 때도 안전하게 동작하도록 보장
       const { granted } = await AudioModule.getRecordingPermissionsAsync();
@@ -26,16 +26,20 @@ export function useCallRecording() {
         throw new Error('마이크 녹음 권한이 없습니다. 통화 시작 전 권한을 요청해주세요.');
       }
 
-      // iOS AVAudioSession을 녹음 가능 모드로 설정 (안전망: useAICallFlow에서 선행 설정되지만
-      // 이 훅이 독립적으로 재사용될 경우를 대비해 방어적으로 한 번 더 설정한다).
+      if (!isCurrent()) return;
+
+      // 독립 녹음에서만 Expo가 세션을 설정한다. 통화 중에는 InCallManager가 관리한다.
       // iOS 전용 — Android에서는 이 호출이 AudioManager.MODE_NORMAL을 강제해 InCallManager가
       // 막 설정한 MODE_IN_COMMUNICATION을 되돌려버리므로(통화 음량 저하 원인), 절대 무해하지
       // 않다. Android 오디오 라우팅은 InCallManager가 전담하도록 여기서는 스킵한다.
-      if (Platform.OS === 'ios') {
+      if (Platform.OS === 'ios' && !managesAudioSession) {
         await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
       }
 
+      if (!isCurrent()) return;
       await recorder.prepareToRecordAsync();
+      // 녹음 준비 중 통화가 종료됐으면 새 녹음을 시작하지 않는다.
+      if (!isCurrent()) { await recorder.stop(); return; }
       recorder.record();
       isRecordingRef.current = true;
       logger.debug('[useCallRecording] Recording started');

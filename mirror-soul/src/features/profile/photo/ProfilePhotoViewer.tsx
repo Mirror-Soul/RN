@@ -7,8 +7,8 @@ import { FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constant
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { PROFILE_PHOTO_ASPECT } from './photoGeometry';
 
-export function ProfilePhotoViewer({ uri, previewUri, name, onClose, onChange, onDelete, disabled = false }: {
-  uri: string; previewUri?: string | null; name: string; onClose: () => void; onChange: () => void; onDelete: () => void; disabled?: boolean;
+export function ProfilePhotoViewer({ uri, previewUri, name, onClose, onChange, onDelete, onRetry, disabled = false }: {
+  uri: string; previewUri?: string | null; name: string; onClose: () => void; onChange: () => void; onDelete: () => void; onRetry?: () => void; disabled?: boolean;
 }) {
   const { colors } = useThemeColors();
   const insets = useSafeAreaInsets();
@@ -42,6 +42,7 @@ export function ProfilePhotoViewer({ uri, previewUri, name, onClose, onChange, o
     activeAttempt.current += 1;
     setAttempt(activeAttempt.current);
     setState('loading');
+    onRetry?.();
   };
   return (
     <Modal visible={visible} animationType={Platform.OS === 'ios' ? 'fade' : 'none'} onDismiss={finishClose} onRequestClose={() => close()}>

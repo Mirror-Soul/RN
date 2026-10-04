@@ -95,10 +95,10 @@ export default function CallControls({
             disabled={isEnding}
             activeOpacity={0.8}
             accessibilityRole="button"
-            accessibilityLabel={isSpeakerOn ? '스피커 끄기' : '스피커로 통화 (한뼘통화)'}
+            accessibilityLabel={isSpeakerOn ? '자동 출력으로 전환 (이어폰 우선)' : '스피커로 통화'}
             accessibilityState={{ selected: isSpeakerOn }}
           >
-            <Ionicons name={isSpeakerOn ? 'volume-high' : 'volume-mute'} size={22} color={iconColor} />
+            <Ionicons name={isSpeakerOn ? 'volume-high' : 'headset-outline'} size={22} color={iconColor} />
           </TouchableOpacity>
         </BlurView>
 

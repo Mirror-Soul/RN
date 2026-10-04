@@ -22,7 +22,7 @@ const ok = (result: unknown) => ({ isSuccess: true, result });
 let client: QueryClient;
 function setup() {
   client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity }, mutations: { retry: false, gcTime: Infinity } } });
-  client.setQueryData(['profile', 'me'], { name: '소울', email: 'a@b.com', profileImageUrl: 'old' });
+  client.setQueryData(['profile', 'me', 'me'], { name: '소울', email: 'a@b.com', profileImageUrl: 'old' });
   return renderHook(() => useProfilePhotoMutation(), { wrapper: ({ children }: React.PropsWithChildren) => <QueryClientProvider client={client}>{children}</QueryClientProvider> });
 }
 beforeEach(() => {
@@ -54,7 +54,7 @@ it('does not treat a preview copy failure as a failed server registration', asyn
   const { result } = setup();
   await act(async () => { expect(await result.current.save(photo)).toBe(url); });
   expect(client.getQueryData(registeredPhotoPreviewKey('me'))).toBeNull();
-  expect(client.getQueryData(['profile', 'me'])).toHaveProperty('profileImageUrl', url);
+  expect(client.getQueryData(['profile', 'me', 'me'])).toHaveProperty('profileImageUrl', url);
 });
 
 it('removes the previous local copy on replacement and on deletion', async () => {
@@ -76,7 +76,7 @@ it('discards a copied preview if the account changes while copying it', async ()
   await act(async () => { await expect(result.current.save(photo)).rejects.toThrow('로그인 상태'); });
   expect(client.getQueryData(registeredPhotoPreviewKey('me'))).toBeUndefined();
   expect(FileSystem.deleteAsync).toHaveBeenCalledWith(expect.stringMatching(/^file:\/\/\/cache\/registered-profile-/), { idempotent: true });
-  expect(client.getQueryData(['profile', 'me'])).toHaveProperty('profileImageUrl', 'old');
+  expect(client.getQueryData(['profile', 'me', 'me'])).toHaveProperty('profileImageUrl', 'old');
 });
 afterEach(() => client?.clear());
 
@@ -86,14 +86,14 @@ it('uploads first, connects the key, and preserves account fields', async () => 
   expect(getPresignedUrl).toHaveBeenCalledWith({ fileName: 'profile.jpg', contentType: 'image/jpeg', directory: 'profile-images' });
   expect(uploadFileToS3).toHaveBeenCalledWith('signed-put', photo.uri, 'image/jpeg', expect.any(Function));
   expect((uploadFileToS3 as jest.Mock).mock.invocationCallOrder[0]).toBeLessThan((modifyProfileImage as jest.Mock).mock.invocationCallOrder[0]);
-  expect(client.getQueryData(['profile', 'me'])).toEqual({ name: '소울', email: 'a@b.com', profileImageUrl: url });
+  expect(client.getQueryData(['profile', 'me', 'me'])).toEqual({ name: '소울', email: 'a@b.com', profileImageUrl: url });
 });
 it('does not PATCH after a failed PUT and keeps the old photo', async () => {
   (uploadFileToS3 as jest.Mock).mockRejectedValue(new Error('PUT failed'));
   const { result } = setup();
   await act(async () => { await expect(result.current.save(photo)).rejects.toThrow('PUT failed'); });
   expect(modifyProfileImage).not.toHaveBeenCalled();
-  expect(client.getQueryData(['profile', 'me'])).toHaveProperty('profileImageUrl', 'old');
+  expect(client.getQueryData(['profile', 'me', 'me'])).toHaveProperty('profileImageUrl', 'old');
 });
 it('retries only PATCH after a failed connection', async () => {
   (modifyProfileImage as jest.Mock).mockRejectedValueOnce(new Error('PATCH failed')).mockResolvedValueOnce(ok({ profileImageUrl: url }));
@@ -109,7 +109,7 @@ it('recognizes a successful PATCH whose response was lost', async () => {
   (getMyProfile as jest.Mock).mockResolvedValue(ok({ profileImageUrl: `${url}?signature=abc` }));
   const { result } = setup();
   await act(async () => { await result.current.save(photo); });
-  expect(client.getQueryData(['profile', 'me'])).toHaveProperty('profileImageUrl', `${url}?signature=abc`);
+  expect(client.getQueryData(['profile', 'me', 'me'])).toHaveProperty('profileImageUrl', `${url}?signature=abc`);
 });
 it('blocks a second save before React rerenders', async () => {
   let finish!: () => void;
@@ -132,14 +132,14 @@ it('does not connect an old upload after logout', async () => {
   const { result } = setup();
   await act(async () => { await expect(result.current.save(photo)).rejects.toThrow('로그인 상태'); });
   expect(modifyProfileImage).not.toHaveBeenCalled();
-  expect(client.getQueryData(['profile', 'me'])).toHaveProperty('profileImageUrl', 'old');
+  expect(client.getQueryData(['profile', 'me', 'me'])).toHaveProperty('profileImageUrl', 'old');
 });
 it('deletes without uploading and restores the default avatar', async () => {
   const { result } = setup();
   await act(async () => { await result.current.remove(); });
   expect(deleteProfileImage).toHaveBeenCalledTimes(1);
   expect(uploadFileToS3).not.toHaveBeenCalled();
-  expect(client.getQueryData(['profile', 'me'])).toHaveProperty('profileImageUrl', null);
+  expect(client.getQueryData(['profile', 'me', 'me'])).toHaveProperty('profileImageUrl', null);
 });
 it('rejects a file over 5 MiB before requesting an upload URL', async () => {
   (FileSystem.getInfoAsync as jest.Mock).mockResolvedValue({ exists: true, isDirectory: false, size: 5 * 1024 * 1024 + 1 });

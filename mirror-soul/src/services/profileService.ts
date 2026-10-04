@@ -22,11 +22,13 @@ import { logger } from '../utils/logger';
  */
 
 /** 마이페이지 진입 - 이름/이메일 조회 */
-export const getMyProfile = async (): Promise<MyProfileResponse> => {
+export const getMyProfile = async (signal?: AbortSignal): Promise<MyProfileResponse> => {
   logger.debug('getMyProfile');
   try {
-    const response = await apiClient.get<MyProfileResponse>('/my-page');
-    logger.info('getMyProfile SUCCESS:', response.data);
+    const response = await (signal
+      ? apiClient.get<MyProfileResponse>('/my-page', { signal })
+      : apiClient.get<MyProfileResponse>('/my-page'));
+    logger.info('getMyProfile SUCCESS');
     return response.data;
   } catch (error: unknown) {
     logger.error('getMyProfile ERROR:', { message: error instanceof Error ? error.message : String(error) });
@@ -35,11 +37,13 @@ export const getMyProfile = async (): Promise<MyProfileResponse> => {
 };
 
 /** 내 소개 상세 조회 — 추천 상세와 유사한 표시 필드를 본인 기준으로 반환한다. */
-export const getMyIntroduction = async (): Promise<MyIntroductionResponse> => {
+export const getMyIntroduction = async (signal?: AbortSignal): Promise<MyIntroductionResponse> => {
   logger.debug('getMyIntroduction');
   try {
-    const response = await apiClient.get<MyIntroductionResponse>('/my-page/profile');
-    logger.info('getMyIntroduction SUCCESS:', response.data);
+    const response = await (signal
+      ? apiClient.get<MyIntroductionResponse>('/my-page/profile', { signal })
+      : apiClient.get<MyIntroductionResponse>('/my-page/profile'));
+    logger.info('getMyIntroduction SUCCESS');
     return response.data;
   } catch (error: unknown) {
     logger.error('getMyIntroduction ERROR:', { message: error instanceof Error ? error.message : String(error) });
@@ -99,10 +103,10 @@ export const buyTime = async (seconds: number): Promise<TimeStatusResponse> => {
 };
 
 /** 음성 및 오디오 설정 조회 */
-export const getAudioSettings = async (): Promise<AudioSettingsResponse> => {
+export const getAudioSettings = async (signal?: AbortSignal): Promise<AudioSettingsResponse> => {
   logger.debug('getAudioSettings');
   try {
-    const response = await apiClient.get<AudioSettingsResponse>('/my-page/audio-settings');
+    const response = await (signal ? apiClient.get<AudioSettingsResponse>('/my-page/audio-settings', { signal }) : apiClient.get<AudioSettingsResponse>('/my-page/audio-settings'));
     logger.info('getAudioSettings SUCCESS:', response.data);
     return response.data;
   } catch (error: unknown) {
@@ -125,10 +129,10 @@ export const updateAudioSettings = async (data: AudioSettingsRequest): Promise<A
 };
 
 /** 알림 설정 조회 */
-export const getAlarmSetting = async (): Promise<AlarmSettingResponse> => {
+export const getAlarmSetting = async (signal?: AbortSignal): Promise<AlarmSettingResponse> => {
   logger.debug('getAlarmSetting');
   try {
-    const response = await apiClient.get<AlarmSettingResponse>('/my-page/alarm');
+    const response = await (signal ? apiClient.get<AlarmSettingResponse>('/my-page/alarm', { signal }) : apiClient.get<AlarmSettingResponse>('/my-page/alarm'));
     logger.info('getAlarmSetting SUCCESS:', response.data);
     return response.data;
   } catch (error: unknown) {
@@ -151,10 +155,10 @@ export const modifyAlarmSetting = async (data: AlarmSettingRequest): Promise<Ala
 };
 
 /** 계정관리 조회 (닉네임) */
-export const getAccountInfo = async (): Promise<AccountInfoResponse> => {
+export const getAccountInfo = async (signal?: AbortSignal): Promise<AccountInfoResponse> => {
   logger.debug('getAccountInfo');
   try {
-    const response = await apiClient.get<AccountInfoResponse>('/my-page/account');
+    const response = await (signal ? apiClient.get<AccountInfoResponse>('/my-page/account', { signal }) : apiClient.get<AccountInfoResponse>('/my-page/account'));
     logger.info('getAccountInfo SUCCESS:', response.data);
     return response.data;
   } catch (error: unknown) {
