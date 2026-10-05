@@ -13,6 +13,7 @@ import { ToastProvider } from '@/src/components/common/Toast/ToastProvider';
 import { useProactiveTokenRefresh } from '@/src/hooks/useProactiveTokenRefresh';
 import { usePushNotificationSetup } from '@/src/features/push/hooks/usePushNotificationSetup';
 import { useChatRealtimeConnection } from '@/src/features/chat/hooks/useChatRealtimeConnection';
+import { getAuthRedirect } from '@/src/features/auth/onboardingResume';
 
 /**
  * hydration 완료 전까지 스플래시 화면 유지.
@@ -47,26 +48,10 @@ function ChatRealtimeSetup() {
   return null;
 }
 
-// 백엔드 확정 전 임시 온보딩 라우트 매핑
-const getOnboardingRoute = (status: string | null) => {
-  switch (status) {
-    case 'ONBOARD_A': return '/signup/profile';
-    case 'ONBOARD_B': return '/signup/express';
-    case 'ONBOARD_C': return '/signup/interview';
-    case 'ONBOARD_D': return '/signup/face-scan';
-    default:          return '/signup';
-  }
-};
-
-const isPublicAuthRoute = (pathname: string) =>
-  pathname === '/login' ||
-  pathname === '/forgot-password' ||
-  pathname.startsWith('/signup');
-
 function RootLayout() {
   const rootNavigationState = useRootNavigationState();
   const pathname = usePathname();
-  const { isHydrated, isLoggedIn, userStatus, hydrate } = useAuthStore();
+  const { isHydrated, isLoggedIn, userStatus, needsOnboardingResume, hydrate } = useAuthStore();
 
   // 앱 첫 실행 시 SecureStore에서 토큰 복구
   useEffect(() => {
@@ -90,36 +75,12 @@ function RootLayout() {
     if (!isHydrated || !rootNavigationState?.key) return;
 
     const timer = setTimeout(() => {
-      if (isLoggedIn) {
-        if (userStatus === 'ACTIVE') {
-          // 로그인 화면(인증 전 전용 경로)에 남아있을 때만 메인으로 옮긴다 — 그렇지 않으면
-          // 예: 알림 없이 /chat/{id}로 직접 들어온 콜드 스타트(딥링크)를 이 effect가 매번
-          // /(main)으로 덮어써버린다. usePushNotificationSetup의 100ms 보정은 알림 응답이
-          // 있을 때만 동작하므로, 일반 딥링크는 여기서 직접 현재 경로를 지켜줘야 한다.
-          if (isPublicAuthRoute(pathname)) {
-            router.replace('/(main)');
-          }
-        } else if (userStatus?.startsWith('ONBOARD_')) {
-          const onboardingRoute = getOnboardingRoute(userStatus);
-          // 현재 상태가 허용하는 단계에 이미 있다면 재진입시키지 않는다. 재진입은
-          // 화면의 로컬 폼 상태를 초기화하고, 입력 중이던 값을 잃게 만든다.
-          if (pathname !== onboardingRoute) {
-            router.replace(onboardingRoute);
-          }
-        }
-      } else {
-        // (main) 그룹의 홈 탭도 파일명이 index라 로그인 화면을 "/"에 두면 두 화면이
-        // 같은 경로를 두고 충돌해 로그아웃 후에도 홈 화면에 머무는 버그가 생긴다.
-        // 로그인·회원가입·비밀번호 찾기는 로그인 전에도 접근 가능해야 한다.
-        // 그 밖의 경로만 로그인 화면으로 보낸다.
-        if (!isPublicAuthRoute(pathname)) {
-          router.replace('/login');
-        }
-      }
+      const destination = getAuthRedirect({ isLoggedIn, userStatus, pathname, needsOnboardingResume });
+      if (destination) router.replace(destination);
     }, 0);
 
     return () => clearTimeout(timer);
-  }, [isHydrated, isLoggedIn, userStatus, rootNavigationState?.key, pathname]);
+  }, [isHydrated, isLoggedIn, userStatus, needsOnboardingResume, rootNavigationState?.key, pathname]);
 
   // hydration 전: null 반환 (SplashScreen이 화면을 가림)
   if (!isHydrated) return null;

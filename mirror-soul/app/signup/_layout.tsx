@@ -1,6 +1,7 @@
 import OnboardingSteps from '@/src/components/signup/common/OnboardingSteps';
 import SignupBackground from '@/src/components/signup/steps/Step1_Account/SignupBackground';
 import { SIGNUP_STEP_MAP } from '@/src/constants/routes/signupRoutes';
+import { ONBOARDING_RESUME_ROUTE } from '@/src/features/auth/onboardingResume';
 import { Spacing } from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { useLayout } from '@/src/hooks/useLayout';
@@ -25,11 +26,11 @@ export default function SignupLayout() {
       <SignupBackground />
 
       <View style={styles.container}>
-        <ScrollView style={styles.stepsScroll} contentContainerStyle={styles.stepsContent} keyboardShouldPersistTaps="handled" nestedScrollEnabled>
+        {pathname !== ONBOARDING_RESUME_ROUTE && <ScrollView style={styles.stepsScroll} contentContainerStyle={styles.stepsContent} keyboardShouldPersistTaps="handled" nestedScrollEnabled>
           <View style={[styles.stepsWrapper, contentContainerStyle, { paddingHorizontal: screenPadding, borderBottomColor: colors.border.primary }]}>
             <OnboardingSteps currentStep={getCurrentStep()} />
           </View>
-        </ScrollView>
+        </ScrollView>}
 
         {/* 하위 페이지(index, profile 등)가 렌더링될 영역 */}
         <Slot />

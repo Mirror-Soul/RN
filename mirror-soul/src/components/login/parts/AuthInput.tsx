@@ -1,130 +1,49 @@
-import React, { forwardRef, useCallback, useState } from 'react';
-import {
-  ReturnKeyTypeOptions,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-import {Colors, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
-import EmailIcon from '@/assets/images/common/login/login_email.svg';
-import PasswordIcon from '@/assets/images/common/login/login_password.svg';
-import SeePasswordIcon from '@/assets/images/common/login/login_SeePassword.svg';
+import React, { forwardRef, useState } from 'react';
+import { Pressable, ReturnKeyTypeOptions, StyleSheet, TextInput, View } from 'react-native';
+import { Feather } from '@expo/vector-icons';
+import { FontFamily, FontSize, Radii, Spacing } from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface AuthInputProps {
-  type: 'email' | 'password';
-  value: string;
-  onChangeText: (text: string) => void;
-  placeholder?: string;
-  /** 에러 상태 시 빨간 테두리 표시 */
-  hasError?: boolean;
-  /** 완료 키 입력 시 다음 필드 포커스 또는 제출 */
-  onSubmitEditing?: () => void;
-  /** 키보드 완료 키 타입 ('next' | 'done') */
-  returnKeyType?: ReturnKeyTypeOptions;
+  type: 'email' | 'password'; value: string; onChangeText: (text: string) => void;
+  placeholder?: string; hasError?: boolean; onSubmitEditing?: () => void;
+  returnKeyType?: ReturnKeyTypeOptions; editable?: boolean; newPassword?: boolean;
+  accessibilityLabel?: string;
+  appearance?: 'default' | 'plain';
 }
-
-/**
- * AuthInput 컴포넌트
- * 이메일 및 비밀번호 입력 인풋.
- *
- * - forwardRef로 부모에서 ref 제어 가능 (필드 간 포커스 이동)
- * - isFocused 상태에 따른 Cyan 테두리 glow
- * - hasError 시 red 테두리
- * - 비밀번호 표시/숨기기 토글
- */
-const AuthInput = forwardRef<TextInput, AuthInputProps>(
-  (
-    {
-      type,
-      value,
-      onChangeText,
-      placeholder,
-      hasError = false,
-      onSubmitEditing,
-      returnKeyType,
-    },
-    ref,
-  ) => {
-    const { colors } = useThemeColors();
-    const [isFocused, setIsFocused] = useState(false);
-    const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-
-    const isPassword = type === 'password';
-    const Icon = isPassword ? PasswordIcon : EmailIcon;
-
-    const handleFocus = useCallback(() => setIsFocused(true), []);
-    const handleBlur = useCallback(() => setIsFocused(false), []);
-    const handleToggleVisibility = useCallback(
-      () => setIsPasswordVisible((prev) => !prev),
-      [],
-    );
-
-    // 우선순위: 에러 > 포커스 > 기본
-    const borderColor = hasError
-      ? 'rgba(251, 44, 54, 0.60)'
-      : isFocused
-        ? Colors.primary.electricCyan
-        : colors.border.primary;
-
-    return (
-      <View style={[styles.container, { borderBottomColor: borderColor }]}>
-        <Icon width={18} height={18} />
-
-        <TextInput
-          ref={ref}
-          style={[styles.input, { color: colors.text.primary }]}
-          value={value}
-          onChangeText={onChangeText}
-          placeholder={placeholder}
-          placeholderTextColor={colors.text.muted}
-          secureTextEntry={isPassword && !isPasswordVisible}
-          autoCapitalize="none"
-          autoCorrect={false}
-          keyboardType={type === 'email' ? 'email-address' : 'default'}
-          textContentType={type === 'email' ? 'emailAddress' : 'password'}
-          returnKeyType={returnKeyType}
-          onSubmitEditing={onSubmitEditing}
-          onFocus={handleFocus}
-          onBlur={handleBlur}
-          accessibilityLabel={type === 'email' ? '이메일 입력' : '비밀번호 입력'}
-        />
-
-        {isPassword && (
-          <TouchableOpacity
-            onPress={handleToggleVisibility}
-            accessibilityRole="button"
-            accessibilityLabel={isPasswordVisible ? '비밀번호 숨기기' : '비밀번호 보기'}
-            accessibilityState={{ selected: isPasswordVisible }}
-            hitSlop={{ top: Spacing.md, bottom: Spacing.md, left: Spacing.md, right: Spacing.md }}
-          >
-            <SeePasswordIcon width={18} height={18} />
-          </TouchableOpacity>
-        )}
-      </View>
-    );
-  },
-);
-
+const AuthInput = forwardRef<TextInput, AuthInputProps>(({
+  type, value, onChangeText, placeholder, hasError = false, onSubmitEditing, returnKeyType, editable = true, newPassword = false, accessibilityLabel, appearance = 'default',
+}, ref) => {
+  const { colors } = useThemeColors();
+  const [focused, setFocused] = useState(false);
+  const [passwordVisible, setPasswordVisible] = useState(false);
+  const password = type === 'password';
+  const plain = appearance === 'plain';
+  return <View style={[styles.container, plain && styles.plain, { backgroundColor: plain ? 'transparent' : colors.background.card, borderColor: hasError ? colors.state.danger : focused ? colors.brand.accent : plain ? 'transparent' : colors.border.primary }]}>
+    {!plain && <Feather accessible={false} name={password ? 'lock' : 'mail'} size={18} color={colors.text.secondary} />}
+    <TextInput ref={ref} style={[styles.input, { color: colors.text.primary }]}
+      value={value} onChangeText={onChangeText} placeholder={placeholder} placeholderTextColor={colors.text.muted}
+      editable={editable} secureTextEntry={password && !passwordVisible} autoCapitalize="none" autoCorrect={false}
+      keyboardType={password ? 'default' : 'email-address'}
+      textContentType={password ? newPassword ? 'newPassword' : 'password' : 'username'}
+      autoComplete={password ? newPassword ? 'new-password' : 'current-password' : 'username'}
+      returnKeyType={returnKeyType} onSubmitEditing={onSubmitEditing}
+      submitBehavior={returnKeyType === 'next' ? 'submit' : 'blurAndSubmit'}
+      onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
+      underlineColorAndroid="transparent" accessibilityLabel={accessibilityLabel ?? (password ? '비밀번호 입력' : '이메일 입력')}
+      accessibilityHint={hasError ? '입력 내용을 확인해주세요.' : undefined} />
+    {password && <Pressable onPress={() => setPasswordVisible(previous => !previous)} disabled={!editable}
+      accessibilityRole="button" accessibilityLabel={passwordVisible ? '비밀번호 숨기기' : '비밀번호 보기'}
+      accessibilityState={{ selected: passwordVisible, disabled: !editable }} style={styles.visibility}>
+      <Feather name={passwordVisible ? 'eye-off' : 'eye'} size={20} color={colors.text.secondary} />
+    </Pressable>}
+  </View>;
+});
 AuthInput.displayName = 'AuthInput';
-
 export default AuthInput;
-
 const styles = StyleSheet.create({
-  container: {
-    width: '100%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-    borderBottomWidth: 1,
-    paddingBottom: 12,
-  },
-  input: {
-    flex: 1,
-    padding: 0,
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.md,
-    fontWeight: FontWeight.regular,
-  },
+  container: { minHeight: 56, flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, borderWidth: 1, borderRadius: Radii.md, paddingLeft: Spacing.md, paddingRight: Spacing.xs },
+  plain: { minHeight: 52, borderWidth: 0, borderBottomWidth: 1, borderRadius: 0, paddingLeft: 0, paddingRight: 0 },
+  input: { flex: 1, minWidth: 0, paddingVertical: Spacing.md, paddingHorizontal: 0, fontFamily: FontFamily.sans, fontSize: FontSize.lg, lineHeight: 24 },
+  visibility: { minWidth: 48, minHeight: 48, alignItems: 'center', justifyContent: 'center' },
 });

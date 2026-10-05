@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 import { Alert } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { getAuthEntryEmail } from '../onboardingResume';
 import { useCountdown } from '@/src/hooks/useCountdown';
 import { isValidEmail, isValidPassword } from '@/src/utils/validation';
 import { sendPasswordResetCode, verifyPasswordResetCode, resetPassword } from '@/src/services/authService';
@@ -41,7 +42,8 @@ const INITIAL_STATE: ForgotPasswordState = {
 
 export function useForgotPasswordFlow() {
   const router = useRouter();
-  const [state, setState] = useState<ForgotPasswordState>(INITIAL_STATE);
+  const { email } = useLocalSearchParams<{ email?: string }>();
+  const [state, setState] = useState<ForgotPasswordState>(() => ({ ...INITIAL_STATE, email: getAuthEntryEmail(email) }));
   const [verifyAttemptCount, setVerifyAttemptCount] = useState(0);
   const { timeLeft, isActive: isTimerActive, start: startTimer, reset: resetTimer, formattedTime } = useCountdown(180);
 
@@ -142,12 +144,12 @@ export function useForgotPasswordFlow() {
       await resetPassword({ newPassword: state.newPassword, newPasswordConfirm: state.newPasswordConfirm });
       // reset 응답엔 토큰이 없어 자동 로그인은 불가 — 로그인 화면으로 돌려보낸다.
       Alert.alert('비밀번호 재설정 완료', '새 비밀번호로 로그인해주세요.', [
-        { text: '확인', onPress: () => router.replace('/login') },
+        { text: '확인', onPress: () => router.replace({ pathname: '/login', params: { email: state.email, notice: 'password-reset' } }) },
       ]);
     } catch (error) {
       updateState({ isLoading: false, passwordError: getErrorDisplayMessage(error, '비밀번호 재설정에 실패했습니다.') });
     }
-  }, [state.isLoading, state.newPassword, state.newPasswordConfirm, updateState, router]);
+  }, [state.isLoading, state.email, state.newPassword, state.newPasswordConfirm, updateState, router]);
 
   return {
     state,

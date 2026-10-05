@@ -4,6 +4,7 @@ import { logger } from '../utils/logger';
 import { queryClient } from '../services/queryClient';
 
 import { isTokenExpired } from '../utils/jwtUtils';
+import { getOnboardingStage } from '../features/auth/onboardingResume';
 
 interface AuthState {
   isHydrated: boolean; 
@@ -11,9 +12,13 @@ interface AuthState {
   accessToken: string | null;
   userUuid: string | null;
   userStatus: string | null;
+  /** UI hints only; server status is always rechecked by logging in. */
+  hasInterruptedSignup: boolean;
+  needsOnboardingResume: boolean;
   
   hydrate: () => Promise<void>;
-  login: (data: { accessToken: string, refreshToken: string, userUuid: string, userStatus: string }) => Promise<void>;
+  login: (data: { accessToken: string, refreshToken: string, userUuid: string, userStatus: string }, options?: { showOnboardingResume: boolean }) => Promise<void>;
+  continueOnboarding: () => void;
   updateUserStatus: (userStatus: string) => Promise<void>;
   updateToken: (newAccessToken: string, newRefreshToken?: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -25,6 +30,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   accessToken: null,
   userUuid: null,
   userStatus: null,
+  hasInterruptedSignup: false,
+  needsOnboardingResume: false,
 
   hydrate: async () => {
     logger.debug('useAuthStore: Starting hydration...');
@@ -40,7 +47,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         // 이 경로는 performLogout()을 거치지 않으므로 react-query 캐시가 남아있을 수 있다 —
         // 다음 로그인 사용자에게 이전 세션의 캐시된 데이터가 잠깐 보이는 것을 막기 위해 직접 비운다.
         queryClient.clear();
-        set({ isHydrated: true, isLoggedIn: false, accessToken: null, userUuid: null, userStatus: null });
+        set({ isHydrated: true, isLoggedIn: false, accessToken: null, userUuid: null, userStatus: null, hasInterruptedSignup: !!userUuid && !!getOnboardingStage(userStatus), needsOnboardingResume: false });
         return;
       }
 
@@ -66,16 +73,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  login: async (data) => {
+  login: async (data, options) => {
     logger.info('useAuthStore: Logging in...', { userUuid: data.userUuid, userStatus: data.userStatus });
     await tokenStorage.saveTokens(data.accessToken, data.refreshToken, data.userUuid, data.userStatus);
-    set({ isLoggedIn: true, ...data });
+    set({ isLoggedIn: true, ...data, hasInterruptedSignup: false, needsOnboardingResume: !!options?.showOnboardingResume && !!getOnboardingStage(data.userStatus) });
   },
+
+  continueOnboarding: () => set({ needsOnboardingResume: false }),
 
   updateUserStatus: async (userStatus) => {
     // 다음 화면으로 이동하기 전에 메모리 상태를 먼저 갱신해야 전역 라우팅 가드가
     // 이전 단계로 되돌리는 레이스가 생기지 않는다.
-    set({ userStatus });
+    set({ userStatus, needsOnboardingResume: false });
     try {
       await tokenStorage.saveUserStatus(userStatus);
     } catch (error) {
@@ -109,6 +118,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   logout: async () => {
     logger.info('useAuthStore: Logging out');
+    const hasInterruptedSignup = get().hasInterruptedSignup || !!getOnboardingStage(get().userStatus);
     try {
       await tokenStorage.clearAll();
     } catch (error) {
@@ -117,7 +127,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       logger.error('useAuthStore: tokenStorage.clearAll failed during logout', error);
     } finally {
       // clearAll()이 실패하더라도 메모리 상태는 반드시 초기화 (라우팅 가드 작동 보장)
-      set({ isLoggedIn: false, accessToken: null, userUuid: null, userStatus: null });
+      set({ isLoggedIn: false, accessToken: null, userUuid: null, userStatus: null, hasInterruptedSignup, needsOnboardingResume: false });
     }
   }
 }));
