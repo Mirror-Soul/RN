@@ -120,6 +120,7 @@ const styles = StyleSheet.create({
   /** leftContent 사용 시 flex:1 으로 빈 공간을 모두 채움 */
   leftContentArea: {
     flex: 1,
+    minWidth: 0,
     paddingLeft: Spacing.md,
   },
   emptySlot: {

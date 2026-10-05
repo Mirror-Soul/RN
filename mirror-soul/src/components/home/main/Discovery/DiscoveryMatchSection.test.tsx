@@ -65,7 +65,7 @@ beforeEach(() => {
 
 it('shows the real empty API result and requires explicit opt-in for development examples', () => {
   mockQuery.recommendations = [];
-  const screen = render(<DiscoveryMatchSection isMatchingEnabled />);
+  const screen = render(<DiscoveryMatchSection />);
   expect(screen.getByText('추천할 상대가 아직 없어요')).toBeTruthy();
   expect(screen.queryByText(MOCK_RECOMMENDATIONS[0].name)).toBeNull();
   fireEvent.press(screen.getByLabelText('개발용 디자인 예시 보기'));
@@ -74,14 +74,29 @@ it('shows the real empty API result and requires explicit opt-in for development
   expect(mockSwipe).not.toHaveBeenCalled();
 });
 
-it('permits browsing with exposure off; next records PASS and previous does not undo server history', () => {
-  const screen = render(<DiscoveryMatchSection isMatchingEnabled={false} />);
+it('records PASS on next and does not undo server history on previous', () => {
+  const screen = render(<DiscoveryMatchSection />);
   expect(screen.getByText(actual[0].name)).toBeTruthy();
   expect(screen.queryByText(/분석 중|매칭 확률/)).toBeNull();
   expect(screen.getByLabelText('이전 프로필')).toBeDisabled();
   fireEvent.press(screen.getByLabelText('다음 프로필'));
   expect(mockSwipe).toHaveBeenCalledWith(actual[0].userUuid);
   expect(screen.getByText(actual[1].name)).toBeTruthy();
+  fireEvent.press(screen.getByLabelText('이전 프로필'));
+  expect(screen.getByText(actual[0].name)).toBeTruthy();
+  expect(mockSwipe).toHaveBeenCalledTimes(1);
+});
+
+it('keeps accessible navigation without swipe instructions or ordinal labels', () => {
+  const screen = render(<DiscoveryMatchSection />);
+  expect(screen.queryByText('밀어서 둘러보기')).toBeNull();
+  expect(screen.queryByText(/번째/)).toBeNull();
+  expect(screen.queryByText('이전')).toBeNull();
+  expect(screen.queryByText('다음')).toBeNull();
+  expect(screen.getByLabelText('이전 프로필')).toBeDisabled();
+  act(() => mockCardCallbacks.onPass());
+  expect(screen.getByText(actual[1].name)).toBeTruthy();
+  expect(screen.getByLabelText('이전 프로필')).toBeEnabled();
   fireEvent.press(screen.getByLabelText('이전 프로필'));
   expect(screen.getByText(actual[0].name)).toBeTruthy();
   expect(mockSwipe).toHaveBeenCalledTimes(1);
@@ -95,7 +110,7 @@ it('locks concurrent refreshes and keeps the selected profile after a failed ref
         finish = resolve;
       }),
   );
-  const screen = render(<DiscoveryMatchSection isMatchingEnabled />);
+  const screen = render(<DiscoveryMatchSection />);
   fireEvent.press(screen.getByLabelText('다음 프로필'));
   fireEvent.press(screen.getByLabelText('추천 목록 새로고침'));
   fireEvent.press(screen.getByLabelText('추천 목록 새로고침'));
@@ -107,7 +122,7 @@ it('locks concurrent refreshes and keeps the selected profile after a failed ref
 });
 
 it('ignores a delayed swipe callback after the next button has already changed the profile', () => {
-  const screen = render(<DiscoveryMatchSection isMatchingEnabled />);
+  const screen = render(<DiscoveryMatchSection />);
   const previousCardSwipe = mockCardCallbacks.onPass;
   fireEvent.press(screen.getByLabelText('다음 프로필'));
   act(() => previousCardSwipe());
@@ -118,7 +133,7 @@ it('ignores a delayed swipe callback after the next button has already changed t
 it('does not loop prefetch after a failure and offers retry for the failed next page', async () => {
   mockQuery.hasNextPage = true;
   mockQuery.isFetchNextPageError = true;
-  const screen = render(<DiscoveryMatchSection isMatchingEnabled />);
+  const screen = render(<DiscoveryMatchSection />);
   expect(mockFetchNextPage).not.toHaveBeenCalled();
   fireEvent.press(screen.getByLabelText('다음 프로필'));
   fireEvent.press(screen.getByLabelText('다음 프로필'));

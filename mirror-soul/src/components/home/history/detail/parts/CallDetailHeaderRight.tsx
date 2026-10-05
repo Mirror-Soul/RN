@@ -1,60 +1,44 @@
-import React from 'react';
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useCallback, useEffect, useRef } from 'react';
+import { ActivityIndicator, View, TouchableOpacity, StyleSheet, useWindowDimensions } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { Radii, Spacing } from '@/src/constants/theme';
-import { useThemeColors } from '@/src/hooks/useThemeColors';
+import type { HistoryMenuAnchor } from '../historyMenuLayout';
+import { useMatchingDesign } from '@/src/features/match/components/MatchingDesign';
 
 interface CallDetailHeaderRightProps {
   onCallPress: () => void;
   onMorePress: () => void;
+  callDisabled?: boolean;
+  callBusy?: boolean;
+  menuExpanded?: boolean;
+  onMenuAnchorChange?: (anchor: HistoryMenuAnchor) => void;
 }
 
-/**
- * 통화 상세 헤더 우측 슬롯 — 통화/더보기 버튼.
- * MessageRoomHeaderRight.tsx와 동일한 구조(공용 Header의 rightElement로 전달).
- * 핸들러는 부모(call-detail.tsx)가 주입 — 실제 기능이 아직 없으면 "곧 제공" 안내로 연결한다.
- */
-export default function CallDetailHeaderRight({ onCallPress, onMorePress }: CallDetailHeaderRightProps) {
-  const { colors } = useThemeColors();
-
-  return (
-    <View style={styles.container}>
-      <TouchableOpacity
-        style={[styles.iconButton, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
-        onPress={onCallPress}
-        activeOpacity={0.7}
-        accessibilityRole="button"
-        accessibilityLabel="통화"
-        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-      >
-        <Feather name="phone" size={16} color={colors.text.primary} />
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={[styles.iconButton, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
-        onPress={onMorePress}
-        activeOpacity={0.7}
-        accessibilityRole="button"
-        accessibilityLabel="더보기"
-        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-      >
-        <Feather name="more-vertical" size={16} color={colors.text.primary} />
-      </TouchableOpacity>
-    </View>
-  );
+/** Target and native call lifecycle remain in the screen; each control has its own touch area. */
+export default function CallDetailHeaderRight({ onCallPress, onMorePress, callDisabled = false, callBusy = false, menuExpanded = false, onMenuAnchorChange }: CallDetailHeaderRightProps) {
+  const { colors, palette } = useMatchingDesign();
+  const menuRef = useRef<View>(null);
+  const { width, height, fontScale } = useWindowDimensions();
+  const measureMenu = useCallback(() => menuRef.current?.measureInWindow((x, y, measuredWidth, measuredHeight) => {
+    if (measuredWidth > 0 && measuredHeight > 0) onMenuAnchorChange?.({ x, y, width: measuredWidth, height: measuredHeight });
+  }), [onMenuAnchorChange]);
+  useEffect(() => {
+    const frame = requestAnimationFrame(measureMenu);
+    return () => cancelAnimationFrame(frame);
+  }, [width, height, fontScale, menuExpanded, measureMenu]);
+  const sharedStyle = { backgroundColor: colors.background.glass, borderColor: colors.border.primary };
+  return <View style={styles.container}>
+    <TouchableOpacity style={[styles.iconButton, { ...sharedStyle, opacity: callDisabled || callBusy ? 0.45 : 1 }]}
+      onPress={onCallPress} disabled={callDisabled || callBusy} activeOpacity={0.7}
+      accessibilityRole="button" accessibilityLabel="상대의 AI 트윈과 통화" accessibilityState={{ disabled: callDisabled || callBusy, busy: callBusy }}>
+      {callBusy ? <ActivityIndicator size="small" color={palette.cyanInk} /> : <Feather name="phone" size={20} color={colors.text.primary} />}
+    </TouchableOpacity>
+    <View ref={menuRef} collapsable={false} onLayout={measureMenu}><TouchableOpacity style={[styles.iconButton, sharedStyle, menuExpanded && { backgroundColor: palette.coolTint, borderColor: palette.softBorder }]} onPress={onMorePress} activeOpacity={0.7}
+      accessibilityRole="button" accessibilityLabel="통화 기록 메뉴" accessibilityState={{ expanded: menuExpanded }}>
+      <Feather name="menu" size={20} color={colors.text.primary} />
+    </TouchableOpacity></View>
+  </View>;
 }
-
 const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  iconButton: {
-    width: 36,
-    height: 36,
-    borderRadius: Radii.full,
-    borderWidth: 0.612,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+  container: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  iconButton: { width: 48, height: 48, borderRadius: 16, borderWidth: StyleSheet.hairlineWidth, justifyContent: 'center', alignItems: 'center' },
 });

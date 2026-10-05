@@ -1,9 +1,10 @@
-import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { useWeeklySummaryQuery } from '@/src/features/history/hooks/useWeeklySummaryQuery';
+import { useLayout } from '@/src/hooks/useLayout';
 
 /**
  * HistoryStatsRow 컴포넌트 (SRP)
@@ -16,6 +17,9 @@ import { useWeeklySummaryQuery } from '@/src/features/history/hooks/useWeeklySum
 export default function HistoryStatsRow() {
   const { colors } = useThemeColors();
   const { data, isLoading, isError, refetch } = useWeeklySummaryQuery();
+  const { fontScale } = useWindowDimensions();
+  const { contentWidth, screenPadding } = useLayout();
+  const [measuredWidth, setMeasuredWidth] = useState<number | null>(null);
 
   if (isError) {
     return (
@@ -32,7 +36,18 @@ export default function HistoryStatsRow() {
     );
   }
 
-  const totalHours = data ? Math.round((data.totalTalkTimeSec / 3600) * 10) / 10 : null;
+  const totalSeconds = !isLoading && data && Number.isSafeInteger(data.totalTalkTimeSec) && data.totalTalkTimeSec >= 0
+    ? data.totalTalkTimeSec : null;
+  const hours = totalSeconds === null ? '--' : Math.floor(totalSeconds / 3600);
+  const minutes = totalSeconds === null ? '--' : Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds === null ? '--' : totalSeconds % 60;
+  // Keep the original number size; reserve enough space before placing counts beside it.
+  const durationDigits = String(hours).length + String(minutes).length + String(seconds).length;
+  const countDigits = !data || isLoading ? 4 : String(data.receivedCallCount).padStart(2, '0').length + String(data.sentCallCount).padStart(2, '0').length;
+  const durationWidth = (durationDigits * 30 * 0.7 + 4 * FontSize.sm + 2 * Spacing.sm) * fontScale;
+  const countsWidth = countDigits * FontSize.base * 0.7 * fontScale + 24 + 2 * Spacing.xxs + Spacing.xl + Spacing.sm;
+  const availableWidth = measuredWidth ?? contentWidth - 2 * screenPadding - 2 * Spacing.xl - 2;
+  const stackCounts = fontScale > 1.3 || availableWidth < durationWidth + countsWidth + 2 * Spacing.xl + 1;
   const trend =
     data && data.comparable && data.changeRate !== null && data.trend !== 'NO_DATA'
       ? {
@@ -59,20 +74,21 @@ export default function HistoryStatsRow() {
       </View>
 
       {/* 하단: 시간 + 구분선 + 카운트 */}
-      <View style={styles.bottomRow}>
+      <View onLayout={event => setMeasuredWidth(event.nativeEvent.layout.width)} style={[styles.bottomRow, stackCounts && styles.stackedBottomRow]}>
         {/* 누적 대화 시간 */}
-        <View style={styles.hoursBlock}>
+        <View style={[styles.hoursBlock, stackCounts && styles.stackedHoursBlock]} accessible accessibilityLabel={totalSeconds === null ? '누적 대화 시간 확인 중' : `누적 대화 시간 ${hours}시간 ${minutes}분 ${seconds}초`}>
           <View style={styles.hoursValueRow}>
-            <Text style={[styles.hoursNumber, { color: colors.text.primary }]}>
-              {isLoading || totalHours === null ? '--' : totalHours}
+            <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.25} style={[styles.hoursNumber, { color: colors.text.primary }]}>
+              {hours}<Text style={[styles.hoursUnit, { color: colors.text.muted }]}>시간</Text>{' '}
+              {minutes}<Text style={[styles.hoursUnit, { color: colors.text.muted }]}>분</Text>{' '}
+              {seconds}<Text style={[styles.hoursUnit, { color: colors.text.muted }]}>초</Text>
             </Text>
-            <Text style={[styles.hoursUnit, { color: colors.text.muted }]}>시간</Text>
           </View>
           <Text style={[styles.hoursLabel, { color: colors.text.muted }]}>누적 대화 시간</Text>
         </View>
 
         {/* 수직 구분선 */}
-        <View style={[styles.verticalDivider, { backgroundColor: colors.border.primary }]} />
+        <View style={[styles.verticalDivider, stackCounts && styles.horizontalDivider, { backgroundColor: colors.border.primary }]} />
 
         {/* 받음/보냄 카운트 */}
         <View style={styles.countsBlock}>
@@ -125,6 +141,8 @@ const styles = StyleSheet.create({
   },
   topRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.xs,
     alignItems: 'center',
     justifyContent: 'space-between',
   },
@@ -150,15 +168,18 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     gap: Spacing.xl,
   },
+  stackedBottomRow: { flexDirection: 'column', alignItems: 'stretch' },
+  stackedHoursBlock: { flex: 0 },
+  horizontalDivider: { width: '100%', height: StyleSheet.hairlineWidth },
   hoursBlock: {
     flex: 1,
+    minWidth: 0,
     flexDirection: 'column',
     gap: Spacing.xxs,
   },
   hoursValueRow: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: Spacing.xs,
+    alignItems: 'baseline',
   },
   hoursNumber: {
     fontFamily: FontFamily.sans,
@@ -166,11 +187,13 @@ const styles = StyleSheet.create({
     fontWeight: FontWeight.black as any,
     letterSpacing: -1,
     lineHeight: 34,
+    flexShrink: 1,
   },
   hoursUnit: {
     fontFamily: FontFamily.sans,
     fontSize: FontSize.sm,
     fontWeight: FontWeight.regular,
+    letterSpacing: 0,
     marginBottom: 2,
   },
   hoursLabel: {
@@ -186,6 +209,7 @@ const styles = StyleSheet.create({
   },
   countsBlock: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     alignItems: 'center',
     gap: Spacing.xl,
     paddingLeft: Spacing.sm,

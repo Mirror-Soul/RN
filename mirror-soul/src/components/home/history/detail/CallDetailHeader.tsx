@@ -3,6 +3,7 @@ import { Header } from '@/src/components/common/Header';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import CallDetailHeaderLeft from './parts/CallDetailHeaderLeft';
 import CallDetailHeaderRight from './parts/CallDetailHeaderRight';
+import type { HistoryMenuAnchor } from './historyMenuLayout';
 
 interface CallDetailHeaderProps {
   name: string;
@@ -13,6 +14,10 @@ interface CallDetailHeaderProps {
   onBack?: () => void;
   onCallPress: () => void;
   onMorePress: () => void;
+  callDisabled?: boolean;
+  callBusy?: boolean;
+  menuExpanded?: boolean;
+  onMenuAnchorChange?: (anchor: HistoryMenuAnchor) => void;
 }
 
 /**
@@ -29,6 +34,10 @@ export default function CallDetailHeader({
   onBack,
   onCallPress,
   onMorePress,
+  callDisabled,
+  callBusy,
+  menuExpanded,
+  onMenuAnchorChange,
 }: CallDetailHeaderProps) {
   const { colors } = useThemeColors();
 
@@ -42,7 +51,7 @@ export default function CallDetailHeader({
           callNumber={callNumber}
         />
       }
-      rightElement={<CallDetailHeaderRight onCallPress={onCallPress} onMorePress={onMorePress} />}
+      rightElement={<CallDetailHeaderRight onCallPress={onCallPress} onMorePress={onMorePress} callDisabled={callDisabled} callBusy={callBusy} menuExpanded={menuExpanded} onMenuAnchorChange={onMenuAnchorChange} />}
       onBackPress={onBack}
       borderBottomColor={colors.border.primary}
     />

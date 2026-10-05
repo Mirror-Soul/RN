@@ -1,3 +1,4 @@
+import { BrowseIcon } from '@/src/components/home/common/BrowseIcon';
 import { Feather } from '@expo/vector-icons';
 import {
   FontFamily,
@@ -14,29 +15,25 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   StyleSheet,
-  Text,
   TouchableOpacity,
-  useWindowDimensions,
   View,
 } from 'react-native';
 import Animated, {
   FadeIn,
-  FadeOut,
   useSharedValue,
 } from 'react-native-reanimated';
-import DiscoveryMatchCard, { SWIPE_DISTANCE_RATIO } from './DiscoveryMatchCard';
-import DiscoveryStackPeek from './DiscoveryStackPeek';
+import DiscoveryMatchCard from './DiscoveryMatchCard';
 import { shouldPrefetchNextPage } from './discoveryPagination';
 import { MOCK_RECOMMENDATIONS } from './mockRecommendations';
 import { useRefreshCooldown } from './useRefreshCooldown';
 import AiStatusTicker from '../AiStatusTicker';
+import { useMatchingDesign } from '@/src/features/match/components/MatchingDesign';
+import { BrowseText as Text } from '@/src/components/home/common/BrowseText';
 
 interface DiscoveryMatchSectionProps {
   onPass?: (userUuid: string) => void;
   onConnect?: (match: Recommendation) => void;
   onOpenDetail?: (match: Recommendation) => void;
-  isMatchingEnabled?: boolean | null;
-  isMatchingStatusError?: boolean;
 }
 
 /**
@@ -48,11 +45,9 @@ export default function DiscoveryMatchSection({
   onPass,
   onConnect,
   onOpenDetail,
-  isMatchingEnabled,
-  isMatchingStatusError,
 }: DiscoveryMatchSectionProps) {
   const { colors } = useThemeColors();
-  const { width } = useWindowDimensions();
+  const { palette } = useMatchingDesign();
   const {
     recommendations,
     isLoading,
@@ -74,8 +69,7 @@ export default function DiscoveryMatchSection({
   // 백엔드가 멱등하게 처리해 중복 호출 비용이 없지만(useSwipeMutation.ts 참고), currentIndex는
   // 함수형 업데이터라 중복 호출 시 그대로 2 증가해 카드 한 장을 건너뛴다. 그걸 막기 위한 락이다.
   const passInFlightUuidRef = useRef<string | null>(null);
-  // DiscoveryMatchCard(위 카드)와 DiscoveryStackPeek(뒤 카드)이 공유하는 드래그 값 —
-  // 여기서 만들어야 다음 카드가 "위 카드를 얼마나 드래그했는지"에 실시간으로 반응할 수 있다.
+  // Keep the current card's drag state outside its mount so navigation can reset it.
   const translateX = useSharedValue(0);
 
   // 실제 추천이 0건일 때만(개발 빌드 한정) 카드 디자인을 눈으로 확인할 수 있도록 목업으로 대체한다.
@@ -92,8 +86,6 @@ export default function DiscoveryMatchSection({
   const currentMatch = displayRecommendations[currentIndex];
   const displayedUuidRef = useRef<string | undefined>(undefined);
   displayedUuidRef.current = currentMatch?.userUuid;
-  // 카드 바로 뒤에 살짝 보이는 다음 후보 — 장식용이라 없으면(마지막 카드) 그냥 안 보여준다.
-  const nextMatch = displayRecommendations[currentIndex + 1];
 
   // 남은 카드가 얼마 없으면 다 소진되기 전에 다음 페이지를 미리 당겨온다
   useEffect(() => {
@@ -140,7 +132,7 @@ export default function DiscoveryMatchSection({
     setCurrentIndex((prev) => prev + 1);
   };
 
-  // 왼쪽 스와이프(이전 후보로) — 순수 로컬 위치 이동이라 서버 스와이프 기록을 남기지
+  // 오른쪽 스와이프(이전 후보로) — 순수 로컬 위치 이동이라 서버 스와이프 기록을 남기지
   // 않는다(패스 기록을 되돌리는 백엔드 API가 없기도 하고, "다시 한번 보기"일 뿐이라
   // 굳이 되돌릴 필요도 없다). 첫 번째 카드보다 더 앞으로는 못 간다.
   const handleGoBack = () => {
@@ -173,10 +165,7 @@ export default function DiscoveryMatchSection({
   const refreshHeader = (
     <View style={styles.sectionHeader}>
       <View style={styles.sectionHeaderLeading}>
-        <AiStatusTicker
-          isMatchingEnabled={isMatchingEnabled}
-          isError={isMatchingStatusError}
-        />
+        <AiStatusTicker />
         {usingMockData ? (
           <Text style={[styles.mockLabel, { color: colors.text.secondary }]}>
             디자인 예시
@@ -198,11 +187,8 @@ export default function DiscoveryMatchSection({
         {isFetching ? (
           <ActivityIndicator size="small" color={colors.text.muted} />
         ) : (
-          <Feather name="refresh-cw" size={13} color={colors.text.muted} />
+          <BrowseIcon name="arrows-clockwise" size={20} color={colors.text.secondary} />
         )}
-        <Text style={[styles.refreshText, { color: colors.text.muted }]}>
-          새로고침
-        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -317,7 +303,7 @@ export default function DiscoveryMatchSection({
               style={styles.navigationButton}
             >
               <Text
-                style={[styles.navigationText, { color: colors.brand.accent }]}
+                style={[styles.navigationText, { color: palette.accentInk }]}
               >
                 다시 불러오기
               </Text>
@@ -349,17 +335,9 @@ export default function DiscoveryMatchSection({
     <View style={styles.container}>
       {refreshHeader}
       <View style={styles.stack}>
-        {nextMatch && (
-          <DiscoveryStackPeek
-            match={nextMatch}
-            translateX={translateX}
-            swipeThreshold={width * SWIPE_DISTANCE_RATIO}
-          />
-        )}
         <Animated.View
           key={currentMatch.userUuid}
-          entering={FadeIn.duration(300)}
-          exiting={FadeOut.duration(200)}
+          entering={FadeIn.duration(180)}
         >
           <DiscoveryMatchCard
             match={currentMatch}
@@ -382,26 +360,20 @@ export default function DiscoveryMatchSection({
           style={[
             styles.navigationButton,
             {
-              backgroundColor: colors.background.card,
-              borderColor: colors.border.primary,
+              backgroundColor: palette.secondaryButton,
+              borderColor: palette.buttonBorder,
+              borderWidth: 1,
             },
             currentIndex === 0 && { opacity: 0.4 },
           ]}
         >
-          <Feather
-            name="chevron-left"
+          <BrowseIcon
+            name="caret-left"
             size={18}
             color={colors.text.secondary}
           />
-          <Text
-            style={[styles.navigationText, { color: colors.text.secondary }]}
-          >
-            이전
-          </Text>
         </TouchableOpacity>
-        <Text style={[styles.position, { color: colors.text.secondary }]}>
-          {currentIndex + 1}번째 프로필
-        </Text>
+
         <TouchableOpacity
           accessibilityRole="button"
           accessibilityLabel="다음 프로필"
@@ -409,18 +381,14 @@ export default function DiscoveryMatchSection({
           style={[
             styles.navigationButton,
             {
-              backgroundColor: colors.background.card,
-              borderColor: colors.border.primary,
+              backgroundColor: palette.secondaryButton,
+              borderColor: palette.buttonBorder,
+              borderWidth: 1,
             },
           ]}
         >
-          <Text
-            style={[styles.navigationText, { color: colors.text.secondary }]}
-          >
-            다음
-          </Text>
-          <Feather
-            name="chevron-right"
+          <BrowseIcon
+            name="caret-right"
             size={18}
             color={colors.text.secondary}
           />
@@ -434,8 +402,6 @@ const styles = StyleSheet.create({
   container: {
     alignSelf: 'stretch',
   },
-  // DiscoveryStackPeek이 absoluteFillObject로 이 컨테이너 기준으로 배치되므로
-  // position:relative가 필요하다 — 실제 크기는 안쪽 카드(비절대배치)가 정해준다.
   stack: {
     position: 'relative',
   },
@@ -443,7 +409,7 @@ const styles = StyleSheet.create({
     width: '100%',
     minHeight: 220,
     paddingVertical: Spacing.xxxl,
-    borderRadius: Radii.xxl,
+    borderRadius: Radii.lg,
     borderWidth: 1,
     justifyContent: 'center',
     alignItems: 'center',
@@ -453,14 +419,11 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontFamily: FontFamily.sans,
     fontSize: FontSize.lg,
-    fontWeight: FontWeight.black,
-  },
-  emptySubtitle: {
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.bold,
+    fontWeight: FontWeight.semibold,
+    lineHeight: 26,
     textAlign: 'center',
   },
+  emptySubtitle: { fontFamily: FontFamily.sans, fontSize: FontSize.base, lineHeight: 23, textAlign: 'center' },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -468,34 +431,22 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
     marginBottom: Spacing.sm,
   },
-  sectionHeaderLeading: {
-    flex: 1,
-    minWidth: 0,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-  },
-  mockLabel: {
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.bold,
-  },
+  sectionHeaderLeading: { flex: 1, minWidth: 0, alignItems: 'flex-start', gap: Spacing.xs },
+  mockLabel: { fontFamily: FontFamily.sans, fontSize: FontSize.sm, lineHeight: 20, fontWeight: FontWeight.medium },
   refreshButton: {
     minHeight: 48,
-    minWidth: 48,
+    width: 48,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: Spacing.xxs,
     paddingHorizontal: Spacing.sm,
     paddingVertical: Spacing.xxs,
   },
-  refreshText: {
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.bold,
-  },
+
   navigation: {
-    marginTop: Spacing.md,
+    marginTop: Spacing.sm,
+    justifyContent: 'center',
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.sm,
@@ -506,21 +457,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.xs,
-    paddingHorizontal: Spacing.md,
-    borderWidth: 1,
+    minWidth: 48,
+    paddingHorizontal: Spacing.sm,
     borderRadius: Radii.full,
+    paddingVertical: Spacing.sm,
   },
   navigationText: {
     fontFamily: FontFamily.sans,
     fontSize: FontSize.base,
     lineHeight: 22,
     fontWeight: FontWeight.medium,
+    flexShrink: 1,
   },
-  position: {
-    flex: 1,
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.sm,
-    lineHeight: 18,
-    textAlign: 'center',
-  },
+
 });

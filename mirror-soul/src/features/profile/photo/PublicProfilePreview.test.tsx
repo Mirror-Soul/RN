@@ -7,6 +7,9 @@ let mockProfile = { ...introductionPreview, userUuid: 'me', profileImageUrl: 'ht
 let mockLocalPreview: { url: string; uri: string } | null = null;
 const mockOwnRefetch = jest.fn();
 const mockOtherRefetch = jest.fn();
+// Own-profile previews never render call/refill flows or access their authenticated APIs.
+jest.mock('@/src/components/call/CallStartConfirmSheet', () => () => null);
+jest.mock('@/src/features/profile/components/TimeRefillBottomSheet', () => ({ TimeRefillBottomSheet: () => null }));
 jest.mock('../hooks/useIntroductionQuery', () => ({ useIntroductionQuery: () => ({ data: mockProfile, isPreview: false, refetch: mockOwnRefetch }) }));
 jest.mock('@/src/utils/logger', () => ({ logger: { warn: jest.fn(), info: jest.fn(), error: jest.fn(), debug: jest.fn() } }));
 jest.mock('@/src/store/useAuthStore', () => ({ useAuthStore: jest.fn() }));

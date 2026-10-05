@@ -19,7 +19,7 @@ export const useCallDetail = (callId: number) => {
     queryKey,
     queryFn: async () => (await getTalkLogs(callId)).result,
     staleTime: 30_000,
-    enabled: isLoggedIn && Number.isFinite(callId),
+    enabled: isLoggedIn && Number.isSafeInteger(callId) && callId > 0,
   });
 
   const mutation = useMutation({
@@ -45,6 +45,7 @@ export const useCallDetail = (callId: number) => {
   return {
     data: query.data,
     isLoading: query.isLoading,
+    isFetching: query.isFetching,
     isError: query.isError,
     refetch: query.refetch,
     updateTalkLog: (talkLogId: number, message: string): Promise<TalkLogResponse> =>

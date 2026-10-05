@@ -1,24 +1,22 @@
-import AvailableTimeCard from '@/src/components/home/main/AvailableTimeCard';
+import DiscoverySettingsBar from '@/src/components/home/main/DiscoverySettingsBar';
 import DiscoveryMatchSection from '@/src/components/home/main/Discovery/DiscoveryMatchSection';
 import PartnerProfileModal from '@/src/components/home/main/Discovery/PartnerProfileModal';
 import CallStartConfirmSheet, {
   CallTarget,
 } from '@/src/components/call/CallStartConfirmSheet';
-import LocationFilterBar from '@/src/components/home/main/LocationFilterBar';
 import MainHeader from '@/src/components/home/main/MainHeader';
 import ProfileQuickActionSheet from '@/src/components/home/main/ProfileQuickActionSheet';
 import MatchingActiveStatus from '@/src/components/home/match/parts/MatchingActiveStatus';
-import { Layout, Spacing } from '@/src/constants/theme';
+import { Layout, Radii, Spacing } from '@/src/constants/theme';
 import { MAIN_ROUTES } from '@/src/constants/routes/mainRoutes';
 import { useLayout } from '@/src/hooks/useLayout';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { performLogout } from '@/src/services/authService';
 import { TimeRefillBottomSheet } from '@/src/features/profile/components/TimeRefillBottomSheet';
 import { usePreferredRegionQuery } from '@/src/features/home/hooks/usePreferredRegionQuery';
-import { useMatchingStatus } from '@/src/features/home/hooks/useMatchingStatus';
 import type { Recommendation } from '@/src/types/api/home';
 import { logger } from '@/src/utils/logger';
-import React, { useCallback, useContext, useRef, useState } from 'react';
+import React, { useCallback, useContext, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FloatingTabBarInsetContext } from '@/src/components/common/FloatingTabBarInsetContext';
@@ -48,12 +46,6 @@ export default function MainHomeScreen() {
   const [callCandidate, setCallCandidate] = useState<Recommendation | null>(
     null,
   );
-  // 상세 모달의 닫힘 애니메이션이 끝난 뒤 통화 시작 시트를 열어, 두 native Modal이
-  // 잠깐 겹쳐 보이는 전환을 피한다.
-  const pendingCallCandidateRef = useRef<Recommendation | null>(null);
-  // 추천 노출 컨트롤과 목록이 같은 계정별 쿼리를 구독하므로 중복 요청은 없다.
-  const { matchingEnabled, isError: isMatchingStatusError } =
-    useMatchingStatus();
 
   const {
     data: preferredRegion,
@@ -94,14 +86,6 @@ export default function MainHomeScreen() {
     router.push('/(main)/profile-settings');
   }, []);
 
-  const handleConnectNow = useCallback((match: Recommendation) => {
-    logger.debug('Call requested from profile detail', {
-      matchId: match.userUuid,
-    });
-    pendingCallCandidateRef.current = match;
-    setSelectedMatch(null);
-  }, []);
-
   const handleConnectPress = useCallback((match: Recommendation) => {
     logger.debug('Call requested from discovery card', {
       matchId: match.userUuid,
@@ -109,16 +93,10 @@ export default function MainHomeScreen() {
     setCallCandidate(match);
   }, []);
 
-  const handleProfileModalDismiss = useCallback(() => {
-    const pendingMatch = pendingCallCandidateRef.current;
-    if (!pendingMatch) return;
-    pendingCallCandidateRef.current = null;
-    setCallCandidate(pendingMatch);
-  }, []);
-
   const handleStartCall = useCallback(
     (match: CallTarget, isPreview: boolean, remainingSeconds?: number) => {
       setCallCandidate(null);
+      setSelectedMatch(null);
       // BottomSheet의 닫힘 애니메이션을 먼저 끝내야 새 화면을 native Modal이 덮지 않는다.
       setTimeout(() => {
         router.push(
@@ -177,41 +155,35 @@ export default function MainHomeScreen() {
           contentContainerStyle,
           {
             paddingTop: Math.max(insets.top + 12, Layout.SCREEN_PADDING),
-            paddingHorizontal: screenPadding,
+            paddingLeft: screenPadding + insets.left,
+            paddingRight: screenPadding + insets.right,
           },
         ]}
       >
-        {/* 그룹 1: 헤더(매칭 상태 배지 포함) */}
+        {/* The tab header stays aligned with the other main tabs. */}
         <View style={styles.groupSpacer}>
           <MainHeader onAvatarPress={() => setShowQuickActions(true)} />
-          <MatchingActiveStatus compact />
         </View>
 
-        {/* 그룹 2: 내 계정/탐색 설정 — 시간충전 + 지역설정. 바로 아래(그룹3과의 경계)만
-            다른 그룹 경계보다 조금 좁게 둬서 "탐색 지역 아래 간격이 넓다"는 지적을 반영한다. */}
-        <View style={[styles.group, styles.groupAccountSpacer]}>
-          <AvailableTimeCard onRefillPress={() => setShowRefillModal(true)} />
-
-          <LocationFilterBar
-            selectedLocations={
-              preferredRegion ? [preferredRegion.eupmyeondongName] : []
-            }
-            nearbyCount={preferredRegion?.includedRegionIds.length}
-            isLoading={isPreferredRegionLoading}
-            isError={isPreferredRegionError}
-            onRetry={() => refetchPreferredRegion()}
-            onPress={() => router.push('/discovery-region-settings')}
-          />
-        </View>
+        <DiscoverySettingsBar
+          regionName={preferredRegion?.eupmyeondongName}
+          nearbyCount={preferredRegion?.includedRegionIds.length}
+          isRegionLoading={isPreferredRegionLoading || (preferredRegion === undefined && !isPreferredRegionError)}
+          isRegionError={isPreferredRegionError}
+          onRefillPress={() => setShowRefillModal(true)}
+          onRegionRetry={() => { void refetchPreferredRegion(); }}
+          onRegionPress={() => router.push('/discovery-region-settings')}
+        />
 
         {/* 그룹 3: 추천 상태/새로고침 + 카드 + 액션 푸터 */}
         <View style={[styles.group, styles.groupSpacer]}>
           <DiscoveryMatchSection
             onConnect={handleConnectPress}
             onOpenDetail={handleOpenDetail}
-            isMatchingEnabled={matchingEnabled}
-            isMatchingStatusError={isMatchingStatusError}
           />
+        </View>
+        <View style={[styles.preferences, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
+          <MatchingActiveStatus compact />
         </View>
       </Animated.View>
 
@@ -231,8 +203,7 @@ export default function MainHomeScreen() {
       <PartnerProfileModal
         match={selectedMatch}
         onClose={() => setSelectedMatch(null)}
-        onDismiss={handleProfileModalDismiss}
-        onConnectNow={handleConnectNow}
+        onStartCall={handleStartCall}
       />
 
       <CallStartConfirmSheet
@@ -255,19 +226,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingBottom: 140, // Floating BottomNavbar 높이만큼 여유 공간 확보
   },
-  // 그룹별로 아래쪽 간격이 서로 달라(그룹2만 더 좁게) 균일 gap 대신 그룹마다
-  // marginBottom을 개별로 준다 — 마지막 그룹(SoulConnectTip)은 여백이 필요 없다.
-  dashboard: {},
+  dashboard: { gap: Spacing.lg },
   // 그룹 내부는 좁게(12px) 붙여서 하나의 덩어리로 읽히게 한다.
   group: {
     alignSelf: 'stretch',
     gap: Spacing.md,
   },
   groupSpacer: {
-    marginBottom: Layout.SCREEN_PADDING,
+    marginBottom: 0,
   },
-  // 탐색 지역 바로 아래(그룹2→그룹3 경계)만 기본 간격(24px)보다 조금 좁게(20px).
-  groupAccountSpacer: {
-    marginBottom: Spacing.xl,
-  },
+  preferences: { borderWidth: 1, borderRadius: Radii.lg, overflow: 'hidden' },
 });

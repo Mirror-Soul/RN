@@ -1,154 +1,67 @@
 import React from 'react';
-import {FontFamily, Colors, FontSize, FontWeight, Radii, Spacing} from '@/src/constants/theme';
+import { Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { BrowseText as Text } from '@/src/components/home/common/BrowseText';
+import { BrowseIcon } from '@/src/components/home/common/BrowseIcon';
+import { useMatchingDesign } from '@/src/features/match/components/MatchingDesign';
+import { TimeRefillOptionData, formatRefillPrice, getTimeRefillSavings } from '../constants/timeRefillOptions';
 
-import { ActivityIndicator, View, Text, StyleSheet, Pressable } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
-import { TimeRefillOptionData } from '../constants/timeRefillOptions';
-import { usePressAnimation } from '../hooks/useProfileAnimations';
-import { useThemeColors } from '@/src/hooks/useThemeColors';
-
-interface TimeRefillOptionProps {
+export function TimeRefillOption({ option, selected = false, onPress, disabled = false }: {
   option: TimeRefillOptionData;
-  delay?: number;
+  selected?: boolean;
   onPress?: () => void;
-  /** 이 옵션이 구매 진행 중인지 여부 — true면 가격 자리에 스피너를 보여준다. */
-  isLoading?: boolean;
-  /** 다른 옵션이 구매 진행 중이라 이 옵션을 비활성화해야 하는지 여부. */
   disabled?: boolean;
+}) {
+  const { colors, palette } = useMatchingDesign();
+  const { width, fontScale } = useWindowDimensions();
+  const savings = getTimeRefillSavings(option);
+  const stacked = width < 350 || fontScale > 1.3;
+  return (
+    <Pressable accessibilityRole="radio" accessibilityLabel={`${option.addedTime}, 가격 예시 ${formatRefillPrice(option.priceWon)}`}
+      accessibilityState={{ checked: selected, disabled }} disabled={disabled} onPress={onPress}
+      style={({ pressed }) => [styles.card, {
+        backgroundColor: selected ? palette.secondaryButton : colors.background.card,
+        borderColor: selected ? palette.buttonBorder : colors.border.primary,
+        opacity: disabled ? 0.6 : pressed ? 0.8 : 1,
+      }]}>
+      <View style={[styles.row, stacked && styles.stacked]}>
+        <View style={styles.identity}>
+          <BrowseIcon name={selected ? 'check-circle' : 'circle'} size={24} color={selected ? palette.cyanInk : colors.text.muted} />
+          <View style={styles.copy}>
+            <View style={styles.titleRow}>
+              <Text variant="heading" style={[styles.time, { color: colors.text.primary }]}>{option.addedTime}</Text>
+              {option.badge && <View style={[styles.badge, { backgroundColor: palette.tint }]}>
+                <Text style={[styles.badgeLabel, { color: palette.accentInk }]}>{option.badge}</Text>
+              </View>}
+            </View>
+            <Text style={[styles.subtitle, { color: colors.text.secondary }]}>{option.durationLabel}</Text>
+          </View>
+        </View>
+        <View style={[styles.priceGroup, stacked && styles.stackedPrice]}>
+          {savings.savingsWon > 0 && <Text style={[styles.reference, { color: colors.text.muted }]}>{formatRefillPrice(savings.referencePriceWon)}</Text>}
+          <Text style={[styles.price, { color: colors.text.primary }]}>{formatRefillPrice(option.priceWon)}</Text>
+        </View>
+      </View>
+      {savings.savingsWon > 0 && <Text style={[styles.savings, { color: palette.cyanInk }]}>
+        {formatRefillPrice(savings.savingsWon)} 절약 · 약 {savings.savingsPercent}%
+      </Text>}
+    </Pressable>
+  );
 }
 
-export const TimeRefillOption = ({ option, delay = 0, onPress, isLoading = false, disabled = false }: TimeRefillOptionProps) => {
-  const { handlePressIn, handlePressOut, animatedStyle } = usePressAnimation();
-  const { colors } = useThemeColors();
-
-  const isHighlighted = option.styleType === 'highlighted';
-  const isDisabled = disabled || isLoading;
-
-  return (
-    <Animated.View
-      entering={FadeInDown.delay(delay).duration(500).springify()}
-      style={styles.containerMargin}
-    >
-      <Animated.View style={[animatedStyle, isDisabled && styles.disabled]}>
-        <Pressable
-          onPress={onPress}
-          onPressIn={handlePressIn}
-          onPressOut={handlePressOut}
-          disabled={isDisabled}
-          accessibilityState={{ disabled: isDisabled, busy: isLoading }}
-          style={[
-            styles.card,
-            isHighlighted ? styles.cardHighlighted : { backgroundColor: colors.background.glass, borderColor: colors.border.primary }
-          ]}
-        >
-          <View style={styles.topRow}>
-            <Text style={[styles.addedTime, { color: colors.text.primary }, isHighlighted && styles.textCyan]}>
-              {option.addedTime}
-            </Text>
-
-            {option.badge && (
-              <View style={[
-                styles.badge,
-                option.badge.type === 'popular' ? styles.badgePopular : { backgroundColor: colors.background.glass, borderColor: colors.border.primary }
-              ]}>
-                <Text style={[
-                  styles.badgeText,
-                  option.badge.type === 'popular' ? styles.badgeTextPopular : { color: colors.text.muted }
-                ]}>
-                  {option.badge.icon ? `${option.badge.icon} ` : ''}{option.badge.text}
-                </Text>
-              </View>
-            )}
-          </View>
-
-          <Text style={[styles.durationLabel, { color: colors.text.secondary }]}>{option.durationLabel}</Text>
-
-          {isLoading ? (
-            <ActivityIndicator size="small" color={Colors.primary.electricCyan} style={styles.priceSpinner} />
-          ) : (
-            <Text style={[styles.price, { color: colors.text.muted }, isHighlighted && styles.priceHighlighted]}>
-              {option.price}
-            </Text>
-          )}
-        </Pressable>
-      </Animated.View>
-    </Animated.View>
-  );
-};
-
 const styles = StyleSheet.create({
-  containerMargin: {
-    marginBottom: Spacing.md,
-  },
-  card: {
-    width: '100%',
-    height: 115,
-    borderRadius: Radii.lg,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.lg,
-    borderWidth: 0.61,
-  },
-  cardHighlighted: {
-    backgroundColor: 'rgba(0, 255, 255, 0.06)',
-    borderColor: 'rgba(0, 255, 255, 0.35)',
-  },
-  topRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
-  addedTime: {
-    fontFamily: FontFamily.sans,
-    fontWeight: FontWeight.medium,
-    fontSize: FontSize.xl,
-    lineHeight: 28,
-    letterSpacing: -0.44,
-  },
-  textCyan: {
-    color: 'rgba(0, 255, 255, 0.95)',
-  },
-  badge: {
-    paddingVertical: Spacing.xxs,
-    paddingHorizontal: Spacing.sm,
-    borderRadius: Radii.lg2,
-    borderWidth: 0.61,
-  },
-  badgePopular: {
-    backgroundColor: 'rgba(0, 255, 255, 0.15)',
-    borderColor: 'rgba(0, 255, 255, 0.25)',
-  },
-  badgeText: {
-    fontFamily: FontFamily.sans,
-    fontWeight: FontWeight.medium,
-    fontSize: FontSize.sm,
-    lineHeight: 16,
-  },
-  badgeTextPopular: {
-    color: 'rgba(0, 255, 255, 0.9)',
-  },
-  durationLabel: {
-    fontFamily: FontFamily.sans,
-    fontWeight: FontWeight.medium,
-    fontSize: FontSize.sm,
-    lineHeight: 16,
-    marginTop: Spacing.xxs,
-  },
-  price: {
-    fontFamily: FontFamily.sans,
-    fontWeight: FontWeight.medium,
-    fontSize: FontSize.lg,
-    lineHeight: 24,
-    letterSpacing: -0.31,
-    marginTop: Spacing.md,
-  },
-  priceHighlighted: {
-    color: 'rgba(0, 255, 255, 0.8)',
-  },
-  priceSpinner: {
-    marginTop: Spacing.md,
-    alignSelf: 'flex-start',
-  },
-  disabled: {
-    opacity: 0.5,
-  },
+  card: { padding: 14, borderWidth: 1, borderRadius: 18, gap: 8 },
+  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+  stacked: { flexDirection: 'column', alignItems: 'stretch' },
+  identity: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 10 },
+  copy: { flex: 1, minWidth: 0, gap: 3 },
+  titleRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
+  time: { fontSize: 20, lineHeight: 28, fontWeight: '600' },
+  subtitle: { fontSize: 13, lineHeight: 20 },
+  badge: { borderRadius: 8, paddingHorizontal: 7, paddingVertical: 3 },
+  badgeLabel: { fontSize: 11, lineHeight: 16, fontWeight: '600' },
+  priceGroup: { maxWidth: '50%', alignItems: 'flex-end', gap: 2 },
+  stackedPrice: { maxWidth: '100%', alignItems: 'flex-start', paddingLeft: 34 },
+  reference: { fontSize: 12, lineHeight: 18, textDecorationLine: 'line-through' },
+  price: { fontSize: 19, lineHeight: 27, fontWeight: '600', fontVariant: ['tabular-nums'] },
+  savings: { fontSize: 13, lineHeight: 20, fontWeight: '500', paddingLeft: 34 },
 });

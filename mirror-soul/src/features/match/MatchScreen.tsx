@@ -65,6 +65,8 @@ export default function MatchScreen() {
   const { showToast } = useToast();
   const userUuid = useAuthStore((s) => s.userUuid);
   const [activeTab, setActiveTab] = useState<MatchingTab>('meet');
+  const [pullRefreshTab, setPullRefreshTab] = useState<MatchingTab | null>(null);
+  const pullRefreshLock = useRef(false);
   const [unreadOnly, setUnreadOnly] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [action, setAction] = useState<Action | null>(null);
@@ -83,6 +85,17 @@ export default function MatchScreen() {
     () => Promise.allSettled([refetchRequests(), refetchRooms()]),
     [refetchRequests, refetchRooms],
   );
+  const handlePullRefresh = async () => {
+    if (pullRefreshLock.current) return;
+    pullRefreshLock.current = true;
+    setPullRefreshTab(activeTab);
+    try {
+      await refresh();
+    } finally {
+      pullRefreshLock.current = false;
+      if (alive.current) setPullRefreshTab(null);
+    }
+  };
   useProfileRefresh(refresh);
   useEffect(() => {
     alive.current = true;
@@ -131,6 +144,7 @@ export default function MatchScreen() {
         }));
   const changeTab = (tab: MatchingTab) => {
     setActiveTab(tab);
+    setPullRefreshTab(null);
     list.current?.scrollToOffset({ offset: 0, animated: false });
   };
   const respond = async (request: MeetingRequestItem, kind: Action['kind']) => {
@@ -222,11 +236,13 @@ export default function MatchScreen() {
     />
   ) : unreadOnly ? (
     <MatchingTabStatus
+      kind="messages"
       message="읽지 않은 메시지가 없어요"
       description="새 메시지가 오면 여기에 모아드릴게요."
     />
   ) : (
     <MatchingTabStatus
+      kind="messages"
       message="첫 대화를 기다리고 있어요"
       description="받은 신청을 수락하면 두 분만의 메시지방이 열려요."
       onRequests={() => changeTab('meet')}
@@ -247,10 +263,9 @@ export default function MatchScreen() {
             : `chat-${item.room.chatRoomId}`
         }
         showsVerticalScrollIndicator={false}
-        refreshing={query.isFetching && !query.isLoading}
-        onRefresh={() => {
-          void refresh();
-        }}
+        // Automatic focus refetch must not activate the native pull-to-refresh offset.
+        refreshing={pullRefreshTab === activeTab}
+        onRefresh={() => { void handlePullRefresh(); }}
         contentContainerStyle={{
           paddingBottom: Math.max(
             insets.bottom + Layout.MAIN_TAB_CONTENTS_BOTTOM_PADDING,
@@ -271,67 +286,68 @@ export default function MatchScreen() {
               }}
               isRefreshing={requestsQuery.isFetching || roomsQuery.isFetching}
             />
-            <MatchingActiveStatus compact />
-            <MatchingActionButtons
-              activeTab={activeTab}
-              onChangeTab={changeTab}
-              unreadCount={unreadCount}
-              requestCount={requestsQuery.data?.requests.length}
-            />
-            {activeTab === 'chat' && rooms.length > 0 && (
-              <View style={styles.filters}>
-                {[
-                  { value: false, label: '전체 대화' },
-                  { value: true, label: `안 읽음 ${unreadRooms.length}` },
-                ].map((filter) => (
-                  <Pressable
-                    key={filter.label}
-                    onPress={() => setUnreadOnly(filter.value)}
-                    accessibilityRole="button"
-                    accessibilityLabel={filter.label}
-                    accessibilityState={{
-                      selected: unreadOnly === filter.value,
-                    }}
-                    style={[
-                      styles.filter,
-                      {
-                        borderColor:
-                          unreadOnly === filter.value
-                            ? colors.brand.accent
-                            : colors.border.primary,
-                        backgroundColor:
-                          unreadOnly === filter.value
-                            ? palette.tint
-                            : colors.background.card,
-                      },
-                    ]}
-                  >
-                    <Text
+            <View style={styles.inboxControls}>
+              <MatchingActionButtons
+                activeTab={activeTab}
+                onChangeTab={changeTab}
+                unreadCount={unreadCount}
+                requestCount={requestsQuery.data?.requests.length}
+              />
+              {activeTab === 'chat' && rooms.length > 0 && (
+                <View style={styles.filters}>
+                  {[
+                    { value: false, label: '전체 대화' },
+                    { value: true, label: `안 읽음 ${unreadRooms.length}` },
+                  ].map((filter) => (
+                    <Pressable
+                      key={filter.label}
+                      onPress={() => setUnreadOnly(filter.value)}
+                      accessibilityRole="button"
+                      accessibilityLabel={filter.label}
+                      accessibilityState={{
+                        selected: unreadOnly === filter.value,
+                      }}
                       style={[
-                        styles.copy,
+                        styles.filter,
                         {
-                          color:
+                          borderColor:
                             unreadOnly === filter.value
-                              ? colors.brand.accent
-                              : colors.text.secondary,
+                              ? palette.buttonBorder
+                              : colors.border.primary,
+                          backgroundColor:
+                            unreadOnly === filter.value
+                              ? palette.buttonBase
+                              : colors.background.card,
                         },
                       ]}
                     >
-                      {filter.label}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
-            )}
-            {query.isError && query.data && (
-              <Text
-                accessibilityRole="alert"
-                style={[styles.copy, { color: colors.state.danger }]}
-              >
-                최신 목록을 확인하지 못했어요. 기존 목록을 보여드리고 있어요.
-                위에서 다시 불러올 수 있어요.
-              </Text>
-            )}
+                      <Text
+                        style={[
+                          styles.copy,
+                          {
+                            color:
+                              unreadOnly === filter.value
+                                ? palette.onAccent
+                                : colors.text.secondary,
+                          },
+                        ]}
+                      >
+                        {filter.label}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </View>
+              )}
+              {query.isError && query.data && (
+                <Text
+                  accessibilityRole="alert"
+                  style={[styles.copy, { color: colors.state.danger }]}
+                >
+                  최신 목록을 확인하지 못했어요. 기존 목록을 보여드리고 있어요.
+                  위에서 다시 불러올 수 있어요.
+                </Text>
+              )}
+            </View>
           </View>
         }
         ItemSeparatorComponent={() => <View style={styles.separator} />}
@@ -360,6 +376,7 @@ export default function MatchScreen() {
             )}
           </View>
         )}
+        ListFooterComponent={<View style={[contentContainerStyle, styles.preferences, { borderColor: colors.border.primary }]}><MatchingActiveStatus compact /></View>}
         ListEmptyComponent={
           <View style={[contentContainerStyle, styles.padded]}>{empty}</View>
         }
@@ -392,10 +409,12 @@ const styles = StyleSheet.create({
   root: { flex: 1 },
   header: {
     paddingHorizontal: Spacing.xxl,
-    paddingBottom: Spacing.lg,
-    gap: Spacing.md,
+    paddingBottom: Spacing.xs,
+    gap: Spacing.lg,
   },
+  inboxControls: { gap: Spacing.xs },
   padded: { paddingHorizontal: Spacing.xxl },
+  preferences: { marginTop: Spacing.xl, borderTopWidth: StyleSheet.hairlineWidth, paddingTop: Spacing.sm, paddingHorizontal: Spacing.sm },
   copy: {
     fontFamily: FontFamily.sans,
     fontSize: FontSize.base,
@@ -407,7 +426,7 @@ const styles = StyleSheet.create({
     minHeight: 48,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
-    borderRadius: Radii.full,
+    borderRadius: Radii.md,
     borderWidth: 1,
     justifyContent: 'center',
   },

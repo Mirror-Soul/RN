@@ -1,9 +1,7 @@
 import React from 'react';
-import { LinearGradient } from 'expo-linear-gradient';
 import { ActivityIndicator, Pressable, StyleSheet } from 'react-native';
 import {
   FontFamily,
-  Colors,
   FontSize,
   FontWeight,
   Radii,
@@ -21,6 +19,7 @@ export function MatchActionButton({
   busy = false,
   primary = false,
   danger = false,
+  icon,
 }: {
   label: string;
   onPress: () => void;
@@ -28,10 +27,11 @@ export function MatchActionButton({
   busy?: boolean;
   primary?: boolean;
   danger?: boolean;
+  icon?: (color: string) => React.ReactNode;
 }) {
   const { colors, palette } = useMatchingDesign();
   const color = primary
-    ? palette.onGradient
+    ? palette.onAccent
     : danger
       ? colors.state.danger
       : colors.text.primary;
@@ -45,22 +45,14 @@ export function MatchActionButton({
       style={({ pressed }) => [
         styles.button,
         {
-          backgroundColor: colors.background.card,
-          borderColor: primary ? 'transparent' : colors.border.primary,
+          backgroundColor: primary ? palette.buttonBase : danger ? colors.background.card : palette.secondaryButton,
+          borderColor: primary ? palette.buttonBorder : danger ? palette.softBorder : palette.buttonBorder,
           opacity: disabled || busy ? 0.6 : pressed ? 0.8 : 1,
         },
       ]}
     >
-      {primary && (
-        <LinearGradient
-          pointerEvents="none"
-          colors={Colors.gradient.cyanToPurple}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={[StyleSheet.absoluteFill, { borderRadius: Radii.full }]}
-        />
-      )}
       {busy && <ActivityIndicator color={color} />}
+      {!busy && icon?.(color)}
       <Text style={[styles.label, { color }]}>{busy ? '처리 중…' : label}</Text>
     </Pressable>
   );
@@ -70,10 +62,10 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     minHeight: 48,
     borderWidth: 1,
-    borderRadius: Radii.full,
-    padding: Spacing.md,
+    borderRadius: Radii.lg,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.lg,
     flexDirection: 'row',
-    flexWrap: 'wrap',
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.sm,
@@ -82,7 +74,7 @@ const styles = StyleSheet.create({
     flexShrink: 1,
     fontFamily: FontFamily.sans,
     fontSize: FontSize.md,
-    fontWeight: FontWeight.semibold,
+    fontWeight: FontWeight.medium,
     lineHeight: 23,
     textAlign: 'center',
   },

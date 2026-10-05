@@ -1,6 +1,6 @@
 import React from 'react';
 import { ActivityIndicator, Pressable, StyleSheet } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import { BrowseIcon } from '@/src/components/home/common/BrowseIcon';
 import { Radii } from '@/src/constants/theme';
 import { MainTabHeader } from '@/src/components/home/common/MainTabHeader';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
@@ -16,6 +16,7 @@ export default function MatchingHeader({
   return (
     <MainTabHeader
       title="매칭"
+      description="받은 신청을 확인하고, 서로의 대화를 이어가요."
       action={
         <Pressable
           onPress={onRefresh}
@@ -32,10 +33,10 @@ export default function MatchingHeader({
           ]}
         >
           {isRefreshing ? (
-            <ActivityIndicator color={colors.brand.accent} />
+            <ActivityIndicator color={colors.text.secondary} />
           ) : (
-            <Feather
-              name="refresh-cw"
+            <BrowseIcon
+              name="arrows-clockwise"
               size={20}
               color={colors.text.secondary}
             />

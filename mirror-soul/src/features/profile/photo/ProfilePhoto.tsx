@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
-import { Image } from 'expo-image';
+import { ProfilePhotoImage } from './ProfilePhotoImage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
 import { Colors, FontFamily } from '@/src/constants/theme';
@@ -46,8 +46,8 @@ function PhotoContent({ uri, name, size, onLoadStateChange, onPress, previewUri,
     );
   }
   const content = uri ? <>
-    {hasPreview && state !== 'loaded' && <Image key={previewUri} source={{ uri: previewUri! }} style={StyleSheet.absoluteFill} contentFit="cover" accessible={false} onError={() => setPreviewFailed(true)} />}
-    {state !== 'error' && <Image key={attempt} source={{ uri }} style={[StyleSheet.absoluteFill, { opacity: state === 'loaded' ? 1 : 0 }]} contentFit="cover" accessible={false}
+    {hasPreview && state !== 'loaded' && <ProfilePhotoImage key={previewUri} source={{ uri: previewUri! }} style={StyleSheet.absoluteFill} accessible={false} onError={() => setPreviewFailed(true)} />}
+    {state !== 'error' && <ProfilePhotoImage key={attempt} source={{ uri }} style={[StyleSheet.absoluteFill, { opacity: state === 'loaded' ? 1 : 0 }]} accessible={false}
       onLoad={() => { if (activeAttempt.current === attempt) setState('loaded'); }}
       onError={() => { if (activeAttempt.current === attempt) { activeAttempt.current += 1; setState('error'); } }} />}
     {state === 'loading' && !hasPreview && <View style={[StyleSheet.absoluteFill, styles.fallback, { backgroundColor: colors.background.card }]} pointerEvents="none"><ActivityIndicator color={colors.brand.accent} /></View>}

@@ -14,6 +14,7 @@ export default function MainHeader({
   return (
     <MainTabHeader
       title="발견"
+      description="나와 잘 맞는 상대를 찾고, 트윈과 먼저 대화해요."
       action={
         <Pressable
           onPress={onAvatarPress}

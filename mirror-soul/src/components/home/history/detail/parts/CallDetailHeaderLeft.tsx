@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Image, Text, View, StyleSheet } from 'react-native';
+import { Image, View, StyleSheet, useWindowDimensions } from 'react-native';
+import { BrowseText as Text } from '@/src/components/home/common/BrowseText';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
@@ -26,6 +27,8 @@ export default function CallDetailHeaderLeft({
   description,
   callNumber,
 }: CallDetailHeaderLeftProps) {
+  const { width, fontScale } = useWindowDimensions();
+  const showAvatar = width >= 360 && fontScale <= 1.3;
   const [failed, setFailed] = useState(false);
   useEffect(() => { setFailed(false); }, [profileImageUrl]);
   const { colors } = useThemeColors();
@@ -36,7 +39,7 @@ export default function CallDetailHeaderLeft({
 
   return (
     <View style={styles.container}>
-      <View style={styles.avatarWrapper}>
+      {showAvatar && <View style={styles.avatarWrapper}>
         {profileImageUrl && !failed ? (
           <Image source={{ uri: profileImageUrl }} style={styles.avatar} accessible={false} onError={() => setFailed(true)} />
         ) : (
@@ -49,14 +52,15 @@ export default function CallDetailHeaderLeft({
             <Text style={styles.avatarInitial}>{initial}</Text>
           </LinearGradient>
         )}
-      </View>
+      </View>}
 
       <View style={styles.info}>
-        <Text style={[styles.name, { color: colors.text.primary }]} numberOfLines={1}>
-          {description}
+        <Text variant="heading" style={[styles.name, { color: colors.text.primary }]} numberOfLines={1} ellipsizeMode="tail" accessibilityLabel={`${name}님`}>
+          {name}님
         </Text>
+        <Text style={[styles.description, { color: colors.text.secondary }]} numberOfLines={1} ellipsizeMode="tail">{description}</Text>
         {hasCallNumber && (
-          <Text style={[styles.metaText, { color: colors.text.muted }]}>{callNumber}번째 통화</Text>
+          <Text numberOfLines={1} ellipsizeMode="tail" style={[styles.metaText, { color: colors.text.muted }]}>{callNumber}번째 통화</Text>
         )}
       </View>
     </View>
@@ -69,6 +73,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.md,
     flex: 1,
+    minWidth: 0,
   },
   avatarWrapper: {
     width: 40,
@@ -92,17 +97,20 @@ const styles = StyleSheet.create({
   },
   info: {
     flex: 1,
+    minWidth: 0,
     gap: Spacing.xxs,
   },
   name: {
     fontFamily: FontFamily.sans,
     fontWeight: FontWeight.semibold,
-    fontSize: FontSize.base,
-    letterSpacing: -0.15,
+    fontSize: 16,
+    lineHeight: 23,
   },
+  description: { fontSize: 12, lineHeight: 18 },
   metaText: {
     fontFamily: FontFamily.sans,
     fontWeight: FontWeight.medium,
     fontSize: FontSize.xs,
+    lineHeight: 18,
   },
 });

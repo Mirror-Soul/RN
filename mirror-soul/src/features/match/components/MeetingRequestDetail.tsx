@@ -7,7 +7,7 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import { BrowseIcon } from '@/src/components/home/common/BrowseIcon';
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -107,7 +107,7 @@ export function MeetingRequestDetail({
               accessibilityLabel="신청 상세 닫기"
               style={[styles.close, { backgroundColor: palette.tint }]}
             >
-              <Feather name="x" size={22} color={colors.text.primary} />
+              <BrowseIcon name="x" size={22} color={colors.text.primary} />
             </Pressable>
           </View>
           <ScrollView
@@ -122,7 +122,7 @@ export function MeetingRequestDetail({
               <MatchAvatar
                 name={name}
                 url={request.profileImageUrl}
-                size={64}
+                size={52}
               />
               <View style={styles.personCopy}>
                 <Text style={[styles.name, { color: colors.text.primary }]}>
@@ -166,7 +166,7 @@ export function MeetingRequestDetail({
                   AI가 정리한 대화
                 </Text>
                 {request.twinSimilarity != null && (
-                  <Text style={[styles.copy, { color: colors.brand.accent }]}>
+                  <Text style={[styles.copy, { color: palette.accentInk }]}>
                     대화 공감도 {request.twinSimilarity}%
                   </Text>
                 )}
@@ -230,6 +230,7 @@ export function MeetingRequestDetail({
                 <>
                   <MatchActionButton
                     label="수락하고 대화하기"
+                    icon={color => <BrowseIcon name="chat-circle-dots" color={color} />}
                     onPress={onAccept}
                     primary
                     disabled={busy}
@@ -237,6 +238,7 @@ export function MeetingRequestDetail({
                   />
                   <MatchActionButton
                     label="상대 트윈과 먼저 통화하기"
+                    icon={color => <BrowseIcon name="phone-call" color={color} />}
                     onPress={onCall}
                     disabled={busy}
                     busy={busy && action === 'call'}
@@ -270,8 +272,8 @@ export function MeetingRequestDetail({
 const styles = StyleSheet.create({
   overlay: { flex: 1, justifyContent: 'flex-end', alignItems: 'center' },
   sheet: {
-    borderTopLeftRadius: Radii.xxl,
-    borderTopRightRadius: Radii.xxl,
+    borderTopLeftRadius: Radii.lg2,
+    borderTopRightRadius: Radii.lg2,
     overflow: 'hidden',
     flexShrink: 1,
   },
@@ -285,8 +287,7 @@ const styles = StyleSheet.create({
   },
   messageBubble: {
     padding: Spacing.lg,
-    borderRadius: Radii.lg2,
-    borderTopLeftRadius: Radii.bubble,
+    borderRadius: Radii.md,
   },
   top: {
     paddingHorizontal: Spacing.xl,
@@ -298,14 +299,14 @@ const styles = StyleSheet.create({
   title: {
     flex: 1,
     fontFamily: FontFamily.sans,
-    fontSize: FontSize.xxl,
+    fontSize: FontSize.xl,
     fontWeight: FontWeight.semibold,
-    lineHeight: 28,
+    lineHeight: 26,
   },
   close: {
     minWidth: 48,
     minHeight: 48,
-    borderRadius: Radii.full,
+    borderRadius: Radii.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -318,9 +319,9 @@ const styles = StyleSheet.create({
   personCopy: { flex: 1, minWidth: 0, gap: Spacing.xs },
   name: {
     fontFamily: FontFamily.sans,
-    fontSize: FontSize.xxxl,
+    fontSize: FontSize.xxl,
     fontWeight: FontWeight.semibold,
-    lineHeight: 34,
+    lineHeight: 28,
   },
   section: { gap: Spacing.sm },
   label: {
@@ -331,8 +332,8 @@ const styles = StyleSheet.create({
   },
   message: {
     fontFamily: FontFamily.sans,
-    fontSize: FontSize.lg,
-    lineHeight: 28,
+    fontSize: FontSize.md,
+    lineHeight: 25,
   },
   copy: {
     fontFamily: FontFamily.sans,

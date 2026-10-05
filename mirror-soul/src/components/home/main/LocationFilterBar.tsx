@@ -1,15 +1,15 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import {
-  Colors,
   FontFamily,
-  FontSize,
   FontWeight,
   Radii,
   Spacing,
 } from '@/src/constants/theme';
+import { BrowseText as Text } from '@/src/components/home/common/BrowseText';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
+import { useMatchingDesign } from '@/src/features/match/components/MatchingDesign';
 
 export default function LocationFilterBar({
   selectedLocations,
@@ -27,6 +27,7 @@ export default function LocationFilterBar({
   onPress?: () => void;
 }) {
   const { colors } = useThemeColors();
+  const { palette } = useMatchingDesign();
   const neighbors =
     typeof nearbyCount === 'number' && Number.isFinite(nearbyCount)
       ? Math.max(0, Math.floor(nearbyCount) - 1)
@@ -55,13 +56,14 @@ export default function LocationFilterBar({
       ]}
     >
       <View style={styles.icon}>
-        <Feather name="map-pin" size={20} color={colors.brand.accent} />
+        <Feather name="map-pin" size={18} color={palette.accentInk} />
       </View>
       <View style={styles.copy}>
         <Text style={[styles.label, { color: colors.text.secondary }]}>
           탐색 지역
         </Text>
         <Text
+          variant="heading"
           style={[
             styles.value,
             { color: isError ? colors.state.danger : colors.text.primary },
@@ -79,35 +81,9 @@ export default function LocationFilterBar({
   );
 }
 const styles = StyleSheet.create({
-  card: {
-    minHeight: 72,
-    borderRadius: Radii.xxl,
-    borderWidth: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-  },
-  icon: {
-    width: 36,
-    height: 36,
-    borderRadius: Radii.md,
-    backgroundColor: Colors.glass.purple20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  copy: { flex: 1, minWidth: 0, gap: Spacing.xs },
-  label: {
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.medium,
-    lineHeight: 18,
-  },
-  value: {
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.md,
-    fontWeight: FontWeight.semibold,
-    lineHeight: 24,
-  },
+  card: { minHeight: 80, borderRadius: Radii.md, flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: Spacing.lg, paddingVertical: 12 },
+  icon: { width: 24, alignItems: 'center' },
+  copy: { flex: 1, minWidth: 0, gap: 2 },
+  label: { fontFamily: FontFamily.sans, fontSize: 13, fontWeight: FontWeight.medium, lineHeight: 19 },
+  value: { fontFamily: FontFamily.sans, fontSize: 17, fontWeight: FontWeight.medium, lineHeight: 25 },
 });
