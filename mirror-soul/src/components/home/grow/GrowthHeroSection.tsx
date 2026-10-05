@@ -1,209 +1,67 @@
-import { Ionicons } from '@expo/vector-icons';
-import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
-import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { useThemeColors } from '@/src/hooks/useThemeColors';
+import { Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { Feather } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { BrowseText as Text } from '@/src/components/home/common/BrowseText';
+import { Colors } from '@/src/constants/theme';
+import { useMatchingDesign } from '@/src/features/match/components/MatchingDesign';
 import { getSyncCopy } from './growthSyncCopy';
+import { useLayout } from '@/src/hooks/useLayout';
 
-interface GrowthHeroSectionProps {
-  /** 서버에서 아직 못 받아온 상태(로딩/에러)면 null. */
+interface Props {
   similarityPercent: number | null;
   isLoading: boolean;
   isError: boolean;
   onRetry?: () => void;
-  isVerified: boolean;
-  onVerifyPress?: () => void;
+  jobSubmitted: boolean | null;
+  jobLoading: boolean;
+  jobError: boolean;
+  onVerifyPress: () => void;
 }
-
-/**
- * GrowthHeroSection 컴포넌트 (SRP)
- * 트윈 유사도 헤드라인 + 인증 배지/버튼 + 진행바만 렌더링하는 순수 표시 컴포넌트입니다.
- * 인증 모달 오픈 상태와 GET /evolve 조회는 부모(grow.tsx)가 소유하고, 이 컴포넌트는
- * 로딩/에러/성공 상태에 따른 표시만 담당한다 (AvailableTimeCard와 동일한 원칙).
- *
- * 실제 % 숫자는 진행바 라벨(유사도 동기화 N% 완료) 한 곳에서만 보여준다 —
- * 예전엔 헤드라인에 "거리 100%"(=100-싱크율), 아래엔 "0% 완료"(=싱크율)로
- * 같은 값을 반대로 두 번 보여줘서 계산이 틀린 것처럼 보였다. 헤드라인은 구간별
- * 자연스러운 문구(growthSyncCopy)로 대체해 숫자 중복 없이 뉘앙스만 전달한다.
- */
-export default function GrowthHeroSection({
-  similarityPercent,
-  isLoading,
-  isError,
-  onRetry,
-  isVerified,
-  onVerifyPress,
-}: GrowthHeroSectionProps) {
-  const { colors } = useThemeColors();
-  // API 과도기나 아직 트윈이 준비되지 않은 계정에서는 성공 응답이라도 result/syncRate가
-  // 비어 있을 수 있다. 이 경우 아래의 syncCopy를 역참조하면 성장 탭 전체가 무너지므로
-  // 런타임 값까지 검증한 뒤 "준비 중" 상태로 표시한다.
+export default function GrowthHeroSection({ similarityPercent, isLoading, isError, onRetry, jobSubmitted, jobLoading, jobError, onVerifyPress }: Props) {
+  const { colors, palette } = useMatchingDesign();
+  const { cardWidth } = useLayout();
+  const { fontScale } = useWindowDimensions();
+  const compact = cardWidth < 300 || fontScale > 1.4;
   const hasValue = typeof similarityPercent === 'number' && Number.isFinite(similarityPercent);
-  const safePercent = hasValue ? Math.min(100, Math.max(0, similarityPercent)) : 0;
-  const syncCopy = getSyncCopy(safePercent);
-
-  const progressValueText = isLoading
-    ? '측정 중...'
-    : isError
-      ? '조회 실패'
-      : hasValue
-        ? `${safePercent}% 완료`
-        : '준비 중';
-  const headline = isLoading
-    ? '트윈과의 싱크를\n확인하고 있어요.'
-    : hasValue
-      ? syncCopy.headline
-      : '트윈 유사도를\n준비하고 있어요.';
-  const subCopy = hasValue
-    ? syncCopy.subCopy
-    : '프로필과 학습 데이터가 준비되면 유사도를 확인할 수 있어요.';
-
-  return (
-    <View style={styles.container}>
-      <View style={styles.headlineRow}>
-        {isError ? (
-          <TouchableOpacity
-            style={styles.headlineTouchable}
-            onPress={onRetry}
-            accessibilityRole="button"
-            accessibilityLabel="트윈 유사도 다시 조회"
-          >
-            <Text style={[styles.headline, { color: colors.state.danger }]}>
-              유사도 정보를 불러오지 못했어요.{'\n'}탭해서 다시 시도해주세요.
-            </Text>
-          </TouchableOpacity>
-        ) : (
-          <Text style={[styles.headline, { color: colors.text.primary }]}>
-            {headline}
-          </Text>
-        )}
-
-        {isVerified ? (
-          <View style={styles.verifiedBadge}>
-            <Ionicons name="shield-checkmark-outline" size={14} color={Colors.primary.electricCyan} />
-            <Text style={styles.verifiedText}>인증됨</Text>
-          </View>
-        ) : (
-          <TouchableOpacity
-            style={[styles.verifyButton, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}
-            onPress={onVerifyPress}
-            activeOpacity={0.7}
-            accessibilityRole="button"
-            accessibilityLabel="프로필 인증하기"
-          >
-            <Ionicons name="shield-checkmark-outline" size={14} color={colors.text.secondary} />
-            <Text style={[styles.verifyButtonText, { color: colors.text.secondary }]}>프로필 인증</Text>
-          </TouchableOpacity>
-        )}
+  const percent = hasValue ? Math.min(100, Math.max(0, similarityPercent)) : 0;
+  const copy = getSyncCopy(percent);
+  const headline = isLoading ? '트윈을 확인하고 있어요.' : hasValue ? copy.headline : '나를 닮은 트윈을 준비하고 있어요.';
+  const value = isLoading ? '확인 중' : isError ? '다시 확인' : hasValue ? `${percent}%` : '준비 중';
+  const jobHint = jobLoading ? '서류 제출 여부 확인 중' : jobError ? '제출 여부를 다시 확인해 주세요' : jobSubmitted ? '가입 때 추가한 서류가 있어요. 심사 결과와는 별개예요.' : '직업 확인 서류 안내와 사진 선택';
+  return <View style={styles.container}>
+    <View style={[styles.headlineRow, compact && styles.compactRow]}>
+      <View style={[styles.headlineCopy, compact && styles.compactCopy]}>
+    {isError ? <Pressable onPress={onRetry} accessibilityRole="button" accessibilityLabel="트윈 준비도 다시 조회" style={styles.retry}>
+      <Text variant="heading" style={[styles.headline, { color: colors.text.primary }]}>트윈 정보를 불러오지 못했어요</Text><Text style={[styles.copy, { color: palette.cyanInk }]}>눌러서 다시 확인해 주세요.</Text>
+    </Pressable> : <Text variant="heading" style={[styles.headline, { color: colors.text.primary }]}>{headline}</Text>}
       </View>
-
-      {!isError && (
-        <Text style={[styles.subCopy, { color: colors.text.muted }]}>
-          {isLoading ? '잠시만 기다려 주세요.' : subCopy}
-        </Text>
-      )}
-
-      <View style={[styles.progressTrack, { backgroundColor: colors.background.glass }]}>
-        <LinearGradient
-          colors={Colors.gradient.cyanBluePurple}
-          start={{ x: 0, y: 0.5 }}
-          end={{ x: 1, y: 0.5 }}
-          style={[styles.progressFill, { width: `${safePercent}%` }]}
-        />
-      </View>
-      <View style={styles.progressLabelRow}>
-        <Text style={[styles.progressLabel, { color: colors.text.muted }]}>유사도 동기화</Text>
-        <Text style={styles.progressLabelAccent}>{progressValueText}</Text>
-      </View>
+      <Pressable onPress={onVerifyPress} accessibilityRole="button" accessibilityLabel="직업 인증하기" accessibilityHint={jobHint} style={({ pressed }) => [styles.job, compact && styles.compactJob, { borderColor: colors.border.primary, backgroundColor: pressed ? palette.coolTint : colors.background.card }]}>
+        <Feather name="briefcase" size={16} color={palette.cyanInk} />
+        <Text style={[styles.jobTitle, { color: colors.text.primary }]}>직업 인증</Text>
+      </Pressable>
     </View>
-  );
+    {!isError && <Text style={[styles.copy, { color: colors.text.secondary }]}>{isLoading ? '잠시만 기다려 주세요.' : hasValue ? copy.subCopy : '학습이 반영되면 준비도를 확인할 수 있어요.'}</Text>}
+    <View accessibilityRole="progressbar" accessibilityLabel="트윈 준비도" accessibilityValue={{ min: 0, max: 100, ...(hasValue && !isLoading && !isError ? { now: percent } : {}), text: value }} style={[styles.track, { backgroundColor: colors.background.glass }]}>
+      {hasValue && !isLoading && !isError && <LinearGradient colors={Colors.gradient.cyanBluePurple} start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={[styles.fill, { width: `${percent}%` }]} />}
+    </View>
+    <View style={styles.progressLabels}><Text style={[styles.caption, { color: colors.text.secondary }]}>트윈 준비도</Text><Text style={[styles.caption, { color: palette.cyanInk }]}>{value}</Text></View>
+  </View>;
 }
-
 const styles = StyleSheet.create({
-  container: {
-    alignSelf: 'stretch',
-    gap: Spacing.lg,
-  },
-  headlineRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
-  headline: {
-    flex: 1,
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.display,
-    fontWeight: FontWeight.black,
-    letterSpacing: -1.43,
-    lineHeight: 40,
-  },
-  headlineTouchable: {
-    flex: 1,
-  },
-  verifiedBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderRadius: Radii.full,
-    backgroundColor: Colors.glass.cyan10_d3,
-    borderWidth: 1,
-    borderColor: Colors.glass.cyan20_d3,
-  },
-  verifiedText: {
-    fontFamily: FontFamily.sans,
-    fontSize: 9,
-    fontWeight: FontWeight.black,
-    letterSpacing: -0.1,
-    color: Colors.primary.electricCyan,
-  },
-  verifyButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderRadius: Radii.full,
-    borderWidth: 1,
-  },
-  verifyButtonText: {
-    fontFamily: FontFamily.sans,
-    fontSize: 9,
-    fontWeight: FontWeight.black,
-    letterSpacing: -0.1,
-  },
-  subCopy: {
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.base,
-    fontWeight: FontWeight.bold,
-    lineHeight: 23,
-  },
-  progressTrack: {
-    height: 6,
-    borderRadius: Radii.full,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    borderRadius: Radii.full,
-  },
-  progressLabelRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  progressLabel: {
-    fontFamily: FontFamily.sans,
-    fontSize: 9,
-    fontWeight: FontWeight.black,
-    letterSpacing: 1.1,
-  },
-  progressLabelAccent: {
-    fontFamily: FontFamily.sans,
-    fontSize: 9,
-    fontWeight: FontWeight.black,
-    letterSpacing: 1.1,
-    color: Colors.primary.electricCyan,
-  },
+  container: { alignSelf: 'stretch', gap: 12 },
+  headline: { fontSize: 28, lineHeight: 38, fontWeight: '600' },
+  copy: { fontSize: 14, lineHeight: 23 },
+  retry: { minHeight: 48, gap: 8 },
+  track: { height: 6, borderRadius: 8, overflow: 'hidden' },
+  fill: { height: '100%', borderRadius: 8 },
+  progressLabels: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 8 },
+  caption: { fontSize: 12, lineHeight: 20 },
+  headlineRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
+  compactRow: { flexDirection: 'column-reverse', alignItems: 'stretch', gap: 8 },
+  headlineCopy: { flex: 1, minWidth: 0 },
+  compactCopy: { flex: 0 },
+  compactJob: { alignSelf: 'flex-end' },
+  job: { alignSelf: 'flex-start', maxWidth: '100%', minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderRadius: 14, paddingHorizontal: 10, paddingVertical: 8 },
+  jobTitle: { flexShrink: 1, fontSize: 12, lineHeight: 20, fontWeight: '600' },
 });

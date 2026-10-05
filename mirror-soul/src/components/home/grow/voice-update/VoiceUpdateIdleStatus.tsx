@@ -1,7 +1,9 @@
 import { FontFamily, FontSize, FontWeight, Spacing } from '@/src/constants/theme';
 import React from 'react';
-import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { BrowseText as Text } from '@/src/components/home/common/BrowseText';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
+import { formatVoiceCooldown } from './readingSimilarity';
 
 export type VoiceUpdateIdleStatusVariant = 'ready' | 'cooldown' | 'checking' | 'checkFailed';
 
@@ -31,8 +33,8 @@ export default function VoiceUpdateIdleStatus({
   if (status === 'cooldown') {
     return (
       <View style={styles.idleInfo}>
-        <Text style={[styles.statusText, { color: colors.text.primary }]}>잠시 후 다시 시도해주세요</Text>
-        <Text style={[styles.footerText, { color: colors.text.secondary }]}>{cooldownRemainingSeconds}초 후 다시 녹음할 수 있어요</Text>
+        <Text style={[styles.statusText, { color: colors.text.primary }]}>다음 녹음까지 {formatVoiceCooldown(cooldownRemainingSeconds ?? 0)}</Text>
+        <Text style={[styles.footerText, { color: colors.text.secondary }]}>녹음은 2분 간격으로 보낼 수 있어요.</Text>
       </View>
     );
   }
@@ -71,29 +73,30 @@ export default function VoiceUpdateIdleStatus({
   return (
     <View style={styles.idleInfo}>
       <Text style={[styles.statusText, { color: colors.text.primary }]}>녹음 시작</Text>
-      <Text style={[styles.footerText, { color: colors.text.secondary }]}>마이크 버튼을 눌러 녹음을 시작하세요</Text>
+      <Text style={[styles.footerText, { color: colors.text.secondary }]}>다 읽은 뒤 같은 버튼을 눌러 확인해요.</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   idleInfo: {
-    alignItems: 'center',
-    gap: Spacing.lg,
+    alignItems: 'stretch',
+    gap: Spacing.xs,
+    alignSelf: 'stretch',
   },
   statusText: {
-    textAlign: 'center',
+    textAlign: 'left',
     fontFamily: FontFamily.sans,
-    fontSize: FontSize.lg,
-    fontWeight: FontWeight.regular,
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.medium,
     lineHeight: 24,
     letterSpacing: -0.312,
   },
   footerText: {
-    textAlign: 'center',
+    textAlign: 'left',
     fontFamily: FontFamily.sans,
     fontSize: FontSize.sm,
     fontWeight: FontWeight.regular,
-    lineHeight: 16,
+    lineHeight: 21,
   },
 });

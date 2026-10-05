@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { updatePreferredRegion } from '@/src/services/homeService';
 import type { UpdatePreferredRegionRequest } from '@/src/types/api/home';
+import { useAuthStore } from '@/src/store/useAuthStore';
 
 /**
  * PUT /home/preferred-region — 탐색 지역(동 앵커+반경) 설정.
@@ -13,8 +14,15 @@ export const useUpdatePreferredRegionMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
+    onMutate: () => {
+      const session = useAuthStore.getState();
+      if (!session.isLoggedIn || !session.userUuid) throw new Error('다시 로그인해 주세요.');
+      return { userUuid: session.userUuid };
+    },
     mutationFn: (data: UpdatePreferredRegionRequest) => updatePreferredRegion(data),
-    onSuccess: (response) => {
+    onSuccess: (response, _variables, context) => {
+      const session = useAuthStore.getState();
+      if (!session.isLoggedIn || session.userUuid !== context?.userUuid) return;
       queryClient.setQueryData(['home', 'preferredRegion'], response.result);
       queryClient.invalidateQueries({ queryKey: ['home', 'recommendations'] });
     },

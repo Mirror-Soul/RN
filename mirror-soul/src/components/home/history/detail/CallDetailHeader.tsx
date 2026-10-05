@@ -1,6 +1,8 @@
 import React from 'react';
-import { Header } from '@/src/components/common/Header';
-import { useThemeColors } from '@/src/hooks/useThemeColors';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { Feather } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useMatchingDesign } from '@/src/features/match/components/MatchingDesign';
 import CallDetailHeaderLeft from './parts/CallDetailHeaderLeft';
 import CallDetailHeaderRight from './parts/CallDetailHeaderRight';
 import type { HistoryMenuAnchor } from './historyMenuLayout';
@@ -10,8 +12,7 @@ interface CallDetailHeaderProps {
   profileImageUrl?: string | null;
   description: string;
   callNumber?: number | null;
-  /** 생략하면 공용 Header의 기본 동작(canGoBack 확인 후 뒤로가기/홈 fallback)에 위임한다. */
-  onBack?: () => void;
+  onBack: () => void;
   onCallPress: () => void;
   onMorePress: () => void;
   callDisabled?: boolean;
@@ -19,41 +20,16 @@ interface CallDetailHeaderProps {
   menuExpanded?: boolean;
   onMenuAnchorChange?: (anchor: HistoryMenuAnchor) => void;
 }
-
-/**
- * 통화 상세 헤더 — 공용 Header(src/components/common/Header.tsx)를 감싸는 얇은 wrapper.
- * message-room의 MessageRoomScreen과 동일한 조립 방식(leftContent/rightElement 슬롯)을 따른다.
- * 예전엔 이 컴포넌트가 헤더 전체를 처음부터 새로 그렸는데, 공용 Header가 이미 제공하는
- * safe-area 처리/뒤로가기 fallback/테마 대응/진입 애니메이션을 중복 구현하고 있었다.
- */
-export default function CallDetailHeader({
-  name,
-  profileImageUrl,
-  description,
-  callNumber,
-  onBack,
-  onCallPress,
-  onMorePress,
-  callDisabled,
-  callBusy,
-  menuExpanded,
-  onMenuAnchorChange,
-}: CallDetailHeaderProps) {
-  const { colors } = useThemeColors();
-
-  return (
-    <Header
-      leftContent={
-        <CallDetailHeaderLeft
-          name={name}
-          profileImageUrl={profileImageUrl}
-          description={description}
-          callNumber={callNumber}
-        />
-      }
-      rightElement={<CallDetailHeaderRight onCallPress={onCallPress} onMorePress={onMorePress} callDisabled={callDisabled} callBusy={callBusy} menuExpanded={menuExpanded} onMenuAnchorChange={onMenuAnchorChange} />}
-      onBackPress={onBack}
-      borderBottomColor={colors.border.primary}
-    />
-  );
+export default function CallDetailHeader({ name, profileImageUrl, description, callNumber, onBack, onCallPress, onMorePress, callDisabled, callBusy, menuExpanded, onMenuAnchorChange }: CallDetailHeaderProps) {
+  const { colors } = useMatchingDesign();
+  const insets = useSafeAreaInsets();
+  return <View style={[styles.header, { paddingTop: insets.top + 8, borderColor: colors.border.primary, backgroundColor: colors.background.primary }]}>
+    <Pressable accessibilityRole="button" accessibilityLabel="기록으로 돌아가기" onPress={onBack} style={({ pressed }) => [styles.back, { backgroundColor: pressed ? colors.background.glass : 'transparent' }]}><Feather name="chevron-left" size={24} color={colors.text.primary} /></Pressable>
+    <CallDetailHeaderLeft name={name} profileImageUrl={profileImageUrl} description={description} callNumber={callNumber} />
+    <CallDetailHeaderRight onCallPress={onCallPress} onMorePress={onMorePress} callDisabled={callDisabled} callBusy={callBusy} menuExpanded={menuExpanded} onMenuAnchorChange={onMenuAnchorChange} />
+  </View>;
 }
+const styles = StyleSheet.create({
+  header: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingBottom: 10, borderBottomWidth: StyleSheet.hairlineWidth },
+  back: { minWidth: 44, minHeight: 48, alignItems: 'center', justifyContent: 'center', borderRadius: 14 },
+});

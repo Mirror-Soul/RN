@@ -20,6 +20,7 @@ export interface CallTarget {
 }
 
 interface CallStartConfirmSheetProps {
+  ownTwin?: boolean;
   embedded?: boolean;
   target: CallTarget | null;
   isOpen: boolean;
@@ -36,7 +37,7 @@ interface CallStartConfirmSheetProps {
  * 실제 추천은 최신 잔여 시간을 다시 조회한 뒤에만 진입을 허용한다. 목업 추천은 의도적으로
  * 어떤 API나 권한도 요청하지 않고, 통화 화면의 UI를 검토하는 미리보기 모드로만 진입한다.
  */
-export default function CallStartConfirmSheet({ target, isOpen, onClose, onStart, onRefill, embedded = false }: CallStartConfirmSheetProps) {
+export default function CallStartConfirmSheet({ target, isOpen, onClose, onStart, onRefill, embedded = false, ownTwin = false }: CallStartConfirmSheetProps) {
   const { colors, palette } = useMatchingDesign();
   const insets = useSafeAreaInsets();
   const { height: screenHeight, fontScale } = useWindowDimensions();
@@ -51,7 +52,7 @@ export default function CallStartConfirmSheet({ target, isOpen, onClose, onStart
   const startInFlightRef = useRef(false);
   const [isStarting, setIsStarting] = useState(false);
   const [hasFreshTimeCheck, setHasFreshTimeCheck] = useState(false);
-  const isPreview = isMockRecommendationUuid(target?.userUuid);
+  const isPreview = !ownTwin && isMockRecommendationUuid(target?.userUuid);
   // 목업 미리보기와 닫힌 시트는 잔액을 확인할 이유가 없다. 실제 통화 확인 단계에서만
   // GET /my-page/buy-time을 활성화해 목업 버튼이 어떤 API도 유발하지 않게 한다.
   const shouldQueryTime = isOpen && !isPreview;
@@ -112,7 +113,7 @@ export default function CallStartConfirmSheet({ target, isOpen, onClose, onStart
   const shouldPromptRefill = !isPreview && !isCheckingTime && !isError && !hasRemainingTime;
   const startDisabled = !isPreview && (isCheckingTime || isError);
 
-  const primaryLabel = isPreview ? '통화 화면 미리보기' : shouldPromptRefill ? '대화 시간 충전하기' : '통화 시작';
+  const primaryLabel = isPreview ? '통화 화면 미리보기' : shouldPromptRefill ? '대화 시간 충전하기' : ownTwin ? '대화 시작' : '통화 시작';
   const action = <View testID="call-start-actions" onLayout={event => setFooterHeight(event.nativeEvent.layout.height)}
     style={[styles.footer, { paddingBottom: Math.max(insets.bottom, Spacing.md), borderTopColor: colors.border.primary }]}>
     <MatchActionButton label={primaryLabel} onPress={handlePrimaryAction} primary disabled={startDisabled} busy={isStarting} />
@@ -133,13 +134,15 @@ export default function CallStartConfirmSheet({ target, isOpen, onClose, onStart
               </View>}
               <View style={styles.heroCopy}>
                 <Text variant="heading" accessibilityRole="header" style={[styles.title, { color: colors.text.primary }]}>
-                  {isPreview ? `${target.name}님 통화 화면 미리보기` : `${target.name}님의 AI 트윈과 통화할까요?`}
+                  {ownTwin ? '내 트윈과 대화할까요?' : isPreview ? `${target.name}님 통화 화면 미리보기` : `${target.name}님의 AI 트윈과 통화할까요?`}
                 </Text>
               </View>
               <TouchableOpacity onPress={onClose} accessibilityRole="button" accessibilityLabel="통화 확인 닫기" style={styles.close}>
                 <Feather name="x" size={20} color={colors.text.secondary} />
               </TouchableOpacity>
             </View>
+
+            {ownTwin && <Text style={[styles.copy, { color: colors.text.secondary }]}>영상통화로 나를 닮은 얼굴과 목소리, 반응을 만나보세요.</Text>}
 
             {isPreview ? (
               <View style={[styles.notice, { backgroundColor: palette.tint, borderColor: palette.softBorder }]}>

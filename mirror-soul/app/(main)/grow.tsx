@@ -9,6 +9,8 @@ import VoiceMissionCard from '@/src/components/home/grow/VoiceMissionCard';
 import ValueBalanceModal from '@/src/components/home/grow/modals/ValueBalanceModal';
 import VerificationModal from '@/src/components/home/grow/modals/VerificationModal';
 import { Layout, Spacing } from '@/src/constants/theme';
+import { useIntroductionQuery } from '@/src/features/profile/hooks/useIntroductionQuery';
+import { useAuthStore } from '@/src/store/useAuthStore';
 import { useTwinSyncQuery } from '@/src/features/growth/hooks/useTwinSyncQuery';
 import React, { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
@@ -20,7 +22,7 @@ import { useThemeColors } from '@/src/hooks/useThemeColors';
  * 성장(Growth) 탭 화면
  * 내 트윈의 유사도를 높이기 위한 미션들을 관리합니다.
  *
- * 모달 상태(프로필 인증 / 가치관 밸런스 게임)와 유사도 % 누적은
+ * 모달 상태(직업 인증 / 가치관 밸런스 게임)는
  * 이 화면이 소유하고, 하위 카드/섹션 컴포넌트들은 콜백을 통해서만 상태 변경을
  * 요청합니다 (SRP).
  */
@@ -31,7 +33,8 @@ export default function GrowScreen() {
 
   const twinSyncQuery = useTwinSyncQuery();
 
-  const [isVerified, setIsVerified] = useState(false); // Mock 상태 (프로필 인증 API 연동 전)
+  const introduction = useIntroductionQuery();
+  const userUuid = useAuthStore(state => state.userUuid);
 
   const [showVerifyModal, setShowVerifyModal] = useState(false);
   const [showBalanceModal, setShowBalanceModal] = useState(false);
@@ -45,7 +48,7 @@ export default function GrowScreen() {
       ]}
       showsVerticalScrollIndicator={false}
     >
-      <View style={[styles.container, contentContainerStyle, { paddingTop: Math.max(insets.top + 12, Layout.SCREEN_PADDING), paddingHorizontal: screenPadding }]}>
+      <View style={[styles.container, contentContainerStyle, { paddingTop: Math.max(insets.top + 12, Layout.SCREEN_PADDING), paddingLeft: screenPadding + insets.left, paddingRight: screenPadding + insets.right }]}>
         <EvolveHeader />
 
         <GrowthHeroSection
@@ -53,11 +56,13 @@ export default function GrowScreen() {
           isLoading={twinSyncQuery.isLoading}
           isError={twinSyncQuery.isError}
           onRetry={() => twinSyncQuery.refetch()}
-          isVerified={isVerified}
+          jobSubmitted={introduction.data?.jobCertificationSubmitted ?? null}
+          jobLoading={introduction.isLoading}
+          jobError={introduction.isError}
           onVerifyPress={() => setShowVerifyModal(true)}
         />
 
-        <TwinSimulationCard />
+        <TwinSimulationCard isReady={typeof twinSyncQuery.data?.syncRate === 'number' && Number.isFinite(twinSyncQuery.data.syncRate)} isLoading={twinSyncQuery.isLoading} isError={twinSyncQuery.isError} onRetry={() => { void twinSyncQuery.refetch(); }} />
 
         <View style={styles.missionSection}>
           <EvolveBodyTitle />
@@ -77,7 +82,12 @@ export default function GrowScreen() {
       <VerificationModal
         isOpen={showVerifyModal}
         onClose={() => setShowVerifyModal(false)}
-        onVerified={() => setIsVerified(true)}
+        key={`job-verification-${userUuid ?? 'guest'}`}
+        submitted={introduction.data?.jobCertificationSubmitted ?? null}
+        job={introduction.data?.job ?? null}
+        loading={introduction.isLoading}
+        error={introduction.isError}
+        onRetry={() => { void introduction.refetch(); }}
       />
 
       {/*
@@ -86,6 +96,7 @@ export default function GrowScreen() {
         최신값을 다시 받아오므로, 이 화면이 별도로 값을 조작할 필요가 없다.
       */}
       <ValueBalanceModal
+        key={`value-balance-${userUuid ?? 'guest'}`}
         isOpen={showBalanceModal}
         onClose={() => setShowBalanceModal(false)}
       />

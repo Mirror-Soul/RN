@@ -11,9 +11,9 @@ import { ApiResponse } from './common';
 export interface TwinSyncResult {
   /** 트윈 READY 이전에는 null이다. */
   syncRate: number | null;
-  /** 누적 목소리 정밀 학습(음성 업데이트) 횟수 */
+  /** 목소리 녹음 제출 작업 수. PENDING/PROCESSING/FAILED도 포함하며 학습 완료 수가 아님. */
   voiceTrainingCount: number;
-  /** 마지막 목소리 정밀 학습 시각. 한 번도 학습한 적 없으면 null. */
+  /** 마지막 목소리 녹음 제출 시각. 제출한 적 없으면 null. */
   lastVoiceTrainingAt: string | null;
 }
 
@@ -45,6 +45,11 @@ export interface VoiceUpdateJobResult {
 
 export type VoiceUpdateJobResponse = ApiResponse<VoiceUpdateJobResult>;
 
+/** POST /evolve/face — 파일은 먼저 face-videos에 업로드한다. */
+export interface CompleteFaceUpdateRequest { objectKey: string; }
+export interface FaceUpdateJobResult { jobId: number; status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED'; }
+export type FaceUpdateJobResponse = ApiResponse<FaceUpdateJobResult>;
+
 // ─────────────────────────────────────────────
 // GET /evolve/value-balance
 // ─────────────────────────────────────────────
@@ -74,7 +79,7 @@ export interface ValueBalanceQuestionResult {
   totalSets: number;
   /** 전체 누적 답변 수. */
   totalAnswered: number;
-  /** 세트 분석 대기 중인지 여부. */
+  /** 세트 사이 12시간 휴식 중인지 여부. AI 분석 완료 여부와 독립적. */
   locked: boolean;
   /** 다음 세트가 열리는 시각. 잠기지 않았으면 null. */
   lockedUntil: string | null;

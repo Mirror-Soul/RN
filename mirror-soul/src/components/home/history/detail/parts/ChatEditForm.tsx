@@ -1,97 +1,25 @@
-import CancelIcon from '@/assets/images/common/Cancel.svg';
-import CompleteIcon from '@/assets/images/common/Complete.svg';
-import {Colors, Radii, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
-import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { BrowseText as Text } from '@/src/components/home/common/BrowseText';
+import { useMatchingDesign } from '@/src/features/match/components/MatchingDesign';
 
-interface ChatEditFormProps {
-  onSave: () => void;
-  onCancel: () => void;
-  disabled?: boolean;
+export default function ChatEditForm({ onSave, onCancel, disabled = false, saving = false }: {
+  onSave: () => void; onCancel: () => void; disabled?: boolean; saving?: boolean;
+}) {
+  const { colors, palette } = useMatchingDesign();
+  const { fontScale } = useWindowDimensions();
+  return <View style={[styles.actions, fontScale > 1.8 && styles.stacked]}>
+    <Pressable onPress={onCancel} disabled={saving} accessibilityRole="button" accessibilityLabel="답변 수정 취소" accessibilityState={{ disabled: saving }} style={[styles.button, styles.cancel, { borderColor: colors.border.primary, opacity: saving ? 0.5 : 1 }]}><Text style={[styles.text, { color: colors.text.secondary }]}>취소</Text></Pressable>
+    <Pressable onPress={onSave} disabled={disabled || saving} accessibilityRole="button" accessibilityLabel="수정한 답변 저장" accessibilityState={{ disabled: disabled || saving, busy: saving }} style={[styles.button, styles.save, { backgroundColor: palette.buttonBase, opacity: disabled || saving ? 0.5 : 1 }]}>
+      {saving ? <ActivityIndicator color={palette.onAccent} /> : <Text style={[styles.text, { color: palette.onAccent }]}>저장하기</Text>}
+    </Pressable>
+  </View>;
 }
-
-/**
- * 말풍선 내부용 액션 버튼 바 (SRP)
- * 제자리 수정(In-place) 모드 시 말풍선 하단에 표시됩니다.
- */
-export default function ChatEditForm({ onSave, onCancel, disabled = false }: ChatEditFormProps) {
-  return (
-    <View style={styles.buttonRow}>
-      {/* 저장 버튼 */}
-      <TouchableOpacity
-        style={[styles.saveButtonWrapper, disabled && styles.disabled]}
-        onPress={onSave}
-        disabled={disabled}
-        activeOpacity={0.8}
-        accessibilityRole="button"
-        accessibilityLabel="저장"
-      >
-        <LinearGradient
-          colors={Colors.gradient.cyanToPurple}
-          start={{ x: 0, y: 0.5 }}
-          end={{ x: 1, y: 0.5 }}
-          style={styles.saveButton}
-        >
-          <CompleteIcon width={12} height={12} />
-          <Text style={styles.saveText}>저장</Text>
-        </LinearGradient>
-      </TouchableOpacity>
-
-      {/* 취소 버튼 */}
-      <TouchableOpacity
-        style={styles.cancelButton}
-        onPress={onCancel}
-        activeOpacity={0.8}
-        accessibilityRole="button"
-        accessibilityLabel="취소"
-        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-      >
-        <CancelIcon width={12} height={12} />
-      </TouchableOpacity>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
-  buttonRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginTop: 10,
-    alignSelf: 'stretch',
-  },
-  saveButtonWrapper: {
-    flex: 1,
-    borderRadius: Radii.md,
-    overflow: 'hidden',
-  },
-  disabled: {
-    opacity: 0.5,
-  },
-  saveButton: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: Spacing.xs,
-    paddingVertical: 6,
-  },
-  saveText: {
-    color: Colors.primary.soulBlack,
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.medium,
-  },
-  cancelButton: {
-    width: 32,
-    height: 32,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: Radii.md,
-    borderWidth: 0.612,
-    // 말풍선 배경이 밝은 시안→블루 그라디언트(twinCallButton)라 옅은 흰색 틴트로는 잘 안 보여서
-    // white10/white5보다 한 단계 진하게 잡는다.
-    borderColor: Colors.glass.white30,
-    backgroundColor: Colors.glass.white20,
-  },
+  actions: { flexDirection: 'row', gap: 10 },
+  stacked: { flexDirection: 'column' },
+  button: { minWidth: 0, minHeight: 48, borderRadius: 14, paddingHorizontal: 16, paddingVertical: 12, alignItems: 'center', justifyContent: 'center' },
+  cancel: { flexGrow: 1, borderWidth: 1 },
+  save: { flexGrow: 2 },
+  text: { fontSize: 15, lineHeight: 23, fontWeight: '600' },
 });

@@ -1,13 +1,16 @@
 import { Feather } from '@expo/vector-icons';
 import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
-import { useRouter } from 'expo-router';
+import { useGrowthReturn } from './useGrowthReturn';
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { BrowseText as Text } from '@/src/components/home/common/BrowseText';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface GrowDoneActionRowProps {
   retryLabel: string;
   onRetry: () => void;
+  retryDisabled?: boolean;
+  retryHint?: string;
   completeLabel?: string;
   showCompleteIcon?: boolean;
 }
@@ -20,25 +23,37 @@ interface GrowDoneActionRowProps {
 export default function GrowDoneActionRow({
   retryLabel,
   onRetry,
+  retryDisabled = false,
+  retryHint,
   completeLabel = '완료하기',
   showCompleteIcon = false,
 }: GrowDoneActionRowProps) {
-  const router = useRouter();
+  const returnToGrowth = useGrowthReturn();
   const { colors } = useThemeColors();
 
   return (
     <View style={styles.actionRow}>
       <TouchableOpacity
+        accessibilityRole="button"
+        accessibilityLabel={retryLabel}
+        accessibilityState={{ disabled: retryDisabled }}
+        accessibilityHint={retryHint}
+        disabled={retryDisabled}
         activeOpacity={0.7}
         onPress={onRetry}
-        style={[styles.actionChip, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
+        style={[styles.actionChip, { backgroundColor: colors.background.glass, borderColor: colors.border.primary, opacity: retryDisabled ? 0.55 : 1 }]}
       >
-        <Text style={[styles.actionChipText, { color: colors.text.secondary }]}>{retryLabel}</Text>
+        <View style={styles.retryCopy}>
+          <Text style={[styles.actionChipText, { color: colors.text.secondary }]}>{retryLabel}</Text>
+          {!!retryHint && <Text style={[styles.retryHint, { color: colors.text.muted }]}>{retryHint}</Text>}
+        </View>
       </TouchableOpacity>
 
       <TouchableOpacity
         activeOpacity={0.7}
-        onPress={() => router.back()}
+        accessibilityRole="button"
+        accessibilityLabel={completeLabel}
+        onPress={returnToGrowth}
         style={[styles.actionChip, styles.primaryChip]}
       >
         {showCompleteIcon && <Feather name="check" size={16} color={Colors.primary.electricCyan} />}
@@ -51,24 +66,36 @@ export default function GrowDoneActionRow({
 const styles = StyleSheet.create({
   actionRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignSelf: 'stretch',
     gap: Spacing.md,
     alignItems: 'center',
   },
   actionChip: {
+    flexGrow: 1,
+    flexBasis: '45%',
+    minWidth: 0,
+    minHeight: 48,
+    justifyContent: 'center',
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.xs,
     paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.xxl,
+    paddingHorizontal: Spacing.md,
     borderRadius: Radii.full,
     borderWidth: 0.6,
   },
   actionChipText: {
+    flexShrink: 1,
+    textAlign: 'center',
+    lineHeight: 23,
     fontFamily: FontFamily.sans,
     fontSize: FontSize.md,
     fontWeight: FontWeight.medium,
     letterSpacing: -0.3,
   },
+  retryCopy: { minWidth: 0, flexShrink: 1, alignItems: 'center', gap: 2 },
+  retryHint: { fontSize: 12, lineHeight: 18, textAlign: 'center' },
   primaryChip: {
     backgroundColor: 'rgba(0, 211, 243, 0.15)',
     borderColor: 'rgba(0, 211, 243, 0.3)',

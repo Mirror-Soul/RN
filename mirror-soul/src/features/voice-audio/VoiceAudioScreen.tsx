@@ -10,11 +10,14 @@ import { useProfileRefresh } from '@/src/features/profile/hooks/useProfileRefres
 import { useVoiceAudioSettings } from './hooks/useVoiceAudioSettings';
 import { AudioCheck } from './components/AudioCheck';
 import { MicrophonePermission } from './components/MicrophonePermission';
+import { useVoiceAudioStore, type CallVoiceGain } from '@/src/store/useVoiceAudioStore';
 
 export const VoiceAudioScreen = () => {
   const router = useRouter();
   const { volume, handleVolumeChange, isLoading, isError, isSaving, refetch } = useVoiceAudioSettings();
   const { colors } = useThemeColors();
+  const gain = useVoiceAudioStore(state => state.callVoiceGain);
+  const setGain = useVoiceAudioStore(state => state.setCallVoiceGain);
   useProfileRefresh(useCallback(() => refetch(), [refetch]));
   const disabled = volume == null || isSaving;
   const card = [styles.card, { backgroundColor: colors.background.card, borderColor: colors.border.primary }];
@@ -35,6 +38,14 @@ export const VoiceAudioScreen = () => {
           {([{ value: 25, label: '작게' }, { value: 50, label: '보통' }, { value: 100, label: '크게' }] as const).map(option => <Pressable key={option.value} disabled={disabled} onPress={() => handleVolumeChange(option.value)} accessibilityRole="radio" accessibilityLabel={`목소리 ${option.label}`} accessibilityState={{ selected: volume === option.value, disabled }} style={[styles.preset, { borderColor: volume === option.value ? colors.brand.accent : colors.border.primary, backgroundColor: colors.background.glass, opacity: disabled ? 0.5 : 1 }]}><Text style={[styles.copy, { color: volume === option.value ? colors.brand.accent : colors.text.primary }]}>{option.label}</Text></Pressable>)}
         </View>
         {isSaving && <Text accessibilityLiveRegion="polite" style={[styles.copy, { color: colors.text.muted }]}>목소리 크기를 저장하고 있어요…</Text>}
+      </View>
+      <View style={card}>
+        <View style={styles.heading}><Feather name="volume-1" size={20} color={colors.brand.accent} /><Text style={[styles.title, { color: colors.text.primary }]}>작은 통화 음성 키우기</Text></View>
+        <Text style={[styles.copy, { color: colors.text.secondary }]}>기기 볼륨을 올려도 트윈 목소리가 작다면 조금 더 키워보세요.</Text>
+        <View style={styles.presets}>
+          {([{ value: 1, label: '원래 크기' }, { value: 1.5, label: '1.5배' }, { value: 2, label: '2배' }] satisfies { value: CallVoiceGain; label: string }[]).map(option => <Pressable key={option.value} onPress={() => setGain(option.value)} accessibilityRole="radio" accessibilityLabel={`통화 음성 ${option.label}`} accessibilityState={{ selected: gain === option.value }} style={[styles.preset, { borderColor: gain === option.value ? colors.brand.accent : colors.border.primary, backgroundColor: colors.background.glass }]}><Text style={[styles.copy, { color: gain === option.value ? colors.brand.accent : colors.text.primary }]}>{option.label}</Text></Pressable>)}
+        </View>
+        <Text style={[styles.copy, { color: colors.text.muted }]}>이 기기의 통화에만 적용돼요. 소리가 거칠게 들리면 원래 크기로 바꿔주세요.</Text>
       </View>
       <View style={card}><View style={styles.heading}><Feather name="headphones" size={20} color={colors.brand.accent} /><Text style={[styles.title, { color: colors.text.primary }]}>소리 확인</Text></View><AudioCheck volume={volume} /></View>
       <View style={card}><View style={styles.heading}><Feather name="mic" size={20} color={colors.brand.accent} /><Text style={[styles.title, { color: colors.text.primary }]}>마이크 사용</Text></View><MicrophonePermission /></View>
