@@ -3,10 +3,9 @@ import { ActivityIndicator, Alert, Modal, PanResponder, Pressable, ScrollView, S
 import type { GestureResponderEvent } from 'react-native';
 import { Image } from 'expo-image';
 import * as FileSystem from 'expo-file-system/legacy';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
-import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
+import { FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { getErrorDisplayMessage } from '@/src/utils/apiErrorCode';
 import { constrainTransform, getCoverScale, getCropRect, type PhotoTransform } from './photoGeometry';
@@ -15,6 +14,9 @@ import { useProfilePhotoMutation } from './useProfilePhotoMutation';
 import { logger } from '@/src/utils/logger';
 import { CroppedPhotoPreview } from './CroppedPhotoPreview';
 import { getPhotoEditorFrame } from './photoEditorLayout';
+import { DetailPhotoOverlay, CardPhotoOverlay } from './ProfilePhotoOverlays';
+import { ProfilePhotoImage } from './ProfilePhotoImage';
+import { RECOMMENDATION_PHOTO_ASPECT } from './profilePhotoPresentation';
 
 export interface EditableProfilePhoto { uri: string; width: number; height: number }
 const identity: PhotoTransform = { zoom: 1, x: 0, y: 0 };
@@ -244,15 +246,9 @@ export function ProfilePhotoEditor({ photo, name, onClose, onSaved }: { photo: E
           </View>
           {prepared ? (
             <View testID="photo-editor-frame" style={[styles.frame, { width: previewFrame.width, height: previewFrame.height, borderRadius: mode === 'avatar' ? previewFrame.width / 2 : Radii.lg }]}>
-              <Image source={{ uri: prepared.uri }} style={StyleSheet.absoluteFill} contentFit="cover" accessibilityLabel="크롭한 사진 미리보기" />
-              {mode === 'detail' && <>
-                <LinearGradient colors={['transparent', 'rgba(5,5,5,0.4)', 'rgba(5,5,5,0.82)', Colors.primary.cardBlack]} locations={[0, 0.45, 0.85, 1]} style={StyleSheet.absoluteFill} />
-                <View style={styles.previewCopy}>
-                  <Text numberOfLines={2} style={[styles.previewName, previewFrame.width < 200 && styles.previewNameCompact]}>{name || '내 프로필'}</Text>
-                  {previewFrame.height >= 240 && window.fontScale <= 1.5 && <Text style={styles.previewCaption}>사진 위에 프로필 정보가 표시돼요</Text>}
-                </View>
-              </>}
-              {mode === 'card' && <View style={styles.cardArrow}><Feather name="chevron-right" size={20} color="#fff" /></View>}
+              <ProfilePhotoImage source={{ uri: prepared.uri }} style={StyleSheet.absoluteFill} accessibilityLabel="크롭한 사진 미리보기" />
+              {mode === 'detail' && <DetailPhotoOverlay name={name} width={previewFrame.width} height={previewFrame.height} preview />}
+              {mode === 'card' && <CardPhotoOverlay />}
             </View>
           ) : (
             <View {...pan.panHandlers} testID="photo-editor-frame" style={[styles.frame, { width: frame.width, height: frame.height }]} accessibilityLabel="프로필 사진 크롭 영역">
@@ -278,7 +274,7 @@ export function ProfilePhotoEditor({ photo, name, onClose, onSaved }: { photo: E
               </View>
               <View style={styles.livePreviews}>
                 <View style={styles.livePreviewItem}>
-                  <CroppedPhotoPreview photo={source} crop={crop} width={miniCardWidth} height={miniCardWidth * 3 / 4} label="추천 카드 실시간 미리보기" />
+                  <CroppedPhotoPreview photo={source} crop={crop} width={miniCardWidth} height={miniCardWidth / RECOMMENDATION_PHOTO_ASPECT} label="추천 카드 실시간 미리보기" />
                   <Text style={[styles.caption, { color: colors.text.secondary }]}>추천 카드</Text>
                 </View>
                 <View style={styles.livePreviewItem}>
@@ -329,12 +325,7 @@ const styles = StyleSheet.create({
   tab: { flex: 1, minHeight: 44, paddingHorizontal: Spacing.xs, paddingVertical: Spacing.sm, borderWidth: 1, borderRadius: Radii.md, justifyContent: 'center' },
   controls: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', width: '100%' },
   controlText: { fontFamily: FontFamily.sans, fontSize: FontSize.base, lineHeight: 22, textAlign: 'center', flexShrink: 1 },
-  previewCopy: { position: 'absolute', bottom: 16, left: 16, right: 16, gap: 4 },
-  previewName: { fontFamily: FontFamily.sans, fontSize: 22, lineHeight: 28, fontWeight: FontWeight.bold, color: '#fff' },
-  previewNameCompact: { fontSize: 16, lineHeight: 22 },
-  previewCaption: { fontFamily: FontFamily.sans, fontSize: 12, lineHeight: 18, color: 'rgba(255,255,255,0.85)' },
   previewLabel: { fontFamily: FontFamily.sans, fontSize: FontSize.lg, lineHeight: 24, fontWeight: FontWeight.medium, textAlign: 'center' },
-  cardArrow: { position: 'absolute', right: 12, bottom: 12, padding: 8, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.5)' },
   notice: { flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.sm, padding: Spacing.sm, borderRadius: Radii.md, width: '100%' },
   noticeText: { fontFamily: FontFamily.sans, flex: 1, fontSize: 13, lineHeight: 20 },
   footer: { paddingHorizontal: Spacing.lg, paddingTop: Spacing.sm, paddingBottom: Spacing.sm, borderTopWidth: StyleSheet.hairlineWidth },

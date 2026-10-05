@@ -1,5 +1,5 @@
 import type { TalkLogResponse, TalkLogResult } from '@/src/types/api/history';
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { FlashList, FlashListRef, ListRenderItemInfo } from '@shopify/flash-list';
 import ChatBubble from './parts/ChatBubble';
@@ -12,6 +12,7 @@ interface CallDetailBodyProps {
   partnerProfileImageUrl?: string | null;
   onSaveTalkLog: (talkLogId: number, message: string) => Promise<TalkLogResponse>;
   isSaving: boolean;
+  onEditingChange?: (editing: boolean) => void;
 }
 
 interface FlattenedTalkLog {
@@ -41,9 +42,14 @@ export default function CallDetailBody({
   partnerProfileImageUrl,
   onSaveTalkLog,
   isSaving,
+  onEditingChange,
 }: CallDetailBodyProps) {
   const { colors } = useThemeColors();
   const [editingId, setEditingId] = useState<number | null>(null);
+  useEffect(() => {
+    onEditingChange?.(editingId !== null);
+    return () => { onEditingChange?.(false); };
+  }, [editingId, onEditingChange]);
   const [editText, setEditText] = useState('');
   const listRef = useRef<FlashListRef<FlattenedTalkLog>>(null);
   // isSaving(mutation.isPending)만으로는 리렌더 사이의 좁은 레이스 윈도우에서 중복 저장이 가능하다 —

@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { Feather } from '@expo/vector-icons';
+import { BrowseIcon } from '@/src/components/home/common/BrowseIcon';
 import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import {
   FontFamily,
@@ -21,7 +21,7 @@ export default function MatchingActiveStatus({
 }: {
   compact?: boolean;
 }) {
-  const { colors } = useMatchingDesign();
+  const { colors, palette } = useMatchingDesign();
   const [showInfo, setShowInfo] = useState(false);
   const { width, fontScale } = useWindowDimensions();
   const {
@@ -55,9 +55,9 @@ export default function MatchingActiveStatus({
           style={[styles.info, stacked && { flex: 0 }]}
         >
           <Text style={[styles.title, { color: colors.text.primary }]}>
-            추천에 나를 소개하기
+            내 프로필 추천
           </Text>
-          <Feather name="info" size={14} color={colors.text.secondary} />
+          <BrowseIcon name="info" size={14} color={colors.text.secondary} />
         </Pressable>
         {missing ? (
           <Pressable
@@ -69,13 +69,13 @@ export default function MatchingActiveStatus({
             accessibilityLabel="추천 노출 상태 다시 확인"
             style={styles.retry}
           >
-            <Text style={[styles.copy, { color: colors.brand.accent }]}>
+            <Text style={[styles.copy, { color: palette.accentInk }]}>
               {isFetching ? '확인 중…' : '다시 확인'}
             </Text>
           </Pressable>
         ) : (
           <NotificationToggle
-            accentColor={colors.brand.accent}
+            accentColor={palette.accentInk}
             value={matchingEnabled}
             label="추천 목록에 나를 보여주기"
             onToggle={handleToggle}
@@ -105,8 +105,8 @@ export default function MatchingActiveStatus({
 }
 const styles = StyleSheet.create({
   card: {
-    paddingHorizontal: Spacing.xs,
-    paddingBottom: Spacing.sm,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.xs,
     borderRadius: Radii.lg,
     gap: Spacing.xxs,
   },

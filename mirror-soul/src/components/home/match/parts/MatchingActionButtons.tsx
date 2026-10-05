@@ -1,6 +1,6 @@
 import React from 'react';
-import { Feather } from '@expo/vector-icons';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { BrowseIcon } from '@/src/components/home/common/BrowseIcon';
+import { Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
 import {
   FontFamily,
   FontSize,
@@ -25,6 +25,7 @@ export default function MatchingActionButtons({
   requestCount?: number;
 }) {
   const { colors, palette } = useMatchingDesign();
+  const { fontScale } = useWindowDimensions();
   return (
     <View
       style={[
@@ -55,25 +56,26 @@ export default function MatchingActionButtons({
             styles.tab,
             {
               backgroundColor:
-                activeTab === tab.id ? palette.tint : 'transparent',
-              borderColor: 'transparent',
+                activeTab === tab.id ? palette.buttonBase : 'transparent',
+              borderColor: activeTab === tab.id ? palette.buttonBorder : 'transparent',
             },
           ]}
         >
-          <Feather
-            name={tab.id === 'meet' ? 'heart' : 'message-circle'}
-            size={17}
+          <View style={[styles.tabContent, fontScale > 1.5 && styles.tabContentStacked]}>
+          {fontScale <= 1.3 && <BrowseIcon
+            name={tab.id === 'meet' ? 'user-plus' : 'chat-circle-dots'}
+            size={20}
             color={
-              activeTab === tab.id ? colors.brand.accent : colors.text.secondary
+              activeTab === tab.id ? palette.onAccent : colors.text.secondary
             }
-          />
+          />}
           <Text
             style={[
               styles.label,
               {
                 color:
                   activeTab === tab.id
-                    ? colors.brand.accent
+                    ? palette.onAccent
                     : colors.text.secondary,
               },
             ]}
@@ -81,18 +83,20 @@ export default function MatchingActionButtons({
             {tab.label}
           </Text>
           {tab.count > 0 && (
+            <View style={[styles.badge, { backgroundColor: activeTab === tab.id ? palette.buttonBorder : palette.coolTint }]}>
             <Text
               style={[
-                styles.badge,
+                styles.badgeText,
                 {
-                  color: palette.onAccent,
-                  backgroundColor: colors.brand.accent,
+                  color: activeTab === tab.id ? palette.onAccent : palette.cyanInk,
                 },
               ]}
             >
               {tab.count > 99 ? '99+' : tab.count}
             </Text>
+            </View>
           )}
+          </View>
         </Pressable>
       ))}
     </View>
@@ -104,35 +108,48 @@ const styles = StyleSheet.create({
     gap: Spacing.xs,
     padding: Spacing.xs,
     borderWidth: 1,
-    borderRadius: Radii.xl,
+    borderRadius: Radii.lg,
   },
   tab: {
     flex: 1,
+    minWidth: 0,
     minHeight: 48,
-    padding: Spacing.sm,
-    borderRadius: Radii.lg2,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    borderRadius: Radii.md,
     borderWidth: 1,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: Spacing.xs,
   },
+  tabContent: { width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.xs },
+  tabContentStacked: { flexDirection: 'column' },
   label: {
+    maxWidth: '100%',
     flexShrink: 1,
+    minWidth: 0,
     fontFamily: FontFamily.sans,
     fontSize: FontSize.md,
-    fontWeight: FontWeight.semibold,
-    lineHeight: 23,
+    fontWeight: FontWeight.medium,
+    lineHeight: 22,
+    textAlign: 'center',
+    textAlignVertical: 'center',
+    includeFontPadding: false,
   },
   badge: {
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.sm,
-    lineHeight: 20,
-    fontWeight: FontWeight.semibold,
+    flexShrink: 0,
     paddingHorizontal: Spacing.xs,
     minWidth: 22,
-    textAlign: 'center',
+    minHeight: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
     borderRadius: Radii.full,
+  },
+  badgeText: {
+    fontFamily: FontFamily.sans,
+    fontSize: FontSize.sm,
+    lineHeight: 18,
+    fontWeight: FontWeight.semibold,
+    textAlign: 'center',
+    includeFontPadding: false,
   },
 });

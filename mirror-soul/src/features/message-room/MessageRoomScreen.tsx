@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -47,7 +47,6 @@ export default function MessageRoomScreen({ room }: MessageRoomScreenProps) {
   const [isCallSheetOpen, setIsCallSheetOpen] = useState(false);
   const [isRefillSheetOpen, setIsRefillSheetOpen] = useState(false);
   const [profileCandidate, setProfileCandidate] = useState<Recommendation | null>(null);
-  const openCallAfterProfileDismissRef = useRef(false);
 
   const {
     dateGroups,
@@ -88,6 +87,7 @@ export default function MessageRoomScreen({ room }: MessageRoomScreenProps) {
 
   const handleStartCall = useCallback((target: CallTarget, isPreview: boolean, remainingSeconds?: number) => {
     setIsCallSheetOpen(false);
+    setProfileCandidate(null);
     // 시트의 닫힘 애니메이션을 끝낸 뒤 이동해 새 화면을 가리지 않게 한다.
     setTimeout(() => {
       router.push(
@@ -108,17 +108,6 @@ export default function MessageRoomScreen({ room }: MessageRoomScreenProps) {
   const handleRefillFromCall = useCallback(() => {
     setIsCallSheetOpen(false);
     setTimeout(() => setIsRefillSheetOpen(true), 280);
-  }, []);
-
-  const handleProfileDismiss = useCallback(() => {
-    if (!openCallAfterProfileDismissRef.current) return;
-    openCallAfterProfileDismissRef.current = false;
-    setIsCallSheetOpen(true);
-  }, []);
-
-  const handleCallFromProfile = useCallback(() => {
-    openCallAfterProfileDismissRef.current = true;
-    setProfileCandidate(null);
   }, []);
 
   const renderItem = useCallback(
@@ -225,8 +214,7 @@ export default function MessageRoomScreen({ room }: MessageRoomScreenProps) {
       <PartnerProfileModal
         match={profileCandidate}
         onClose={() => setProfileCandidate(null)}
-        onDismiss={handleProfileDismiss}
-        onConnectNow={handleCallFromProfile}
+        onStartCall={handleStartCall}
       />
       <TimeRefillBottomSheet isOpen={isRefillSheetOpen} onClose={() => setIsRefillSheetOpen(false)} />
     </View>

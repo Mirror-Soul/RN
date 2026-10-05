@@ -20,9 +20,11 @@ interface BottomSheetProps {
   children: React.ReactNode;
   height?: number;
   dragFromHandleOnly?: boolean;
+  /** Render inside an existing full-screen Modal; never present a second native Modal. */
+  embedded?: boolean;
 }
 
-export const BottomSheet = ({ isOpen, onClose, children, height: requestedHeight, dragFromHandleOnly = false }: BottomSheetProps) => {
+export const BottomSheet = ({ isOpen, onClose, children, height: requestedHeight, dragFromHandleOnly = false, embedded = false }: BottomSheetProps) => {
   const { colors } = useThemeColors();
   const { height: screenHeight } = useWindowDimensions();
   const height = Math.min(requestedHeight ?? screenHeight * 0.8, screenHeight);
@@ -81,20 +83,25 @@ export const BottomSheet = ({ isOpen, onClose, children, height: requestedHeight
     <View style={styles.contentContainer}>{children}</View>
   </Animated.View>;
 
-  return (
-    <Modal visible={isModalVisible} transparent animationType="none" onRequestClose={closeSheet}>
-      <GestureHandlerRootView style={StyleSheet.absoluteFill}>
+  const content = (
+      <GestureHandlerRootView accessibilityViewIsModal style={[StyleSheet.absoluteFill, styles.overlay]}>
         <TouchableWithoutFeedback onPress={() => closeSheet()}>
           <Animated.View style={[styles.backdrop, animatedBackdropStyle]} />
         </TouchableWithoutFeedback>
 
         {dragFromHandleOnly ? sheet : <GestureDetector gesture={panGesture}>{sheet}</GestureDetector>}
       </GestureHandlerRootView>
+  );
+  if (embedded) return isModalVisible ? content : null;
+  return (
+    <Modal visible={isModalVisible} transparent animationType="none" onRequestClose={closeSheet}>
+      {content}
     </Modal>
   );
 };
 
 const styles = StyleSheet.create({
+  overlay: { zIndex: 10 },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0, 0, 0, 0.7)',

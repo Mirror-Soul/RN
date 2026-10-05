@@ -1,6 +1,6 @@
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import { BrowseIcon } from '@/src/components/home/common/BrowseIcon';
 import { useRouter } from 'expo-router';
 import {
   FontFamily,
@@ -43,10 +43,10 @@ export default function MatchingChatItem({
         },
       ]}
     >
-      <MatchAvatar name={name} url={partner.profileImageUrl} size={56} />
+      <MatchAvatar name={name} url={partner.profileImageUrl} size={48} />
       <View style={styles.copy}>
         <View style={styles.heading}>
-          <Text style={[styles.name, { color: colors.text.primary }]}>
+          <Text variant="heading" style={[styles.name, { color: colors.text.primary }]}>
             {name}
           </Text>
           {unread && (
@@ -54,8 +54,8 @@ export default function MatchingChatItem({
               style={[
                 styles.badge,
                 {
-                  color: palette.onAccent,
-                  backgroundColor: colors.brand.accent,
+                  color: palette.accentInk,
+                  backgroundColor: palette.tint,
                 },
               ]}
             >
@@ -83,8 +83,8 @@ export default function MatchingChatItem({
           )}
           {!data.notificationEnabled && (
             <View style={styles.quiet}>
-              <Feather
-                name="bell-off"
+              <BrowseIcon
+                name="bell-slash"
                 size={12}
                 color={colors.text.secondary}
               />
@@ -95,7 +95,7 @@ export default function MatchingChatItem({
           )}
         </View>
       </View>
-      <Feather name="chevron-right" size={18} color={colors.text.secondary} />
+      <BrowseIcon name="caret-right" size={18} color={colors.text.secondary} />
     </Pressable>
   );
 }
@@ -103,19 +103,20 @@ const styles = StyleSheet.create({
   card: {
     padding: Spacing.lg,
     borderWidth: 1,
-    borderRadius: Radii.lg2,
+    borderRadius: Radii.lg,
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.md,
   },
   copy: { flex: 1, minWidth: 0, gap: Spacing.xs },
-  heading: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
+  heading: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: Spacing.sm },
   name: {
     flex: 1,
+    minWidth: 0,
     fontFamily: FontFamily.sans,
-    fontSize: FontSize.xl,
+    fontSize: FontSize.lg,
     fontWeight: FontWeight.semibold,
-    lineHeight: 25,
+    lineHeight: 24,
   },
   badge: {
     fontFamily: FontFamily.sans,
@@ -134,5 +135,5 @@ const styles = StyleSheet.create({
   },
   meta: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
   note: { fontFamily: FontFamily.sans, fontSize: FontSize.sm, lineHeight: 20 },
-  quiet: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs },
+  quiet: { maxWidth: '100%', flexDirection: 'row', alignItems: 'center', gap: Spacing.xs },
 });

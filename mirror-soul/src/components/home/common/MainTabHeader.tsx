@@ -1,5 +1,6 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { BrowseText as Text } from './BrowseText';
 import {
   FontFamily,
   FontSize,
@@ -16,39 +17,64 @@ export function mainTabTopPadding(topInset: number) {
 
 export function MainTabHeader({
   title,
+  description,
   action,
 }: {
   title: string;
+  description?: string;
   action?: React.ReactNode;
 }) {
   const { colors } = useThemeColors();
   return (
-    <View style={styles.row}>
-      <Text
-        accessibilityRole="header"
-        lineBreakStrategyIOS="hangul-word"
-        textBreakStrategy="highQuality"
-        style={[styles.title, { color: colors.text.primary }]}
-      >
-        {title}
-      </Text>
-      {action}
+    <View style={styles.container}>
+      <View style={styles.row}>
+        <Text
+          variant="heading"
+          accessibilityRole="header"
+          lineBreakStrategyIOS="hangul-word"
+          textBreakStrategy="highQuality"
+          style={[styles.title, { color: colors.text.primary }]}
+        >
+          {title}
+        </Text>
+        {action}
+      </View>
+      {description ? (
+        <Text
+          lineBreakStrategyIOS="hangul-word"
+          textBreakStrategy="highQuality"
+          style={[styles.description, { color: colors.text.secondary }]}
+        >
+          {description}
+        </Text>
+      ) : null}
     </View>
   );
 }
 const styles = StyleSheet.create({
+  container: {
+    alignSelf: 'stretch',
+    gap: Spacing.xxs,
+  },
   row: {
     minHeight: 48,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.md,
+    gap: Spacing.sm,
   },
   title: {
     flex: 1,
+    minWidth: 0,
     fontFamily: FontFamily.sans,
     fontSize: FontSize.xxxl,
-    fontWeight: FontWeight.bold,
-    lineHeight: 31,
-    letterSpacing: -0.7,
+    fontWeight: FontWeight.medium,
+    lineHeight: 32,
+    letterSpacing: -0.3,
+  },
+  description: {
+    fontFamily: FontFamily.sans,
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.regular,
+    lineHeight: 21,
   },
 });

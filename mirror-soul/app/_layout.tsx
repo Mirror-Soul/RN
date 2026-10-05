@@ -14,9 +14,11 @@ import { useProactiveTokenRefresh } from '@/src/hooks/useProactiveTokenRefresh';
 import { usePushNotificationSetup } from '@/src/features/push/hooks/usePushNotificationSetup';
 import { useChatRealtimeConnection } from '@/src/features/chat/hooks/useChatRealtimeConnection';
 import { getAuthRedirect } from '@/src/features/auth/onboardingResume';
+import { useFonts } from 'expo-font';
+import { BROWSE_FONT_ASSETS } from '@/src/constants/browseFonts';
 
 /**
- * hydration 완료 전까지 스플래시 화면 유지.
+ * 저장된 세션과 로컬 글꼴 준비 전까지 스플래시 화면 유지.
  * 반드시 컴포넌트 렌더링 전에 호출되어야 합니다.
  */
 SplashScreen.preventAutoHideAsync();
@@ -49,6 +51,8 @@ function ChatRealtimeSetup() {
 }
 
 function RootLayout() {
+  const [fontsLoaded, fontError] = useFonts(BROWSE_FONT_ASSETS);
+  const fontsReady = fontsLoaded || !!fontError;
   const rootNavigationState = useRootNavigationState();
   const pathname = usePathname();
   const { isHydrated, isLoggedIn, userStatus, needsOnboardingResume, hydrate } = useAuthStore();
@@ -61,18 +65,18 @@ function RootLayout() {
   // access token 만료 전 사전 갱신 (hydration 이후에만 의미 있음 — 훅 내부에서 isLoggedIn/accessToken 가드)
   useProactiveTokenRefresh();
 
-  // hydration 완료 → 스플래시 숨김
+  // Font failures fall back to the original typeface and still allow app startup.
   useEffect(() => {
-    if (isHydrated) {
+    if (isHydrated && fontsReady) {
       SplashScreen.hideAsync().catch(() => {
         // 이미 숨겨진 경우 등 무시
       });
     }
-  }, [isHydrated]);
+  }, [isHydrated, fontsReady]);
 
   // 인증 상태 변경 감지 → 적절한 화면으로 이동
   useEffect(() => {
-    if (!isHydrated || !rootNavigationState?.key) return;
+    if (!isHydrated || !fontsReady || !rootNavigationState?.key) return;
 
     const timer = setTimeout(() => {
       const destination = getAuthRedirect({ isLoggedIn, userStatus, pathname, needsOnboardingResume });
@@ -80,10 +84,10 @@ function RootLayout() {
     }, 0);
 
     return () => clearTimeout(timer);
-  }, [isHydrated, isLoggedIn, userStatus, needsOnboardingResume, rootNavigationState?.key, pathname]);
+  }, [isHydrated, fontsReady, isLoggedIn, userStatus, needsOnboardingResume, rootNavigationState?.key, pathname]);
 
-  // hydration 전: null 반환 (SplashScreen이 화면을 가림)
-  if (!isHydrated) return null;
+  // Wait before mounting navigation to avoid switching fonts on a visible screen.
+  if (!isHydrated || !fontsReady) return null;
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

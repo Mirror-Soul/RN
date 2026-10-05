@@ -1,4 +1,4 @@
-export const PROFILE_PHOTO_ASPECT = 4 / 5;
+export { PROFILE_PHOTO_ASPECT } from './profilePhotoPresentation';
 export const MAX_PROFILE_PHOTO_BYTES = 5 * 1024 * 1024;
 
 export interface PhotoSize { width: number; height: number }

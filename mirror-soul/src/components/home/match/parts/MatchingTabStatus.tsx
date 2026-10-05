@@ -1,6 +1,6 @@
 import React from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import { BrowseIcon } from '@/src/components/home/common/BrowseIcon';
 import {
   FontFamily,
   FontSize,
@@ -20,6 +20,7 @@ export default function MatchingTabStatus({
   onRetry,
   onExplore,
   onRequests,
+  kind = 'requests',
 }: {
   message: string;
   description?: string;
@@ -27,6 +28,7 @@ export default function MatchingTabStatus({
   onRetry?: () => void;
   onExplore?: () => void;
   onRequests?: () => void;
+  kind?: 'requests' | 'messages';
 }) {
   const { colors, palette } = useMatchingDesign();
   return (
@@ -41,12 +43,12 @@ export default function MatchingTabStatus({
     >
       <View style={[styles.symbol, { backgroundColor: palette.tint }]}>
         {isLoading ? (
-          <ActivityIndicator color={colors.brand.accent} />
+          <ActivityIndicator color={palette.accentInk} />
         ) : (
-          <Feather
-            name={onRetry ? 'wifi-off' : 'heart'}
-            size={28}
-            color={colors.brand.accent}
+          <BrowseIcon
+            name={onRetry ? 'wifi-slash' : kind === 'messages' ? 'chat-circle-dots' : 'user-plus'}
+            size={24}
+            color={palette.accentInk}
           />
         )}
       </View>
@@ -73,18 +75,17 @@ export default function MatchingTabStatus({
 const styles = StyleSheet.create({
   card: {
     borderWidth: 1,
-    borderRadius: Radii.xl,
-    padding: Spacing.xxl,
+    borderRadius: Radii.lg,
+    padding: Spacing.xl,
     gap: Spacing.md,
   },
   symbol: {
-    width: 64,
-    height: 64,
+    width: 48,
+    height: 48,
     borderRadius: Radii.full,
     justifyContent: 'center',
     alignItems: 'center',
     alignSelf: 'center',
-    marginBottom: Spacing.sm,
   },
   title: {
     fontFamily: FontFamily.sans,

@@ -6,6 +6,9 @@ import { act, fireEvent, render, waitFor, within } from '@testing-library/react-
 import { prepareProfilePhoto, rotateSelectedPhoto } from './prepareProfilePhoto';
 import { useProfilePhotoMutation } from './useProfilePhotoMutation';
 import { ProfilePhotoEditor } from './ProfilePhotoEditor';
+import { DetailPhotoOverlay, CardPhotoOverlay } from './ProfilePhotoOverlays';
+import { ProfilePhotoImage } from './ProfilePhotoImage';
+import { PHOTO_PREVIEW_ASPECTS } from './profilePhotoPresentation';
 import { CroppedPhotoPreview } from './CroppedPhotoPreview';
 
 jest.mock('expo-image', () => ({ Image: jest.requireActual('react-native').Image }));
@@ -190,5 +193,21 @@ it('keeps preview actions available with large text on a short screen', async ()
     expect(button).toBeEnabled();
     expect(StyleSheet.flatten(button.props.style).flexBasis).toBe('auto');
     expect(within(screen.getByTestId('photo-editor-scroll')).queryByRole('button', { name })).toBeNull();
+  }
+});
+
+// The prepared preview and public surfaces share the same final-file crop and overlays.
+it('keeps each prepared preview centered and applies its public presentation ratio', async () => {
+  const screen = render(<ProfilePhotoEditor photo={photo} name="소울" onClose={jest.fn()} />);
+  fireEvent.press(screen.getByText('미리보기 확인'));
+  await waitFor(() => expect(screen.getByText('이렇게 보여요')).toBeTruthy());
+  for (const [tab, mode] of [['프로필', 'detail'], ['추천 카드', 'card'], ['원형 사진', 'avatar']] as const) {
+    fireEvent.press(screen.getByRole('button', { name: tab }));
+    const frame = StyleSheet.flatten(screen.getByTestId('photo-editor-frame').props.style);
+    expect(frame.width / frame.height).toBeCloseTo(PHOTO_PREVIEW_ASPECTS[mode]);
+    const preparedImage = screen.UNSAFE_getByType(ProfilePhotoImage);
+    expect(preparedImage.props.source.uri).toBe(prepared.uri);
+    if (mode === 'detail') expect(screen.UNSAFE_getByType(DetailPhotoOverlay).props.name).toBe('소울');
+    if (mode === 'card') expect(screen.UNSAFE_getByType(CardPhotoOverlay)).toBeTruthy();
   }
 });

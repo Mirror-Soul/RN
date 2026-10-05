@@ -1,6 +1,8 @@
 import React from 'react';
 import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { FlatList } from 'react-native';
+import { useProfileRefresh } from '@/src/features/profile/hooks/useProfileRefresh';
 import MatchScreen from './MatchScreen';
 import {
   getReceivedMeetingRequests,
@@ -134,6 +136,32 @@ beforeEach(() => {
   });
 });
 afterEach(() => client.clear());
+
+it('refreshes on focus without pulling the whole list down through the native refresh control', async () => {
+  const screen = render(<MatchScreen />, { wrapper });
+  await screen.findByText('첫 메시지 1');
+  let finish!: (response: unknown) => void;
+  (getReceivedMeetingRequests as jest.Mock).mockImplementationOnce(() => new Promise(resolve => { finish = resolve; }));
+  let background!: Promise<unknown>;
+  act(() => { background = jest.mocked(useProfileRefresh).mock.calls.at(-1)![0](); });
+  await waitFor(() => expect(screen.getByLabelText('매칭 목록 새로고침').props.accessibilityState.busy).toBe(true));
+  expect(screen.UNSAFE_getByType(FlatList).props.refreshing).toBe(false);
+  await act(async () => { finish({ result: { totalCount: 2, requests } }); await background; });
+});
+
+it('keeps manual pull-to-refresh functional, blocks repeated pulls and clears its indicator', async () => {
+  const screen = render(<MatchScreen />, { wrapper });
+  await screen.findByText('첫 메시지 1');
+  let finish!: (response: unknown) => void;
+  (getReceivedMeetingRequests as jest.Mock).mockImplementationOnce(() => new Promise(resolve => { finish = resolve; }));
+  const before = jest.mocked(getReceivedMeetingRequests).mock.calls.length;
+  fireEvent(screen.UNSAFE_getByType(FlatList), 'refresh');
+  fireEvent(screen.UNSAFE_getByType(FlatList), 'refresh');
+  expect(screen.UNSAFE_getByType(FlatList).props.refreshing).toBe(true);
+  await waitFor(() => expect(getReceivedMeetingRequests).toHaveBeenCalledTimes(before + 1));
+  await act(async () => { finish({ result: { totalCount: 2, requests } }); });
+  await waitFor(() => expect(screen.UNSAFE_getByType(FlatList).props.refreshing).toBe(false));
+});
 
 it('accepts the exact request row once and navigates even if the chat list refresh fails', async () => {
   let finish!: (response: unknown) => void;

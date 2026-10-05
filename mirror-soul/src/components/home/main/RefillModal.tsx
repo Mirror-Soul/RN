@@ -3,7 +3,7 @@ import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { TIME_REFILL_OPTIONS } from '@/src/features/profile/constants/timeRefillOptions';
+import { TIME_REFILL_OPTIONS, formatRefillPrice } from '@/src/features/profile/constants/timeRefillOptions';
 
 interface TimePackage {
   id: string;
@@ -20,9 +20,9 @@ const TIME_PACKAGES: TimePackage[] = TIME_REFILL_OPTIONS.map((option) => ({
   id: option.id,
   duration: option.addedTime.replace('+ ', ''),
   tagline: option.durationLabel,
-  price: option.price,
-  best: option.badge?.type === 'popular',
-  note: option.badge?.text ?? '',
+  price: `${formatRefillPrice(option.priceWon)} (가격 예시)`,
+  best: option.badge === '추천',
+  note: option.badge ?? '',
 }));
 
 interface RefillModalProps {
@@ -42,7 +42,7 @@ export default function RefillModal({ visible, onClose, onSelectPackage }: Refil
     <BottomSheetModal visible={visible} onClose={onClose}>
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.text.primary }]}>시간 채우기</Text>
-        <Text style={[styles.subtitle, { color: colors.text.muted }]}>더 깊은 공명을 위해 대화 시간을 충전하세요.</Text>
+        <Text style={[styles.subtitle, { color: colors.text.muted }]}>현재는 결제 없는 테스트 충전이며, 가격은 예시입니다.</Text>
       </View>
 
       <View style={styles.packageList}>

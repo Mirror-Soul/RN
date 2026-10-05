@@ -1,6 +1,6 @@
 import React from 'react';
 import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import { BrowseIcon } from '@/src/components/home/common/BrowseIcon';
 import {
   FontFamily,
   FontSize,
@@ -16,6 +16,7 @@ import type { MeetingRequestItem } from '@/src/types/api/meeting';
 import { formatRelativeTime } from '@/src/utils/formatRelativeTime';
 import { MatchAvatar } from './MatchAvatar';
 import { MatchActionButton } from './MatchActionButton';
+import { useLayout } from '@/src/hooks/useLayout';
 
 export function MeetingRequestCard({
   request,
@@ -31,8 +32,10 @@ export function MeetingRequestCard({
   accepting: boolean;
 }) {
   const { colors, palette } = useMatchingDesign();
-  const { width, fontScale } = useWindowDimensions();
-  const stacked = width < 360 || fontScale > 1.15;
+  const { fontScale } = useWindowDimensions();
+  const { cardWidth } = useLayout();
+  const [actionWidth, setActionWidth] = React.useState(cardWidth - Spacing.lg * 2);
+  const stacked = actionWidth < 300 || fontScale > 1.3;
   const name = request.name || '상대방';
   return (
     <View
@@ -51,9 +54,9 @@ export function MeetingRequestCard({
         accessibilityLabel={`${name}님의 신청 자세히 보기`}
         style={styles.heading}
       >
-        <MatchAvatar name={name} url={request.profileImageUrl} size={64} />
+        <MatchAvatar name={name} url={request.profileImageUrl} size={52} />
         <View style={styles.person}>
-          <Text style={[styles.name, { color: colors.text.primary }]}>
+          <Text variant="heading" style={[styles.name, { color: colors.text.primary }]}>
             {name}
           </Text>
           <Text style={[styles.copy, { color: colors.text.secondary }]}>
@@ -61,10 +64,9 @@ export function MeetingRequestCard({
             {formatRelativeTime(request.requestedAt)}
           </Text>
         </View>
-        <Feather name="chevron-right" size={20} color={colors.text.secondary} />
+        <BrowseIcon name="caret-right" size={20} color={colors.text.secondary} />
       </Pressable>
       <View style={[styles.messageBubble, { backgroundColor: palette.tint }]}>
-        <Feather name="message-circle" size={16} color={palette.tintText} />
         <Text
           style={[styles.message, { color: colors.text.primary }]}
           numberOfLines={3}
@@ -74,16 +76,17 @@ export function MeetingRequestCard({
       </View>
       {request.twinSimilarity != null && (
         <View style={styles.meta}>
-          <Feather name="heart" size={13} color={colors.brand.accent} />
+          <BrowseIcon name="sparkle" size={13} color={palette.accentInk} />
           <Text style={[styles.copy, { color: colors.text.secondary }]}>
             AI 대화 공감도 {request.twinSimilarity}%
           </Text>
         </View>
       )}
-      <View style={[styles.actions, stacked && styles.stacked]}>
+      <View onLayout={event => setActionWidth(event.nativeEvent.layout.width)} style={[styles.actions, stacked && styles.stacked]}>
         <View style={!stacked && styles.primaryAction}>
           <MatchActionButton
             label="수락하고 대화하기"
+            icon={color => <BrowseIcon name="chat-circle-dots" color={color} />}
             onPress={onAccept}
             primary
             disabled={disabled}
@@ -97,7 +100,7 @@ export function MeetingRequestCard({
           accessibilityLabel={`${name}님의 메시지와 대화 요약 보기`}
           style={[styles.details, { borderColor: colors.border.primary }]}
         >
-          <Text style={[styles.copy, { color: colors.brand.accent }]}>
+          <Text style={[styles.copy, { color: palette.accentInk }]}>
             자세히 보기
           </Text>
         </Pressable>
@@ -107,9 +110,9 @@ export function MeetingRequestCard({
 }
 const styles = StyleSheet.create({
   card: {
-    padding: Spacing.xl,
+    padding: Spacing.lg,
     borderWidth: 1,
-    borderRadius: Radii.xxl,
+    borderRadius: Radii.lg,
     gap: Spacing.md,
   },
   heading: {
@@ -121,9 +124,9 @@ const styles = StyleSheet.create({
   person: { flex: 1, minWidth: 0, gap: Spacing.xs },
   name: {
     fontFamily: FontFamily.sans,
-    fontSize: FontSize.xxl,
+    fontSize: FontSize.xl,
     fontWeight: FontWeight.semibold,
-    lineHeight: 29,
+    lineHeight: 26,
   },
   copy: {
     fontFamily: FontFamily.sans,
@@ -132,9 +135,8 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
   messageBubble: {
-    borderRadius: Radii.lg2,
-    borderTopLeftRadius: Radii.bubble,
-    padding: Spacing.lg,
+    borderRadius: Radii.md,
+    padding: Spacing.md,
     gap: Spacing.sm,
   },
   message: {
@@ -154,7 +156,7 @@ const styles = StyleSheet.create({
   details: {
     minHeight: 48,
     borderWidth: 1,
-    borderRadius: Radii.full,
+    borderRadius: Radii.md,
     padding: Spacing.md,
     justifyContent: 'center',
     alignItems: 'center',

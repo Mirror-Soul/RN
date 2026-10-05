@@ -1,28 +1,19 @@
 import React from 'react';
-import { StyleSheet, Text } from 'react-native';
+import { StyleSheet } from 'react-native';
+import { BrowseText as Text } from '@/src/components/home/common/BrowseText';
 import { FontFamily, FontSize, FontWeight } from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 /** matchingEnabled controls recommendation exposure, not an AI analysis job or browsing. */
-export default function AiStatusTicker({
-  isMatchingEnabled,
-  isError,
-}: {
-  isMatchingEnabled?: boolean | null;
-  isError?: boolean;
-}) {
+export default function AiStatusTicker() {
   const { colors } = useThemeColors();
-  const title = isError
-    ? '추천 노출 확인 필요'
-    : isMatchingEnabled == null
-      ? '추천 노출 확인 중'
-      : '추천 프로필';
   return (
     <Text
+      variant="heading"
       accessibilityRole="header"
       style={[styles.title, { color: colors.text.primary }]}
     >
-      {title}
+      추천 프로필
     </Text>
   );
 }
@@ -31,7 +22,7 @@ const styles = StyleSheet.create({
     flexShrink: 1,
     fontFamily: FontFamily.sans,
     fontSize: FontSize.xl,
-    fontWeight: FontWeight.bold,
+    fontWeight: FontWeight.semibold,
     lineHeight: 26,
   },
 });

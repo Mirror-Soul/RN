@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Image } from 'expo-image';
+import { ProfilePhotoImage } from '@/src/features/profile/photo/ProfilePhotoImage';
 import { FontFamily, FontSize, FontWeight, Radii } from '@/src/constants/theme';
 import {
   useMatchingDesign,
@@ -16,8 +16,10 @@ export function MatchAvatar({
   url: string | null;
   size?: number;
 }) {
-  const { colors, palette } = useMatchingDesign();
+  const { palette } = useMatchingDesign();
   const [failed, setFailed] = useState(false);
+  const currentUrl = useRef(url);
+  currentUrl.current = url;
   useEffect(() => setFailed(false), [url]);
   return (
     <View
@@ -32,21 +34,22 @@ export function MatchAvatar({
       ]}
     >
       {url && !failed ? (
-        <Image
+        <ProfilePhotoImage
+          key={url}
           accessibilityLabel={`${name} 프로필 사진`}
           source={{ uri: url }}
           style={StyleSheet.absoluteFill}
-          contentFit="cover"
           cachePolicy="disk"
-          onError={() => setFailed(true)}
+          onError={() => { if (currentUrl.current === url) setFailed(true); }}
         />
       ) : (
         <Text
+          variant="heading"
           maxFontSizeMultiplier={1.6}
           accessibilityLabel={
             url ? '사진을 불러오지 못해 기본 아바타로 표시' : '기본 아바타'
           }
-          style={[styles.initial, { color: colors.brand.accent }]}
+          style={[styles.initial, { color: palette.accentInk }]}
         >
           {name.trim().charAt(0) || '?'}
         </Text>
