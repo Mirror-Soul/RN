@@ -11,7 +11,7 @@ beforeEach(() => { jest.clearAllMocks(); mockSession = { isLoggedIn: true, userU
 const payload = { anchorRegionId: 5, nearbyCount: 30 };
 
 function setup() {
-  const client = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
+  const client = new QueryClient({ defaultOptions: { queries: { gcTime: Infinity }, mutations: { retry: false, gcTime: Infinity } } });
   const wrapper = ({ children }: { children: React.ReactNode }) => <QueryClientProvider client={client}>{children}</QueryClientProvider>;
   return { client, ...renderHook(() => useUpdatePreferredRegionMutation(), { wrapper }) };
 }
