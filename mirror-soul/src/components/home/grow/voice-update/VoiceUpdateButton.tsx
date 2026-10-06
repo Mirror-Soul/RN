@@ -1,6 +1,4 @@
-import CompleteIcon from '@/assets/images/common/evlove/voice-update/voice_update_complete.svg';
-import StopIcon from '@/assets/images/common/evlove/voice-update/voice_update_stop.svg';
-import VoiceIcon from '@/assets/images/common/Voice_icon_white.svg';
+import { Feather } from '@expo/vector-icons';
 import {Colors, Radii, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
 import GrowDoneActionRow from '@/src/components/home/grow/GrowDoneActionRow';
 import VoiceUpdateIdleStatus, {
@@ -8,8 +6,10 @@ import VoiceUpdateIdleStatus, {
 } from '@/src/components/home/grow/voice-update/VoiceUpdateIdleStatus';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
+import { BrowseText as Text } from '@/src/components/home/common/BrowseText';
+import { StyleSheet, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
+import { formatVoiceCooldown } from './readingSimilarity';
 
 export type VoiceUpdateStatus = 'idle' | 'starting' | 'recording' | 'analyzing' | 'done';
 
@@ -18,7 +18,8 @@ interface VoiceUpdateButtonProps {
   elapsedTime?: string;
   onPress: () => void;
   onRetry: () => void;
-  /** 2분 쿨다운이 남았으면 남은 초, 아니면 undefined. idle 상태에서만 의미가 있다. */
+  recordingBlocked?: boolean;
+  /** 2분 쿨다운이 남았으면 남은 초. 제출 완료 후 다음 문장 버튼에도 표시한다. */
   cooldownRemainingSeconds?: number;
   /** 쿨다운 여부를 확인하는 중(twinSync 최초 조회)이면 true — 곧 풀리는 상태라 안내만 한다. */
   isCooldownStatusPending?: boolean;
@@ -38,6 +39,7 @@ export default function VoiceUpdateButton({
   elapsedTime,
   onPress,
   onRetry,
+  recordingBlocked = false,
   cooldownRemainingSeconds,
   isCooldownStatusPending,
   isCooldownStatusError,
@@ -47,9 +49,8 @@ export default function VoiceUpdateButton({
   const { width } = useWindowDimensions();
   const { colors } = useThemeColors();
 
-  // 기기 폭에 비례하는 동적 크기 계산 (기준 393px에서 96px은 약 24.4%)
-  // 너무 작아지거나 커지는 것을 방지하기 위해 clamp 적용
-  const dynamicButtonSize = Math.max(80, Math.min(width * 0.244, 112));
+  // Keep the recording control reachable without taking space away from the reading prompt.
+  const dynamicButtonSize = status === 'done' ? 48 : Math.max(64, Math.min(width * 0.19, 80));
 
   const isIdle = status === 'idle';
   const isStarting = status === 'starting';
@@ -70,6 +71,7 @@ export default function VoiceUpdateButton({
           ? 'checking'
           : 'ready';
   const isCoolingDown = isIdle && idleStatus !== 'ready';
+  const disabled = isStarting || isAnalyzing || isCoolingDown || (isIdle && recordingBlocked);
 
   // 상태별 그라디언트 및 그림자 스타일 결정
   const gradientColors = isIdle || isStarting
@@ -86,7 +88,7 @@ export default function VoiceUpdateButton({
 
   return (
     <View style={styles.container}>
-      {/* 1. 상단 버튼 영역 (공통) */}
+      <View style={styles.controlRow}>
       {status === 'done' ? (
         // 완료 상태: 클릭 불가능한 정적 뷰로 유지
         <View 
@@ -102,21 +104,24 @@ export default function VoiceUpdateButton({
             end={{ x: 1, y: 1 }}
             style={styles.button}
           >
-            <CompleteIcon width={32} height={32} />
+            <Feather name="check" size={32} color={Colors.neutral.pureWhite} />
           </LinearGradient>
         </View>
       ) : (
         // 그 외 상태: 인터랙션 가능한 버튼
         <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel={isRecording ? '녹음 종료 후 문장 확인' : isStarting ? '녹음 준비 중' : isAnalyzing ? '녹음 전송 중' : '목소리 녹음 시작'}
+          accessibilityState={{ disabled, busy: isStarting || isAnalyzing }}
           activeOpacity={0.8}
           onPress={onPress}
           style={[
             styles.buttonWrapper,
             shadowStyle,
             { width: dynamicButtonSize, height: dynamicButtonSize }, // 동적 사이즈 적용
-            isCoolingDown && styles.buttonCoolingDown,
+            disabled && styles.buttonCoolingDown,
           ]}
-          disabled={isStarting || isAnalyzing || isCoolingDown}
+          disabled={disabled}
         >
           <LinearGradient
             colors={gradientColors}
@@ -124,17 +129,17 @@ export default function VoiceUpdateButton({
             end={{ x: 1, y: 1 }}
             style={styles.button}
           >
-            {(isIdle || isStarting) && <VoiceIcon width={32} height={32} />}
-            {isRecording && <StopIcon width={32} height={32} />}
-            {isAnalyzing && <CompleteIcon width={32} height={32} />}
+            {(isIdle || isStarting) && <Feather name="mic" size={32} color={Colors.neutral.pureWhite} />}
+            {isRecording && <Feather name="square" size={32} color={Colors.neutral.pureWhite} />}
+            {isAnalyzing && <Feather name="upload-cloud" size={32} color={Colors.neutral.pureWhite} />}
           </LinearGradient>
         </TouchableOpacity>
       )}
 
-      {/* 2. 하단 정보 및 액션 영역 */}
       <View style={styles.infoArea}>
         {isStarting && <Text style={[styles.statusText, { color: colors.text.secondary }]}>녹음을 준비하고 있어요…</Text>}
-        {isIdle && (
+        {isIdle && recordingBlocked && <Text style={[styles.statusText, { color: colors.text.secondary }]}>읽을 문장을 확인해주세요</Text>}
+        {isIdle && !recordingBlocked && (
           <VoiceUpdateIdleStatus
             status={idleStatus}
             cooldownRemainingSeconds={cooldownRemainingSeconds}
@@ -147,41 +152,50 @@ export default function VoiceUpdateButton({
           <View style={styles.recordingInfo}>
             <View style={styles.recordingStatusRow}>
               <View style={styles.recordingDot} />
-              <Text style={[styles.statusText, { color: colors.text.primary }]}>녹음 중...</Text>
+              <Text style={[styles.statusText, { color: colors.text.primary }]}>녹음 중</Text>
+              <Text style={[styles.elapsedText, { color: colors.text.secondary }]}>{elapsedTime ?? '00:00'}</Text>
             </View>
-            <Text style={[styles.elapsedText, { color: colors.text.secondary }]}>{elapsedTime}초</Text>
+            <Text style={[styles.statusText, { color: colors.text.primary }]}>끝내고 확인하기</Text>
           </View>
         )}
 
         {isAnalyzing && (
           <View style={styles.doneInfo}>
             <Text style={[styles.statusText, { color: Colors.primary.successGreen, fontWeight: FontWeight.semibold }]}>
-              목소리 분석 중...
+              녹음을 보내고 있어요…
             </Text>
-            <Text style={[styles.footerText, { color: colors.text.secondary }]}>인공지능이 당신의 말투를 학습하고 있습니다</Text>
+            <Text style={[styles.footerText, { color: colors.text.secondary }]}>녹음 전송이 끝나면 학습을 요청해요. 잠시만 기다려 주세요.</Text>
           </View>
         )}
 
         {isDone && (
-          <View style={styles.finalActionArea}>
-            <GrowDoneActionRow retryLabel="다른 문장 읽어보기" onRetry={onRetry} />
+          <View style={styles.doneInfo}>
+            <Text style={[styles.statusText, { color: colors.text.primary }]}>녹음을 보냈어요</Text>
+            <Text style={[styles.footerText, { color: colors.text.secondary }]}>학습을 요청했어요. 반영까지 시간이 걸릴 수 있어요.</Text>
           </View>
         )}
       </View>
+      </View>
+      {isDone && <View style={styles.finalActionArea}>
+        {(idleStatus === 'checkFailed' || idleStatus === 'checking') && <VoiceUpdateIdleStatus status={idleStatus} isRetrying={isCooldownCheckRetrying} onRetryCooldownCheck={onRetryCooldownCheck} />}
+        <GrowDoneActionRow retryLabel="다음 문장 읽기" onRetry={onRetry} retryDisabled={idleStatus !== 'ready'}
+          retryHint={idleStatus === 'cooldown' ? `${formatVoiceCooldown(cooldownRemainingSeconds ?? 0)} 후 가능` : undefined} completeLabel="성장으로 돌아가기" />
+      </View>}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    alignItems: 'center',
-    gap: Spacing.xxl,
+    alignItems: 'stretch',
+    gap: 12,
     alignSelf: 'stretch',
-    minHeight: 180,
   },
+  controlRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   buttonWrapper: {
     // width와 height는 컴포넌트 내부에서 동적으로 할당됨
     borderRadius: Radii.full,
+    flexShrink: 0,
   },
   buttonCoolingDown: {
     opacity: 0.5,
@@ -193,17 +207,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   infoArea: {
-    alignItems: 'center',
-    height: 80,
+    flex: 1,
+    minWidth: 0,
+    alignItems: 'stretch',
   },
   recordingInfo: {
-    alignItems: 'center',
+    alignSelf: 'stretch',
+    alignItems: 'flex-start',
     gap: Spacing.sm,
   },
   recordingStatusRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.sm,
+    flexWrap: 'wrap',
+    justifyContent: 'flex-start',
   },
   recordingDot: {
     width: 8,
@@ -213,19 +231,21 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
   doneInfo: {
-    alignItems: 'center',
+    alignSelf: 'stretch',
+    alignItems: 'stretch',
     gap: Spacing.sm,
   },
   statusText: {
-    textAlign: 'center',
+    alignSelf: 'stretch',
+    textAlign: 'left',
     fontFamily: FontFamily.sans,
-    fontSize: FontSize.lg,
-    fontWeight: FontWeight.regular,
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.medium,
     lineHeight: 24,
     letterSpacing: -0.312,
   },
   elapsedText: {
-    textAlign: 'center',
+    textAlign: 'left',
     fontFamily: FontFamily.sans,
     fontSize: FontSize.base,
     fontWeight: FontWeight.regular,
@@ -233,16 +253,16 @@ const styles = StyleSheet.create({
     letterSpacing: -0.15,
   },
   footerText: {
-    textAlign: 'center',
+    alignSelf: 'stretch',
+    textAlign: 'left',
     fontFamily: FontFamily.sans,
     fontSize: FontSize.sm,
     fontWeight: FontWeight.regular,
-    lineHeight: 16,
+    lineHeight: 21,
   },
   finalActionArea: {
     width: '100%',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop: 10,
+    alignItems: 'stretch',
+    gap: 10,
   },
 });

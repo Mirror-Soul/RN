@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { submitValueBalanceAnswer } from '@/src/services/evolveService';
+import { useAuthStore } from '@/src/store/useAuthStore';
 import type { ValueBalanceChosenSide } from '@/src/types/api/evolve';
 
 interface SubmitValueBalanceAnswerParams {
@@ -15,11 +16,18 @@ interface SubmitValueBalanceAnswerParams {
  */
 export const useSubmitValueBalanceAnswerMutation = () => {
   const queryClient = useQueryClient();
+  const userUuid = useAuthStore(state => state.userUuid);
 
   return useMutation({
-    mutationFn: ({ questionId, chosenSide }: SubmitValueBalanceAnswerParams) =>
-      submitValueBalanceAnswer(questionId, chosenSide),
-    onSuccess: () => {
+    onMutate: () => ({ userUuid }),
+    mutationFn: ({ questionId, chosenSide }: SubmitValueBalanceAnswerParams) => {
+      const session = useAuthStore.getState();
+      if (!userUuid || !session.isLoggedIn || session.userUuid !== userUuid) throw new Error('다시 로그인해 주세요.');
+      return submitValueBalanceAnswer(questionId, chosenSide);
+    },
+    onSuccess: (_response, _params, context) => {
+      const session = useAuthStore.getState();
+      if (!session.isLoggedIn || session.userUuid !== context?.userUuid) return;
       queryClient.invalidateQueries({ queryKey: ['growth', 'valueBalanceQuestion'] });
       queryClient.invalidateQueries({ queryKey: ['growth', 'twinSync'] });
     },

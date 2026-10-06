@@ -3,6 +3,8 @@ import { fireEvent, render } from '@testing-library/react-native';
 import { VoiceAudioScreen } from './VoiceAudioScreen';
 
 const mockChange = jest.fn();
+const mockSetGain = jest.fn();
+jest.mock('@/src/store/useVoiceAudioStore', () => ({ useVoiceAudioStore: (selector: (state: unknown) => unknown) => selector({ callVoiceGain: 1, setCallVoiceGain: mockSetGain }) }));
 const mockRefetch = jest.fn();
 let mockSettings = { volume: 50 as number | null, isLoading: false, isError: false, isSaving: false };
 jest.mock('./hooks/useVoiceAudioSettings', () => ({ useVoiceAudioSettings: () => ({ ...mockSettings, handleVolumeChange: mockChange, refetch: mockRefetch }) }));
@@ -33,4 +35,14 @@ it('offers retry after a settings error without allowing speculative edits', () 
   expect(screen.getByLabelText('목소리 보통')).toBeDisabled();
   fireEvent.press(screen.getByLabelText('소리 설정 다시 불러오기'));
   expect(mockRefetch).toHaveBeenCalledTimes(1);
+});
+
+
+it('offers local call gain without making a backend settings update', () => {
+  const screen = render(<VoiceAudioScreen />);
+  fireEvent.press(screen.getByLabelText('통화 음성 1.5배'));
+  expect(mockSetGain).toHaveBeenCalledWith(1.5);
+  fireEvent.press(screen.getByLabelText('통화 음성 2배'));
+  expect(mockSetGain).toHaveBeenLastCalledWith(2);
+  expect(mockChange).not.toHaveBeenCalled();
 });

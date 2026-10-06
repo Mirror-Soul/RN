@@ -1,6 +1,7 @@
 import { act, renderHook } from '@testing-library/react-native';
 import * as FileSystem from 'expo-file-system/legacy';
 import { getPresignedUrl } from '@/src/services/fileService';
+import { completeFaceUpdate } from '@/src/services/evolveService';
 import { saveFaceScan } from '@/src/services/onboardingService';
 import { uploadFileToS3 } from '@/src/services/s3Service';
 import { useAuthStore } from '@/src/store/useAuthStore';
@@ -8,6 +9,7 @@ import { useFaceScanUpload } from './useFaceScanUpload';
 
 jest.mock('expo-file-system/legacy', () => ({ getInfoAsync: jest.fn() }));
 jest.mock('@/src/services/fileService', () => ({ getPresignedUrl: jest.fn() }));
+jest.mock('@/src/services/evolveService', () => ({ completeFaceUpdate: jest.fn() }));
 jest.mock('@/src/services/onboardingService', () => ({ saveFaceScan: jest.fn() }));
 jest.mock('@/src/services/s3Service', () => ({ uploadFileToS3: jest.fn() }));
 jest.mock('@/src/store/useAuthStore', () => ({ useAuthStore: { getState: jest.fn(), subscribe: jest.fn() } }));
@@ -20,6 +22,7 @@ beforeEach(() => {
   (FileSystem.getInfoAsync as jest.Mock).mockResolvedValue({ exists: true, isDirectory: false, size: 1024 });
   (getPresignedUrl as jest.Mock).mockResolvedValue(ok({ presignedUrl: 'put', objectKey: 'face-videos/me/take.mp4', fileUrl: 'file-url' }));
   (uploadFileToS3 as jest.Mock).mockResolvedValue(undefined);
+  (completeFaceUpdate as jest.Mock).mockResolvedValue(ok({ jobId: 25, status: 'PENDING' }));
   (saveFaceScan as jest.Mock).mockResolvedValue(ok({ saved: true, userUuid: 'me', objectKey: 'face-videos/me/take.mp4' }));
 });
 it('uploads mp4, requires confirmed server registration and exposes byte progress', async () => {
@@ -92,4 +95,31 @@ it('preserves the friendly message of plain API errors', async () => {
   (saveFaceScan as jest.Mock).mockRejectedValue({ code: 'NETWORK_ERROR', message: '네트워크 연결을 확인해주세요.' });
   await act(async () => { await expect(hook.result.current.uploadFaceVideo('file:///take.mp4')).rejects.toBeDefined(); });
   expect(hook.result.current.error).toBe('네트워크 연결을 확인해주세요.');
+});
+
+it('submits a new face video to the ACTIVE-member endpoint, never the onboarding endpoint', async () => {
+  const hook = renderHook(() => useFaceScanUpload('update'));
+  await act(async () => { expect(await hook.result.current.uploadFaceVideo('file:///take.mp4')).toBe(true); });
+  expect(getPresignedUrl).toHaveBeenCalledWith(expect.objectContaining({ directory: 'face-videos', contentType: 'video/mp4' }));
+  expect(completeFaceUpdate).toHaveBeenCalledWith({ objectKey: 'face-videos/me/take.mp4' });
+  expect(saveFaceScan).not.toHaveBeenCalled();
+});
+it('keeps a retryable take after face-job submission fails', async () => {
+  const hook = renderHook(() => useFaceScanUpload('update'));
+  (completeFaceUpdate as jest.Mock).mockRejectedValueOnce(new Error('offline'));
+  await act(async () => { await expect(hook.result.current.uploadFaceVideo('file:///take.mp4')).rejects.toThrow('offline'); });
+  await act(async () => { expect(await hook.result.current.uploadFaceVideo('file:///take.mp4')).toBe(true); });
+  expect(uploadFileToS3).toHaveBeenCalledTimes(1);
+  expect(completeFaceUpdate).toHaveBeenCalledTimes(2);
+});
+it.each([{ jobId: 25, status: 'FAILED' }, { jobId: 0, status: 'PENDING' }, { jobId: 25 }])('does not claim a successful face request for an invalid response: %p', async result => {
+  const hook = renderHook(() => useFaceScanUpload('update'));
+  (completeFaceUpdate as jest.Mock).mockResolvedValue(ok(result));
+  await act(async () => { await expect(hook.result.current.uploadFaceVideo('file:///take.mp4')).rejects.toThrow('얼굴 학습 접수'); });
+});
+it('does not submit a face job after the user changes during upload', async () => {
+  const hook = renderHook(() => useFaceScanUpload('update'));
+  (uploadFileToS3 as jest.Mock).mockImplementation(async () => sessionChange({ userUuid: 'other', isLoggedIn: true }));
+  await act(async () => { await expect(hook.result.current.uploadFaceVideo('file:///take.mp4')).rejects.toThrow('로그인 상태'); });
+  expect(completeFaceUpdate).not.toHaveBeenCalled();
 });

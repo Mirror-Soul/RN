@@ -23,7 +23,7 @@ beforeEach(() => {
 it('keeps two separate actions in one horizontal bar and preserves the selected area scope', () => {
   const screen = render(<DiscoverySettingsBar {...props} />);
   expect(screen.getByText('01:23:45')).toBeTruthy();
-  expect(screen.getByText('성수동 주변')).toBeTruthy();
+  expect(screen.getByText('성수동')).toBeTruthy();
   expect(StyleSheet.flatten(screen.getByTestId('discovery-settings-bar').props.style).flexDirection).toBe('row');
   fireEvent.press(screen.getByRole('button', { name: /남은 대화 시간 1시간 23분 45초/ }));
   expect(props.onRefillPress).toHaveBeenCalledTimes(1);
@@ -74,7 +74,7 @@ it.each([
   const screen = render(<DiscoverySettingsBar {...props} />);
   expect(StyleSheet.flatten(screen.getByTestId('discovery-settings-bar').props.style).flexDirection).toBe('column');
   expect(screen.getAllByRole('button')).toHaveLength(2);
-  expect(screen.getByText('성수동 주변')).toBeTruthy();
+  expect(screen.getByText('성수동')).toBeTruthy();
 });
 
 it('responds to the actual parent width and retains the full long region name for accessibility', () => {
@@ -83,4 +83,19 @@ it('responds to the actual parent width and retains the full long region name fo
   fireEvent(screen.getByTestId('discovery-settings-bar'), 'layout', { nativeEvent: { layout: { width: 260 } } });
   expect(StyleSheet.flatten(screen.getByTestId('discovery-settings-bar').props.style).flexDirection).toBe('column');
   expect(screen.getByLabelText(`탐색 지역 ${name} 외 9개 동, 지역 설정`)).toBeTruthy();
+});
+
+
+it.each([1, 10, 30, 50])('shows an explicit %i-neighborhood scope instead of an identical nearby label', count => {
+  const screen = render(<DiscoverySettingsBar {...props} nearbyCount={count} />);
+  expect(screen.getByText(`${count}개 동`)).toBeTruthy();
+  expect(screen.queryByText('성수동 주변')).toBeNull();
+});
+
+it('assigns the same flexible width to time and region instead of shrinking time to content', () => {
+  const screen = render(<DiscoverySettingsBar {...props} />);
+  const time = screen.getByRole('button', { name: /남은 대화 시간/ });
+  const region = screen.getByLabelText('탐색 지역 성수동 외 9개 동, 지역 설정');
+  expect(StyleSheet.flatten(time.props.style).flex).toBe(1);
+  expect(StyleSheet.flatten(region.props.style).flex).toBe(1);
 });

@@ -1,15 +1,11 @@
-import CallDetailAlert from '@/src/components/home/history/detail/CallDetailAlert';
 import CallDetailBody from '@/src/components/home/history/detail/CallDetailBody';
-import CallDetailFooter from '@/src/components/home/history/detail/CallDetailFooter';
+import CallDetailSummary from '@/src/components/home/history/detail/CallDetailSummary';
 import CallDetailHeader from '@/src/components/home/history/detail/CallDetailHeader';
 import { Colors, FontFamily, FontSize, FontWeight, Spacing } from '@/src/constants/theme';
 import { useCallDetail } from '@/src/features/history/hooks/useCallDetail';
-import { useCallDetailGlow } from '@/src/features/history/hooks/useCallDetailGlow';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Keyboard, KeyboardAvoidingView, Linking, Modal, Platform, StyleSheet, View, Text, TouchableOpacity } from 'react-native';
-import Animated from 'react-native-reanimated';
-import { Circle, Defs, RadialGradient, Stop, Svg } from 'react-native-svg';
+import { ActivityIndicator, Alert, Keyboard, Linking, Modal, StyleSheet, View, Text, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLayout } from '@/src/hooks/useLayout';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
@@ -36,8 +32,7 @@ export default function CallDetailScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { contentContainerStyle } = useLayout();
-  const { colors, isDark } = useThemeColors();
-  const { glowLeftStyle, glowRightStyle } = useCallDetailGlow(isDark);
+  const { colors } = useThemeColors();
   const { id } = useLocalSearchParams<{ id: string }>();
   const callId = Number(id);
   const isValidCallId = Number.isSafeInteger(callId) && callId > 0;
@@ -244,7 +239,7 @@ export default function CallDetailScreen() {
     return (
       <View style={[styles.container, styles.centered, { backgroundColor: colors.background.primary, paddingTop: insets.top }]}>
         <Text style={[styles.errorText, { color: colors.text.muted }]}>잘못된 통화 기록입니다.</Text>
-        <TouchableOpacity onPress={handleSafeBack} accessibilityRole="button" accessibilityLabel="뒤로가기">
+        <TouchableOpacity onPress={handleSafeBack} accessibilityRole="button" accessibilityLabel="뒤로가기" style={styles.recoveryButton}>
           <Text style={[styles.errorText, styles.retryText]}>뒤로가기</Text>
         </TouchableOpacity>
       </View>
@@ -259,14 +254,14 @@ export default function CallDetailScreen() {
     );
   }
 
-  if (isError || !data) {
+  if (!data) {
     return (
       <View style={[styles.container, styles.centered, { backgroundColor: colors.background.primary, paddingTop: insets.top }]}>
         <Text style={[styles.errorText, { color: colors.text.muted }]}>통화 기록을 불러오지 못했습니다.</Text>
-        <TouchableOpacity onPress={() => { void refetch(); }} disabled={isFetching} accessibilityRole="button" accessibilityLabel="다시 시도">
+        <TouchableOpacity onPress={() => { void refetch(); }} disabled={isFetching} accessibilityRole="button" accessibilityLabel="다시 시도" style={styles.recoveryButton}>
           <Text style={[styles.errorText, styles.retryText]}>다시 시도</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={handleSafeBack} accessibilityRole="button" accessibilityLabel="기록으로 돌아가기">
+        <TouchableOpacity onPress={handleSafeBack} accessibilityRole="button" accessibilityLabel="기록으로 돌아가기" style={styles.recoveryButton}>
           <Text style={[styles.errorText, { color: colors.text.secondary }]}>기록으로 돌아가기</Text>
         </TouchableOpacity>
       </View>
@@ -275,41 +270,8 @@ export default function CallDetailScreen() {
 
   return (
     <View ref={rootRef} collapsable={false} style={[styles.container, { backgroundColor: colors.background.primary }]}>
-      {/* 배경 glow — message-room과 같은 컨셉(은은한 펄스)이지만, shadowRadius는 Android에서
-          전혀 렌더링되지 않아(RN 공식 문서) 대신 react-native-svg의 RadialGradient로 그린다.
-          펄스 애니메이션은 그대로 Animated.View의 opacity로 처리한다. */}
-      <View style={styles.background} pointerEvents="none">
-        <Animated.View style={[styles.glowLeft, glowLeftStyle]}>
-          <Svg width="100%" height="100%">
-            <Defs>
-              <RadialGradient id="glowLeftGradient" cx="50%" cy="50%" r="50%">
-                <Stop offset="0%" stopColor="rgb(0, 184, 219)" stopOpacity={1} />
-                <Stop offset="100%" stopColor="rgb(0, 184, 219)" stopOpacity={0} />
-              </RadialGradient>
-            </Defs>
-            <Circle cx="50%" cy="50%" r="50%" fill="url(#glowLeftGradient)" />
-          </Svg>
-        </Animated.View>
-        <Animated.View style={[styles.glowRight, glowRightStyle]}>
-          <Svg width="100%" height="100%">
-            <Defs>
-              <RadialGradient id="glowRightGradient" cx="50%" cy="50%" r="50%">
-                <Stop offset="0%" stopColor="rgb(173, 70, 255)" stopOpacity={1} />
-                <Stop offset="100%" stopColor="rgb(173, 70, 255)" stopOpacity={0} />
-              </RadialGradient>
-            </Defs>
-            <Circle cx="50%" cy="50%" r="50%" fill="url(#glowRightGradient)" />
-          </Svg>
-        </Animated.View>
-      </View>
-
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={0}
-      >
-        <View style={[styles.contentWrapper, contentContainerStyle]} accessibilityElementsHidden={menuOpen} importantForAccessibility={menuOpen ? 'no-hide-descendants' : 'auto'}>
-          <View style={{ paddingLeft: insets.left, paddingRight: insets.right }} onLayout={event => setHeaderBottom(event.nativeEvent.layout.height)}>
+      <View style={[styles.contentWrapper, contentContainerStyle]} accessibilityElementsHidden={menuOpen} importantForAccessibility={menuOpen ? 'no-hide-descendants' : 'auto'}>
+        <View style={{ paddingLeft: insets.left, paddingRight: insets.right }} onLayout={event => setHeaderBottom(event.nativeEvent.layout.height)}>
           <CallDetailHeader
             name={data.partner.name}
             profileImageUrl={data.partner.profileImageUrl}
@@ -323,22 +285,17 @@ export default function CallDetailScreen() {
             menuExpanded={menuOpen}
             onMenuAnchorChange={measureMenuAnchor}
           />
-          </View>
-          <CallDetailAlert name={data.partner.name} twinSyncRate={data.partner.twinSyncRate} />
-          <CallDetailBody
-            key={data.callId}
-            talkLogs={data.talkLogs}
-            partnerName={data.partner.name}
-            partnerProfileImageUrl={data.partner.profileImageUrl}
-            onSaveTalkLog={updateTalkLog}
-            isSaving={isSaving}
-            onEditingChange={setEditing}
-          />
-          <View style={{ paddingBottom: insets.bottom }}>
-            <CallDetailFooter />
-          </View>
         </View>
-      </KeyboardAvoidingView>
+        <CallDetailBody
+          key={data.callId}
+          summary={<CallDetailSummary data={data} refreshFailed={isError} />}
+          talkLogs={data.talkLogs}
+          partnerName={data.partner.name}
+          onSaveTalkLog={updateTalkLog}
+          isSaving={isSaving}
+          onEditingChange={setEditing}
+        />
+      </View>
       <CallDetailMenu isOpen={menuOpen} data={data} anchor={menuAnchor} headerBottom={headerBottom} onClose={() => setMenuOpen(false)}
         onRefresh={handleRefresh} onProfile={handleProfile} onBlock={handleBlock} onReport={handleReport} userActionsDisabled={userActionsDisabled} reporting={reporting}
         editing={editing || isSaving} refreshing={refreshing || isFetching} />
@@ -356,30 +313,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  flex: {
-    flex: 1,
-  },
-  background: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  glowLeft: {
-    position: 'absolute',
-    width: 256,
-    height: 256,
-    top: 0,
-    left: '25%',
-  },
-  glowRight: {
-    position: 'absolute',
-    width: 256,
-    height: 256,
-    bottom: 200,
-    right: '15%',
-  },
+  recoveryButton: { minHeight: 48, justifyContent: 'center', paddingHorizontal: 20 },
   centered: {
     justifyContent: 'center',
     alignItems: 'center',
     gap: Spacing.md,
+    paddingHorizontal: 24,
   },
   contentWrapper: {
     flex: 1,

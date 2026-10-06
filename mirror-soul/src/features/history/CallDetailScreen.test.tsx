@@ -56,7 +56,8 @@ jest.mock('@/src/components/home/history/detail/CallDetailAlert', () => ({ __esM
 jest.mock('@/src/components/home/history/detail/CallDetailFooter', () => ({ __esModule: true, default: () => null }));
 jest.mock('@/src/components/home/history/detail/CallDetailBody', () => {
   const { Pressable, Text } = jest.requireActual('react-native');
-  return { __esModule: true, default: ({ onEditingChange }: { onEditingChange: (value: boolean) => void }) => <>
+  return { __esModule: true, default: ({ onEditingChange, summary }: { onEditingChange: (value: boolean) => void; summary: React.ReactElement }) => <>
+    {summary}
     <Pressable accessibilityLabel="답변 수정 테스트" onPress={() => onEditingChange(true)}><Text>답변 수정</Text></Pressable>
     <Pressable accessibilityLabel="답변 수정 취소 테스트" onPress={() => onEditingChange(false)}><Text>수정 취소</Text></Pressable>
   </> };
@@ -300,7 +301,7 @@ it('keeps a small landscape menu scrollable inside safe bounds at large text siz
 });
 
 it('returns an inaccessible record to the history tab without a navigation stack', () => {
-  mockError = true;
+  mockError = true; mockData = undefined as unknown as TalkLogListResult;
   const screen = render(<CallDetailScreen />);
   fireEvent.press(screen.getByLabelText('기록으로 돌아가기'));
   expect(mockReplace).toHaveBeenCalledWith('/(main)/history');
@@ -338,4 +339,13 @@ it('keeps a new record usable while an old refresh finishes, without clearing a 
   expect(screen.getByLabelText('상대의 AI 트윈과 통화')).toBeDisabled();
   await act(async () => { finishNew({ isError: false }); });
   expect(screen.getByLabelText('상대의 AI 트윈과 통화')).toBeEnabled();
+});
+
+
+it('keeps a cached transcript readable when a background refresh fails', () => {
+  mockError = true;
+  const screen = render(<CallDetailScreen />);
+  expect(screen.getByText('지수의 Twin과 대화')).toBeTruthy();
+  expect(screen.getByText('새로고침하지 못했어요. 이전에 불러온 기록을 보여드려요. 더보기에서 다시 시도할 수 있어요.')).toBeTruthy();
+  expect(screen.queryByText('통화 기록을 불러오지 못했습니다.')).toBeNull();
 });

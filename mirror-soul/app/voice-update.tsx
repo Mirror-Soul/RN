@@ -10,12 +10,15 @@ import { useTwinSyncQuery } from '@/src/features/growth/hooks/useTwinSyncQuery';
 import { useSTT } from '@/src/hooks/useSTT';
 import { Spacing } from '@/src/constants/theme';
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLayout } from '@/src/hooks/useLayout';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
-import { getErrorDisplayMessage } from '@/src/utils/apiErrorCode';
+import { getErrorCode, getErrorDisplayMessage } from '@/src/utils/apiErrorCode';
 import { logger } from '@/src/utils/logger';
+import { BrowseText as Text } from '@/src/components/home/common/BrowseText';
+import { Feather } from '@expo/vector-icons';
+import { MIN_READING_SIMILARITY, readingSimilarity } from '@/src/components/home/grow/voice-update/readingSimilarity';
 
 /**
  * 목소리 업데이트 화면
@@ -27,12 +30,15 @@ export default function VoiceUpdateScreen() {
   const { colors } = useThemeColors();
   const [status, setStatus] = useState<VoiceUpdateStatus>('idle');
   const [elapsed, setElapsed] = useState(0);
+  const [acceptedAt, setAcceptedAt] = useState<number>();
+  const [readingCheck, setReadingCheck] = useState<{ transcript: string; similarity: number } | null>(null);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lock = useRef(false);
   const mounted = useRef(true);
   const operation = useRef(0);
   const statusRef = useRef<VoiceUpdateStatus>('idle');
+  const recordingSentence = useRef<{ sentenceId: number; speechLine: string } | null>(null);
   const transition = (next: VoiceUpdateStatus) => {
     statusRef.current = next;
     if (mounted.current) setStatus(next);
@@ -48,21 +54,10 @@ export default function VoiceUpdateScreen() {
   // pending(최초 로딩)과 error(조회 실패)를 하나로 합치면, 조회가 실패했을 때 이 화면
   // 안에서 다시 시도할 방법이 없어 버튼이 영구적으로 막힌 채 남는다 — 별도로 넘긴다.
   const twinSyncQuery = useTwinSyncQuery();
-  const { isInCooldown, remainingSeconds } = useVoiceTrainingCooldown(twinSyncQuery.data?.lastVoiceTrainingAt);
+  const { isInCooldown, remainingSeconds } = useVoiceTrainingCooldown(twinSyncQuery.data?.lastVoiceTrainingAt, acceptedAt);
 
   // STT 훅 연동 (실시간 자막 표시용 — 업로드용 오디오 파일은 useVoiceRecording이 별도로 녹음)
   const { transcript, startListening, stopListening, resetTranscript } = useSTT('ko-KR');
-
-  // 낭독 문장 조회 실패 시 안내 + 재시도 (필수 데이터 없인 진행 불가 화면 패턴)
-  useEffect(() => {
-    if (sentenceQuery.isError) {
-      Alert.alert('알림', '낭독 문장을 불러오지 못했습니다.', [
-        { text: '재시도', onPress: () => sentenceQuery.refetch() },
-      ]);
-    }
-    // sentenceQuery 객체 전체를 deps에 넣으면 매 렌더마다 새 참조라 effect가 계속 재실행된다.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sentenceQuery.isError]);
 
   const handlePress = () => {
     if (statusRef.current === 'idle') void startRecording();
@@ -70,20 +65,26 @@ export default function VoiceUpdateScreen() {
   };
 
   const startRecording = async () => {
-    if (lock.current || statusRef.current !== 'idle' || !sentenceQuery.data || isInCooldown || twinSyncQuery.isPending || twinSyncQuery.isError) return;
+    if (lock.current || statusRef.current !== 'idle' || !sentenceQuery.data?.speechLine?.trim() || sentenceQuery.isError || sentenceQuery.isPending || sentenceQuery.isFetching || isInCooldown || twinSyncQuery.isPending || twinSyncQuery.isError) return;
     lock.current = true;
+    recordingSentence.current = readingCheck ? recordingSentence.current ?? sentenceQuery.data : sentenceQuery.data;
     const attempt = ++operation.current;
     let audioStarted = false;
     transition('starting');
     try {
       setElapsed(0);
+      setReadingCheck(null);
+      resetTranscript();
 
       if (!voiceRecording.hasPermission) {
         const granted = await voiceRecording.requestPermission();
         if (!mounted.current || attempt !== operation.current) return;
         if (!granted) {
           transition('idle');
-          Alert.alert('마이크 권한 필요', '설정에서 마이크 권한을 허용해주세요.');
+          Alert.alert('마이크 사용을 허용해주세요', '목소리를 녹음하려면 마이크 권한이 필요해요. 휴대폰 설정에서 변경할 수 있어요.', [
+            { text: '나중에', style: 'cancel' },
+            { text: '기기 설정 열기', onPress: () => { void Linking.openSettings().catch(() => Alert.alert('설정을 열지 못했어요', '휴대폰 설정에서 Mirror Soul의 마이크 권한을 확인해주세요.')); } },
+          ]);
           return;
         }
       }
@@ -96,8 +97,8 @@ export default function VoiceUpdateScreen() {
       transition('recording');
 
       timerRef.current = setInterval(() => {
-        setElapsed((prev) => prev + 0.1);
-      }, 100);
+        if (mounted.current && attempt === operation.current) setElapsed((prev) => prev + 1);
+      }, 1000);
     } catch (error) {
       if (audioStarted) await Promise.allSettled([stopListening(), voiceRecording.stopRecording()]);
       if (!mounted.current || attempt !== operation.current) return;
@@ -124,26 +125,41 @@ export default function VoiceUpdateScreen() {
       const finalTranscript = textResult.value;
       const recordingResult = audioResult.value;
       if (!finalTranscript.trim() || !recordingResult.uri) throw new Error('인식된 목소리가 없습니다. 다시 녹음해주세요.');
-      if (!sentenceQuery.data) throw new Error('문장 정보를 불러오지 못했습니다. 다시 시도해주세요.');
+      if (!recordingSentence.current) throw new Error('문장 정보를 불러오지 못했습니다. 다시 시도해주세요.');
+      const similarity = readingSimilarity(recordingSentence.current.speechLine, finalTranscript);
+      setReadingCheck({ transcript: finalTranscript, similarity });
+      if (similarity < MIN_READING_SIMILARITY) {
+        transition('idle');
+        return;
+      }
       registering = true;
       await completeMutation.mutateAsync({
-        sentenceId: sentenceQuery.data.sentenceId,
+        sentenceId: recordingSentence.current.sentenceId,
         recordingUri: recordingResult.uri,
         durationSeconds: recordingResult.durationSeconds,
       });
-      if (mounted.current && attempt === operation.current) transition('done');
+      if (mounted.current && attempt === operation.current) {
+        setAcceptedAt(Date.now());
+        transition('done');
+      }
     } catch (error) {
       if (!mounted.current || attempt !== operation.current) return;
+      if (getErrorCode(error) === 'VOICE_TRAINING_TOO_FREQUENT') {
+        setAcceptedAt(Date.now());
+        void twinSyncQuery.refetch();
+      }
       transition('idle');
-      Alert.alert(registering ? '학습 저장 실패' : '녹음을 마무리하지 못했어요', getErrorDisplayMessage(error, '다시 녹음해주세요.'));
+      Alert.alert(registering ? '녹음 제출 실패' : '녹음을 마무리하지 못했어요', getErrorDisplayMessage(error, '다시 녹음해주세요.'));
     } finally { if (attempt === operation.current) lock.current = false; }
   };
 
   const handleRetry = () => {
-    if (lock.current) return;
+    if (lock.current || isInCooldown || twinSyncQuery.isPending || twinSyncQuery.isError) return;
     transition('idle');
     setElapsed(0);
     resetTranscript();
+    setReadingCheck(null);
+    recordingSentence.current = null;
     completeMutation.reset();
     sentenceQuery.refetch();
   };
@@ -158,32 +174,41 @@ export default function VoiceUpdateScreen() {
     };
   }, []);
 
+  const sentence = (status !== 'idle' || readingCheck) && recordingSentence.current ? recordingSentence.current.speechLine : sentenceQuery.data?.speechLine;
+  const sentenceUnavailable = !sentenceQuery.data?.speechLine?.trim() || sentenceQuery.isError || sentenceQuery.isPending || sentenceQuery.isFetching;
+  const displayedTranscript = readingCheck?.transcript ?? transcript;
+  const actions = <View testID="voice-update-actions" style={[styles.actions, { borderColor: colors.border.primary, backgroundColor: colors.background.card }]}>
+    <VoiceUpdateButton status={status} elapsedTime={`${Math.floor(elapsed / 60).toString().padStart(2, '0')}:${(elapsed % 60).toString().padStart(2, '0')}`}
+      onPress={handlePress} onRetry={handleRetry} recordingBlocked={!!sentenceUnavailable}
+      cooldownRemainingSeconds={isInCooldown ? remainingSeconds : undefined} isCooldownStatusPending={twinSyncQuery.isPending}
+      isCooldownStatusError={twinSyncQuery.isError} isCooldownCheckRetrying={twinSyncQuery.isError && twinSyncQuery.isFetching}
+      onRetryCooldownCheck={() => twinSyncQuery.refetch()} />
+  </View>;
+
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background.primary }]}>
       <View style={styles.container}>
-        <GrowSubScreenHeader title="목소리 업데이트" />
+        <View style={contentContainerStyle}><GrowSubScreenHeader title="목소리 정밀 학습" disabled={status === 'starting' || status === 'analyzing'} /></View>
 
-        <View style={[styles.main, contentContainerStyle]}>
-          <VoiceUpdatePrompt sentence={sentenceQuery.data?.speechLine ?? '문장을 불러오는 중...'} />
+        <ScrollView testID="voice-update-scroll" style={styles.scroll} contentContainerStyle={[styles.main, contentContainerStyle]} showsVerticalScrollIndicator={false}>
+          <View style={styles.readingStage}>
+          {status === 'idle' && sentenceUnavailable ? <View style={[styles.requestState, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
+            {sentenceQuery.isError ? <><Text style={[styles.requestTitle, { color: colors.text.primary }]}>읽을 문장을 불러오지 못했어요</Text>
+              <Text style={[styles.requestCopy, { color: colors.text.secondary }]}>연결을 확인한 뒤 다시 시도해주세요.</Text>
+              <Pressable onPress={() => { void sentenceQuery.refetch(); }} disabled={sentenceQuery.isFetching} accessibilityRole="button" accessibilityLabel="낭독 문장 다시 불러오기" accessibilityState={{ busy: sentenceQuery.isFetching }} style={styles.retry}>
+                <Feather name="refresh-cw" size={16} color={colors.text.secondary} /><Text style={[styles.requestCopy, { color: colors.text.primary }]}>{sentenceQuery.isFetching ? '다시 확인 중…' : '다시 불러오기'}</Text>
+              </Pressable></> : <><ActivityIndicator color={colors.text.secondary} /><Text style={[styles.requestCopy, { color: colors.text.secondary }]}>읽을 문장을 준비하고 있어요…</Text></>}
+          </View> : <VoiceUpdatePrompt sentence={sentence ?? ''} />}
 
-          {/* 실시간 STT 결과창: 빈 공간을 채우고 사용자에게 피드백 제공 */}
-          <VoiceUpdateTranscriptBox
-            transcript={transcript}
+          {/* 녹음 중이거나 인식 결과가 있을 때만 자막을 보여준다. */}
+          {(status === 'recording' || !!displayedTranscript) && <VoiceUpdateTranscriptBox
+            transcript={displayedTranscript}
             isRecording={status === 'recording'}
-          />
-
-          <VoiceUpdateButton
-            status={status}
-            elapsedTime={elapsed.toFixed(1)}
-            onPress={handlePress}
-            onRetry={handleRetry}
-            cooldownRemainingSeconds={isInCooldown ? remainingSeconds : undefined}
-            isCooldownStatusPending={twinSyncQuery.isPending}
-            isCooldownStatusError={twinSyncQuery.isError}
-            isCooldownCheckRetrying={twinSyncQuery.isError && twinSyncQuery.isFetching}
-            onRetryCooldownCheck={() => twinSyncQuery.refetch()}
-          />
-        </View>
+            similarity={readingCheck?.similarity}
+          />}
+          </View>
+          {actions}
+        </ScrollView>
       </View>
     </SafeAreaView>
   );
@@ -197,11 +222,19 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: Spacing.xxl,
   },
+  scroll: { flex: 1 },
   main: {
-    flex: 1,
-    paddingVertical: Spacing.giant,
-    justifyContent: 'center', // 중앙 집중형 배치
-    alignItems: 'center',
-    gap: Spacing.massive, // 컴포넌트 간 충분한 간격 확보
+    flexGrow: 1,
+    paddingTop: 8,
+    paddingBottom: 12,
+    alignItems: 'stretch',
+    gap: 16,
   },
+  // Grow into unused viewport space, but keep natural content height when text needs scrolling.
+  readingStage: { flexGrow: 1, flexShrink: 0, justifyContent: 'center', gap: 12, paddingVertical: 12 },
+  actions: { flexShrink: 0, padding: 16, borderWidth: 1, borderRadius: 24 },
+  requestState: { padding: 20, gap: 10, borderWidth: 1, borderRadius: 20 },
+  requestTitle: { fontSize: 17, lineHeight: 26, fontWeight: '600' },
+  requestCopy: { fontSize: 14, lineHeight: 22 },
+  retry: { minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: 8 },
 });

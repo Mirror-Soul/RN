@@ -3,10 +3,11 @@ import * as FileSystem from 'expo-file-system/legacy';
 import { getPresignedUrl } from '@/src/services/fileService';
 import { uploadFileToS3 } from '@/src/services/s3Service';
 import { saveFaceScan } from '@/src/services/onboardingService';
+import { completeFaceUpdate } from '@/src/services/evolveService';
 import { useAuthStore } from '@/src/store/useAuthStore';
 import { getErrorMessage } from '@/src/utils/errorUtils';
 
-export function useFaceScanUpload() {
+export function useFaceScanUpload(mode: 'onboarding' | 'update' = 'onboarding') {
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState<number | null>(null);
@@ -37,7 +38,10 @@ export function useFaceScanUpload() {
     const unsubscribe = useAuthStore.subscribe(state => {
       if (!state.isLoggedIn || state.userUuid !== owner) ended = true;
     });
-    const assertSession = () => { if (ended || !mounted.current) throw new Error('로그인 상태가 변경되어 영상 등록을 중단했어요.'); };
+    const assertSession = () => {
+      const session = useAuthStore.getState();
+      if (ended || !mounted.current || !session.isLoggedIn || session.userUuid !== owner) throw new Error('로그인 상태가 변경되어 영상 등록을 중단했어요.');
+    };
     try {
       const info = await FileSystem.getInfoAsync(uri);
       assertSession();
@@ -59,6 +63,12 @@ export function useFaceScanUpload() {
       }
       setProgress(1); setStage('save');
       const { objectKey, fileUrl } = uploaded.current;
+      if (mode === 'update') {
+        const response = await completeFaceUpdate({ objectKey });
+        assertSession();
+        if (!response.isSuccess || !response.result || !Number.isInteger(response.result.jobId) || response.result.jobId <= 0 || !['PENDING', 'PROCESSING', 'COMPLETED'].includes(response.result.status)) throw new Error('얼굴 학습 접수를 확인하지 못했어요. 다시 시도해주세요.');
+        return true;
+      }
       const response = await saveFaceScan({ objectKey, fileUrl });
       assertSession();
       if (!response.isSuccess || !response.result?.saved || response.result.objectKey !== objectKey || response.result.userUuid !== owner) throw new Error(response.message || '영상 등록을 확인하지 못했어요. 다시 시도해주세요.');
@@ -67,13 +77,13 @@ export function useFaceScanUpload() {
       if (mounted.current && !ended) {
         const forbidden = typeof cause === 'object' && cause !== null && 'code' in cause && cause.code === 'AUTH_4030';
         setRequiresLogin(forbidden);
-        setError(forbidden ? '이미 등록됐거나 현재 단계에서 등록할 수 없어요. 다시 로그인하여 가입 완료 여부를 확인해주세요.' : getErrorMessage(cause, '영상 등록에 실패했어요. 네트워크를 확인해주세요.'));
+        setError(forbidden ? mode === 'update' ? '현재 계정에서 얼굴 학습을 요청할 수 없어요. 다시 로그인하여 계정 상태를 확인해주세요.' : '이미 등록됐거나 현재 단계에서 등록할 수 없어요. 다시 로그인하여 가입 완료 여부를 확인해주세요.' : getErrorMessage(cause, '영상 등록에 실패했어요. 네트워크를 확인해주세요.'));
       }
       throw cause;
     } finally {
       unsubscribe(); lock.current = false;
       if (mounted.current) { setIsUploading(false); setStage('idle'); }
     }
-  }, []);
+  }, [mode]);
   return { uploadFaceVideo, isUploading, error, progress, stage, requiresLogin, clearError: () => { if (!lock.current) { setError(null); setRequiresLogin(false); } } };
 }

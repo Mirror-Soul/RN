@@ -1,6 +1,7 @@
-import { FontFamily, FontSize, FontWeight, Spacing } from '@/src/constants/theme';
+import { FontFamily, FontWeight, Spacing } from '@/src/constants/theme';
 import React from 'react';
-import { StyleSheet, View, Text } from 'react-native';
+import { BrowseText as Text } from '@/src/components/home/common/BrowseText';
+import { StyleSheet, View } from 'react-native';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 /**
@@ -12,7 +13,7 @@ export default function EvolveBodyTitle() {
 
   return (
     <View style={styles.container}>
-      <Text style={[styles.label, { color: colors.text.muted }]}>딥러닝 미션</Text>
+      <Text style={[styles.label, { color: colors.text.muted }]}>조금씩 더 닮아가기</Text>
       <View style={[styles.divider, { backgroundColor: colors.border.primary }]} />
     </View>
   );
@@ -27,9 +28,10 @@ const styles = StyleSheet.create({
   },
   label: {
     fontFamily: FontFamily.sans,
-    fontSize: FontSize.xs,
+
     fontWeight: FontWeight.black,
-    letterSpacing: 3.1,
+    fontSize: 13,
+    lineHeight: 22,
   },
   divider: {
     flex: 1,

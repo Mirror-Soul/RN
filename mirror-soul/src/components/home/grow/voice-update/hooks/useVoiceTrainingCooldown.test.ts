@@ -20,6 +20,23 @@ describe('useVoiceTrainingCooldown', () => {
     expect(result.current.remainingSeconds).toBe(0);
   });
 
+  it('uses Korean time for offset-less API timestamps and handles invalid dates', () => {
+    const { result, rerender } = renderHook(({ time }: { time: string }) => useVoiceTrainingCooldown(time), { initialProps: { time: '2026-08-19T09:00:00' } });
+    expect(result.current.remainingSeconds).toBe(120);
+    rerender({ time: 'invalid' });
+    expect(result.current.remainingSeconds).toBe(0);
+  });
+
+  it('blocks immediately after local acceptance even when the server cache still contains an old job', () => {
+    const old = new Date(Date.now() - 180_000).toISOString();
+    const { result, rerender } = renderHook(({ acceptedAt }: { acceptedAt?: number }) => useVoiceTrainingCooldown(old, acceptedAt), { initialProps: { acceptedAt: undefined } });
+    expect(result.current.isInCooldown).toBe(false);
+    rerender({ acceptedAt: Date.now() });
+    expect(result.current.remainingSeconds).toBe(120);
+    act(() => { jest.advanceTimersByTime(120_000); });
+    expect(result.current.isInCooldown).toBe(false);
+  });
+
   it('reports no cooldown once 2 minutes have already passed', () => {
     const threeMinutesAgo = new Date(Date.now() - 3 * 60 * 1000).toISOString();
     const { result } = renderHook(() => useVoiceTrainingCooldown(threeMinutesAgo));
