@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Platform, PermissionsAndroid } from 'react-native';
+import { AppState, Linking, PermissionsAndroid, Platform } from 'react-native';
 import InCallManager from 'react-native-incall-manager';
-import type { MediaStream } from 'react-native-webrtc';
 import { AudioModule, setAudioModeAsync } from 'expo-audio';
 import { useAuthStore } from '../store/useAuthStore';
 import { initiateCall, setCallInProgress, endCall } from '../services/callService';
@@ -10,686 +9,353 @@ import { useWebRTCCall } from './useWebRTCCall';
 import { useCallRecording } from './useCallRecording';
 import { logger } from '../utils/logger';
 import { queryClient } from '../services/queryClient';
-import { getErrorDisplayMessage } from '../utils/apiErrorCode';
-import type { SignalingMessage, AnswerData, IceData, OfferData, CallRejectData, SignalingErrorData } from '../types/signaling';
+import { getErrorCode, getErrorDisplayMessage } from '../utils/apiErrorCode';
+import type { SignalingMessage, OfferData, AnswerData, IceData, CallRejectData } from '../types/signaling';
 import type { CallMediaType, EndCallResult } from '../types/api/call';
 
-const WS_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL?.replace('https://', 'wss://').replace('http://', 'ws://');
-const INVITE_TIMEOUT_MS = 10000; // 10초 AI 응답 대기
-// 사용자의 카메라 전송 없이, AI가 생성한 Ditto 비디오 트랙만 수신하는 영상 통화다.
-const AI_TWIN_CALL_MEDIA_TYPE: CallMediaType = 'VIDEO';
-
-export type CallStatus =
-  | 'idle'        // 대기
-  | 'initiating'  // REST API 호출 중
-  | 'joining'     // WebSocket 연결 중
-  | 'inviting'    // CALL_INVITE 발송 후 AI 응답 대기
-  | 'connecting'  // WebRTC Offer/Answer/ICE 교환 중
-  | 'connected'   // 통화 중
-  | 'ending'      // 종료 처리 중 (녹음 업로드)
-  | 'ended';      // 종료 완료
-
-/** 서버가 통화 종료를 확정한 결과. 만남 신청은 이 결과의 callId를 반드시 사용한다. */
+export type CallStatus = 'idle' | 'initiating' | 'joining' | 'inviting' | 'connecting' | 'connected' | 'reconnecting' | 'ending' | 'ended';
 export type CompletedCall = EndCallResult;
+export type CallErrorKind = 'microphone' | 'connection' | 'unavailable' | 'end';
+type Issue = { message: string; kind: CallErrorKind };
+type Session = { callId: number; roomId: string; callerSignalId: string; aiSignalId: string; mediaType: CallMediaType; owner: string };
 
-/**
- * AI 트윈 음성 통화 전체 시나리오 오케스트레이션 훅 (SoC)
- *
- * 외부로 노출되는 인터페이스:
- * - callStatus: 현재 통화 단계
- * - remoteStream: AI 트윈 오디오·비디오 스트림
- * - startCall(): 통화 시작
- * - hangUp(): 통화 종료
- * - error: 에러 메시지
- */
-/**
- * @param targetUserUuid 통화할 상대(클론 소유자)의 uuid — Clone이 User와 1:1이라
- * clone-user-uuid엔 그 사람 본인의 uuid를 그대로 쓴다(CloneRepository.findByUserUuid 참고).
- * 생략하면 로그인한 본인의 클론에 건다(Grow 탭 셀프 시뮬레이션, 기존 동작 그대로 유지).
- */
+const rejectionMessage = (reason?: string) => reason === 'CLONE_NOT_READY'
+  ? '이 트윈은 아직 통화 준비 중이에요. 잠시 후 다시 확인해주세요.'
+  : reason === 'AI_SERVER_UNAVAILABLE' || reason === 'CALL_CONTEXT_UNAVAILABLE' || reason === 'AI_SERVER_CONFIG_ERROR'
+    ? '지금은 트윈에 연결할 수 없어요. 잠시 후 다시 시도해주세요.'
+    : '트윈의 통화 정보를 확인하지 못했어요. 다시 시도해주세요.';
+
+/** Keeps transport, recording and server finalization separate. No invented AI speaking state. */
 export function useAICallFlow(targetUserUuid?: string) {
-  const [callStatus, setCallStatus] = useState<CallStatus>('idle');
-  const [error, setError] = useState<string | null>(null);
-  // 기본 경로는 시스템에 맡긴다. 유선/블루투스 기기가 연결되어 있으면 그 기기가 우선되어야
-  // 하며, 사용자가 스피커를 직접 선택했을 때만 강제로 스피커로 전환한다.
-  const [isSpeakerOn, setIsSpeakerOn] = useState(false);
-  const speakerForcedRef = useRef(false);
-  const [isMuted, setIsMuted] = useState(false);
-  // 카메라는 기본 off — 마이크와 달리 통화 시작 시점이 아니라 사용자가 실제로 켤 때만
-  // 권한을 요청한다(불필요하게 미리 요청하지 않기 위함).
-  const [isCameraOn, setIsCameraOn] = useState(false);
-  // 서버의 최종 durationSec과 별개로, 연결된 순간부터의 경과 시간을 통화 화면에 실시간 표시한다.
-  const [callDurationSeconds, setCallDurationSeconds] = useState(0);
-  // 종료 API가 성공한 뒤에만 채운다. 상대 트윈 통화의 후속 만남 신청은 서버가 COMPLETED로
-  // 확정한 callId가 필요하므로, 표시용 로컬 타이머만으로는 이 값을 만들면 안 된다.
-  const [completedCall, setCompletedCall] = useState<CompletedCall | null>(null);
-
   const { userUuid } = useAuthStore();
-  // 실제로 전화를 거는 대상(피호출자) — REST 방 생성과 WS CALL_INVITE 양쪽 다 이 값을 써야
-  // AI 서버가 올바른 사람의 클론 인격을 로드한다. userUuid(발신자 본인)와 혼동하지 말 것.
-  const calleeUuid = targetUserUuid ?? userUuid ?? '';
+  const [callStatus, setCallStatus] = useState<CallStatus>('idle');
+  const [issue, setIssueState] = useState<Issue | null>(null);
+  const issueRef = useRef<Issue | null>(null);
+  const setIssue = useCallback((next: Issue | null) => { issueRef.current = next; if (mounted.current) setIssueState(next); }, []);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [isSpeakerOn, setIsSpeakerOn] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const [isCameraOn, setIsCameraOn] = useState(false);
+  const [isCameraPending, setIsCameraPending] = useState(false);
+  const [setupPending, setSetupPending] = useState(false);
+  const [callDurationSeconds, setCallDurationSeconds] = useState(0);
+  const [completedCall, setCompletedCall] = useState<CompletedCall | null>(null);
+  const mounted = useRef(true);
+  const status = useRef<CallStatus>('idle');
+  const session = useRef<Session | null>(null);
+  const ws = useRef<WebSocket | null>(null);
+  const attempt = useRef(0);
+  const starting = useRef(false);
+  const closing = useRef(false);
+  const finishPromise = useRef<Promise<void> | null>(null);
+  const connectedAt = useRef<number | null>(null);
+  const recordingUrl = useRef<string | undefined>(undefined);
+  const speaker = useRef(false);
+  const muted = useRef(false);
+  const cameraOn = useRef(false);
+  const cameraRequest = useRef(0);
+  const cameraBusy = useRef(false);
+  const stageTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const finishRef = useRef<(issue?: Issue) => Promise<void>>(async () => {});
+  const failRef = useRef<(message: string, kind?: CallErrorKind) => Promise<void>>(async () => {});
+  const owner = useRef(userUuid);
 
-  // 세션 정보 (REST API 응답으로 채워짐)
-  const callSessionRef = useRef<{
-    callId: number;
-    roomId: string;
-    callerSignalId: string;
-    aiSignalId: string;
-    mediaType: CallMediaType;
-  } | null>(null);
-
-  // WebSocket 단일 인스턴스 (Ref로 관리하여 re-render 시 중복 생성 방지)
-  const wsRef = useRef<WebSocket | null>(null);
-
-  // AI 응답 대기 타임아웃
-  const inviteTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // 종료 진행 중 여부 (중복 방지)
-  const isHangingUpRef = useRef<boolean>(false);
-
-  // startCall 시도 식별자 — REST/WebRTC 병렬 초기화가 진행되는 동안 사용자가 취소하거나
-  // 화면이 언마운트되면(_cleanup이 이 값을 증가시켜 무효화) 그 시도가 뒤늦게 완료되더라도
-  // 로컬 연결을 이어가지 않고 서버에 생성된 방을 보상 종료하도록 구분하는 데 쓴다.
-  const startAttemptIdRef = useRef(0);
-  // Android 권한 프롬프트와 getUserMedia가 비동기라 통화 종료 후에도 완료될 수 있다.
-  // 종료/새 토글마다 세대를 바꿔 늦게 도착한 카메라 활성화를 무효화한다.
-  const cameraToggleAttemptIdRef = useRef(0);
-  const connectedAtRef = useRef<number | null>(null);
-
-  const {
-    remoteStream,
-    localCameraStream,
-    iceConnectionState,
-    onLocalIceCandidateCb,
-    initialize: initWebRTC,
-    enableCamera,
-    disableCamera,
-    createOffer,
-    createAnswer,
-    applyAnswer,
-    applyOffer,
-    applyIceCandidate,
-    close: closeWebRTC,
-  } = useWebRTCCall();
+  const rtc = useWebRTCCall();
+  const { remoteStream, localCameraStream, iceConnectionState, onLocalIceCandidateCb, initialize, createOffer, createAnswer, applyAnswer, applyOffer, applyIceCandidate, close: closeRTC, enableCamera, disableCamera, setMicrophoneMuted } = rtc;
   useRemoteAudioVolume(remoteStream);
+  const { startRecording, stopAndUpload, setRecordingMuted, discardRecording } = useCallRecording();
 
-  const { startRecording, stopAndUpload } = useCallRecording();
-
-  // ─────────────────────────────────────────────
-  // WebSocket 메시지 발송 헬퍼
-  // ─────────────────────────────────────────────
-  const sendMessage = useCallback((msg: SignalingMessage) => {
-    const ws = wsRef.current;
-    if (!ws || ws.readyState !== WebSocket.OPEN) {
-      logger.warn('[useAICallFlow] WebSocket not open, cannot send message:', msg.type);
-      return;
-    }
-    ws.send(JSON.stringify(msg));
-    logger.debug('[useAICallFlow] Sent:', msg.type);
+  const transition = useCallback((next: CallStatus) => {
+    status.current = next;
+    if (mounted.current) setCallStatus(next);
   }, []);
-
-  // ─────────────────────────────────────────────
-  // WebRTC ICE → WebSocket 전달 (로컬 ICE 발생 시)
-  // ─────────────────────────────────────────────
-  useEffect(() => {
-    onLocalIceCandidateCb.current = (candidate: any) => {
-      const session = callSessionRef.current;
-      if (!session) return;
-
-      sendMessage({
-        type: 'ICE',
-        roomId: session.roomId,
-        from: session.callerSignalId,
-        to: session.aiSignalId,
-        data: {
-          callId: session.callId,
-          candidate: {
-            candidate: candidate.candidate,
-            sdpMid: candidate.sdpMid ?? '0',
-            sdpMLineIndex: candidate.sdpMLineIndex ?? 0,
-          },
-        },
-      });
-    };
-  }, [sendMessage]);
-
-  // ─────────────────────────────────────────────
-  // WebRTC 연결 성공 감지 → setCallInProgress
-  // ─────────────────────────────────────────────
-  useEffect(() => {
-    if (iceConnectionState === 'connected' && callStatus === 'connecting') {
-      const session = callSessionRef.current;
-      if (!session) return;
-
-      logger.info('[useAICallFlow] WebRTC connected! Notifying server...');
-      connectedAtRef.current = Date.now();
-      setCallDurationSeconds(0);
-      setCallStatus('connected');
-
-      // 기본 라우팅은 OS/InCallManager 자동 선택에 맡긴다. 이 경로는 유선·블루투스
-      // 기기가 연결됐을 때 해당 장치로 오디오를 보내며, 스피커는 아래 토글로 사용자가
-      // 명시적으로 선택했을 때만 강제한다.
-      InCallManager.start({ media: session.mediaType === 'VIDEO' ? 'video' : 'audio', auto: true });
-
-      setCallInProgress(session.callId).catch((err) => {
-        logger.error('[useAICallFlow] setCallInProgress failed:', err);
-      });
-
-      const isCurrent = () => callSessionRef.current === session && !isHangingUpRef.current;
-      startRecording({ isCurrent, managesAudioSession: true }).catch((err) => {
-        logger.error('[useAICallFlow] startRecording failed:', err);
-      }).finally(() => {
-        // Expo iOS recorder.prepare는 mode를 .default로 바꾼다. 준비 성공/실패 모두
-        // 영상통화 모드를 복구하되, 늦은 완료로 종료된 통화의 오디오를 건드리지 않는다.
-        if (isCurrent()) {
-          (InCallManager.setForceSpeakerphoneOn as (flag: boolean | null) => void)(speakerForcedRef.current ? true : null);
-        }
-      });
+  const clearStage = useCallback(() => {
+    if (stageTimer.current) clearTimeout(stageTimer.current);
+    stageTimer.current = null;
+  }, []);
+  const send = useCallback((message: SignalingMessage) => {
+    if (ws.current?.readyState !== WebSocket.OPEN) return;
+    try { ws.current.send(JSON.stringify(message)); }
+    catch (error) { logger.warn('통화 신호 전송 실패', error); }
+  }, []);
+  const closeTransport = useCallback(() => {
+    attempt.current += 1;
+    cameraRequest.current += 1;
+    clearStage();
+    if (reconnectTimer.current) clearTimeout(reconnectTimer.current);
+    reconnectTimer.current = null;
+    const socket = ws.current;
+    ws.current = null;
+    if (socket) {
+      socket.onopen = null; socket.onmessage = null; socket.onerror = null; socket.onclose = null;
+      try { socket.close(); } catch { /* Socket may already be closed. */ }
     }
-  }, [iceConnectionState, callStatus, startRecording]);
+    try { closeRTC(); } catch (error) { logger.warn('미디어 연결 정리 실패', error); }
+    try { InCallManager.stop(); } catch (error) { logger.warn('통화 소리 정리 실패', error); }
+    speaker.current = false; muted.current = false; cameraOn.current = false; cameraBusy.current = false;
+    if (mounted.current) { setIsSpeakerOn(false); setIsCameraOn(false); setIsCameraPending(false); }
+  }, [clearStage, closeRTC]);
 
-  // 연결 대기·종료 처리 시간은 포함하지 않고, 실제 연결 중인 시간만 초 단위로 표시한다.
-  useEffect(() => {
-    if (callStatus !== 'connected' || connectedAtRef.current == null) return;
-
-    const updateDuration = () => {
-      const startedAt = connectedAtRef.current;
-      if (startedAt != null) {
-        setCallDurationSeconds(Math.max(0, Math.floor((Date.now() - startedAt) / 1000)));
+  const finish = useCallback((failure?: Issue): Promise<void> => {
+    if (finishPromise.current) return finishPromise.current;
+    closing.current = true;
+    if (failure && mounted.current) setIssue(failure);
+    transition('ending');
+    const active = session.current;
+    const wasConnected = connectedAt.current != null;
+    if (active) send({ type: 'CALL_END', roomId: active.roomId, from: active.callerSignalId, to: active.aiSignalId, data: { callId: active.callId } });
+    // Stop transmission and camera immediately, before any file upload or REST wait.
+    closeTransport();
+    const task = (async () => {
+      if (!active) { await discardRecording(); return; }
+      if (recordingUrl.current === undefined) recordingUrl.current = await stopAndUpload(active.owner);
+      try {
+        const response = await endCall(active.callId, recordingUrl.current ?? '');
+        if (!response.isSuccess) throw new Error(response.message);
+        session.current = null;
+        if (mounted.current) {
+          if (!failure) setIssue(null);
+          if (wasConnected && response.result.status === 'COMPLETED') setCompletedCall(response.result);
+        }
+        void queryClient.invalidateQueries({ queryKey: ['profile', 'time'] });
+        void queryClient.invalidateQueries({ queryKey: ['history', 'calls'] });
+      } catch (error) {
+        if (getErrorCode(error) === 'CALL_ALREADY_ENDED') {
+          session.current = null;
+          if (mounted.current) setIssue({ kind: 'end', message: '통화는 종료됐어요. 사용 시간과 남은 시간은 기록과 프로필에서 다시 확인해주세요.' });
+        } else if (mounted.current) {
+          setIssue({ kind: 'end', message: '소리와 영상은 껐지만 종료 처리를 확인하지 못했어요. 종료 확인을 다시 시도해주세요.' });
+        }
+        logger.error('통화 종료 확인 실패', error);
       }
-    };
+    })().finally(() => {
+      closing.current = false;
+      finishPromise.current = null;
+      transition('ended');
+    });
+    finishPromise.current = task;
+    return task;
+  }, [closeTransport, discardRecording, send, setIssue, stopAndUpload, transition]);
+  finishRef.current = finish;
+  const fail = useCallback((message: string, kind: CallErrorKind = 'connection') => finishRef.current({ message, kind }), []);
+  failRef.current = fail;
+  const armStage = useCallback((milliseconds: number, message: string) => {
+    clearStage();
+    stageTimer.current = setTimeout(() => { void failRef.current(message); }, milliseconds);
+  }, [clearStage]);
 
-    updateDuration();
-    const intervalId = setInterval(updateDuration, 1000);
-    return () => clearInterval(intervalId);
+  const handleMessage = useCallback(async (event: WebSocketMessageEvent) => {
+    if (closing.current) return;
+    let message: SignalingMessage;
+    try { message = JSON.parse(event.data as string); } catch { return; }
+    const active = session.current;
+    if (!active || !message || typeof message.type !== 'string') return;
+    if (message.roomId && message.roomId !== active.roomId) return;
+    if (message.data && typeof message.data === 'object' && 'callId' in message.data && message.data.callId !== active.callId) return;
+    try {
+      switch (message.type) {
+        case 'JOINED':
+          if (status.current !== 'joining') return;
+          transition('inviting');
+          send({ type: 'CALL_INVITE', roomId: active.roomId, from: active.callerSignalId, to: active.aiSignalId, data: { callId: active.callId } });
+          armStage(15000, '트윈의 응답을 기다리는 시간이 길어지고 있어요. 잠시 후 다시 연결해주세요.');
+          break;
+        case 'CALL_ACCEPT': {
+          if (status.current !== 'inviting' && status.current !== 'joining') return;
+          transition('connecting');
+          armStage(25000, '음성과 영상 연결을 마치지 못했어요. 네트워크를 확인하고 다시 연결해주세요.');
+          const offer = await createOffer();
+          if (session.current !== active || closing.current) return;
+          send({ type: 'OFFER', roomId: active.roomId, from: active.callerSignalId, to: active.aiSignalId, data: { callId: active.callId, sdp: { type: 'offer', sdp: offer.sdp ?? '' } } });
+          break;
+        }
+        case 'ANSWER': await applyAnswer((message.data as AnswerData).sdp); break;
+        case 'ICE': await applyIceCandidate((message.data as IceData).candidate); break;
+        case 'OFFER': {
+          await applyOffer((message.data as OfferData).sdp);
+          const answer = await createAnswer();
+          if (session.current !== active || closing.current) return;
+          send({ type: 'ANSWER', roomId: active.roomId, from: active.callerSignalId, to: active.aiSignalId, data: { callId: active.callId, sdp: { type: 'answer', sdp: answer.sdp ?? '' } } });
+          break;
+        }
+        case 'CALL_REJECT': await failRef.current(rejectionMessage((message.data as CallRejectData | null)?.reason), 'unavailable'); break;
+        case 'SIGNALING_ERROR': await failRef.current('트윈과의 연결이 끊어졌어요. 다시 연결해주세요.'); break;
+        case 'CALL_END': await finishRef.current(); break;
+      }
+    } catch (error) {
+      logger.error('통화 연결 신호 처리 실패', error);
+      if (session.current === active && !closing.current) await failRef.current('연결 정보를 확인하지 못했어요. 다시 연결해주세요.');
+    }
+  }, [applyAnswer, applyIceCandidate, applyOffer, armStage, createAnswer, createOffer, send, transition]);
+
+  const startCall = useCallback(async () => {
+    if (starting.current || closing.current || session.current || !['idle', 'ended'].includes(status.current)) return;
+    if (!userUuid) { setIssue({ kind: 'connection', message: '로그인 정보를 다시 확인해주세요.' }); transition('ended'); return; }
+    starting.current = true;
+    setSetupPending(true);
+    const request = ++attempt.current;
+    setIssue(null); setNotice(null); setCompletedCall(null); setIsMuted(false);
+    muted.current = false; setRecordingMuted(false);
+    connectedAt.current = null; recordingUrl.current = undefined;
+    setCallDurationSeconds(0);
+    transition('initiating');
+    const isCurrent = () => mounted.current && request === attempt.current;
+    try {
+      const permission = await AudioModule.requestRecordingPermissionsAsync();
+      if (!isCurrent()) return;
+      if (!permission.granted) { await failRef.current('마이크를 허용하면 트윈과 대화할 수 있어요. 휴대폰 설정에서 마이크 권한을 확인해주세요.', 'microphone'); return; }
+      if (Platform.OS === 'ios') await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
+      if (!isCurrent()) return;
+      armStage(20000, '통화 준비에 시간이 걸리고 있어요. 네트워크를 확인하고 다시 연결해주세요.');
+      const [created, initialized] = await Promise.allSettled([
+        initiateCall(targetUserUuid ?? userUuid, { mediaType: 'VIDEO' }), initialize(),
+      ]);
+      if (created.status === 'rejected') throw created.reason;
+      if (!created.value.isSuccess) throw new Error(created.value.message);
+      const data = created.value.result;
+      const active: Session = { ...data, owner: userUuid };
+      if (!isCurrent()) {
+        // A canceled REST request can still create a room. Close that room exactly once.
+        session.current = active;
+        await finishRef.current(issueRef.current ?? undefined);
+        return;
+      }
+      session.current = active;
+      if (initialized.status === 'rejected') throw initialized.reason;
+      const base = process.env.EXPO_PUBLIC_API_BASE_URL;
+      if (!base) throw new Error('서버 연결 설정을 확인해주세요.');
+      const address = new URL(data.signalingUrl || '/ws/signaling', base);
+      if (address.protocol === 'https:') address.protocol = 'wss:';
+      if (address.protocol === 'http:') address.protocol = 'ws:';
+      if (!['wss:', 'ws:'].includes(address.protocol)) throw new Error('서버 연결 주소를 확인해주세요.');
+      transition('joining');
+      armStage(10000, '연결을 시작하지 못했어요. 네트워크를 확인하고 다시 연결해주세요.');
+      const socket = new WebSocket(address.toString());
+      ws.current = socket;
+      socket.onopen = () => {
+        if (ws.current !== socket || closing.current) return;
+        send({ type: 'JOIN', roomId: active.roomId, from: active.callerSignalId, to: 'server', data: null });
+      };
+      socket.onmessage = event => { if (ws.current === socket) void handleMessage(event); };
+      socket.onerror = () => { if (ws.current === socket && !closing.current) void failRef.current('서버 연결에 문제가 생겼어요. 다시 연결해주세요.'); };
+      socket.onclose = () => { if (ws.current === socket && !closing.current) void failRef.current('트윈과의 연결이 끊어졌어요. 다시 연결해주세요.'); };
+    } catch (error) {
+      if (isCurrent()) await failRef.current(getErrorDisplayMessage(error, '통화를 시작하지 못했어요. 다시 시도해주세요.'));
+    } finally {
+      starting.current = false;
+      if (mounted.current) setSetupPending(false);
+    }
+  }, [armStage, handleMessage, initialize, send, setIssue, setRecordingMuted, targetUserUuid, transition, userUuid]);
+
+  useEffect(() => {
+    onLocalIceCandidateCb.current = candidate => {
+      const active = session.current;
+      if (active && !closing.current) send({ type: 'ICE', roomId: active.roomId, from: active.callerSignalId, to: active.aiSignalId, data: { callId: active.callId, candidate: { candidate: candidate.candidate, sdpMid: candidate.sdpMid ?? '0', sdpMLineIndex: candidate.sdpMLineIndex ?? 0 } } });
+    };
+    return () => { onLocalIceCandidateCb.current = null; };
+  }, [onLocalIceCandidateCb, send]);
+
+  useEffect(() => {
+    const active = session.current;
+    if (!active || closing.current) return;
+    if (iceConnectionState === 'connected' || iceConnectionState === 'completed') {
+      if (status.current === 'reconnecting') {
+        if (reconnectTimer.current) clearTimeout(reconnectTimer.current);
+        reconnectTimer.current = null;
+        transition('connected');
+      } else if (status.current === 'connecting') {
+        clearStage();
+        connectedAt.current = Date.now();
+        transition('connected');
+        InCallManager.start({ media: 'video', auto: true });
+        void (async () => {
+          try { await setCallInProgress(active.callId); }
+          catch (error) { logger.error('통화 연결 확인 실패', error); if (session.current === active && !closing.current) await failRef.current('서버의 통화 연결 확인을 받지 못했어요. 다시 연결해주세요.'); return; }
+          if (session.current !== active || closing.current) return;
+          const current = () => session.current === active && !closing.current && mounted.current;
+          try { await startRecording({ isCurrent: current, managesAudioSession: true }); }
+          catch (error) { logger.error('통화 녹음 준비 실패', error); if (current()) setNotice('통화는 연결됐지만 음성 기록을 준비하지 못했어요.'); }
+          finally { if (current()) (InCallManager.setForceSpeakerphoneOn as (flag: boolean | null) => void)(speaker.current ? true : null); }
+        })();
+      }
+    } else if (iceConnectionState === 'disconnected' && status.current === 'connected') {
+      transition('reconnecting');
+      reconnectTimer.current = setTimeout(() => { void failRef.current('연결을 복구하지 못했어요. 네트워크를 확인하고 다시 연결해주세요.'); }, 5000);
+    } else if ((iceConnectionState === 'failed' || iceConnectionState === 'closed') && ['connecting', 'connected', 'reconnecting'].includes(status.current)) {
+      void failRef.current('음성과 영상 연결이 끊어졌어요. 다시 연결해주세요.');
+    }
+  }, [clearStage, iceConnectionState, startRecording, transition]);
+
+  useEffect(() => {
+    if (!['connected', 'reconnecting'].includes(callStatus)) return;
+    const tick = () => { if (connectedAt.current != null) setCallDurationSeconds(Math.max(0, Math.floor((Date.now() - connectedAt.current) / 1000))); };
+    tick();
+    const timer = setInterval(tick, 1000);
+    const foreground = AppState.addEventListener('change', next => { if (next === 'active') tick(); });
+    return () => { clearInterval(timer); foreground.remove(); };
   }, [callStatus]);
 
-  // ─────────────────────────────────────────────
-  // 스피커/음소거 토글 (공개 API)
-  // ─────────────────────────────────────────────
-  const toggleSpeaker = useCallback(() => {
-    const next = !speakerForcedRef.current;
-    speakerForcedRef.current = next;
-    setIsSpeakerOn(next);
-    // 자동 출력은 이어폰 우선 및 VIDEO 기본 스피커 경로를 유지한다.
-    (InCallManager.setForceSpeakerphoneOn as (flag: boolean | null) => void)(next ? true : null);
-  }, []);
-
   const toggleMute = useCallback(() => {
-    setIsMuted((prev) => {
-      const next = !prev;
-      InCallManager.setMicrophoneMute(next);
-      return next;
-    });
+    if (status.current !== 'connected' || closing.current) return;
+    const next = !muted.current;
+    try {
+      if (next) { setMicrophoneMuted(true); setRecordingMuted(true); }
+      else { setRecordingMuted(false); setMicrophoneMuted(false); }
+      muted.current = next;
+      setIsMuted(next);
+    } catch (error) {
+      logger.error('마이크 상태 변경 실패', error);
+      void discardRecording();
+      void failRef.current('마이크 설정을 확인하지 못해 통화를 마쳤어요. 다시 연결해주세요.');
+    }
+  }, [discardRecording, setMicrophoneMuted, setRecordingMuted]);
+  const toggleSpeaker = useCallback(() => {
+    if (status.current !== 'connected' || closing.current) return;
+    const next = !speaker.current;
+    try {
+      (InCallManager.setForceSpeakerphoneOn as (flag: boolean | null) => void)(next ? true : null);
+      speaker.current = next; setIsSpeakerOn(next);
+    } catch { setNotice('소리 출력을 바꾸지 못했어요. 연결된 이어폰이나 기기 설정을 확인해주세요.'); }
   }, []);
-
-  // ─────────────────────────────────────────────
-  // 카메라 토글 (공개 API) — 내 화면에만 보이는 셀프뷰. Android는 getUserMedia가 런타임
-  // 권한을 직접 요청/확인하지 않으므로(react-native-webrtc GetUserMediaImpl 확인) 여기서
-  // 먼저 명시적으로 요청한다 — 안 하면 권한 거부 시 catch 불가능한 예외로 앱이 죽을 수 있다.
-  // iOS는 getUserMedia 호출 자체가 시스템 카메라 권한 프롬프트를 트리거한다.
-  // ─────────────────────────────────────────────
   const toggleCamera = useCallback(async () => {
-    const cameraAttemptId = ++cameraToggleAttemptIdRef.current;
-
-    if (isCameraOn) {
-      disableCamera();
-      setIsCameraOn(false);
-      return;
-    }
-
-    if (Platform.OS === 'android') {
-      const result = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.CAMERA, {
-        title: '카메라 접근 권한',
-        message: 'Mirror Soul에서 영상통화 중 내 모습을 보여주려면 카메라 접근이 필요합니다.',
-        buttonPositive: '허용',
-        buttonNegative: '거부',
-      });
-      if (result !== PermissionsAndroid.RESULTS.GRANTED) {
-        logger.warn('[useAICallFlow] Camera permission denied (Android)');
-        return;
-      }
-    }
-
-    if (cameraAttemptId !== cameraToggleAttemptIdRef.current || !callSessionRef.current) {
-      return;
-    }
-
+    if (status.current !== 'connected' || closing.current || cameraBusy.current) return;
+    const request = ++cameraRequest.current;
+    cameraBusy.current = true; setIsCameraPending(true);
     try {
+      if (cameraOn.current) { disableCamera(); cameraOn.current = false; setIsCameraOn(false); return; }
+      if (Platform.OS === 'android') {
+        const granted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.CAMERA, { title: '내 모습 확인', message: '내 화면에서 모습을 확인할 때만 카메라를 사용해요. AI에게 전송하지 않아요.', buttonPositive: '허용', buttonNegative: '나중에' });
+        if (!mounted.current || request !== cameraRequest.current) return;
+        if (granted !== PermissionsAndroid.RESULTS.GRANTED) { setNotice('내 모습을 보려면 휴대폰 설정에서 카메라를 허용해주세요.'); return; }
+      }
+      if (request !== cameraRequest.current || closing.current || !session.current) return;
       const enabled = await enableCamera();
-      if (enabled && cameraAttemptId === cameraToggleAttemptIdRef.current && callSessionRef.current) {
-        setIsCameraOn(true);
-      }
-    } catch (err) {
-      if (cameraAttemptId === cameraToggleAttemptIdRef.current) {
-        logger.error('[useAICallFlow] Failed to enable camera:', err);
-      }
-    }
-  }, [isCameraOn, enableCamera, disableCamera]);
+      if (enabled && request === cameraRequest.current && !closing.current && session.current) { cameraOn.current = true; setIsCameraOn(true); setNotice(null); }
+    } catch { if (mounted.current && request === cameraRequest.current) setNotice('카메라를 열지 못했어요. 휴대폰 설정에서 권한을 확인해주세요.'); }
+    finally { if (mounted.current && request === cameraRequest.current) { cameraBusy.current = false; setIsCameraPending(false); } }
+  }, [disableCamera, enableCamera]);
 
-  // ─────────────────────────────────────────────
-  // WebSocket 메시지 처리
-  // ─────────────────────────────────────────────
-  const handleMessage = useCallback(async (event: WebSocketMessageEvent) => {
-    let msg: SignalingMessage;
-    try {
-      msg = JSON.parse(event.data as string);
-    } catch {
-      logger.warn('[useAICallFlow] Failed to parse WS message');
-      return;
-    }
-
-    logger.debug('[useAICallFlow] Received:', msg.type);
-    const session = callSessionRef.current;
-    if (!session) return;
-
-    switch (msg.type) {
-      case 'JOINED': {
-        logger.info('[useAICallFlow] JOINED received. Sending CALL_INVITE...');
-        setCallStatus('inviting');
-
-        // 백엔드 시그널링 검증(Backend #185)은 CALL_INVITE.data에 callId만 허용한다 — 필드가 하나라도
-        // 더 있으면 SIGNALING_ERROR(INVALID_MESSAGE)로 거부된다. 클론·mediaType은 AI 서버가 callId로
-        // 백엔드 내부 API에서 직접 조회하므로 여기서 보내지 않는다.
-        sendMessage({
-          type: 'CALL_INVITE',
-          roomId: session.roomId,
-          from: session.callerSignalId,
-          to: session.aiSignalId,
-          data: { callId: session.callId },
-        });
-
-        inviteTimeoutRef.current = setTimeout(() => {
-          logger.warn('[useAICallFlow] CALL_INVITE timeout after 10s');
-          _cleanup('AI 트윈이 응답하지 않습니다. 잠시 후 다시 시도해주세요.');
-        }, INVITE_TIMEOUT_MS);
-        break;
-      }
-
-      case 'CALL_ACCEPT': {
-        // 타임아웃 해제
-        if (inviteTimeoutRef.current) {
-          clearTimeout(inviteTimeoutRef.current);
-          inviteTimeoutRef.current = null;
-        }
-
-        setCallStatus('connecting');
-        logger.info('[useAICallFlow] CALL_ACCEPT received. Creating offer...');
-
-        try {
-          const offer = await createOffer();
-          sendMessage({
-            type: 'OFFER',
-            roomId: session.roomId,
-            from: session.callerSignalId,
-            to: session.aiSignalId,
-            data: {
-              callId: session.callId,
-              sdp: { type: 'offer', sdp: offer.sdp ?? '' },
-            },
-          });
-        } catch (err) {
-          logger.error('[useAICallFlow] Failed to create offer:', err);
-          await _cleanup('통화 연결에 실패했습니다.');
-        }
-        break;
-      }
-
-      case 'OFFER': {
-        // AI 주도 재협상: 수신한 메시지의 from/to를 뒤집어서 ANSWER 발송 (백엔드 컨벤션)
-        const offerData = msg.data as OfferData;
-        try {
-          logger.info('[useAICallFlow] OFFER received from AI. Applying and creating answer...');
-          await applyOffer(offerData.sdp);
-          const answer = await createAnswer();
-          sendMessage({
-            type: 'ANSWER',
-            roomId: msg.roomId,
-            from: msg.to,
-            to: msg.from,
-            data: {
-              callId: offerData.callId,
-              sdp: { type: 'answer', sdp: answer.sdp ?? '' },
-            },
-          });
-        } catch (err) {
-          logger.error('[useAICallFlow] Failed to handle AI OFFER:', err);
-        }
-        break;
-      }
-
-      case 'ANSWER': {
-        const answerData = msg.data as AnswerData;
-        try {
-          await applyAnswer(answerData.sdp);
-        } catch (err) {
-          logger.error('[useAICallFlow] Failed to apply answer:', err);
-        }
-        break;
-      }
-
-      case 'ICE': {
-        const iceData = msg.data as IceData;
-        try {
-          await applyIceCandidate(iceData.candidate);
-        } catch (err) {
-          logger.error('[useAICallFlow] Failed to apply ICE candidate:', err);
-        }
-        break;
-      }
-
-      case 'CALL_REJECT': {
-        const rejectData = msg.data as CallRejectData | null;
-        if (rejectData) {
-          logger.warn('[useAICallFlow] CALL_REJECT reason:', rejectData.reason, rejectData.detail);
-        }
-        // AI_SERVER_UNAVAILABLE(백엔드가 CALL_INVITE를 AI 서버로 릴레이 자체를 못 한 경우)만
-        // 별도 문구로 구분한다 — 그 외 기존 4개 사유는 이미 있던 동작(고정 문구) 그대로 유지.
-        const message =
-          rejectData?.reason === 'AI_SERVER_UNAVAILABLE'
-            ? 'AI 트윈 서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.'
-            : 'AI 트윈이 통화를 거절했습니다.';
-        await _cleanup(message);
-        break;
-      }
-
-      case 'SIGNALING_ERROR': {
-        const signalingErrorData = msg.data as SignalingErrorData | null;
-        logger.warn(
-          '[useAICallFlow] SIGNALING_ERROR reason:',
-          signalingErrorData?.reason,
-          signalingErrorData?.detail
-        );
-
-        // 이미 hangUp()으로 종료 중이면(예: 방금 보낸 CALL_END 자체가 전달 실패) 상대는 어차피
-        // 곧 정리될 예정이니 에러 화면을 띄우지 않는다. _performHangUp이 CALL_END 발송 직후
-        // isHangingUpRef를 true로 세운 채 stopAndUpload/endCall(둘 다 시간이 걸림)을 기다리는
-        // 동안 이 메시지가 도착할 수 있는데, 가드가 없으면 여기서 _cleanup(message)이 error를
-        // 먼저 세팅해버리고, 뒤이어 _performHangUp 자신의 _cleanup()은 메시지 없이 호출되어
-        // (errorMessage가 falsy면 setError를 안 함) 그 error를 못 지운다 — 정상적으로 전화를
-        // 끊었는데도 ai-call.tsx의 "callStatus==='ended' && !error" 자동 뒤로가기 조건이
-        // 깨지면서 에러 화면이 잘못 뜬다.
-        if (isHangingUpRef.current) break;
-
-        await _cleanup('AI 트윈과의 연결이 끊어졌습니다. 잠시 후 다시 시도해주세요.');
-        break;
-      }
-
-      case 'CALL_END':
-        logger.info('[useAICallFlow] CALL_END received from AI');
-        await _performHangUp();
-        break;
-
-      default:
-        logger.debug('[useAICallFlow] Unhandled message type:', msg.type);
-    }
-  }, [createOffer, createAnswer, applyAnswer, applyOffer, applyIceCandidate, sendMessage]);
-
-  // ─────────────────────────────────────────────
-  // 내부 정리 함수
-  // ─────────────────────────────────────────────
-  const _cleanup = useCallback(async (errorMessage?: string, targetStatus: CallStatus = 'ended') => {
-    logger.debug('[useAICallFlow] Cleaning up...');
-
-    // 대기 중인 startCall 시도가 있다면 여기서 무효화한다 — Promise.allSettled가 끝난 뒤
-    // 이 값이 자기 시작 시점과 달라진 걸 보고, 뒤늦게 로컬 연결을 이어가지 않는다.
-    startAttemptIdRef.current += 1;
-    cameraToggleAttemptIdRef.current += 1;
-
-    if (inviteTimeoutRef.current) {
-      clearTimeout(inviteTimeoutRef.current);
-      inviteTimeoutRef.current = null;
-    }
-
-    const ws = wsRef.current;
-    if (ws) {
-      ws.onmessage = null;
-      ws.onclose = null;
-      ws.onerror = null;
-      if (ws.readyState === WebSocket.OPEN) ws.close();
-      wsRef.current = null;
-    }
-
-    closeWebRTC(); // 카메라 스트림 트랙 정지까지 포함
-    InCallManager.stop();
-    speakerForcedRef.current = false;
-    setIsSpeakerOn(false);
-    setIsMuted(false);
-    setIsCameraOn(false);
-    callSessionRef.current = null;
-    isHangingUpRef.current = false;
-
-    if (errorMessage) {
-      setError(errorMessage);
-    }
-
-    setCallStatus(targetStatus);
-  }, [closeWebRTC]);
-
-  // ─────────────────────────────────────────────
-  // 통화 종료 내부 처리 (녹음 업로드 포함)
-  // ─────────────────────────────────────────────
-  const _performHangUp = useCallback(async () => {
-    if (isHangingUpRef.current) return;
-    const session = callSessionRef.current;
-    if (!session) {
-      // 아직 서버에 알릴 세션(REST 응답)이 없는 시점의 취소 — 알릴 대상이 없으니 로컬 정리만 한다.
-      // 여기서 그냥 return하면 callStatus가 안 바뀌어 화면 전환(연결 취소)이 안 일어난다.
-      await _cleanup();
-      return;
-    }
-
-    isHangingUpRef.current = true;
-    setCallStatus('ending');
-    logger.info('[useAICallFlow] Hanging up...');
-
-    // 1. WebSocket CALL_END 발송
-    sendMessage({
-      type: 'CALL_END',
-      roomId: session.roomId,
-      from: session.callerSignalId,
-      to: session.aiSignalId,
-      data: { callId: session.callId },
-    });
-
-    // 2. 녹음 중단 및 S3 업로드 (내 목소리 → AI 학습/분석용)
-    const recordingUrl = await stopAndUpload(userUuid ?? '');
-
-    // TODO: 통화 기록(대화 내용) 저장
-    // 나와 AI 서버가 주고받은 대화 내용을 callId 기준으로 저장해야 합니다.
-    // 구현 방향 (백엔드 협의 필요):
-    //   - 방법 A (권장): 백엔드가 callId별 AI 응답 텍스트 + 사용자 음성 STT 결과를 저장
-    //                    → GET /calls/{callId}/transcript 로 조회
-    //   - 방법 B: 클라이언트에서 통화 중 실시간 STT(useSTT)로 수집한 텍스트를 endCall 시 전송
-    // 현재는 recordingUrl(S3 음성 파일)만 전달하며, 텍스트 기록은 추후 추가 예정
-
-    // 3. REST API 종료 알림
-    try {
-      const response = await endCall(session.callId, recordingUrl);
-      // 연결 전 취소된 방에는 만남 신청을 붙일 수 없다. 실제 연결까지 완료했고 서버 종료도
-      // 성공한 통화에만 후속 UI가 사용할 callId/duration을 남긴다.
-      if (connectedAtRef.current != null && response.isSuccess) {
-        setCompletedCall(response.result);
-      }
-      // 종료 응답이 서버에서 잔여 시간을 차감한 뒤 돌아온다. 홈/프로필의 활성 잔액 쿼리를
-      // 즉시 무효화해 다음 화면에서 오래된 시간을 잠깐 보여주지 않게 한다.
-      void queryClient.invalidateQueries({ queryKey: ['profile', 'time'] });
-    } catch (err) {
-      logger.error('[useAICallFlow] endCall REST failed:', err);
-    }
-
-    // 4. 정리
-    await _cleanup();
-  }, [sendMessage, stopAndUpload, userUuid, endCall, _cleanup]);
-
-  // ─────────────────────────────────────────────
-  // 통화 시작 (공개 API)
-  // ─────────────────────────────────────────────
-  const startCall = useCallback(async () => {
-    if (!userUuid) {
-      // 자동 시작 구조라 idle로 되돌리기만 하면 재시도 버튼이 없어 빠져나갈 수 없다 —
-      // 에러 상태로 전이시켜 CallErrorFallback의 뒤로가기로 나갈 수 있게 한다.
-      setError('사용자 정보를 찾을 수 없습니다.');
-      return;
-    }
-
-    const myAttemptId = ++startAttemptIdRef.current;
-
-    setError(null);
-    connectedAtRef.current = null;
-    setCallDurationSeconds(0);
-    setCompletedCall(null);
-    setCallStatus('initiating');
-    logger.info('[useAICallFlow] Starting call...');
-
-    try {
-      // ─── 전제조건 1: 마이크 권한 확인/요청 ───
-      // 통화 시작 전에 권한을 미리 요청합니다.
-      // 권한이 없으면 WebRTC 초기화 자체가 실패하므로 여기서 조기 차단합니다.
-      const { granted } = await AudioModule.requestRecordingPermissionsAsync();
-      if (!granted) {
-        logger.warn('[useAICallFlow] Microphone permission denied');
-        // 화면 진입 시 자동으로 통화가 걸리는 구조라(수동 "다시 시작" 버튼이 없음),
-        // 여기서 idle로만 되돌리면 사용자가 나갈 방법 없는 무한 로딩 화면에 갇힌다.
-        // CallErrorFallback(뒤로가기 버튼 있음)이 뜨도록 에러 상태로 전이시킨다.
-        await _cleanup('통화를 시작하려면 마이크 접근 권한이 필요합니다. 설정에서 권한을 허용해주세요.', 'idle');
-        return;
-      }
-      logger.debug('[useAICallFlow] Microphone permission granted');
-
-      // ─── 전제조건 2: iOS 오디오 세션을 녹음 가능 모드로 사전 설정 ───
-      // WebRTC(getUserMedia)와 expo-audio가 같은 마이크를 공유하려면
-      // iOS AVAudioSession이 처음부터 .playAndRecord 모드여야 합니다.
-      // initWebRTC() 호출 전에 설정해야 충돌이 발생하지 않습니다.
-      // iOS 전용 — Android에서 이 두 필드(allowsRecording/playsInSilentMode)는 아무 효과가
-      // 없고, expo-audio의 Android 구현은 대신 AudioManager.MODE_NORMAL + 스피커 강제 on으로
-      // 해석한다(AudioModule.kt). InCallManager.start()가 직후 올바르게 MODE_IN_COMMUNICATION을
-      // 설정해도, 이 호출이 (또는 useCallRecording의 동일 호출이) Android에서 그걸 되돌려버려
-      // 통화 내내 잘못된 오디오 모드로 남는 원인이 된다 — 그래서 Android에서는 호출 자체를 스킵한다.
-      if (Platform.OS === 'ios') {
-        await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
-        logger.debug('[useAICallFlow] Audio mode configured for recording (iOS)');
-      }
-
-      // 1+2. REST API(방 생성)와 WebRTC 초기화(마이크 스트림 획득)는 서로의 결과값이
-      // 필요 없는 독립적인 작업이다(roomId 등은 WebSocket JOIN 시에만 필요) — 순차 실행 시
-      // 두 왕복시간이 그대로 더해지던 걸, 병렬 실행으로 느린 쪽 하나만 기다리면 되게 줄인다.
-      // allSettled를 쓰는 이유: Promise.all은 하나만 실패해도 다른 쪽 결과(특히 REST 성공 시
-      // 생성된 callId)를 잃어버려서, REST는 성공하고 WebRTC만 실패한 경우 서버에 생성된
-      // 통화방을 정리(보상 종료)할 방법이 없어진다.
-      const [initiateResult, webrtcResult] = await Promise.allSettled([
-        initiateCall(calleeUuid, {
-          mediaType: AI_TWIN_CALL_MEDIA_TYPE,
-        }),
-        initWebRTC(),
-      ]);
-
-      if (initiateResult.status === 'rejected') {
-        throw initiateResult.reason;
-      }
-      const response = initiateResult.value;
-      if (!response.isSuccess) throw new Error(response.message);
-
-      const { callId, roomId, callerSignalId, aiSignalId, mediaType } = response.result;
-
-      // 이 시도가 REST/WebRTC 초기화를 기다리는 동안 사용자가 취소했거나(hangUp) 화면이
-      // 언마운트됐다면(_cleanup이 attemptId를 무효화) 서버엔 이미 방이 생겼으니 로컬 연결을
-      // 이어가지 말고 보상 종료 요청만 보낸다.
-      if (myAttemptId !== startAttemptIdRef.current) {
-        logger.warn('[useAICallFlow] startCall attempt cancelled during setup — sending compensating hangup');
-        // 취소 시점의 _cleanup()은 initWebRTC()가 끝나기 전에 이미 지나갔으므로, 방금 막
-        // 만들어진 PeerConnection/마이크 스트림은 아무도 안 닫은 상태다 — useWebRTCCall.initialize()가
-        // pcRef.current를 먼저 세팅한 뒤 getUserMedia()를 호출하므로, webrtcResult가 fulfilled든
-        // rejected(getUserMedia 실패 등)든 pcRef가 채워져 있을 수 있다. 무조건 호출한다
-        // (closeWebRTC()는 pc가 없으면 안전하게 no-op).
-        closeWebRTC();
-        try {
-          await endCall(callId, '');
-        } catch (err) {
-          logger.error('[useAICallFlow] compensating endCall failed:', err);
-        }
-        return;
-      }
-
-      callSessionRef.current = { callId, roomId, callerSignalId, aiSignalId, mediaType };
-
-      if (webrtcResult.status === 'rejected') {
-        // REST 세션은 이미 만들어졌으니 로컬 정리만으론 부족하다 — catch 블록에서
-        // callSessionRef가 있는 걸 보고 정식 hangUp 경로(CALL_END + endCall)로 보낸다.
-        throw webrtcResult.reason;
-      }
-
-      // 3. WebSocket 연결
-      setCallStatus('joining');
-      const ws = new WebSocket(`${WS_BASE_URL}/ws/signaling`);
-      wsRef.current = ws;
-
-      ws.onerror = (e) => {
-        logger.error('[useAICallFlow] WebSocket error:', e);
-        _cleanup('시그널링 서버 연결에 실패했습니다.');
-      };
-
-      ws.onclose = () => {
-        logger.debug('[useAICallFlow] WebSocket closed');
-      };
-
-      ws.onmessage = handleMessage;
-
-      ws.onopen = () => {
-        logger.info('[useAICallFlow] WebSocket connected. Sending JOIN...');
-
-        // 4. JOIN 발송
-        ws.send(JSON.stringify({
-          type: 'JOIN',
-          roomId,
-          from: callerSignalId,
-          to: 'server',
-          data: null,
-        }));
-      };
-    } catch (err: unknown) {
-      const message = getErrorDisplayMessage(err, '통화를 시작할 수 없습니다.');
-      logger.error('[useAICallFlow] startCall failed:', err);
-      if (callSessionRef.current) {
-        // REST로 서버에 통화방이 이미 생성된 상태 — 로컬 정리만으론 서버에 고아 통화가 남는다.
-        // 정식 hangUp 경로(CALL_END + endCall)로 서버도 함께 정리한다. _performHangUp이 호출하는
-        // _cleanup()엔 메시지를 안 넘기므로, 에러 문구는 먼저 세팅해서 CallErrorFallback에 남긴다.
-        setError(message);
-        await _performHangUp();
-      } else {
-        await _cleanup(message, 'idle');
-      }
-    }
-  }, [userUuid, calleeUuid, initWebRTC, handleMessage, _cleanup, _performHangUp, endCall, closeWebRTC]);
-
-  // ─────────────────────────────────────────────
-  // 통화 종료 (공개 API)
-  // ─────────────────────────────────────────────
-  const hangUp = useCallback(async () => {
-    await _performHangUp();
-  }, [_performHangUp]);
-
-  // 언마운트 시 자동 정리
   useEffect(() => {
-    return () => {
-      _cleanup();
-    };
-  }, [_cleanup]);
+    if (owner.current !== userUuid) {
+      owner.current = userUuid;
+      void failRef.current('계정이 변경되어 통화를 마쳤어요.');
+    }
+  }, [userUuid]);
+  useEffect(() => {
+    mounted.current = true;
+    return () => { mounted.current = false; queueMicrotask(() => { if (!mounted.current) void finishRef.current(); }); };
+  }, []);
 
   return {
-    callStatus,
-    remoteStream: remoteStream as MediaStream | null,
-    localCameraStream: localCameraStream as MediaStream | null,
-    startCall,
-    hangUp,
-    error,
-    isSpeakerOn,
-    toggleSpeaker,
-    isMuted,
-    toggleMute,
-    isCameraOn,
-    toggleCamera,
-    callDurationSeconds,
-    completedCall,
+    callStatus, remoteStream, localCameraStream, startCall,
+    hangUp: useCallback(() => finishRef.current(), []),
+    error: issue?.message ?? null, errorKind: issue?.kind ?? null,
+    canRetry: !!issue && !setupPending && callStatus === 'ended' && session.current === null && issue.kind !== 'end',
+    canRetryEnd: issue?.kind === 'end' && session.current !== null && session.current.owner === userUuid && callStatus === 'ended',
+    isSpeakerOn, toggleSpeaker, isMuted, toggleMute, isCameraOn, isCameraPending, toggleCamera,
+    callDurationSeconds, completedCall, notice,
+    dismissNotice: useCallback(() => setNotice(null), []),
+    openSettings: useCallback(() => { void Linking.openSettings().catch(() => setNotice('휴대폰 설정에서 Mirror Soul 권한을 확인해주세요.')); }, []),
   };
 }

@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Modal, PanResponder, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { ToastViewport } from '@/src/components/common/Toast/ToastViewport';
 import type { GestureResponderEvent } from 'react-native';
 import { Image } from 'expo-image';
 import * as FileSystem from 'expo-file-system/legacy';
@@ -304,6 +305,7 @@ export function ProfilePhotoEditor({ photo, name, onClose, onSaved }: { photo: E
           </View>}
         </View>
       </View>
+      <ToastViewport />
     </Modal>
   );
 }

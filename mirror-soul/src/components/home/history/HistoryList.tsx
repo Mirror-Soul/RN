@@ -2,11 +2,13 @@ import { useHistoryCallsQuery } from '@/src/features/history/hooks/useHistoryCal
 import { useRouter } from 'expo-router';
 import React, { useMemo } from 'react';
 import { ActivityIndicator, SectionList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useMainTabBottomPadding } from '@/src/hooks/useMainTabBottomPadding';
+import { useMainTabScroll } from '@/src/hooks/useMainTabScroll';
+import { ProfileImageReloadContext } from '@/src/features/profile/photo/useRetryableProfileImage';
 import { HistoryFilterType } from './HistoryFilterRow';
 import HistoryCallCard from './parts/HistoryCallCard';
 import HistoryDateSectionHeader from './parts/HistoryDateSectionHeader';
-import { Colors, Layout, Spacing } from '@/src/constants/theme';
+import { Colors, Spacing } from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import type { CallHistoryResult } from '@/src/types/api/history';
 import { toRelativeDateLabel } from '@/src/utils/formatHistoryDate';
@@ -35,7 +37,8 @@ interface HistorySection {
  */
 export default function HistoryList({ filter, searchQuery, ListHeaderComponent }: HistoryListProps) {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
+  const bottomPadding = useMainTabBottomPadding();
+  const scrollCallbacks = useMainTabScroll('history');
   const { colors } = useThemeColors();
   const { data, isLoading, isError, refetch } = useHistoryCallsQuery();
 
@@ -88,7 +91,8 @@ export default function HistoryList({ filter, searchQuery, ListHeaderComponent }
   };
 
   return (
-    <SectionList<CallHistoryResult, HistorySection>
+    <ProfileImageReloadContext.Provider value={refetch}><SectionList<CallHistoryResult, HistorySection>
+      {...scrollCallbacks}
       style={styles.list}
       sections={sections}
       keyExtractor={(item) => String(item.callId)}
@@ -109,8 +113,8 @@ export default function HistoryList({ filter, searchQuery, ListHeaderComponent }
       showsVerticalScrollIndicator={false}
       stickySectionHeadersEnabled={false}
       keyboardShouldPersistTaps="handled"
-      contentContainerStyle={{ paddingBottom: insets.bottom + Layout.MAIN_TAB_CONTENTS_BOTTOM_PADDING }}
-    />
+      contentContainerStyle={{ paddingBottom: bottomPadding }}
+    /></ProfileImageReloadContext.Provider>
   );
 }
 

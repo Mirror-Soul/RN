@@ -63,3 +63,17 @@ it('keeps the registration preview visible without hiding the remote error or bl
   fireEvent(screen.UNSAFE_getByType(Image), 'error');
   expect(screen.getByText(/사진은 등록되어 있어요/)).toBeTruthy();
 });
+
+it('loads a renewed URL inside the same modal and ignores the previous download events', () => {
+  const screen = render(<ProfilePhotoViewer {...props} />);
+  const modal = screen.UNSAFE_getByType(Modal);
+  const staleError = screen.UNSAFE_getByType(Image).props.onError;
+  fireEvent(screen.UNSAFE_getByType(Image), 'error');
+  screen.rerender(<ProfilePhotoViewer {...props} uri={`${props.uri}?signature=new`} />);
+  act(() => staleError());
+  expect(screen.UNSAFE_getByType(Image).props.source.uri).toBe(`${props.uri}?signature=new`);
+  expect(screen.UNSAFE_getByType(Modal)).toBe(modal);
+  fireEvent(screen.UNSAFE_getByType(Image), 'load');
+  expect(screen.queryByText('사진을 불러오고 있어요…')).toBeNull();
+  expect(props.onClose).not.toHaveBeenCalled();
+});

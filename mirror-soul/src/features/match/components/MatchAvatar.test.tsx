@@ -8,10 +8,10 @@ jest.mock('@/src/hooks/useThemeColors', () => ({
 }));
 jest.mock('expo-image', () => ({ Image: jest.requireActual('react-native').Image }));
 
-it('shows the initial on failure and attempts a newly received photo URL', () => {
+it('offers photo recovery on failure and attempts a newly received photo URL', () => {
   const screen = render(<MatchAvatar name="소울" url="https://photo/old.jpg" />);
   fireEvent(screen.UNSAFE_getByType(Image), 'error');
-  expect(screen.getByLabelText('사진을 불러오지 못해 기본 아바타로 표시')).toBeTruthy();
+  expect(screen.getByRole('button', { name: '소울 프로필 사진 다시 불러오기' })).toBeTruthy();
   screen.rerender(<MatchAvatar name="소울" url="https://photo/new.jpg" />);
   expect(screen.UNSAFE_getByType(Image).props.source.uri).toBe('https://photo/new.jpg');
 });

@@ -1,43 +1,36 @@
-import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { RTCView, type MediaStream } from 'react-native-webrtc';
-import CallAIAvatar from './CallAIAvatar';
+import { BrowseText as Text } from '@/src/components/home/common/BrowseText';
+import { useCallAppearance } from './CallAppearance';
 import type { CallStatus } from '@/src/hooks/useAICallFlow';
 
-interface CallRemoteVideoViewProps {
-  callStatus: CallStatus;
-  remoteStream: MediaStream | null;
+export default function CallRemoteVideoView({ callStatus, remoteStream, targetName = '내 트윈', isPreview = false }: {
+  callStatus: CallStatus; remoteStream: MediaStream | null; targetName?: string; isPreview?: boolean;
+}) {
+  const { colors, palette } = useCallAppearance();
+  const hasVideo = (remoteStream?.getVideoTracks().length ?? 0) > 0;
+  const url = hasVideo ? remoteStream?.toURL() : undefined;
+  const currentURL = useRef(url);
+  currentURL.current = url;
+  const [dimensionsReceived, setDimensionsReceived] = useState(false);
+  const [slow, setSlow] = useState(false);
+  useEffect(() => { setDimensionsReceived(false); setSlow(false); const timer = setTimeout(() => setSlow(true), 6000); return () => clearTimeout(timer); }, [url]);
+  const ending = callStatus === 'ending' || callStatus === 'ended';
+  return <View testID="call-media-surface" style={[styles.container, { backgroundColor: colors.background.primary }]}>
+    {url && !ending && <RTCView streamURL={url} style={styles.video} objectFit="contain" zOrder={0} onDimensionsChange={event => { if (currentURL.current === url && event.nativeEvent.width > 0 && event.nativeEvent.height > 0) setDimensionsReceived(true); }} />}
+    {(!dimensionsReceived || ending || isPreview) && <View pointerEvents="none" style={[styles.fallback, { backgroundColor: colors.background.primary }]}>
+      <View style={[styles.avatar, { backgroundColor: palette.tint }]}><Text variant="heading" style={[styles.initial, { color: palette.accentInk }]}>{Array.from(targetName)[0] || 'M'}</Text></View>
+      <Text style={[styles.copy, { color: colors.text.secondary }]}>{ending ? '대화를 마쳤어요' : isPreview ? 'AI 영상이 표시되는 영역이에요' : slow ? '영상이 아직 표시되지 않고 있어요' : '영상을 연결하고 있어요'}</Text>
+      {!ending && !isPreview && <ActivityIndicator color={palette.accentInk} />}
+    </View>}
+  </View>;
 }
-
-/**
- * 상대(AI 트윈) 영상통화 영역 — 화면 전체를 채우는 배경 레이어.
- *
- * AI 서버가 비디오 트랙을 보내면 RTCView로 자동 전환한다. 렌더 서비스 준비 전이거나
- * 비디오 트랙 협상에 실패한 경우에는 기존 CallAIAvatar를 안전한 자리표시자로 유지한다.
- */
-export default function CallRemoteVideoView({ callStatus, remoteStream }: CallRemoteVideoViewProps) {
-  const hasVideoTrack = (remoteStream?.getVideoTracks().length ?? 0) > 0;
-
-  if (hasVideoTrack && remoteStream) {
-    return (
-      <View style={styles.container}>
-        <RTCView streamURL={remoteStream.toURL()} style={styles.video} objectFit="cover" />
-      </View>
-    );
-  }
-
-  return (
-    <View style={styles.container}>
-      <CallAIAvatar callStatus={callStatus} />
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
-  container: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  video: {
-    flex: 1,
-  },
+  container: { flex: 1, minHeight: 0, overflow: 'hidden' },
+  video: { ...StyleSheet.absoluteFillObject },
+  fallback: { ...StyleSheet.absoluteFillObject, justifyContent: 'center', alignItems: 'center', gap: 14, padding: 16 },
+  avatar: { width: 72, height: 72, borderRadius: 26, alignItems: 'center', justifyContent: 'center' },
+  initial: { fontSize: 30, lineHeight: 40, fontWeight: '600' },
+  copy: { fontSize: 13, lineHeight: 21, textAlign: 'center' },
 });

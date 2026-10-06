@@ -1,9 +1,15 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { LayoutChangeEvent, StyleSheet, View, useWindowDimensions } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Spacing } from '@/src/constants/theme';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, BackHandler, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import { useAICallFlow } from '@/src/hooks/useAICallFlow';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
+import { darkTheme } from '@/src/constants/theme';
+import { CallVideoAppearance } from '@/src/components/call/CallAppearance';
+import { getMyTime } from '@/src/services/profileService';
+import { useAuthStore } from '@/src/store/useAuthStore';
+import { BrowseText as Text } from '@/src/components/home/common/BrowseText';
 import CallHeader from '@/src/components/call/CallHeader';
 import CallRemoteVideoView from '@/src/components/call/CallRemoteVideoView';
 import CallLocalPreview from '@/src/components/call/CallLocalPreview';
@@ -13,246 +19,146 @@ import CallEndMeetingPrompt from '@/src/components/call/CallEndMeetingPrompt';
 import CallErrorFallback from '@/src/components/call/CallErrorFallback';
 import CallScreenBackground from '@/src/components/call/CallScreenBackground';
 
-function parseTimeLimitSeconds(value: string | undefined): number | null {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : null;
-}
-
-/**
- * AI 트윈 영상통화 화면
- *
- * 진입 경로:
- * - Grow 탭 → 트윈 시뮬레이션 카드 클릭 (파라미터 없음 → 본인 클론에 통화)
- * - 발견/매칭 탭 → 상대 카드의 TWIN CALL (`targetUuid` 파라미터로 상대방 uuid 전달)
- * 화면 진입 시 사용자 조작 없이 바로 통화가 걸린다("탭해서 시작" 단계를 거치지 않음).
- * 연결 완료 전(idle~connecting)에는 CallConnectingView(펄스 오브 + 스텝 인디케이터)를,
- * 연결된 이후에는 실제 영상통화 레이아웃을 보여준다.
- * 통화 종료 후 자동으로 이전 화면으로 돌아갑니다.
- *
- * 전체화면 AI 영상 + 내 셀프뷰 PIP 형태다. AI 서버가 보낸 비디오 트랙은
- * CallRemoteVideoView가 자동으로 표시하고, 아직 트랙이 없을 때만 아바타 자리표시자를 쓴다.
- *
- * 음소거/스피커는 react-native-incall-manager로 실제 오디오 라우팅까지 연결되어 있다
- * (useAICallFlow 참고, 기본 라우팅은 OS가 결정한다). 카메라 토글은 내 화면에만
- * 보이는 셀프뷰를 실제로 켜고 끈다 — 의도적으로 AI 서버로는 보내지 않는다(어차피 비디오
- * 트랙을 받으면 버리는 서버라 지금은 효과가 없고, 이미 연결된 통화 중 재협상을 새로 거는
- * 위험을 감수할 이유가 없다).
- *
- * 셀프뷰 PIP는 탭하면 커졌다 작아졌다 토글되고, 드래그하면 네 모서리 중 가까운 곳으로
- * 스냅된다(CallLocalPreview 참고) — 위치는 헤더/컨트롤 오버레이의 실측 높이(onLayout)로
- * 계산한 안전 영역(localPreviewSafeArea) 안에서만 움직이고, 통화마다 기본 위치(우상단)로
- * 초기화된다(저장하지 않음).
- *
- * 의도적으로 `useLayout()`의 컨텐츠 폭 캡을 적용하지 않는다 — 통화 화면은 몰입형
- * 풀블리드 UI(영상/컨트롤이 화면 전체를 채움)가 맞고, 태블릿에서도 좁은 칼럼으로
- * 가운데 정렬할 이유가 없다.
- */
+/** One call surface, with media kept away from controls and camera preview local only. */
 export default function AICallScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
-  const { height: windowHeight, width: windowWidth } = useWindowDimensions();
-  const { targetUuid, targetName, remainingSeconds, preview, receivedRequestId } = useLocalSearchParams<{
-    targetUuid?: string;
-    targetName?: string;
-    remainingSeconds?: string;
-    preview?: string;
-    receivedRequestId?: string;
-  }>();
-  const isPreview = preview === 'true';
-  const isPartnerCall = !isPreview && typeof targetUuid === 'string' && targetUuid.length > 0;
-  const timeLimitSeconds = parseTimeLimitSeconds(remainingSeconds);
-  const {
-    callStatus,
-    remoteStream,
-    localCameraStream,
-    startCall,
-    hangUp,
-    error,
-    isSpeakerOn,
-    toggleSpeaker,
-    isMuted,
-    toggleMute,
-    isCameraOn,
-    toggleCamera,
-    callDurationSeconds,
-    completedCall,
-  } = useAICallFlow(targetUuid);
-  const [previewDurationSeconds, setPreviewDurationSeconds] = useState(0);
+  const { isDark } = useThemeColors();
+  const colors = darkTheme;
+  const { width, height, fontScale } = useWindowDimensions();
+  const params = useLocalSearchParams<{ targetUuid?: string; targetName?: string; remainingSeconds?: string; preview?: string; receivedRequestId?: string }>();
+  const targetUuid = typeof params.targetUuid === 'string' ? params.targetUuid : undefined;
+  const targetName = typeof params.targetName === 'string' && params.targetName.trim() ? params.targetName : targetUuid ? '상대 트윈' : '내 트윈';
+  const isPreview = params.preview === 'true';
+  const partnerCall = !!targetUuid && !isPreview;
+  const [retrySeconds, setRetrySeconds] = useState<number | null>(null);
+  const [retrying, setRetrying] = useState(false);
+  const [retryError, setRetryError] = useState<string | null>(null);
+  const retryLock = useRef(false);
+  const alive = useRef(true);
+  const limit = Number(params.remainingSeconds);
+  const timeLimit = retrySeconds ?? (Number.isFinite(limit) && limit > 0 ? Math.floor(limit) : null);
+  const flow = useAICallFlow(targetUuid);
+  const { callStatus, remoteStream, localCameraStream, startCall, hangUp, error, errorKind, canRetry, canRetryEnd, isSpeakerOn, toggleSpeaker, isMuted, toggleMute, isCameraOn, isCameraPending, toggleCamera, callDurationSeconds, completedCall, notice, dismissNotice, openSettings } = flow;
+  const [previewDuration, setPreviewDuration] = useState(0);
   const [previewMuted, setPreviewMuted] = useState(false);
-  const [previewSpeakerOn, setPreviewSpeakerOn] = useState(false);
-  const [previewCameraOn, setPreviewCameraOn] = useState(false);
+  const [previewSpeaker, setPreviewSpeaker] = useState(false);
+  const [previewCamera, setPreviewCamera] = useState(false);
   const [endedByTimeLimit, setEndedByTimeLimit] = useState(false);
-  const hasTriggeredTimeLimitRef = useRef(false);
+  const [videoSize, setVideoSize] = useState({ width: 0, height: 0 });
+  const [bodyHeight, setBodyHeight] = useState(Math.max(120, height - 180));
+  const [controlHeight, setControlHeight] = useState(140);
+  const autoStarted = useRef(false);
+  const timedOut = useRef(false);
+  const exitRequested = useRef(false);
+  const hasConnected = useRef(isPreview);
+  const landscape = width > height;
+  const accessibleScroll = width < 280 || fontScale > 2.5 || (fontScale > 1.8 && height < 640);
+  const controlRail = landscape && !accessibleScroll;
+  const visibleStatus = isPreview ? 'connected' : callStatus;
+  const duration = isPreview ? previewDuration : callDurationSeconds;
+  const visibleCamera = isPreview ? previewCamera : isCameraOn;
+  const goBack = useCallback(() => { if (router.canGoBack()) router.back(); else router.replace('/(main)'); }, [router]);
+  const retryConnection = async () => {
+    if (retryLock.current || !canRetry) return;
+    retryLock.current = true;
+    setRetrying(true); setRetryError(null);
+    const owner = useAuthStore.getState().userUuid;
+    try {
+      const time = (await getMyTime()).result.remainingTalkTime;
+      const current = useAuthStore.getState();
+      if (!alive.current || !current.isLoggedIn || current.userUuid !== owner) return;
+      if (!Number.isFinite(time) || time <= 0) { setRetryError('대화 시간이 없어요. 프로필에서 시간을 충전한 뒤 다시 연결해주세요.'); return; }
+      setRetrySeconds(Math.floor(time));
+      timedOut.current = false; exitRequested.current = false; hasConnected.current = false;
+      setEndedByTimeLimit(false);
+      await startCall();
+    } catch { if (alive.current) setRetryError('남은 대화 시간을 확인하지 못했어요. 연결 상태를 확인하고 다시 시도해주세요.'); }
+    finally { retryLock.current = false; if (alive.current) setRetrying(false); }
+  };
 
-  // 목업 통화는 서버·권한 없이 화면만 검토하는 모드지만, 실제 화면과 같은 경과 시간 UI는
-  // 확인할 수 있도록 로컬 타이머를 돌린다.
+  useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
+
+  useEffect(() => {
+    if (callStatus === 'connected' || callStatus === 'reconnecting') hasConnected.current = true;
+  }, [callStatus]);
+  useEffect(() => {
+    if (isPreview || autoStarted.current) return;
+    autoStarted.current = true;
+    void startCall();
+  }, [isPreview, startCall]);
   useEffect(() => {
     if (!isPreview) return;
-    const startedAt = Date.now();
-    const updateDuration = () => setPreviewDurationSeconds(Math.floor((Date.now() - startedAt) / 1000));
-    updateDuration();
-    const intervalId = setInterval(updateDuration, 1000);
-    return () => clearInterval(intervalId);
+    const start = Date.now();
+    const timer = setInterval(() => setPreviewDuration(Math.floor((Date.now() - start) / 1000)), 1000);
+    return () => clearInterval(timer);
   }, [isPreview]);
-
-  const visibleCallStatus = isPreview ? 'connected' : callStatus;
-  const visibleDurationSeconds = isPreview ? previewDurationSeconds : callDurationSeconds;
-  const visibleMuted = isPreview ? previewMuted : isMuted;
-  const visibleSpeakerOn = isPreview ? previewSpeakerOn : isSpeakerOn;
-  const visibleCameraOn = isPreview ? previewCameraOn : isCameraOn;
-
-  // 발견에서 통화 직전 다시 읽은 잔여 시간을 전달받는다. 사용자가 결정한 기준대로
-  // WebRTC 연결 완료 이후부터만 카운트하며, 0초가 되면 기존의 정식 hangUp 경로를 타서
-  // signaling·녹음 종료·서버 종료 API가 모두 실행되게 한다.
   useEffect(() => {
-    if (
-      isPreview
-      || timeLimitSeconds == null
-      || callStatus !== 'connected'
-      || callDurationSeconds < timeLimitSeconds
-      || hasTriggeredTimeLimitRef.current
-    ) {
-      return;
-    }
-
-    hasTriggeredTimeLimitRef.current = true;
+    if (isPreview || timeLimit == null || !['connected', 'reconnecting'].includes(callStatus) || callDurationSeconds < timeLimit || timedOut.current) return;
+    timedOut.current = true;
     setEndedByTimeLimit(true);
     void hangUp();
-  }, [callDurationSeconds, callStatus, hangUp, isPreview, timeLimitSeconds]);
-
-  // 셀프뷰 PIP 드래그 가능 영역(safeArea) 계산용 — 헤더/컨트롤 오버레이의 실제 렌더 높이를
-  // onLayout으로 측정한다. Spacing 상수로 어림잡지 않는 이유: 두 오버레이 모두 내부 컴포넌트
-  // (CallHeader/CallControls)의 실제 콘텐츠 높이가 포함돼야 정확한데, 그건 여기서 알 수 없다.
-  const [headerHeight, setHeaderHeight] = useState(0);
-  const [controlsHeight, setControlsHeight] = useState(0);
-  const handleHeaderLayout = useCallback((event: LayoutChangeEvent) => {
-    setHeaderHeight(event.nativeEvent.layout.height);
-  }, []);
-  const handleControlsLayout = useCallback((event: LayoutChangeEvent) => {
-    setControlsHeight(event.nativeEvent.layout.height);
-  }, []);
-  // headerOverlay는 top:0, controlsOverlay는 bottom:0 절대 배치이므로, 측정된 높이가 곧
-  // 화면 좌표계의 경계선이다.
-  const localPreviewSafeArea = useMemo(
-    () => ({
-      top: headerHeight,
-      bottom: windowHeight - controlsHeight,
-      left: insets.left,
-      right: windowWidth - insets.right,
-    }),
-    [headerHeight, controlsHeight, windowHeight, windowWidth, insets.left, insets.right]
-  );
-
-  // 실제로 한 번이라도 'connected'에 도달했는지 추적한다. 연결 전(joining/inviting/connecting)에
-  // 취소하면 callStatus가 잠깐 'ending'을 거치는데, 이때 실제 통화 레이아웃(빈 영상 배경 +
-  // 비활성화된 컨트롤)이 한 프레임 스쳐 지나가는 게 아니라 계속 CallConnectingView에 머물러야 한다.
-  const hasConnectedRef = useRef(false);
+  }, [callDurationSeconds, callStatus, hangUp, isPreview, timeLimit]);
   useEffect(() => {
-    if (visibleCallStatus === 'connected') hasConnectedRef.current = true;
-  }, [visibleCallStatus]);
-
-  // 화면 진입 시 자동으로 통화를 건다 — "탭해서 시작" 화면을 없애고 바로 연결 흐름으로 들어간다.
-  // StrictMode 이중 렌더/재마운트에도 한 번만 걸리도록 ref로 막는다(startCall이 REST 방 생성을
-  // 포함해서 두 번 걸리면 안 됨).
-  const hasAutoStartedRef = useRef(false);
+    if (!isPreview && callStatus === 'ended' && !error && (exitRequested.current || !partnerCall || !completedCall)) goBack();
+  }, [callStatus, completedCall, error, goBack, isPreview, partnerCall]);
   useEffect(() => {
-    if (isPreview) return;
-    if (hasAutoStartedRef.current) return;
-    hasAutoStartedRef.current = true;
-    startCall();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    const back = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (isPreview || error || callStatus === 'ended' || callStatus === 'ending') { goBack(); return true; }
+      exitRequested.current = true;
+      void hangUp();
+      return true;
+    });
+    return () => back.remove();
+  }, [callStatus, error, goBack, hangUp, isPreview]);
 
-  // 본인 트윈 통화는 기존처럼 종료 즉시 돌아간다. 상대 트윈 통화는 서버가 반환한 COMPLETED
-  // 결과가 있을 때만 만남 신청 화면을 거친다. 종료 API가 실패하면 검증할 callId가 없으므로
-  // 신청 UI를 띄우지 않고 안전하게 이전 화면으로 복귀한다.
-  useEffect(() => {
-    if (!isPreview && callStatus === 'ended' && !error && (!isPartnerCall || completedCall == null)) {
-      router.back();
-    }
-  }, [callStatus, completedCall, error, isPartnerCall, isPreview, router]);
-
-  // 에러 발생 시 안내 UI
+  let content: React.ReactNode;
+  let videoScreen = false;
   if (error) {
-    return <CallErrorFallback message={error} onBack={() => router.back()} />;
-  }
-
-  if (isPartnerCall && callStatus === 'ended' && completedCall != null) {
-    return (
-      <CallEndMeetingPrompt
-        hasReceivedRequest={!!receivedRequestId}
-        partnerName={targetName || '상대방'}
-        partnerUserUuid={targetUuid}
-        completedCall={completedCall}
-        endedByTimeLimit={endedByTimeLimit}
-        onClose={() => receivedRequestId ? router.replace({ pathname: '/(main)/match', params: { receivedRequestId, receivedRequestReturnToken: String(completedCall.callId) } }) : router.back()}
-      />
-    );
-  }
-
-  // 연결 완료 전(idle~connecting)까지는 완전히 새로 디자인된 대기 화면을 보여주고,
-  // 연결된 이후(및 그 뒤의 종료 처리 중)에만 실제 영상통화 레이아웃을 보여준다.
-  // 한 번도 연결되지 않은 채 취소한 경우(hasConnectedRef가 false)엔 'ending'/'ended'로 바뀌어도
-  // 계속 CallConnectingView에 머문다 — router.back()이 호출될 때까지 화면이 안 바뀐다.
-  const isCallLayoutVisible =
-    isPreview || callStatus === 'connected' || (hasConnectedRef.current && (callStatus === 'ending' || callStatus === 'ended'));
-
-  if (!isCallLayoutVisible) {
-    // hangUp()은 세션이 이미 만들어졌으면(REST 응답 후) CALL_END 시그널 + endCall REST까지 정식으로
-    // 보내고, 아직 없으면 로컬 정리만 한다 — 어느 단계에서 취소하든 서버가 항상 정확한 상태를 안다.
-    // callStatus가 'ended'로 바뀌면 위 effect가 자동으로 router.back()을 호출한다.
-    return <CallConnectingView callStatus={callStatus} onCancel={hangUp} />;
-  }
-
-  return (
-    <CallScreenBackground>
-      <CallRemoteVideoView callStatus={visibleCallStatus} remoteStream={isPreview ? null : remoteStream} />
-
-      <View
-        style={[styles.headerOverlay, { paddingTop: insets.top + Spacing.md }]}
-        onLayout={handleHeaderLayout}
-      >
-        <CallHeader callStatus={visibleCallStatus} callDurationSeconds={visibleDurationSeconds} isPreview={isPreview} />
+    content = <CallErrorFallback message={error} onBack={goBack} title={errorKind === 'end' ? '종료 상태를 확인해주세요' : errorKind === 'microphone' ? '마이크 사용을 허용해주세요' : '연결을 마치지 못했어요'}
+      busy={callStatus === 'ending' || retrying} onRetry={canRetryEnd ? () => { void hangUp(); } : canRetry ? () => { void retryConnection(); } : undefined}
+      retryLabel={canRetryEnd ? '종료 확인 다시 시도' : '다시 연결'} onSettings={errorKind === 'microphone' ? openSettings : undefined} secondaryMessage={retryError ?? notice} />;
+  } else if (partnerCall && callStatus === 'ended' && completedCall && !exitRequested.current) {
+    content = <CallEndMeetingPrompt hasReceivedRequest={!!params.receivedRequestId} partnerName={targetName} partnerUserUuid={targetUuid!} completedCall={completedCall} endedByTimeLimit={endedByTimeLimit}
+      onClose={() => params.receivedRequestId ? router.replace({ pathname: '/(main)/match', params: { receivedRequestId: params.receivedRequestId, receivedRequestReturnToken: String(completedCall.callId) } }) : goBack()} />;
+  } else if (!isPreview && (['idle', 'initiating', 'joining', 'inviting', 'connecting'].includes(callStatus) || (!hasConnected.current && ['ending', 'ended'].includes(callStatus)))) {
+    content = <CallConnectingView callStatus={callStatus} targetName={targetName} onCancel={() => { exitRequested.current = true; void hangUp(); }} />;
+  } else {
+    videoScreen = true;
+    content = <CallVideoAppearance><CallScreenBackground variant="video"><SafeAreaView style={styles.screen}>
+      <CallResponsiveFrame scroll={accessibleScroll}>
+      <CallHeader callStatus={visibleStatus} targetName={targetName} callDurationSeconds={duration} isPreview={isPreview} isMuted={isPreview ? previewMuted : isMuted} />
+      {!!notice && <ScrollView style={{ height: Math.max(80, Math.min(140, height * 0.22)), flexGrow: 0 }}><View style={[styles.notice, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
+        <Text style={[styles.noticeText, { color: colors.text.secondary }]}>{notice}</Text>
+        <View style={styles.noticeActions}>{notice.includes('카메라') && <Pressable onPress={openSettings} accessibilityRole="button" accessibilityLabel="카메라 기기 설정 열기" style={styles.noticeButton}><Text style={[styles.noticeText, { color: colors.text.primary }]}>기기 설정</Text></Pressable>}
+          <Pressable onPress={dismissNotice} accessibilityRole="button" accessibilityLabel="통화 안내 닫기" style={styles.noticeButton}><Text style={[styles.noticeText, { color: colors.text.primary }]}>확인</Text></Pressable></View>
+      </View></ScrollView>}
+      <View style={[styles.body, controlRail && styles.landscape, accessibleScroll && styles.accessibleBody]} onLayout={event => setBodyHeight(event.nativeEvent.layout.height)}>
+        <View testID="call-video-area" style={styles.stage} onLayout={event => setVideoSize({ width: event.nativeEvent.layout.width, height: event.nativeEvent.layout.height })}>
+          <CallRemoteVideoView callStatus={visibleStatus} remoteStream={isPreview ? null : remoteStream} targetName={targetName} isPreview={isPreview} />
+          {visibleCamera && visibleStatus === 'connected' && <CallLocalPreview isCameraOn localStream={isPreview ? null : localCameraStream} safeArea={{ top: 0, left: 0, bottom: videoSize.height, right: videoSize.width }} />}
+        </View>
+        <ScrollView testID="call-control-area" onContentSizeChange={(_width, measuredHeight) => setControlHeight(measuredHeight)} style={[styles.controls, { backgroundColor: colors.background.card, borderColor: colors.border.primary }, controlRail ? styles.controlRail : { height: Math.min(controlHeight + 2, Math.max(96, bodyHeight * 0.45)) }]} contentContainerStyle={[styles.controlContent, !controlRail && styles.naturalControls]} showsVerticalScrollIndicator={false}>
+          {callStatus === 'ending' && !isPreview && <ActivityIndicator color={colors.text.secondary} style={styles.endingSpinner} />}
+          <CallControls callStatus={visibleStatus} vertical={controlRail} onHangUp={isPreview ? goBack : () => { void hangUp(); }} isMuted={isPreview ? previewMuted : isMuted} onToggleMute={isPreview ? () => setPreviewMuted(value => !value) : toggleMute}
+            isSpeakerOn={isPreview ? previewSpeaker : isSpeakerOn} onToggleSpeaker={isPreview ? () => setPreviewSpeaker(value => !value) : toggleSpeaker}
+            isCameraOn={visibleCamera} isCameraPending={isPreview ? false : isCameraPending} onToggleCamera={isPreview ? () => setPreviewCamera(value => !value) : () => { void toggleCamera(); }} />
+        </ScrollView>
       </View>
-
-      {visibleCallStatus === 'connected' && (
-        <CallLocalPreview
-          isCameraOn={visibleCameraOn}
-          localStream={isPreview ? null : localCameraStream}
-          safeArea={localPreviewSafeArea}
-        />
-      )}
-
-      <View
-        style={[styles.controlsOverlay, { paddingBottom: insets.bottom }]}
-        onLayout={handleControlsLayout}
-      >
-        <CallControls
-          callStatus={visibleCallStatus}
-          onHangUp={isPreview ? () => router.back() : hangUp}
-          isMuted={visibleMuted}
-          onToggleMute={isPreview ? () => setPreviewMuted((value) => !value) : toggleMute}
-          isSpeakerOn={visibleSpeakerOn}
-          onToggleSpeaker={isPreview ? () => setPreviewSpeakerOn((value) => !value) : toggleSpeaker}
-          isCameraOn={visibleCameraOn}
-          onToggleCamera={isPreview ? () => setPreviewCameraOn((value) => !value) : toggleCamera}
-        />
-      </View>
-    </CallScreenBackground>
-  );
+      </CallResponsiveFrame>
+    </SafeAreaView></CallScreenBackground></CallVideoAppearance>;
+  }
+  return <><Stack.Screen options={{ headerShown: false, gestureEnabled: false }} /><StatusBar style={videoScreen || isDark ? 'light' : 'dark'} />{content}</>;
 }
-
+function CallResponsiveFrame({ scroll, children }: { scroll: boolean; children: React.ReactNode }) {
+  return scroll ? <ScrollView testID="call-accessibility-scroll" contentContainerStyle={styles.accessibleCanvas}>{children}</ScrollView> : <View style={styles.screen}>{children}</View>;
+}
 const styles = StyleSheet.create({
-  headerOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-  },
-  controlsOverlay: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-  },
+  screen: { flex: 1 }, body: { flex: 1, minHeight: 0, paddingTop: 4, paddingBottom: 10, gap: 10 },
+  landscape: { flexDirection: 'row' }, stage: { flex: 1, minWidth: 0, minHeight: 0 },
+  accessibleCanvas: { flexGrow: 1 }, accessibleBody: { flex: 0, height: 400 },
+  controls: { flexGrow: 0, flexShrink: 0, marginHorizontal: 12, borderWidth: 1, borderRadius: 24 }, controlRail: { width: 170, flexGrow: 0, marginHorizontal: 0, marginRight: 12 },
+  controlContent: { flexGrow: 1, justifyContent: 'center' }, naturalControls: { flexGrow: 0 }, endingSpinner: { marginTop: 12 },
+  notice: { marginHorizontal: 16, marginBottom: 6, borderWidth: 1, borderRadius: 14, paddingHorizontal: 12, paddingTop: 10 },
+  noticeText: { flexShrink: 1, fontSize: 12, lineHeight: 20 }, noticeActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 12 },
+  noticeButton: { minHeight: 44, minWidth: 44, justifyContent: 'center', alignItems: 'center' },
 });

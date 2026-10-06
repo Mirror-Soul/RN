@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { Image, StyleSheet, Text, View } from 'react-native';
+import React from 'react';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useRetryableProfileImage } from '@/src/features/profile/photo/useRetryableProfileImage';
 import { Colors, FontFamily, FontSize, FontWeight, Radii } from '@/src/constants/theme';
 import { Feather } from '@expo/vector-icons';
 
@@ -16,8 +17,7 @@ interface CallAvatarProps {
  * - SENT(보냄): vividPurple 배경 + arrow-up-right
  */
 export default function CallAvatar({ name, profileImageUrl, direction }: CallAvatarProps) {
-  const [failed, setFailed] = useState(false);
-  useEffect(() => { setFailed(false); }, [profileImageUrl]);
+  const photo = useRetryableProfileImage(profileImageUrl);
   const isReceived = direction === 'RECEIVED';
   const badgeColor = isReceived ? Colors.primary.electricCyan : Colors.primary.vividPurple;
   const arrowIcon = isReceived ? 'arrow-down-left' : 'arrow-up-right';
@@ -25,8 +25,13 @@ export default function CallAvatar({ name, profileImageUrl, direction }: CallAva
   return (
     <View style={styles.wrapper}>
       {/* 프로필 이미지 또는 이니셜 */}
-      {profileImageUrl && !failed ? (
-        <Image source={{ uri: profileImageUrl }} style={styles.avatar} onError={() => setFailed(true)} />
+      {profileImageUrl && !photo.failed ? (
+        <Image key={photo.imageKey} source={{ uri: profileImageUrl }} style={styles.avatar} onError={photo.onError} />
+      ) : photo.failed ? (
+        <Pressable style={styles.avatarPlaceholder} onPress={() => { void photo.retry(); }} disabled={photo.isReloading}
+          accessibilityRole="button" accessibilityLabel={`${name} 프로필 사진 다시 불러오기`} accessibilityState={{ busy: photo.isReloading }}>
+          <Feather name="refresh-cw" size={20} color={Colors.neutral.lightGrayText} />
+        </Pressable>
       ) : (
         <View style={styles.avatarPlaceholder}>
           <Text style={styles.initialText}>{name[0]}</Text>

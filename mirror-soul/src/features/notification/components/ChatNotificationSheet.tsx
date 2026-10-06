@@ -7,6 +7,7 @@ import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { useProfileRefresh } from '@/src/features/profile/hooks/useProfileRefresh';
 import { useNotificationChatRooms } from '../hooks/useNotificationChatRooms';
 import { NotificationItem } from './NotificationItem';
+import { ToastViewport } from '@/src/components/common/Toast/ToastViewport';
 
 export function ChatNotificationSheet({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const { colors } = useThemeColors();
@@ -40,6 +41,7 @@ export function ChatNotificationSheet({ visible, onClose }: { visible: boolean; 
             ListEmptyComponent={<View style={styles.empty}><Feather name="message-circle" size={28} color={colors.text.secondary} /><Text style={[styles.emptyTitle, { color: colors.text.primary }]}>아직 대화방이 없어요</Text><Text style={[styles.copy, { color: colors.text.secondary }]}>대화가 시작되면 여기에서{ '\n' }메시지 알림을 관리할 수 있어요.</Text></View>}
           />}
         </View>
+        <ToastViewport active={visible} />
       </View>
     </Modal>
   );

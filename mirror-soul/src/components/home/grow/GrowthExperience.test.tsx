@@ -47,8 +47,7 @@ jest.mock('@/src/store/useAuthStore', () => ({ useAuthStore: Object.assign((sele
 jest.mock('@/src/features/growth/hooks/useTwinSyncQuery', () => ({ useTwinSyncQuery: () => ({ data: { syncRate: 72.5, voiceTrainingCount: 9, lastVoiceTrainingAt: 'bad-date' }, isLoading: false, isError: false, refetch: mockRetry }) }));
 jest.mock('@/src/features/growth/hooks/useValueBalanceQuestionQuery', () => ({ useValueBalanceQuestionQuery: () => ({ data: mockQuestion, isLoading: false, isError: mockQueryError, isFetching: false, refetch: mockRetry }) }));
 jest.mock('@/src/features/growth/hooks/useSubmitValueBalanceAnswerMutation', () => ({ useSubmitValueBalanceAnswerMutation: () => ({ mutateAsync: mockSubmit, isPending: false }) }));
-jest.mock('@/src/hooks/useFloatingNotice', () => ({ useFloatingNotice: () => ({ message: '', opacity: 1, flash: mockFlash }) }));
-jest.mock('@/src/components/home/common/FloatingNotice', () => () => null);
+jest.mock('@/src/components/common/Toast/ToastProvider', () => ({ useToast: () => ({ showToast: mockFlash }) }));
 jest.mock('@/src/components/home/grow/GrowSubScreenHeader', () => () => null);
 jest.mock('@/src/features/profile/hooks/useTimeStatusQuery', () => ({ useTimeStatusQuery: () => ({ data: { remainingTalkTime: 120 }, isFetching: false, isError: false, refetch: mockTimeRefetch }) }));
 jest.mock('@/src/features/profile/components/TimeRefillBottomSheet', () => ({ TimeRefillBottomSheet: () => null }));
@@ -215,7 +214,7 @@ it('releases the iOS confirmation modal before opening the own-twin call', async
   expect(mockPush).not.toHaveBeenCalled();
   fireEvent(screen.UNSAFE_getByType(Modal), 'dismiss');
   expect(mockPush).toHaveBeenCalledTimes(1);
-  expect(mockPush).toHaveBeenCalledWith('/ai-call');
+  expect(mockPush).toHaveBeenCalledWith({ pathname: '/ai-call', params: { targetName: '내 트윈', remainingSeconds: '120' } });
 });
 
 it('keeps an unready twin out of the call', () => {

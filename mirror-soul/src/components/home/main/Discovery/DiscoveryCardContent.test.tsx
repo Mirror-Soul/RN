@@ -51,3 +51,16 @@ it('distinguishes the job visually without treating a submitted document as appr
   expect(screen.queryByText('서류 제출')).toBeNull();
   expect(screen.queryByText('직업 인증 완료')).toBeNull();
 });
+
+it('refreshes the photo source without opening the profile or starting a call', async () => {
+  const reload = jest.fn().mockResolvedValue(undefined);
+  const open = jest.fn();
+  const screen = render(<DiscoveryCardContent match={profile} onContentPress={open} onReloadPhoto={reload} />);
+  const oldError = screen.UNSAFE_getByType(Image).props.onError;
+  fireEvent(screen.UNSAFE_getByType(Image), 'error');
+  await act(async () => { fireEvent.press(screen.getByLabelText('추천 프로필 사진 다시 불러오기')); });
+  expect(reload).toHaveBeenCalledTimes(1);
+  act(() => oldError());
+  expect(screen.UNSAFE_getByType(Image).props.source.uri).toBe(profile.profileImageUrl);
+  expect(open).not.toHaveBeenCalled();
+});

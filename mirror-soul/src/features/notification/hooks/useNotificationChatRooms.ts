@@ -17,7 +17,7 @@ export function useNotificationChatRooms(visible: boolean) {
     enabled: visible && isLoggedIn && !!userUuid,
     staleTime: 60_000,
   });
-  const mutation = useChatNotificationMutation();
+  const mutation = useChatNotificationMutation(false);
   const toggle = (roomId: number) => {
     const room = query.data?.rooms.find(item => item.chatRoomId === roomId);
     if (visible && room) mutation.change(roomId, !room.notificationEnabled, userUuid);

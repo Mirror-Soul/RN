@@ -50,7 +50,8 @@ it('keeps the confirmed setting on failure and blocks rapid duplicate changes', 
   act(() => { hook.result.current.toggle(10); hook.result.current.toggle(10); });
   await waitFor(() => expect(updateNotificationSetting).toHaveBeenCalledTimes(1));
   await act(async () => fail(new Error('offline')));
-  await waitFor(() => expect(mockToast).toHaveBeenCalled());
+  await waitFor(() => expect(hook.result.current.saveError).toBeTruthy());
+  expect(mockToast).not.toHaveBeenCalled();
   expect(hook.result.current.data?.rooms[0].notificationEnabled).toBe(true);
   await waitFor(() => expect(hook.result.current.isSaving).toBe(false));
 });

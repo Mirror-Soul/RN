@@ -7,6 +7,7 @@ const mockSwipe = jest.fn();
 const mockFetchNextPage = jest.fn();
 const mockRefetch = jest.fn();
 const mockCooldown = jest.fn();
+jest.mock('@/src/features/home/refreshRecommendationPhoto', () => ({ refreshRecommendationPhoto: jest.fn() }));
 let mockQuery: Record<string, unknown>;
 let mockCardCallbacks: { onPass: () => void };
 jest.mock('@/src/features/home/hooks/useRecommendationsQuery', () => ({

@@ -163,7 +163,7 @@ export default function CallStartConfirmSheet({ target, isOpen, onClose, onStart
                   <Text style={[styles.copy, { color: palette.accentInk }]}>다시 확인하기</Text>
                 </TouchableOpacity> : shouldPromptRefill && <Text style={[styles.copy, { color: colors.text.secondary }]}>대화 시간을 충전하면 통화를 시작할 수 있어요.</Text>}
                 <View style={[styles.timeLimitNotice, { borderTopColor: colors.border.primary }]}>
-                  <Text style={[styles.copy, { color: colors.text.secondary }]}>연결된 뒤부터 시간이 차감되고, 남은 시간이 0초가 되면 통화가 종료돼요.</Text>
+                  <Text style={[styles.copy, { color: colors.text.secondary }]}>대화 시간은 종료 후 서버에서 정산돼요. 현재는 연결 대기와 기록 저장 시간도 포함될 수 있어요.</Text>
                 </View>
               </View>
             )}
