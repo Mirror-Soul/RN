@@ -4,8 +4,10 @@ import { AccessibilityInfo, Keyboard, Platform, Text } from 'react-native';
 import BottomNavbar from './BottomNavbar';
 import { FloatingTabBarInsetContext } from '@/src/components/common/FloatingTabBarInsetContext';
 import { useMainTabBottomPadding } from '@/src/hooks/useMainTabBottomPadding';
+import { TabBarCompactContext } from '@/src/components/common/TabBarScrollContext';
 
 jest.mock('expo-font', () => ({ isLoaded: () => false }));
+jest.mock('react-native-reanimated', () => jest.requireActual('react-native-reanimated/mock'));
 jest.mock('expo-blur', () => ({ BlurView: (props: any) => jest.requireActual('react').createElement(jest.requireActual('react-native').View, props) }));
 jest.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({ top: 44, bottom: 34, left: 0, right: 0 }) }));
 jest.mock('@/src/hooks/useThemeColors', () => ({ useThemeColors: () => ({ colors: jest.requireActual('@/src/constants/theme').lightTheme, isDark: false }) }));
@@ -87,4 +89,17 @@ it('gives scroll content the measured inset without adding the home indicator tw
   function Content() { return <Text>{useMainTabBottomPadding()}</Text>; }
   const screen = render(<FloatingTabBarInsetContext.Provider value={210}><Content /></FloatingTabBarInsetContext.Provider>);
   expect(screen.getByText('226')).toBeTruthy();
+});
+
+it('keeps all five tabs tappable in the compact state and uses an expanded reserve', async () => {
+  const onPress = jest.fn();
+  const inset = jest.fn();
+  const screen = render(<TabBarCompactContext.Provider value={true}><BottomNavbar onTabPress={onPress} onObstructionHeightChange={inset} /></TabBarCompactContext.Provider>);
+  await act(async () => {});
+  expect(screen.getAllByRole('tab')).toHaveLength(5);
+  fireEvent(screen.getByTestId('main-tab-bar'), 'layout', { nativeEvent: { layout: { height: 78 } } });
+  expect(inset).toHaveBeenLastCalledWith(120);
+  fireEvent.press(screen.getByRole('tab', { name: '매칭' }));
+  expect(onPress).toHaveBeenCalledWith('match');
+  expect(screen.getByTestId('main-tab-bar').props.pointerEvents).toBe('box-none');
 });

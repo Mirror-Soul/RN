@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useRetryableProfileImage } from '@/src/features/profile/photo/useRetryableProfileImage';
+import { sameProfileImageObject, shouldRefreshProfileImage } from '@/src/features/profile/photo/profileImageUrl';
 import { StyleSheet, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { BrowseIcon } from '@/src/components/home/common/BrowseIcon';
 import { ProfilePhotoImage } from '@/src/features/profile/photo/ProfilePhotoImage';
@@ -37,6 +38,15 @@ export default function DiscoveryCardContent({
   const { fontScale } = useWindowDimensions();
   const [actionWidth, setActionWidth] = useState(cardWidth - Spacing.lg * 2);
   const photo = useRetryableProfileImage(match.profileImageUrl, onReloadPhoto);
+  const { failed: photoFailed, retry: retryPhoto } = photo;
+  const autoRecovery = useRef<{ userUuid: string; uri: string } | null>(null);
+  useEffect(() => {
+    const uri = match.profileImageUrl;
+    if (!photoFailed || !uri || !onReloadPhoto || !shouldRefreshProfileImage(uri)) return;
+    if (autoRecovery.current?.userUuid === match.userUuid && sameProfileImageObject(autoRecovery.current.uri, uri)) return;
+    autoRecovery.current = { userUuid: match.userUuid, uri };
+    void retryPhoto();
+  }, [match.userUuid, match.profileImageUrl, onReloadPhoto, photoFailed, retryPhoto]);
   const [expanded, setExpanded] = useState(false);
   const [truncated, setTruncated] = useState(false);
   useEffect(() => { setExpanded(false); setTruncated(false); }, [match.userUuid, match.selfIntroduction]);

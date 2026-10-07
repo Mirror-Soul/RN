@@ -13,7 +13,9 @@ export function tabBarGeometry(width: number, left: number, right: number, fontS
   const tabWidth = Math.max(48, available / 5);
   const labelLines = Math.max(1, Math.ceil(33 * fontScale / Math.max(1, tabWidth - 6)));
   const estimatedHeight = Math.max(56, 24 + 4 + labelLines * 16 * fontScale + 14) + 18;
-  return { width: barWidth, left: left + (safeWidth - barWidth) / 2, bottomGap: 8, paddingHorizontal, scrollable, tabWidth, estimatedHeight };
+  const canCompact = !scrollable && fontScale <= 1.4;
+  const compactWidth = canCompact ? Math.min(barWidth, Math.max(5 * 48 + paddingHorizontal * 2 + 2, Math.min(304, barWidth - 32))) : barWidth;
+  return { width: barWidth, left: left + (safeWidth - barWidth) / 2, bottomGap: 8, paddingHorizontal, scrollable, tabWidth, estimatedHeight, canCompact, compactWidth };
 }
 
 export function mainTabContentPadding(obstructionHeight: number, fallbackHeight: number) {

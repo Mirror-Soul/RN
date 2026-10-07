@@ -9,6 +9,10 @@ it('fits five non-overlapping touch targets in small phones and safe landscape w
         expect(value.left).toBeGreaterThanOrEqual(sideInset);
         expect(value.left + value.width).toBeLessThanOrEqual(width - sideInset);
         expect(value.tabWidth).toBeGreaterThanOrEqual(48);
+        if (value.canCompact) {
+          expect(value.compactWidth).toBeLessThanOrEqual(value.width);
+          expect((value.compactWidth - value.paddingHorizontal * 2 - 2) / 5).toBeGreaterThanOrEqual(48);
+        } else expect(value.compactWidth).toBe(value.width);
         if (!value.scrollable) {
           expect(value.tabWidth * 5 + value.paddingHorizontal * 2 + 2).toBeCloseTo(value.width);
         }
@@ -16,6 +20,11 @@ it('fits five non-overlapping touch targets in small phones and safe landscape w
       }
     }
   }
+});
+
+it('keeps labels expanded for large accessibility fonts and narrow overflow layouts', () => {
+  expect(tabBarGeometry(320, 0, 0, 2, 'compact').canCompact).toBe(false);
+  expect(tabBarGeometry(230, 0, 0, 1, 'compact').canCompact).toBe(false);
 });
 
 it('uses reachable overflow instead of shrinking tap targets in a narrow split window', () => {

@@ -20,6 +20,7 @@ jest.mock('react-native-reanimated', () => ({
   useSharedValue: (value: number) => ({ value }),
   useAnimatedStyle: (fn: () => unknown) => fn(),
   withTiming: (value: number) => value,
+  cancelAnimation: () => {},
   Easing: { out: () => undefined, inOut: () => undefined },
 }));
 jest.mock('@/src/components/common/Header', () => ({ Header: () => null }));

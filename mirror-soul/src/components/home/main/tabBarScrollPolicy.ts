@@ -1,4 +1,4 @@
-export type TabBarScrollDecision = 'show' | 'hide' | null;
+export type TabBarScrollDecision = 'expand' | 'compact' | null;
 
 /** Clamped offsets prevent iOS bounce and Android overscroll from reversing direction. */
 export function createTabBarScrollTracker() {
@@ -26,7 +26,7 @@ export function createTabBarScrollTracker() {
       if (max <= 24 || y <= 12 || y >= max - 4 || resized) {
         direction = 0;
         distance = 0;
-        return 'show';
+        return 'expand';
       }
       // Focus restoration, list refresh and scrollToOffset are not user intent.
       if (!userScrolling) { direction = 0; distance = 0; return null; }
@@ -37,7 +37,7 @@ export function createTabBarScrollTracker() {
       const threshold = direction > 0 ? 36 : 12;
       if (distance < threshold) return null;
       distance = 0;
-      return direction > 0 ? 'hide' : 'show';
+      return direction > 0 ? 'compact' : 'expand';
     },
   };
 }

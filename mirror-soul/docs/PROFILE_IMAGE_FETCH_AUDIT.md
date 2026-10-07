@@ -1,5 +1,26 @@
 # 프로필 이미지 조회 점검 및 백엔드 요청
 
+## 최신 요약 — 2026-10-07, 백엔드 `0f45c02`
+
+아래 이전 점검 기록보다 이 요약을 우선한다. 내 프로필·내 상세·사진 수정 응답·추천 목록에는 다운로드 서명이 적용됐다. 다음 응답은 아직 저장된 영구 S3 URL을 그대로 반환하므로 비공개 사진을 안정적으로 표시하려면 서버 처리가 필요하다.
+
+| 화면 | API | 수정 대상 |
+| --- | --- | --- |
+| 상대 상세 | `GET /home/recommendations/{uuid}` | `RecommendationDetailService` |
+| 받은 신청·신청 상세 | `GET /match/meeting/requests` | `MeetingService` |
+| 메시지 목록·채팅방 헤더·더보기 | `GET /chat/rooms` | `ChatService` |
+| 기록 목록 | `GET /history/calls` | `HistoryService` |
+| 기록 상세·상단/더보기 | `GET /history/calls/{id}/talk-logs` | `HistoryService` |
+| 트윈 매칭 응답 | `GET /match/twins` | `MatchService` |
+
+모든 매핑에서 `FileService.createPresignedDownloadUrlOrFallback(user.getProfileImageObjectKey(), user.getProfileImageUrl())` 또는 같은 공통 resolver를 사용하고, 필드 이름은 `profileImageUrl`을 유지하면 된다. DB에는 서명 URL을 저장하지 않는다. objectKey가 없는 이전 데이터는 버킷/객체를 검증해 복구해야 하며, 현재 helper는 key가 없으면 서명 없는 주소를 반환한다.
+
+RN은 같은 사진에 이미 발급된 유효한 추천 서명을 재사용할 수 있지만, 목록에 없는 상대·변경된 사진·만료·과거 기록까지 해결하는 대체 서버 계약은 아니다. 추천의 서명 생성도 정렬·페이지네이션 뒤 실제 응답 회원만 처리하는 것이 효율적이다.
+
+최종 RN 검증: 110개 묶음·747개 테스트, 변경 파일 ESLint, iOS·Android 번들 생성 및 diff 검사 통과. TypeScript의 기존 오류 26개 외 새 오류 없음. 인증된 운영 API/S3 다운로드와 기기별 육안 검증은 별도로 필요하다. 백엔드·AI·인프라는 수정하지 않았다.
+
+## 이전 점검 기록
+
 점검일: 2026-10-06. RN 브랜치: `codex/call-entry-connected-ux`.
 백엔드는 `origin/main`을 fetch하여 **`5b78878` (PR #195, 실제 수정 `eeae8ba`)** 소스를 읽었다. 로컬 백엔드 체크아웃/소스 및 submodule 포인터는 변경하지 않았다. 아래는 소스 확인 결과이며, 인증된 운영 API 응답이나 S3의 실제 HTTP 오류는 직접 검증하지 않았다.
 
@@ -51,3 +72,14 @@
 소스 근거: 백엔드 `5b78878`의 `FileService`, `ProfileService`, `MyProfileDetailService`, `RecommendService`, `RecommendationDetailService`, `MeetingService`, `ChatService`, `HistoryService`, `MatchService`, `AwsS3Properties`.
 
 검증: 전체 Jest 109개 묶음·736개 테스트 통과. API 재조회 연타, 같은 URL 재시도, 갱신된 서명에 이전 다운로드 오류가 남지 않음, 계정 변경 뒤 캐시 갱신 차단, 추천 사진만 병합하여 목록 순서 유지, 내 사진 모달 유지, 기존 통화·채팅·등록 기능의 회귀를 확인했다. 변경 파일 ESLint 통과, 기존 TypeScript 오류 26개 외 새 오류 없음. 인증된 배포 API/S3의 실제 다운로드 및 모든 기기의 육안 검증은 수행하지 않았다.
+
+## 2026-10-07 재점검
+
+- 최신 원격은 `0f45c02`(PR #196, 실제 수정 `53798d1`)이다. 추천 목록의 `RecommendService`에 다운로드 서명 생성이 추가됐다. 상대 상세의 `RecommendationDetailService`는 여전히 영구 S3 URL을 반환한다. 받은 신청·채팅·기록·트윈 매칭도 이전 표의 미적용 상태가 유지된다.
+- [배포 작업 #93](https://github.com/Mirror-Soul/Mirror-Soul-Backend/actions/runs/37438720381)의 동일 커밋 빌드·파일 복사·EC2 배포 단계가 모두 성공한 것을 GitHub Actions에서 확인했다. 앱의 로컬 `.env` 대상은 `https://api.mirrorsoul64.com`이다. 실행 중인 서버의 커밋 값이나 로그인된 실제 이미지 응답은 직접 확인하지 않았으므로 배포 작업 성공과 실제 S3 다운로드 검증을 구분한다.
+- RN의 이전 사진 재시도는 상세 API에서 받은 영구 URL을 정상적인 추천 서명 URL 위에 덮어쓸 수 있었다. 상대 상세 화면도 상세 응답 도착 시 서명 있는 목록 사진을 영구 URL로 바꿨다. 따라서 추천 서버 수정만으로 모든 화면이 함께 정상화되지는 않는다.
+- RN은 **같은 버킷 호스트·같은 사진 객체**에 대해 목록/캐시에 이미 있는 유효한 서버 서명을 유지한다. 상세가 삭제(`null`)를 명시하거나 다른 사진을 반환하면 이전 사진을 되살리지 않는다. 서명 쿼리는 수정하지 않고, 유효기간은 응답의 AWS 서명 메타데이터로 판단한다.
+- 갱신할 때는 먼저 기존 상세 API의 접근 권한·회원 UUID를 확인한다. 상세가 아직 서명을 제공하지 않으면 해당 회원이 들어 있던 추천 페이지와 이미 읽었던 앞쪽 페이지에서 서버가 제공한 새 주소를 찾는다. 결과는 사진 필드만 캐시에 병합하며 추천 순서·페이지·스와이프 위치는 유지한다. 상세에 향후 서명이 적용되면 이 추가 조회는 필요 없어진다.
+- 추천/상대 상세에서 오래된 S3 주소나 만료된 사진을 한 번 자동 복구하고, 동일 사진이 계속 실패하면 반복 자동 호출 없이 수동 재시도를 유지한다. 상대 상세의 동시 재시도는 같은 요청을 공유한다.
+- objectKey가 없는 예전 회원, 삭제된 S3 파일, 잘못된 키/버킷 권한은 여전히 서버에서 확인해야 한다. 노출 목록에 없는 과거 상대의 주소를 갱신하거나 신규 사진을 항상 표시하려면 상대 상세·채팅·기록에서도 공통 다운로드 resolver가 필요하다.
+- `RecommendService`는 현재 정렬·페이지네이션 전 후보 매핑에서 서명을 만든다. 기존 요청안처럼 실제 응답 페이지의 회원만 서명하도록 옮기면 불필요한 생성 비용을 줄일 수 있다. 백엔드는 수정하지 않았다.

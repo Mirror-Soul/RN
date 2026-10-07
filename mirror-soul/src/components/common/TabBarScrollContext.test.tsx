@@ -1,25 +1,26 @@
 import React, { useContext } from 'react';
 import { act, fireEvent, render } from '@testing-library/react-native';
 import { AccessibilityInfo, Keyboard, Pressable, ScrollView, Text } from 'react-native';
-import { TabBarHiddenContext, TabBarScrollContext, TabBarScrollProvider } from './TabBarScrollContext';
+import { TabBarCompactContext, TabBarScrollContext, TabBarScrollProvider } from './TabBarScrollContext';
 import { FloatingTabBarInsetContext } from './FloatingTabBarInsetContext';
 import { useMainTabScroll } from '@/src/hooks/useMainTabScroll';
 import { useMainTabBottomPadding } from '@/src/hooks/useMainTabBottomPadding';
 import BottomNavbar from '@/src/components/home/main/BottomNavbar';
 
 jest.mock('expo-font', () => ({ isLoaded: () => false }));
+jest.mock('react-native-reanimated', () => jest.requireActual('react-native-reanimated/mock'));
 jest.mock('expo-blur', () => ({ BlurView: jest.requireActual('react-native').View }));
 jest.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({ top: 44, bottom: 34, left: 0, right: 0 }) }));
 jest.mock('@/src/hooks/useThemeColors', () => ({ useThemeColors: () => ({ colors: jest.requireActual('@/src/constants/theme').lightTheme, isDark: false }) }));
 
 function Content() {
   const controller = useContext(TabBarScrollContext);
-  const hidden = useContext(TabBarHiddenContext);
+  const compact = useContext(TabBarCompactContext);
   const primary = useMainTabScroll('index');
   const stale = useMainTabScroll('history');
   const padding = useMainTabBottomPadding();
   return <>
-    <Text>{hidden ? '숨김' : '표시'}</Text><Text>{`여백 ${padding}`}</Text>
+    <Text>{compact ? '축소' : '펼침'}</Text><Text>{`여백 ${padding}`}</Text>
     <ScrollView testID="primary-scroll" {...primary} />
     <ScrollView testID="stale-scroll" {...stale} />
     <Pressable testID="activate" onPress={() => controller?.activate('grow')} />
@@ -38,18 +39,18 @@ beforeEach(() => {
 });
 afterEach(() => { jest.useRealTimers(); jest.restoreAllMocks(); });
 
-it('disables hidden tap targets while retaining exactly the same content padding', async () => {
+it('keeps compact tabs interactive while retaining exactly the same content padding', async () => {
   const screen = setup();
   await act(async () => {});
   const scroll = screen.getByTestId('primary-scroll');
   fireEvent(scroll, 'scrollBeginDrag', event(0));
   fireEvent.scroll(scroll, event(40));
-  expect(screen.getByText('숨김')).toBeTruthy();
+  expect(screen.getByText('축소')).toBeTruthy();
   expect(screen.getByText('여백 226')).toBeTruthy();
-  expect(screen.getByTestId('main-tab-bar', { includeHiddenElements: true }).props.pointerEvents).toBe('none');
-  expect(screen.getByTestId('main-tab-bar', { includeHiddenElements: true }).props.accessibilityElementsHidden).toBe(true);
+  expect(screen.getByTestId('main-tab-bar', { includeHiddenElements: true }).props.pointerEvents).toBe('box-none');
+  expect(screen.getByTestId('main-tab-bar', { includeHiddenElements: true }).props.accessibilityElementsHidden).not.toBe(true);
   fireEvent.scroll(scroll, event(28));
-  expect(screen.getByText('표시')).toBeTruthy();
+  expect(screen.getByText('펼침')).toBeTruthy();
   expect(screen.getByText('여백 226')).toBeTruthy();
   expect(screen.getByTestId('main-tab-bar').props.pointerEvents).toBe('box-none');
 });
@@ -59,14 +60,14 @@ it('shows for a new route and ignores late events from mounted inactive tabs', a
   await act(async () => {});
   fireEvent(screen.getByTestId('stale-scroll'), 'scrollBeginDrag', event(0));
   fireEvent.scroll(screen.getByTestId('stale-scroll'), event(80));
-  expect(screen.getByText('표시')).toBeTruthy();
+  expect(screen.getByText('펼침')).toBeTruthy();
   fireEvent(screen.getByTestId('primary-scroll'), 'scrollBeginDrag', event(0));
   fireEvent.scroll(screen.getByTestId('primary-scroll'), event(80));
-  expect(screen.getByText('숨김')).toBeTruthy();
+  expect(screen.getByText('축소')).toBeTruthy();
   fireEvent.press(screen.getByTestId('activate'));
-  expect(screen.getByText('표시')).toBeTruthy();
+  expect(screen.getByText('펼침')).toBeTruthy();
   fireEvent.scroll(screen.getByTestId('primary-scroll'), event(200));
-  expect(screen.getByText('표시')).toBeTruthy();
+  expect(screen.getByText('펼침')).toBeTruthy();
 });
 
 it('continues user momentum, reveals at the end and stops reacting after it settles', async () => {
@@ -78,12 +79,12 @@ it('continues user momentum, reveals at the end and stops reacting after it sett
   fireEvent(scroll, 'momentumScrollBegin', event(20));
   act(() => jest.advanceTimersByTime(200));
   fireEvent.scroll(scroll, event(80));
-  expect(screen.getByText('숨김')).toBeTruthy();
+  expect(screen.getByText('축소')).toBeTruthy();
   fireEvent(scroll, 'momentumScrollEnd', event(1998));
-  expect(screen.getByText('표시')).toBeTruthy();
+  expect(screen.getByText('펼침')).toBeTruthy();
   fireEvent.scroll(scroll, event(1800));
   fireEvent.scroll(scroll, event(1900));
-  expect(screen.getByText('표시')).toBeTruthy();
+  expect(screen.getByText('펼침')).toBeTruthy();
 });
 
 it('does not treat programmatic momentum as a drag', async () => {
@@ -93,7 +94,7 @@ it('does not treat programmatic momentum as a drag', async () => {
   fireEvent(scroll, 'momentumScrollBegin', event(0));
   fireEvent.scroll(scroll, event(200));
   fireEvent.scroll(scroll, event(500));
-  expect(screen.getByText('표시')).toBeTruthy();
+  expect(screen.getByText('펼침')).toBeTruthy();
 });
 
 it('invalidates a previous gesture when leaving and returning to the same tab', async () => {
@@ -102,15 +103,15 @@ it('invalidates a previous gesture when leaving and returning to the same tab', 
   const scroll = screen.getByTestId('primary-scroll');
   fireEvent(scroll, 'scrollBeginDrag', event(0));
   fireEvent.scroll(scroll, event(80));
-  expect(screen.getByText('숨김')).toBeTruthy();
+  expect(screen.getByText('축소')).toBeTruthy();
   fireEvent.press(screen.getByTestId('activate'));
   fireEvent.press(screen.getByTestId('return'));
   fireEvent.scroll(scroll, event(300));
   fireEvent.scroll(scroll, event(400));
-  expect(screen.getByText('표시')).toBeTruthy();
+  expect(screen.getByText('펼침')).toBeTruthy();
   fireEvent(scroll, 'scrollBeginDrag', event(400));
   fireEvent.scroll(scroll, event(440));
-  expect(screen.getByText('숨김')).toBeTruthy();
+  expect(screen.getByText('축소')).toBeTruthy();
 });
 
 it('restores navigation after closing the keyboard even when previously hidden', async () => {
@@ -124,11 +125,11 @@ it('restores navigation after closing the keyboard even when previously hidden',
   const scroll = screen.getByTestId('primary-scroll');
   fireEvent(scroll, 'scrollBeginDrag', event(0));
   fireEvent.scroll(scroll, event(80));
-  expect(screen.getByText('숨김')).toBeTruthy();
+  expect(screen.getByText('축소')).toBeTruthy();
   act(() => (callbacks.keyboardWillShow ?? callbacks.keyboardDidShow)());
   expect(screen.queryByTestId('main-tab-bar', { includeHiddenElements: true })).toBeNull();
   act(() => callbacks.keyboardDidHide());
-  expect(screen.getByText('표시')).toBeTruthy();
+  expect(screen.getByText('펼침')).toBeTruthy();
   expect(screen.getByTestId('main-tab-bar').props.pointerEvents).toBe('box-none');
 });
 
@@ -143,11 +144,11 @@ it('keeps navigation visible for screen readers, including when enabled while hi
   const scroll = screen.getByTestId('primary-scroll');
   fireEvent(scroll, 'scrollBeginDrag', event(0));
   fireEvent.scroll(scroll, event(80));
-  expect(screen.getByText('숨김')).toBeTruthy();
+  expect(screen.getByText('축소')).toBeTruthy();
   act(() => listener?.(true));
-  expect(screen.getByText('표시')).toBeTruthy();
+  expect(screen.getByText('펼침')).toBeTruthy();
   fireEvent.scroll(scroll, event(200));
-  expect(screen.getByText('표시')).toBeTruthy();
+  expect(screen.getByText('펼침')).toBeTruthy();
 });
 
 it('cleans up the drag settling timer on unmount', async () => {
