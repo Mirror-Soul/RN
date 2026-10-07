@@ -1,10 +1,9 @@
 import { BottomSheet } from '@/src/components/common/BottomSheet/BottomSheet';
-import FloatingNotice from '@/src/components/home/common/FloatingNotice';
+import { useToast } from '@/src/components/common/Toast/ToastProvider';
 import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
 import { useValueBalanceQuestionQuery } from '@/src/features/growth/hooks/useValueBalanceQuestionQuery';
 import { useSubmitValueBalanceAnswerMutation } from '@/src/features/growth/hooks/useSubmitValueBalanceAnswerMutation';
-import { useFloatingNotice } from '@/src/hooks/useFloatingNotice';
 import { getErrorDisplayMessage, getErrorCode } from '@/src/utils/apiErrorCode';
 import { VALUE_BALANCE_AXIS_LABELS } from '@/src/constants/valueBalanceAxis';
 import type {
@@ -68,7 +67,7 @@ export default function ValueBalanceModal({ isOpen, onClose }: ValueBalanceModal
   const [lastAnswer, setLastAnswer] = useState<ValueBalanceAnswerResult | null>(null);
   // 방금 탭한 선택지를 잠깐 하이라이트해서 "내가 뭘 눌렀는지" 시각 피드백을 준다.
   const [selectedSide, setSelectedSide] = useState<ValueBalanceChosenSide | null>(null);
-  const { message: noticeMessage, opacity: noticeOpacity, flash: flashNotice } = useFloatingNotice();
+  const { showToast } = useToast();
 
   // 새 질문으로 바뀌면(답변 성공/자동 복구 refetch 등) 이전 질문에 남아있던 하이라이트를 지운다.
   useEffect(() => {
@@ -89,7 +88,7 @@ export default function ValueBalanceModal({ isOpen, onClose }: ValueBalanceModal
     } catch (error) {
       if (!mounted.current) return;
       setSelectedSide(null);
-      flashNotice(getErrorDisplayMessage(error, '답변 제출에 실패했습니다. 잠시 후 다시 시도해주세요.'));
+      showToast(getErrorDisplayMessage(error, '답변을 저장하지 못했어요. 다시 선택해주세요.'), 'error');
       // 이미 답한 질문이거나(레이스) 질문이 만료된 경우, 화면엔 여전히 낡은 질문이 남아있어
       // 사용자가 같은 버튼을 다시 눌러도 같은 에러가 반복된다 — 새 질문으로 자동 복구한다.
       const code = getErrorCode(error);
@@ -300,7 +299,6 @@ export default function ValueBalanceModal({ isOpen, onClose }: ValueBalanceModal
         )}
       </ScrollView>
 
-      <FloatingNotice message={noticeMessage} opacity={noticeOpacity} bottom={24} />
     </BottomSheet>
   );
 }

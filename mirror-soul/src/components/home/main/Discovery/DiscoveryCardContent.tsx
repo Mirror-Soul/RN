@@ -1,4 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useRetryableProfileImage } from '@/src/features/profile/photo/useRetryableProfileImage';
+import { sameProfileImageObject, shouldRefreshProfileImage } from '@/src/features/profile/photo/profileImageUrl';
 import { StyleSheet, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { BrowseIcon } from '@/src/components/home/common/BrowseIcon';
 import { ProfilePhotoImage } from '@/src/features/profile/photo/ProfilePhotoImage';
@@ -21,26 +23,34 @@ interface DiscoveryCardContentProps {
   onPhotoPress?: () => void;
   onContentPress?: () => void;
   onConnectPress?: () => void;
+  onReloadPhoto?: () => Promise<unknown>;
 }
 
 /** Photo, identity, introduction, then explicit actions; each action owns its touch area. */
 export default function DiscoveryCardContent({
   match, showPhotoOverlays = false, summaryExpandable = false,
   onPhotoPress, onContentPress, onConnectPress,
+  onReloadPhoto,
 }: DiscoveryCardContentProps) {
   const { colors } = useThemeColors();
   const { palette } = useMatchingDesign();
   const { cardWidth } = useLayout();
   const { fontScale } = useWindowDimensions();
   const [actionWidth, setActionWidth] = useState(cardWidth - Spacing.lg * 2);
-  const [imageFailed, setImageFailed] = useState(false);
-  const imageIdentity = useRef(match.profileImageUrl);
-  imageIdentity.current = match.profileImageUrl;
+  const photo = useRetryableProfileImage(match.profileImageUrl, onReloadPhoto);
+  const { failed: photoFailed, retry: retryPhoto } = photo;
+  const autoRecovery = useRef<{ userUuid: string; uri: string } | null>(null);
+  useEffect(() => {
+    const uri = match.profileImageUrl;
+    if (!photoFailed || !uri || !onReloadPhoto || !shouldRefreshProfileImage(uri)) return;
+    if (autoRecovery.current?.userUuid === match.userUuid && sameProfileImageObject(autoRecovery.current.uri, uri)) return;
+    autoRecovery.current = { userUuid: match.userUuid, uri };
+    void retryPhoto();
+  }, [match.userUuid, match.profileImageUrl, onReloadPhoto, photoFailed, retryPhoto]);
   const [expanded, setExpanded] = useState(false);
   const [truncated, setTruncated] = useState(false);
-  useEffect(() => { setImageFailed(false); }, [match.profileImageUrl]);
   useEffect(() => { setExpanded(false); setTruncated(false); }, [match.userUuid, match.selfIntroduction]);
-  const photoAvailable = !!match.profileImageUrl && !imageFailed;
+  const photoAvailable = !!match.profileImageUrl && !photo.failed;
   const summary = match.selfIntroduction?.trim();
   const stacked = actionWidth < 300 || fontScale > 1.3;
   const photoAction = photoAvailable ? onPhotoPress : onContentPress;
@@ -50,14 +60,19 @@ export default function DiscoveryCardContent({
       accessibilityRole="button" accessibilityLabel={photoAvailable ? '프로필 사진 크게 보기' : '상세 프로필 보기'}
     >
       {photoAvailable ? <ProfilePhotoImage
-        key={match.profileImageUrl} source={{ uri: match.profileImageUrl! }} style={StyleSheet.absoluteFill}
-        cachePolicy="disk" transition={150} onError={() => { if (imageIdentity.current === match.profileImageUrl) setImageFailed(true); }}
+        key={photo.imageKey} source={{ uri: match.profileImageUrl! }} style={StyleSheet.absoluteFill}
+        cachePolicy="disk" transition={150} onError={photo.onError}
       /> : <View style={styles.fallback}>
         <View style={styles.avatar}><BrowseIcon name="user-circle" size={32} color={Colors.neutral.softWhite} /></View>
         <Text style={styles.fallbackText}>{match.profileImageUrl ? '사진을 불러오지 못했어요' : '사진 없이 먼저 만나보세요'}</Text>
       </View>}
       {showPhotoOverlays && photoAvailable && <CardPhotoOverlay />}
     </TouchableOpacity>
+    {photo.failed && <TouchableOpacity accessibilityRole="button" accessibilityLabel="추천 프로필 사진 다시 불러오기"
+      disabled={photo.isReloading} accessibilityState={{ busy: photo.isReloading }} onPress={() => { void photo.retry(); }}
+      style={[styles.more, { alignSelf: 'center' }]}>
+      <Text style={[styles.caption, { color: palette.accentInk }]}>{photo.isReloading ? '사진을 다시 확인하고 있어요…' : '사진 다시 불러오기'}</Text>
+    </TouchableOpacity>}
 
     <View style={styles.content}>
       <TouchableOpacity onPress={onContentPress} disabled={!onContentPress} activeOpacity={0.8}

@@ -8,6 +8,7 @@ import { FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constant
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { useAuthStore } from '@/src/store/useAuthStore';
 import { useToast } from '@/src/components/common/Toast/ToastProvider';
+import { ToastViewport } from '@/src/components/common/Toast/ToastViewport';
 import { getErrorDisplayMessage } from '@/src/utils/apiErrorCode';
 import { useAccountInfoQuery } from '../hooks/useAccountInfoQuery';
 import { useModifyNicknameMutation } from '../hooks/useModifyNicknameMutation';
@@ -72,6 +73,7 @@ export const NicknameEditModal = ({ isOpen, onClose }: { isOpen: boolean; onClos
         </ScrollView>
       </View>
     </KeyboardAvoidingView>
+    <ToastViewport active={isOpen} />
   </Modal>;
 };
 const styles = StyleSheet.create({

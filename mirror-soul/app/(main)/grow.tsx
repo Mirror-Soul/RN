@@ -17,6 +17,8 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLayout } from '@/src/hooks/useLayout';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
+import { useMainTabBottomPadding } from '@/src/hooks/useMainTabBottomPadding';
+import { useMainTabScroll } from '@/src/hooks/useMainTabScroll';
 
 /**
  * 성장(Growth) 탭 화면
@@ -28,6 +30,8 @@ import { useThemeColors } from '@/src/hooks/useThemeColors';
  */
 export default function GrowScreen() {
   const insets = useSafeAreaInsets();
+  const bottomPadding = useMainTabBottomPadding();
+  const scrollCallbacks = useMainTabScroll('grow');
   const { colors } = useThemeColors();
   const { contentContainerStyle, screenPadding } = useLayout();
 
@@ -41,10 +45,11 @@ export default function GrowScreen() {
 
   return (
     <ScrollView
+      {...scrollCallbacks}
       style={[styles.scrollView, { backgroundColor: colors.background.primary }]}
       contentContainerStyle={[
         styles.scrollContent,
-        { paddingBottom: insets.bottom + Layout.MAIN_TAB_CONTENTS_BOTTOM_PADDING },
+        { paddingBottom: bottomPadding },
       ]}
       showsVerticalScrollIndicator={false}
     >

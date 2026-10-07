@@ -1,5 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React from 'react';
+import { Pressable, View, Text, StyleSheet } from 'react-native';
+import { Feather } from '@expo/vector-icons';
+import { useRetryableProfileImage } from '@/src/features/profile/photo/useRetryableProfileImage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Image } from 'expo-image';
 import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
@@ -13,23 +15,26 @@ interface MessageRoomHeaderLeftProps {
 
 export function MessageRoomHeaderLeft({ room }: MessageRoomHeaderLeftProps) {
   const { partner } = room;
-  const [imageFailed, setImageFailed] = useState(false);
-  useEffect(() => { setImageFailed(false); }, [partner.profileImageUrl]);
+  const photo = useRetryableProfileImage(partner.profileImageUrl);
   const { colors } = useThemeColors();
 
   return (
     <View style={styles.headerLeft}>
       {/* 아바타 */}
       <View style={styles.avatarWrapper}>
-        {!imageFailed && partner.profileImageUrl ? (
+        {!photo.failed && partner.profileImageUrl ? (
           <Image
+            key={photo.imageKey}
             source={{ uri: partner.profileImageUrl }}
             style={styles.headerAvatar}
             contentFit="cover"
             cachePolicy="disk"
             transition={150}
-            onError={() => setImageFailed(true)}
+            onError={photo.onError}
           />
+        ) : photo.failed ? (
+          <Pressable style={styles.headerAvatar} hitSlop={4} accessibilityRole="button" accessibilityLabel={`${partner.name} 프로필 사진 다시 불러오기`}
+            disabled={photo.isReloading} onPress={() => { void photo.retry(); }}><Feather name="refresh-cw" size={20} color={colors.text.secondary} /></Pressable>
         ) : (
           <LinearGradient
             colors={Colors.gradient.voiceStart}

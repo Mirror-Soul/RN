@@ -1,6 +1,5 @@
 import React, {
   useCallback,
-  useContext,
   useEffect,
   useRef,
   useState,
@@ -14,11 +13,12 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
   FontFamily,
   FontSize,
-  Layout,
   Radii,
   Spacing,
 } from '@/src/constants/theme';
-import { FloatingTabBarInsetContext } from '@/src/components/common/FloatingTabBarInsetContext';
+import { useMainTabBottomPadding } from '@/src/hooks/useMainTabBottomPadding';
+import { useMainTabScroll } from '@/src/hooks/useMainTabScroll';
+import { ProfileImageReloadContext } from '@/src/features/profile/photo/useRetryableProfileImage';
 import { mainTabTopPadding } from '@/src/components/home/common/MainTabHeader';
 import {
   useMatchingDesign,
@@ -55,7 +55,8 @@ export default function MatchScreen() {
   const { colors, palette } = useMatchingDesign();
   const { contentContainerStyle } = useLayout();
   const insets = useSafeAreaInsets();
-  const tabBarInset = useContext(FloatingTabBarInsetContext);
+  const bottomPadding = useMainTabBottomPadding();
+  const scrollCallbacks = useMainTabScroll('match');
   const router = useRouter();
   const { receivedRequestId, receivedRequestReturnToken } =
     useLocalSearchParams<{
@@ -250,11 +251,12 @@ export default function MatchScreen() {
     />
   );
   return (
-    <SafeAreaView
+    <ProfileImageReloadContext.Provider value={activeTab === 'meet' ? requestsQuery.refetch : roomsQuery.refetch}><SafeAreaView
       edges={['top', 'left', 'right']}
       style={[styles.root, { backgroundColor: colors.background.primary }]}
     >
       <FlatList<Row>
+        {...scrollCallbacks}
         ref={list}
         data={rows}
         keyExtractor={(item) =>
@@ -267,10 +269,7 @@ export default function MatchScreen() {
         refreshing={pullRefreshTab === activeTab}
         onRefresh={() => { void handlePullRefresh(); }}
         contentContainerStyle={{
-          paddingBottom: Math.max(
-            insets.bottom + Layout.MAIN_TAB_CONTENTS_BOTTOM_PADDING,
-            tabBarInset + Spacing.lg,
-          ),
+          paddingBottom: bottomPadding,
         }}
         ListHeaderComponent={
           <View
@@ -402,7 +401,7 @@ export default function MatchScreen() {
           }}
         />
       )}
-    </SafeAreaView>
+    </SafeAreaView></ProfileImageReloadContext.Provider>
   );
 }
 const styles = StyleSheet.create({

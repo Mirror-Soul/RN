@@ -1,5 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import React from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { Feather } from '@expo/vector-icons';
+import { useRetryableProfileImage } from '@/src/features/profile/photo/useRetryableProfileImage';
 import { ProfilePhotoImage } from '@/src/features/profile/photo/ProfilePhotoImage';
 import { FontFamily, FontSize, FontWeight, Radii } from '@/src/constants/theme';
 import {
@@ -17,10 +19,7 @@ export function MatchAvatar({
   size?: number;
 }) {
   const { palette } = useMatchingDesign();
-  const [failed, setFailed] = useState(false);
-  const currentUrl = useRef(url);
-  currentUrl.current = url;
-  useEffect(() => setFailed(false), [url]);
+  const photo = useRetryableProfileImage(url);
   return (
     <View
       style={[
@@ -33,15 +32,21 @@ export function MatchAvatar({
         },
       ]}
     >
-      {url && !failed ? (
+      {url && !photo.failed ? (
         <ProfilePhotoImage
-          key={url}
+          key={photo.imageKey}
           accessibilityLabel={`${name} 프로필 사진`}
           source={{ uri: url }}
           style={StyleSheet.absoluteFill}
           cachePolicy="disk"
-          onError={() => { if (currentUrl.current === url) setFailed(true); }}
+          onError={photo.onError}
         />
+      ) : photo.failed ? (
+        <Pressable onPress={() => { void photo.retry(); }} disabled={photo.isReloading} accessibilityRole="button"
+          accessibilityLabel={`${name} 프로필 사진 다시 불러오기`} accessibilityState={{ busy: photo.isReloading }}
+          style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center' }]}>
+          <Feather name="refresh-cw" size={Math.min(20, size / 2)} color={palette.accentInk} />
+        </Pressable>
       ) : (
         <Text
           variant="heading"

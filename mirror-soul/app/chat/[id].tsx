@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MessageRoomScreen from '@/src/features/message-room/MessageRoomScreen';
 import { useChatRoomsQuery } from '@/src/features/chat/hooks/useChatRoomsQuery';
 import { Colors, FontFamily, FontSize, FontWeight, Spacing } from '@/src/constants/theme';
+import { ProfileImageReloadContext } from '@/src/features/profile/photo/useRetryableProfileImage';
 
 /**
  * 메시지방 상세 화면 (루트 Stack 레벨)
@@ -54,7 +55,7 @@ export default function MessageRoomDetailScreen() {
     );
   }
 
-  return <MessageRoomScreen room={room} />;
+  return <ProfileImageReloadContext.Provider value={refetch}><MessageRoomScreen room={room} /></ProfileImageReloadContext.Provider>;
 }
 
 const styles = StyleSheet.create({

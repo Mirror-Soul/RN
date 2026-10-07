@@ -7,6 +7,7 @@ let mockProfile = { ...introductionPreview, userUuid: 'me', profileImageUrl: 'ht
 let mockLocalPreview: { url: string; uri: string } | null = null;
 const mockOwnRefetch = jest.fn();
 const mockOtherRefetch = jest.fn();
+jest.mock('@/src/features/home/refreshRecommendationPhoto', () => ({ refreshRecommendationPhoto: jest.fn().mockResolvedValue(undefined) }));
 // Own-profile previews never render call/refill flows or access their authenticated APIs.
 jest.mock('@/src/components/call/CallStartConfirmSheet', () => () => null);
 jest.mock('@/src/features/profile/components/TimeRefillBottomSheet', () => ({ TimeRefillBottomSheet: () => null }));

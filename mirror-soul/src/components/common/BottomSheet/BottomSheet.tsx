@@ -10,6 +10,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { Spacing } from '@/src/constants/theme';
+import { ToastViewport } from '@/src/components/common/Toast/ToastViewport';
 
 
 const springConfig = { damping: 20, stiffness: 200, mass: 0.8 };
@@ -90,6 +91,7 @@ export const BottomSheet = ({ isOpen, onClose, children, height: requestedHeight
         </TouchableWithoutFeedback>
 
         {dragFromHandleOnly ? sheet : <GestureDetector gesture={panGesture}>{sheet}</GestureDetector>}
+        <ToastViewport active={isModalVisible} />
       </GestureHandlerRootView>
   );
   if (embedded) return isModalVisible ? content : null;

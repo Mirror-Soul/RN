@@ -11,7 +11,7 @@ import { logger } from '../utils/logger';
 const ICE_SERVERS = [{ urls: 'stun:stun.l.google.com:19302' }];
 
 const stopStreamTracks = (stream: MediaStream | null) => {
-  stream?.getTracks().forEach((track: any) => track.stop());
+  stream?.getTracks().forEach(track => { try { track.stop(); } catch (error) { logger.warn('미디어 트랙 정리 실패', error); } });
 };
 
 /**
@@ -22,6 +22,10 @@ const stopStreamTracks = (stream: MediaStream | null) => {
  */
 export function useWebRTCCall() {
   const pcRef = useRef<RTCPeerConnection | null>(null);
+  const audioStreamRef = useRef<MediaStream | null>(null);
+  const generation = useRef(0);
+  const microphoneMuted = useRef(false);
+  const [, refreshTracks] = useState(0);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
   const [iceConnectionState, setIceConnectionState] = useState<string>('new');
   // 내 카메라 셀프뷰 전용 스트림 — 의도적으로 PeerConnection에 addTrack하지 않는다.
@@ -42,21 +46,28 @@ export function useWebRTCCall() {
 
   /** PeerConnection 초기화 및 로컬 마이크 스트림 획득 */
   const initialize = useCallback(async () => {
+    const request = ++generation.current;
     logger.debug('[useWebRTCCall] Initializing PeerConnection...');
 
-    const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+    // This package's EventTarget parent is omitted from its bundled declaration graph.
+    const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS }) as RTCPeerConnection & {
+      addEventListener(type: 'track' | 'icecandidate' | 'iceconnectionstatechange', listener: (event: any) => void): void;
+    };
     pcRef.current = pc;
 
     // 원격 AI 미디어 스트림(오디오·비디오) 수신
     pc.addEventListener('track', (event: any) => {
+      if (pcRef.current !== pc) return;
       logger.debug('[useWebRTCCall] Remote track received');
       if (event.streams?.[0]) {
         setRemoteStream(event.streams[0]);
+        refreshTracks(value => value + 1);
       }
     });
 
     // 로컬 ICE 후보 발생 시 콜백으로 전달
     pc.addEventListener('icecandidate', (event: any) => {
+      if (pcRef.current !== pc) return;
       if (event.candidate) {
         logger.debug('[useWebRTCCall] Local ICE candidate generated');
         onLocalIceCandidateCb.current?.(event.candidate);
@@ -65,6 +76,7 @@ export function useWebRTCCall() {
 
     // 연결 상태 변화 감지
     pc.addEventListener('iceconnectionstatechange', () => {
+      if (pcRef.current !== pc) return;
       const state = pc.iceConnectionState;
       logger.debug('[useWebRTCCall] ICE connection state:', state);
       setIceConnectionState(state);
@@ -73,7 +85,13 @@ export function useWebRTCCall() {
     // 로컬 마이크 스트림 획득 후 PeerConnection에 추가
     try {
       const stream = await mediaDevices.getUserMedia({ audio: true, video: false });
+      if (request !== generation.current || pcRef.current !== pc) {
+        stopStreamTracks(stream);
+        throw new Error('통화 연결이 취소됐어요.');
+      }
+      audioStreamRef.current = stream;
       stream.getTracks().forEach((track: any) => {
+        if (track.kind === 'audio') track.enabled = !microphoneMuted.current;
         pc.addTrack(track, stream);
       });
       logger.debug('[useWebRTCCall] Local audio track added');
@@ -87,6 +105,14 @@ export function useWebRTCCall() {
       logger.error('[useWebRTCCall] Failed to get microphone stream:', err);
       throw err;
     }
+  }, []);
+
+  /** Track.enabled controls actual WebRTC transmission on both iOS and Android. */
+  const setMicrophoneMuted = useCallback((muted: boolean) => {
+    const tracks = audioStreamRef.current?.getAudioTracks() ?? [];
+    if (!tracks.length) throw new Error('마이크 연결을 확인해주세요.');
+    tracks.forEach(track => { track.enabled = !muted; });
+    microphoneMuted.current = muted;
   }, []);
 
   /** 내 카메라 셀프뷰 시작 — 통화 마이크 스트림과 별개의 video-only 스트림을 새로 획득한다. */
@@ -169,12 +195,12 @@ export function useWebRTCCall() {
   }, [flushPendingIceCandidates]);
 
   /** AI 서버의 ICE 후보 적용 (Remote Description 미등록 시 버퍼링) */
-  const applyIceCandidate = useCallback(async (candidate: RTCIceCandidate): Promise<void> => {
+  const applyIceCandidate = useCallback(async (candidate: Pick<RTCIceCandidate, 'candidate' | 'sdpMid' | 'sdpMLineIndex'>): Promise<void> => {
     const pc = pcRef.current;
     if (!pc) throw new Error('PeerConnection이 초기화되지 않았습니다.');
 
     if (!pc.remoteDescription) {
-      pendingIceCandidatesRef.current.push(candidate);
+      pendingIceCandidatesRef.current.push(new RTCIceCandidate(candidate));
       logger.debug('[useWebRTCCall] Buffered ICE candidate (no remote description yet)');
       return;
     }
@@ -184,6 +210,10 @@ export function useWebRTCCall() {
 
   /** 정리: PeerConnection 및 트랙 해제 */
   const close = useCallback(() => {
+    generation.current += 1;
+    microphoneMuted.current = false;
+    stopStreamTracks(audioStreamRef.current);
+    audioStreamRef.current = null;
     disableCamera();
 
     const pc = pcRef.current;
@@ -191,9 +221,9 @@ export function useWebRTCCall() {
 
     pendingIceCandidatesRef.current = [];
     pc.getSenders().forEach((sender: any) => {
-      sender.track?.stop();
+      try { sender.track?.stop(); } catch (error) { logger.warn('송신 트랙 정리 실패', error); }
     });
-    pc.close();
+    try { pc.close(); } catch (error) { logger.warn('통화 연결 정리 실패', error); }
     pcRef.current = null;
     setRemoteStream(null);
     setIceConnectionState('closed');
@@ -201,10 +231,10 @@ export function useWebRTCCall() {
   }, [disableCamera]);
 
   // 언마운트 시 자동 정리 (메모리 누수 방지)
+  const mounted = useRef(true);
   useEffect(() => {
-    return () => {
-      close();
-    };
+    mounted.current = true;
+    return () => { mounted.current = false; queueMicrotask(() => { if (!mounted.current) close(); }); };
   }, [close]);
 
   return {
@@ -215,6 +245,7 @@ export function useWebRTCCall() {
     initialize,
     enableCamera,
     disableCamera,
+    setMicrophoneMuted,
     createOffer,
     createAnswer,
     applyAnswer,

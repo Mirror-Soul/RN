@@ -9,6 +9,10 @@ import { useMatchingDesign } from '@/src/features/match/components/MatchingDesig
 import { useLayout } from '@/src/hooks/useLayout';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { useRecommendationDetailQuery } from '@/src/features/home/hooks/useRecommendationDetailQuery';
+import { useCachedRecommendationPhoto } from '@/src/features/home/hooks/useCachedRecommendationPhoto';
+import { sameProfileImageObject, selectProfileImageUrl, shouldRefreshProfileImage } from '@/src/features/profile/photo/profileImageUrl';
+import { refreshRecommendationPhoto } from '@/src/features/home/refreshRecommendationPhoto';
+import { queryClient } from '@/src/services/queryClient';
 import { getErrorCode, getErrorDisplayMessage } from '@/src/utils/apiErrorCode';
 import { formatRegion } from '@/src/utils/formatRegion';
 import { VoicePreviewPlayer } from '@/src/features/profile/components/VoicePreviewPlayer';
@@ -19,7 +23,7 @@ import { DetailPhotoOverlay } from '@/src/features/profile/photo/ProfilePhotoOve
 import { PROFILE_PHOTO_ASPECT, PROFILE_PHOTO_MAX_WIDTH } from '@/src/features/profile/photo/profilePhotoPresentation';
 import { getMockRecommendationDetail, isMockRecommendationUuid } from './mockRecommendations';
 import type { Recommendation, RecommendationDetailResult } from '@/src/types/api/home';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Animated,
@@ -71,6 +75,22 @@ export default function PartnerProfileModal({ match, onClose, onDismiss, onStart
   const [previewFailed, setPreviewFailed] = useState(false);
   const [imageAttempt, setImageAttempt] = useState(0);
   const imageIdentity = useRef('');
+  const autoRecovery = useRef<{ userUuid: string; uri: string } | null>(null);
+  const photoRequests = useRef(new Map<string, Promise<void>>());
+  const [refreshingPhotoTarget, setRefreshingPhotoTarget] = useState<string | null>(null);
+  const mounted = useRef(true);
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+  const reloadRecommendationPhoto = useCallback((target: string) => {
+    const existing = photoRequests.current.get(target);
+    if (existing) return existing;
+    setRefreshingPhotoTarget(target);
+    const operation = refreshRecommendationPhoto(queryClient, target).finally(() => {
+      photoRequests.current.delete(target);
+      if (mounted.current) setRefreshingPhotoTarget(current => current === target ? null : current);
+    });
+    photoRequests.current.set(target, operation);
+    return operation;
+  }, []);
   // match가 null이 되어도 닫힘 애니메이션이 끝날 때까지 마지막 match를 계속 렌더링하기 위한 상태
   const [displayedMatch, setDisplayedMatch] = useState<Recommendation | null>(null);
   const [activeSheet, setActiveSheet] = useState<'call' | 'refill' | null>(null);
@@ -84,6 +104,7 @@ export default function PartnerProfileModal({ match, onClose, onDismiss, onStart
   // 목업 UUID는 백엔드 UUID가 아니며 실제 추천 노출 이력도 없다. 따라서 API 요청을 완전히
   // 건너뛰고, 실제 상세 API 응답과 같은 타입의 fixture로 UI를 렌더링한다.
   const displayedUserUuid = displayedMatch?.userUuid;
+  const cachedPhoto = useCachedRecommendationPhoto(ownPreview ? null : displayedUserUuid);
   const isMockMatch = isMockRecommendationUuid(displayedUserUuid);
   const mockDetail = getMockRecommendationDetail(displayedUserUuid);
   const {
@@ -94,8 +115,17 @@ export default function PartnerProfileModal({ match, onClose, onDismiss, onStart
     refetch: refetchDetail,
   } = useRecommendationDetailQuery(ownPreview || isMockMatch ? null : (displayedUserUuid ?? null));
   const detail = ownPreview ? previewDetail : (mockDetail ?? apiDetail);
+  const availablePhoto = detail
+    ? selectProfileImageUrl(detail.profileImageUrl, cachedPhoto === undefined ? displayedMatch?.profileImageUrl : cachedPhoto)
+    : null;
+  useEffect(() => {
+    if (ownPreview || isMockMatch || source !== 'recommendation' || isDetailError || isDetailFetching || !displayedUserUuid || !availablePhoto || !shouldRefreshProfileImage(availablePhoto)) return;
+    if (autoRecovery.current?.userUuid === displayedUserUuid && sameProfileImageObject(autoRecovery.current.uri, availablePhoto)) return;
+    autoRecovery.current = { userUuid: displayedUserUuid, uri: availablePhoto };
+    void reloadRecommendationPhoto(displayedUserUuid).catch(() => {});
+  }, [availablePhoto, displayedUserUuid, isDetailError, isDetailFetching, isMockMatch, ownPreview, reloadRecommendationPhoto, source]);
 
-  useEffect(() => { setImageFailed(false); setPreviewFailed(false); }, [displayedMatch?.profileImageUrl, detail?.profileImageUrl, previewImageUri]);
+  useEffect(() => { setImageFailed(false); setPreviewFailed(false); }, [displayedMatch?.profileImageUrl, detail?.profileImageUrl, previewImageUri, cachedPhoto]);
 
   useEffect(() => {
     if (match) {
@@ -134,13 +164,18 @@ export default function PartnerProfileModal({ match, onClose, onDismiss, onStart
   // 단, 상세 API가 null을 명시한 필드는 목록의 오래된 값으로 되살리지 않고 빈 상태를 보여준다.
   const profileName = detail?.name ?? displayedMatch.name;
   const profileAge = detail ? detail.age : displayedMatch.age;
-  const profileImageUrl = detail ? detail.profileImageUrl : displayedMatch.profileImageUrl;
+  const listPhoto = cachedPhoto === undefined ? displayedMatch.profileImageUrl : cachedPhoto;
+  const profileImageUrl = detail
+    ? selectProfileImageUrl(detail.profileImageUrl, listPhoto)
+    : selectProfileImageUrl(listPhoto, displayedMatch.profileImageUrl);
   const photoUri = imageFailed && ownPreview && previewImageUri && !previewFailed ? previewImageUri : profileImageUrl;
   const imageKey = `${displayedUserUuid}:${photoUri}:${imageAttempt}`;
   imageIdentity.current = imageKey;
   const showPhoto = !!photoUri && (!imageFailed || photoUri === previewImageUri);
-  const refreshProfile = ownPreview ? onPreviewReload : isMockMatch ? undefined : () => refetchDetail({ throwOnError: true });
-  const refreshing = ownPreview ? isPreviewReloading : isDetailFetching;
+  const refreshProfile = ownPreview ? onPreviewReload : isMockMatch ? undefined
+    : source === 'recommendation' && detail ? () => reloadRecommendationPhoto(displayedMatch.userUuid)
+      : () => refetchDetail({ throwOnError: true });
+  const refreshing = ownPreview ? isPreviewReloading : isDetailFetching || refreshingPhotoTarget === displayedUserUuid;
   const retryPhoto = () => {
     setImageAttempt(value => value + 1);
     setImageFailed(false);

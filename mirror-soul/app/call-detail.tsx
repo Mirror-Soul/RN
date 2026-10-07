@@ -3,6 +3,7 @@ import CallDetailSummary from '@/src/components/home/history/detail/CallDetailSu
 import CallDetailHeader from '@/src/components/home/history/detail/CallDetailHeader';
 import { Colors, FontFamily, FontSize, FontWeight, Spacing } from '@/src/constants/theme';
 import { useCallDetail } from '@/src/features/history/hooks/useCallDetail';
+import { ProfileImageReloadContext } from '@/src/features/profile/photo/useRetryableProfileImage';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Keyboard, Linking, Modal, StyleSheet, View, Text, TouchableOpacity } from 'react-native';
@@ -269,7 +270,7 @@ export default function CallDetailScreen() {
   }
 
   return (
-    <View ref={rootRef} collapsable={false} style={[styles.container, { backgroundColor: colors.background.primary }]}>
+    <ProfileImageReloadContext.Provider value={refetch}><View ref={rootRef} collapsable={false} style={[styles.container, { backgroundColor: colors.background.primary }]}>
       <View style={[styles.contentWrapper, contentContainerStyle]} accessibilityElementsHidden={menuOpen} importantForAccessibility={menuOpen ? 'no-hide-descendants' : 'auto'}>
         <View style={{ paddingLeft: insets.left, paddingRight: insets.right }} onLayout={event => setHeaderBottom(event.nativeEvent.layout.height)}>
           <CallDetailHeader
@@ -305,7 +306,7 @@ export default function CallDetailScreen() {
           onClose={() => setActiveSheet(null)} onStart={handleStartCall} onRefill={() => setActiveSheet('refill')} />}
         {activeSheet === 'refill' && <TimeRefillBottomSheet embedded isOpen onClose={() => setActiveSheet(null)} />}
       </Modal>
-    </View>
+    </View></ProfileImageReloadContext.Provider>
   );
 }
 

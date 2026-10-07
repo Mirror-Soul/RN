@@ -2,10 +2,11 @@ import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
+import { darkTheme } from '@/src/constants/theme';
 
 interface CallScreenBackgroundProps {
   /** error면 시안/퍼플 대신 은은한 레드 톤으로 위험 신호를 겹친다 */
-  variant?: 'default' | 'error';
+  variant?: 'default' | 'error' | 'video';
   children: React.ReactNode;
 }
 
@@ -24,6 +25,7 @@ const hexToRgba = (hex: string, alpha: number) => {
  */
 export default function CallScreenBackground({ variant = 'default', children }: CallScreenBackgroundProps) {
   const { colors } = useThemeColors();
+  if (variant === 'video') return <View style={[styles.container, { backgroundColor: darkTheme.background.primary }]}>{children}</View>;
 
   const topGlow: [string, string, string] =
     variant === 'error'

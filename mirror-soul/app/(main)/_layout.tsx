@@ -6,6 +6,7 @@ import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { FloatingTabBarInsetContext } from '@/src/components/common/FloatingTabBarInsetContext';
+import { TabBarScrollProvider } from '@/src/components/common/TabBarScrollContext';
 
 /**
  * (main) 그룹 탭 레이아웃
@@ -16,7 +17,7 @@ export default function MainLayout() {
   const [tabBarInset, setTabBarInset] = useState(0);
 
   return (
-    <FloatingTabBarInsetContext.Provider value={tabBarInset}>
+    <TabBarScrollProvider><FloatingTabBarInsetContext.Provider value={tabBarInset}>
       <View style={[styles.container, { backgroundColor: colors.background.primary }]}>
         <Tabs
           initialRouteName="index"
@@ -32,11 +33,18 @@ export default function MainLayout() {
             return (
               <BottomNavbar
                 activeTab={activeTab}
+                activeRoute={routeName}
                 onObstructionHeightChange={setTabBarInset}
                 onTabPress={(tab) => {
-                  // TAB_TO_ROUTE 상수를 사용하여 이동할 라우트명을 결정
                   const destRoute = TAB_TO_ROUTE[tab];
-                  navigation.navigate(destRoute);
+                  const target = state.routes.find(route => route.name === destRoute);
+                  if (!target) return;
+                  const event = navigation.emit({ type: 'tabPress', target: target.key, canPreventDefault: true });
+                  if (state.routes[state.index].key !== target.key && !event.defaultPrevented) navigation.navigate(destRoute);
+                }}
+                onTabLongPress={tab => {
+                  const target = state.routes.find(route => route.name === TAB_TO_ROUTE[tab]);
+                  if (target) navigation.emit({ type: 'tabLongPress', target: target.key });
                 }}
               />
             );
@@ -54,7 +62,7 @@ export default function MainLayout() {
           <Tabs.Screen name="terms-policy" options={{ unmountOnBlur: true }} />
         </Tabs>
       </View>
-    </FloatingTabBarInsetContext.Provider>
+    </FloatingTabBarInsetContext.Provider></TabBarScrollProvider>
   );
 }
 

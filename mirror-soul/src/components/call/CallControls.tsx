@@ -1,198 +1,53 @@
-import { BlurView } from 'expo-blur';
-import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { ActivityIndicator, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { Colors, Radii, Spacing } from '@/src/constants/theme';
-import { useThemeColors } from '@/src/hooks/useThemeColors';
+import { ActivityIndicator, Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { Feather } from '@expo/vector-icons';
+import { BrowseText as Text } from '@/src/components/home/common/BrowseText';
+import { useCallAppearance } from './CallAppearance';
+import { Colors } from '@/src/constants/theme';
 import type { CallStatus } from '@/src/hooks/useAICallFlow';
 
-interface CallControlsProps {
-  callStatus: CallStatus;
-  onHangUp: () => void;
-  /** 아래 세 토글은 현재 레이아웃/자리표시자용 — 실제 오디오 라우팅/카메라 연동은 후속 작업 */
-  isMuted: boolean;
-  onToggleMute: () => void;
-  isSpeakerOn: boolean;
-  onToggleSpeaker: () => void;
-  isCameraOn: boolean;
-  onToggleCamera: () => void;
+interface Props {
+  callStatus: CallStatus; onHangUp: () => void; isMuted: boolean; onToggleMute: () => void;
+  isSpeakerOn: boolean; onToggleSpeaker: () => void; isCameraOn: boolean; onToggleCamera: () => void;
+  isCameraPending?: boolean; vertical?: boolean;
 }
-
-/**
- * 통화 제어 버튼 컴포넌트
- * - idle / initiating / joining / inviting: 로딩 표시 (연결 중 — idle은 화면 진입 즉시
- *   자동으로 통화가 걸리므로 사용자가 실제로 보는 경우는 아주 짧은 순간뿐이다)
- * - connected: 음소거/스피커/카메라 토글 + 빨간 종료 버튼
- * - ending: 비활성화 (종료 처리 중)
- */
-export default function CallControls({
-  callStatus,
-  onHangUp,
-  isMuted,
-  onToggleMute,
-  isSpeakerOn,
-  onToggleSpeaker,
-  isCameraOn,
-  onToggleCamera,
-}: CallControlsProps) {
-  const { colors, isDark } = useThemeColors();
-  const isConnected = callStatus === 'connected';
-  const isEnding = callStatus === 'ending' || callStatus === 'ended';
-  const isPending = !isConnected && !isEnding;
-  const blurTint = isDark ? 'dark' : 'light';
-  const blurIntensity = isDark ? 40 : 60;
-  const iconColor = colors.text.primary;
-
-  if (isPending) {
-    return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color={Colors.primary.electricCyan} />
-      </View>
-    );
-  }
-
-  return (
-    <View style={styles.container}>
-      <View style={styles.toggleRow}>
-        <BlurView
-          intensity={blurIntensity}
-          tint={blurTint}
-          style={[styles.toggleButton, { borderColor: colors.border.primary }, isMuted && styles.toggleButtonActiveBorder]}
-        >
-          <View
-            style={[styles.toggleButtonTint, { backgroundColor: colors.background.glass }, isMuted && styles.toggleButtonTintActive]}
-            pointerEvents="none"
-          />
-          <TouchableOpacity
-            style={styles.toggleButtonPressable}
-            onPress={onToggleMute}
-            disabled={isEnding}
-            activeOpacity={0.8}
-            accessibilityRole="button"
-            accessibilityLabel={isMuted ? '음소거 해제' : '음소거'}
-            accessibilityState={{ selected: isMuted }}
-          >
-            <Ionicons name={isMuted ? 'mic-off' : 'mic'} size={22} color={iconColor} />
-          </TouchableOpacity>
-        </BlurView>
-
-        <BlurView
-          intensity={blurIntensity}
-          tint={blurTint}
-          style={[styles.toggleButton, { borderColor: colors.border.primary }, isSpeakerOn && styles.toggleButtonActiveBorder]}
-        >
-          <View
-            style={[
-              styles.toggleButtonTint,
-              { backgroundColor: colors.background.glass },
-              isSpeakerOn && styles.toggleButtonTintActive,
-            ]}
-            pointerEvents="none"
-          />
-          <TouchableOpacity
-            style={styles.toggleButtonPressable}
-            onPress={onToggleSpeaker}
-            disabled={isEnding}
-            activeOpacity={0.8}
-            accessibilityRole="button"
-            accessibilityLabel={isSpeakerOn ? '자동 출력으로 전환 (이어폰 우선)' : '스피커로 통화'}
-            accessibilityState={{ selected: isSpeakerOn }}
-          >
-            <Ionicons name={isSpeakerOn ? 'volume-high' : 'headset-outline'} size={22} color={iconColor} />
-          </TouchableOpacity>
-        </BlurView>
-
-        <BlurView
-          intensity={blurIntensity}
-          tint={blurTint}
-          style={[styles.toggleButton, { borderColor: colors.border.primary }, !isCameraOn && styles.toggleButtonActiveBorder]}
-        >
-          <View
-            style={[
-              styles.toggleButtonTint,
-              { backgroundColor: colors.background.glass },
-              !isCameraOn && styles.toggleButtonTintActive,
-            ]}
-            pointerEvents="none"
-          />
-          <TouchableOpacity
-            style={styles.toggleButtonPressable}
-            onPress={onToggleCamera}
-            disabled={isEnding}
-            activeOpacity={0.8}
-            accessibilityRole="button"
-            accessibilityLabel={isCameraOn ? '카메라 끄기' : '카메라 켜기'}
-            accessibilityState={{ selected: !isCameraOn }}
-          >
-            <Ionicons name={isCameraOn ? 'videocam' : 'videocam-off'} size={22} color={iconColor} />
-          </TouchableOpacity>
-        </BlurView>
-      </View>
-
-      <TouchableOpacity
-        style={[styles.endButton, isEnding && styles.disabledButton]}
-        onPress={onHangUp}
-        disabled={isEnding}
-        activeOpacity={0.8}
-        accessibilityRole="button"
-        accessibilityLabel="통화 종료"
-        accessibilityHint="진행 중인 통화를 종료합니다."
-        accessibilityState={{ disabled: isEnding }}
-      >
-        <View style={styles.endIcon} />
-      </TouchableOpacity>
-    </View>
-  );
+export default function CallControls({ callStatus, onHangUp, isMuted, onToggleMute, isSpeakerOn, onToggleSpeaker, isCameraOn, onToggleCamera, isCameraPending = false, vertical = false }: Props) {
+  const { colors, palette } = useCallAppearance();
+  const { width } = useWindowDimensions();
+  const [measuredWidth, setMeasuredWidth] = React.useState(width - 24);
+  const grid = vertical || measuredWidth < 260;
+  const enabled = callStatus === 'connected';
+  const ending = callStatus === 'ending' || callStatus === 'ended';
+  const controls: { label: string; accessibility: string; icon: React.ComponentProps<typeof Feather>['name']; selected: boolean; action: () => void; danger?: boolean; busy?: boolean }[] = [
+    { label: '마이크', accessibility: isMuted ? '마이크 켜기' : '마이크 끄기', icon: isMuted ? 'mic-off' : 'mic', selected: isMuted, action: onToggleMute },
+    { label: '소리', accessibility: isSpeakerOn ? '자동 출력으로 전환, 이어폰 우선' : '스피커로 전환', icon: isSpeakerOn ? 'volume-2' : 'headphones', selected: isSpeakerOn, action: onToggleSpeaker },
+    { label: '내 모습', accessibility: isCameraOn ? '내 모습 확인 끄기' : '내 모습 확인 켜기', icon: isCameraOn ? 'video' : 'video-off', selected: isCameraOn, action: onToggleCamera, busy: isCameraPending },
+    { label: '종료', accessibility: '통화 종료', icon: 'phone-off', selected: false, action: onHangUp, danger: true },
+  ];
+  return <View style={styles.container} onLayout={event => setMeasuredWidth(event.nativeEvent.layout.width)}>
+    <View testID="call-control-grid" style={[styles.row, grid && styles.grid]}>{controls.map(control => {
+      const disabled = control.danger ? ending : !enabled || !!control.busy;
+      return <Pressable key={control.label} onPress={control.action} disabled={disabled} accessibilityRole="button" accessibilityLabel={control.accessibility}
+        accessibilityHint={control.label === '내 모습' ? '이 기기에서만 보이고 AI에게 전송되지 않아요.' : undefined}
+        accessibilityState={{ disabled, selected: control.selected, busy: !!control.busy }}
+        style={({ pressed }) => [styles.control, grid && styles.gridItem, { opacity: disabled ? 0.45 : pressed ? 0.7 : 1 }]}>
+        <View style={[styles.circle, { backgroundColor: control.danger ? Colors.primary.recordingRed : control.selected ? palette.tint : colors.background.glass, borderColor: control.danger ? Colors.primary.recordingRed : control.selected ? palette.softBorder : colors.border.primary }]}>
+          {control.busy ? <ActivityIndicator color={colors.text.primary} /> : <Feather name={control.icon} size={22} color={control.danger ? Colors.neutral.pureWhite : colors.text.primary} />}
+        </View><Text style={[styles.label, { color: colors.text.secondary }]}>{control.label}</Text>
+      </Pressable>;
+    })}</View>
+    {isCameraOn && <Text style={[styles.note, { color: colors.text.secondary }]}>내 모습은 나에게만 보여요</Text>}
+    {!ending && <Text style={[styles.note, { color: colors.text.secondary }]}>{isSpeakerOn ? '스피커 출력' : '자동 출력 · 이어폰 우선'}</Text>}
+    {ending && <Text style={[styles.note, { color: colors.text.secondary }]}>소리와 영상은 껐어요. 종료를 확인하고 있어요.</Text>}
+  </View>;
 }
-
 const styles = StyleSheet.create({
-  container: {
-    alignItems: 'center',
-    gap: Spacing.xxl,
-    paddingBottom: Spacing.massive,
-  },
-  toggleRow: {
-    flexDirection: 'row',
-    gap: Spacing.xl,
-  },
-  toggleButton: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    overflow: 'hidden',
-    borderWidth: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  toggleButtonActiveBorder: {
-    borderColor: Colors.glass.cyan30_d3,
-  },
-  toggleButtonTint: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  toggleButtonTintActive: {
-    backgroundColor: Colors.glass.purple20,
-  },
-  toggleButtonPressable: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  endButton: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: Colors.primary.recordingRed,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  disabledButton: {
-    opacity: 0.5,
-  },
-  endIcon: {
-    width: 28,
-    height: 6,
-    borderRadius: Radii.sm,
-    backgroundColor: Colors.neutral.pureWhite,
-  },
+  container: { padding: 12, gap: 8 },
+  row: { flexDirection: 'row', alignItems: 'flex-start', gap: 6 },
+  grid: { flexWrap: 'wrap', rowGap: 14 },
+  control: { flex: 1, minWidth: 0, minHeight: 48, alignItems: 'center', gap: 7 },
+  gridItem: { flex: 0, flexGrow: 1, flexBasis: '44%' },
+  circle: { width: 48, height: 48, borderRadius: 18, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
+  label: { alignSelf: 'stretch', fontSize: 12, lineHeight: 18, textAlign: 'center' },
+  note: { fontSize: 11, lineHeight: 18, textAlign: 'center' },
 });

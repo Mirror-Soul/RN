@@ -16,10 +16,11 @@ import { TimeRefillBottomSheet } from '@/src/features/profile/components/TimeRef
 import { usePreferredRegionQuery } from '@/src/features/home/hooks/usePreferredRegionQuery';
 import type { Recommendation } from '@/src/types/api/home';
 import { logger } from '@/src/utils/logger';
-import React, { useCallback, useContext, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { FloatingTabBarInsetContext } from '@/src/components/common/FloatingTabBarInsetContext';
+import { useMainTabBottomPadding } from '@/src/hooks/useMainTabBottomPadding';
+import { useMainTabScroll } from '@/src/hooks/useMainTabScroll';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { router } from 'expo-router';
 
@@ -34,7 +35,8 @@ import { router } from 'expo-router';
  */
 export default function MainHomeScreen() {
   const insets = useSafeAreaInsets();
-  const tabBarInset = useContext(FloatingTabBarInsetContext);
+  const bottomPadding = useMainTabBottomPadding();
+  const scrollCallbacks = useMainTabScroll('index');
   const { colors } = useThemeColors();
   const { contentContainerStyle, screenPadding } = useLayout();
 
@@ -133,6 +135,7 @@ export default function MainHomeScreen() {
 
   return (
     <ScrollView
+      {...scrollCallbacks}
       style={[
         styles.scrollView,
         { backgroundColor: colors.background.primary },
@@ -140,10 +143,7 @@ export default function MainHomeScreen() {
       contentContainerStyle={[
         styles.scrollContent,
         {
-          paddingBottom: Math.max(
-            insets.bottom + Layout.MAIN_TAB_CONTENTS_BOTTOM_PADDING,
-            tabBarInset + Spacing.lg,
-          ),
+          paddingBottom: bottomPadding,
         },
       ]}
       showsVerticalScrollIndicator={false}

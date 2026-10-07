@@ -1,5 +1,5 @@
 import React from 'react';
-import { fireEvent, render, within, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, render, within, waitFor } from '@testing-library/react-native';
 import * as RN from 'react-native';
 import { DetailPhotoOverlay } from '@/src/features/profile/photo/ProfilePhotoOverlays';
 import { PROFILE_PHOTO_ASPECT } from '@/src/features/profile/photo/profilePhotoPresentation';
@@ -7,12 +7,14 @@ import PartnerProfileModal from './PartnerProfileModal';
 import { MOCK_RECOMMENDATIONS } from './mockRecommendations';
 import { introductionPreview } from '@/src/features/profile/constants/introductionPreview';
 import type { RecommendationDetailResult } from '@/src/types/api/home';
+import { queryClient } from '@/src/services/queryClient';
 
 let mockDetail: RecommendationDetailResult | undefined;
 let mockError: unknown;
 let mockRemainingTime = 180;
 let mockDimensions = { width: 393, height: 852, fontScale: 1, scale: 3 };
 const mockRefetchTime = jest.fn().mockResolvedValue({});
+jest.mock('@/src/features/home/refreshRecommendationPhoto', () => ({ refreshRecommendationPhoto: jest.fn().mockResolvedValue(undefined) }));
 jest.mock('react-native/Libraries/Utilities/useWindowDimensions', () => ({ __esModule: true, default: () => mockDimensions }));
 jest.mock('@/src/features/profile/hooks/useTimeStatusQuery', () => ({
   useTimeStatusQuery: () => ({ data: { remainingTalkTime: mockRemainingTime }, isFetching: false, isError: false, refetch: mockRefetchTime }),
@@ -54,7 +56,31 @@ beforeEach(() => {
   mockRemainingTime = 180;
   mockDimensions = { width: 393, height: 852, fontScale: 1, scale: 3 };
 });
-afterEach(() => jest.restoreAllMocks());
+afterEach(() => { jest.restoreAllMocks(); queryClient.clear(); });
+
+it('keeps the signed recommendation photo when the detail response still returns its raw S3 URL', async () => {
+  const raw = 'https://bucket.s3.ap-northeast-2.amazonaws.com/profile-images/photo.jpg';
+  const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z');
+  const signed = `${raw}?X-Amz-Date=${stamp}&X-Amz-Expires=300&X-Amz-Signature=test`;
+  mockDetail = { ...mockDetail!, profileImageUrl: raw };
+  const snapshot = { ...profile, profileImageUrl: signed };
+  const screen = render(<PartnerProfileModal match={snapshot} onClose={jest.fn()} />);
+  await waitFor(() => expect(screen.UNSAFE_getByType(RN.Image).props.source.uri).toBe(signed));
+  const updated = `${signed}2`;
+  act(() => queryClient.setQueryData(['home', 'recommendations'], { pages: [{ recommendations: [{ ...snapshot, profileImageUrl: updated }] }], pageParams: [0] }));
+  await waitFor(() => expect(screen.UNSAFE_getByType(RN.Image).props.source.uri).toBe(updated));
+});
+
+it('does not revive a deleted detail photo from a signed list cache', async () => {
+  const raw = 'https://bucket.s3.ap-northeast-2.amazonaws.com/profile-images/photo.jpg';
+  const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z');
+  const signed = `${raw}?X-Amz-Date=${stamp}&X-Amz-Expires=300&X-Amz-Signature=test`;
+  mockDetail = { ...mockDetail!, profileImageUrl: null };
+  queryClient.setQueryData(['home', 'recommendations'], { pages: [{ recommendations: [{ ...profile, profileImageUrl: signed }] }], pageParams: [0] });
+  const screen = render(<PartnerProfileModal match={{ ...profile, profileImageUrl: signed }} onClose={jest.fn()} />);
+  await screen.findByText('프로필 사진은 아직 등록하지 않았어요.');
+  expect(screen.UNSAFE_queryByType(RN.Image)).toBeNull();
+});
 
 it('uses the latest detail fields and opens confirmation before starting a call', async () => {
   const onStartCall = jest.fn();

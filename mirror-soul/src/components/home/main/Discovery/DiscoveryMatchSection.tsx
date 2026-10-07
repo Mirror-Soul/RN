@@ -29,6 +29,8 @@ import { useRefreshCooldown } from './useRefreshCooldown';
 import AiStatusTicker from '../AiStatusTicker';
 import { useMatchingDesign } from '@/src/features/match/components/MatchingDesign';
 import { BrowseText as Text } from '@/src/components/home/common/BrowseText';
+import { queryClient } from '@/src/services/queryClient';
+import { refreshRecommendationPhoto } from '@/src/features/home/refreshRecommendationPhoto';
 
 interface DiscoveryMatchSectionProps {
   onPass?: (userUuid: string) => void;
@@ -347,6 +349,7 @@ export default function DiscoveryMatchSection({
             canGoBack={currentIndex > 0}
             onConnect={() => onConnect?.(currentMatch)}
             translateX={translateX}
+            onReloadPhoto={usingMockData ? undefined : () => refreshRecommendationPhoto(queryClient, currentMatch.userUuid)}
           />
         </Animated.View>
       </View>

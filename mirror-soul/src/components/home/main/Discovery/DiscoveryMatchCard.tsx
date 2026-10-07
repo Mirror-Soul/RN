@@ -46,6 +46,7 @@ interface DiscoveryMatchCardProps {
   onConnect: () => void;
   /** 부모가 보관하고, 버튼으로 후보가 바뀔 때도 드래그 위치를 초기화한다. */
   translateX: SharedValue<number>;
+  onReloadPhoto?: () => Promise<unknown>;
 }
 
 /**
@@ -63,6 +64,7 @@ export default function DiscoveryMatchCard({
   canGoBack,
   onConnect,
   translateX,
+  onReloadPhoto,
 }: DiscoveryMatchCardProps) {
   const { colors } = useThemeColors();
   const { width } = useWindowDimensions();
@@ -158,6 +160,7 @@ export default function DiscoveryMatchCard({
             onPhotoPress={() => setIsLightboxVisible(true)}
             onContentPress={() => onOpenDetail?.(match)}
             onConnectPress={onConnect}
+            onReloadPhoto={onReloadPhoto}
           />
         </Animated.View>
       </GestureDetector>
@@ -165,6 +168,7 @@ export default function DiscoveryMatchCard({
       <PhotoLightbox
         visible={isLightboxVisible}
         imageUrl={match.profileImageUrl ?? ''}
+        onReload={onReloadPhoto}
         onClose={() => setIsLightboxVisible(false)}
       />
     </>

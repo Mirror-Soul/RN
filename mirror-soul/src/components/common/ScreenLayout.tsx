@@ -5,6 +5,8 @@ import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { useLayout } from '@/src/hooks/useLayout';
 import { Spacing } from '@/src/constants/theme';
 import { FloatingTabBarInsetContext } from './FloatingTabBarInsetContext';
+import { useMainTabScroll } from '@/src/hooks/useMainTabScroll';
+import { useMainTabBottomPadding } from '@/src/hooks/useMainTabBottomPadding';
 
 interface ScreenLayoutProps {
   children: React.ReactNode;
@@ -15,6 +17,8 @@ interface ScreenLayoutProps {
   paddingBottomOffset?: number;
   /** 히어로 배경처럼 화면 끝까지 닿아야 하는 화면은 false로 캡을 끌 것. 기본은 켜짐. */
   centerContent?: boolean;
+  /** Primary tab scroll only; settings/editor scrolls do not hide navigation. */
+  mainTabScrollRoute?: string;
 }
 
 export const ScreenLayout = ({
@@ -24,21 +28,25 @@ export const ScreenLayout = ({
   contentContainerStyle,
   paddingBottomOffset = 40,
   centerContent = true,
+  mainTabScrollRoute,
 }: ScreenLayoutProps) => {
   const insets = useSafeAreaInsets();
   const { colors } = useThemeColors();
   const { contentContainerStyle: responsiveStyle } = useLayout();
   const tabBarInset = useContext(FloatingTabBarInsetContext);
+  const mainTabPadding = useMainTabBottomPadding();
+  const scrollCallbacks = useMainTabScroll(mainTabScrollRoute ?? '', !!mainTabScrollRoute);
 
-  // 기존 화면의 더 넓은 여백은 유지하며, 실측 탭바 높이를 최소 여백으로 보장한다.
-  // tabBarInset은 이미 안전 영역을 포함하므로 insets.bottom을 중복해서 더하지 않는다.
-  const bottomPadding = Math.max(insets.bottom + paddingBottomOffset, tabBarInset > 0 ? tabBarInset + Spacing.lg : 0);
+  // Primary tabs share the measured reserve; settings keep their requested larger padding.
+  // tabBarInset already includes the safe area, so never add it a second time.
+  const bottomPadding = mainTabScrollRoute ? mainTabPadding : Math.max(insets.bottom + paddingBottomOffset, tabBarInset > 0 ? tabBarInset + Spacing.lg : 0);
   const contentWrapperStyle = centerContent ? responsiveStyle : undefined;
 
   if (withScroll) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background.primary }, style]}>
         <ScrollView
+          {...(mainTabScrollRoute ? scrollCallbacks : {})}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomPadding }, contentContainerStyle]}
         >

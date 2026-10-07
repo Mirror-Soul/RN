@@ -107,7 +107,7 @@ export const ProfileScreen = () => {
 
   return (
     <>
-      <ScreenLayout withScroll={true} paddingBottomOffset={112}>
+      <ScreenLayout withScroll={true} mainTabScrollRoute="profile">
         <View style={[styles.content, { paddingTop: mainTabTopPadding(insets.top) }]}>
           <Animated.View entering={FadeInDown.duration(360)} style={styles.topBar}>
             <MainTabHeader title="프로필" description="내 프로필과 남은 통화 시간, 설정을 관리해요." />

@@ -18,9 +18,11 @@ export default function TwinSimulationCard({ isReady, isLoading, isError, onRetr
   const [sheet, setSheet] = useState<{ kind: 'call' | 'refill'; owner: string } | null>(null);
   const focused = useRef(true);
   const pendingOwner = useRef<string | null>(null);
+  const pendingTime = useRef<number | null>(null);
   const navigationTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const clearNavigation = useCallback(() => {
     pendingOwner.current = null;
+    pendingTime.current = null;
     if (navigationTimer.current) clearTimeout(navigationTimer.current);
     navigationTimer.current = null;
   }, []);
@@ -33,18 +35,22 @@ export default function TwinSimulationCard({ isReady, isLoading, isError, onRetr
   useEffect(() => { if (!valid) { clearNavigation(); setSheet(null); } }, [valid, clearNavigation]);
   const finishNavigation = () => {
     const owner = pendingOwner.current;
+    const time = pendingTime.current;
     pendingOwner.current = null;
+    pendingTime.current = null;
     const session = useAuthStore.getState();
-    if (owner && focused.current && session.isLoggedIn && session.userUuid === owner && valid) router.push('/ai-call');
+    if (owner && time != null && focused.current && session.isLoggedIn && session.userUuid === owner && valid) router.push({ pathname: '/ai-call', params: { targetName: '내 트윈', remainingSeconds: String(time) } });
   };
   const open = () => {
     if (!valid || !userUuid || pendingOwner.current || !focused.current) return;
     setSheet({ kind: 'call', owner: userUuid });
   };
-  const start = () => {
+  const start = (_target: { userUuid: string }, _preview: boolean, remainingSeconds?: number) => {
     const session = useAuthStore.getState();
+    if (remainingSeconds == null || !Number.isFinite(remainingSeconds) || remainingSeconds <= 0) return;
     if (!sheet || !valid || pendingOwner.current || !focused.current || !session.isLoggedIn || session.userUuid !== sheet.owner) return;
     pendingOwner.current = sheet.owner;
+    pendingTime.current = remainingSeconds;
     setSheet(null);
     // iOS must release the native Modal before opening the full-screen call route.
     if (Platform.OS !== 'ios') navigationTimer.current = setTimeout(finishNavigation, 0);

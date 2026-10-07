@@ -14,7 +14,8 @@ export const useProfileQuery = () => {
       if (!session.isLoggedIn || !userUuid || session.userUuid !== userUuid) throw new Error('다시 로그인해 주세요.');
       return (await getMyProfile(signal)).result;
     },
-    staleTime: 60_000,
+    // The server now returns expiring download URLs, so remounts need a fresh response.
+    staleTime: 0,
     enabled: isLoggedIn && !!userUuid,
   });
 };
