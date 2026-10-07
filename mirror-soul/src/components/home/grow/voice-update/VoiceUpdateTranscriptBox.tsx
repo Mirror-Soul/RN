@@ -1,11 +1,14 @@
-import {Colors, Radii, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
+import {Colors, Radii, FontSize, FontWeight} from '@/src/constants/theme';
 import React, { useEffect, useRef } from 'react';
-import { Animated, StyleSheet, Text, View } from 'react-native';
+import { BrowseText as Text } from '@/src/components/home/common/BrowseText';
+import { Animated, StyleSheet, View } from 'react-native';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
+import { MIN_READING_SIMILARITY } from './readingSimilarity';
 
 interface VoiceUpdateTranscriptBoxProps {
   transcript: string;
   isRecording: boolean;
+  similarity?: number;
 }
 
 /**
@@ -15,9 +18,11 @@ interface VoiceUpdateTranscriptBoxProps {
 export default function VoiceUpdateTranscriptBox({
   transcript,
   isRecording,
+  similarity,
 }: VoiceUpdateTranscriptBoxProps) {
   const blinkAnim = useRef(new Animated.Value(0.8)).current;
   const { colors } = useThemeColors();
+  const belowThreshold = similarity !== undefined && similarity < MIN_READING_SIMILARITY;
 
   useEffect(() => {
     let animation: Animated.CompositeAnimation | null = null;
@@ -45,7 +50,7 @@ export default function VoiceUpdateTranscriptBox({
     return () => {
       if (animation) animation.stop();
     };
-  }, [isRecording]);
+  }, [isRecording, blinkAnim]);
 
   return (
     <View style={[styles.container, { borderColor: colors.border.primary, backgroundColor: colors.background.card }]}>
@@ -53,20 +58,24 @@ export default function VoiceUpdateTranscriptBox({
         {isRecording && (
           <View style={styles.recordingIndicator}>
             <Animated.View style={[styles.redDot, { opacity: blinkAnim }]} />
-            <Text style={styles.recordingText}>실시간 음성 인식 중 ...</Text>
+            <Text style={styles.recordingText}>말한 내용을 받아 적고 있어요</Text>
           </View>
         )}
+        {!isRecording && <Text style={[styles.recordingText, { color: colors.text.secondary }]}>인식된 문장</Text>}
       </View>
-
       <View style={styles.content}>
         {transcript ? (
           <Text style={[styles.transcriptText, { color: colors.text.primary }]}>{transcript}</Text>
         ) : (
           <Text style={[styles.placeholderText, { color: colors.text.secondary }]}>
-            {isRecording ? '말씀해 주세요...' : '녹음 버튼을 눌러 문장을 읽어주세요'}
+            {isRecording ? '위 문장을 읽으면 여기에 보여요.' : '녹음한 내용이 여기에 보여요.'}
           </Text>
         )}
       </View>
+      {!isRecording && similarity !== undefined && <View style={styles.feedback} accessibilityLiveRegion="polite">
+        <Text style={[styles.matchText, { color: belowThreshold ? colors.state.danger : colors.text.secondary }]}>문장 일치도 {Math.floor(similarity * 100)}% · {Math.round(MIN_READING_SIMILARITY * 100)}% 이상 필요</Text>
+        {belowThreshold && <Text style={[styles.matchHint, { color: colors.text.secondary }]}>녹음은 보내지 않았어요. 조용한 곳에서 위 문장을 끝까지 다시 읽어주세요.</Text>}
+      </View>}
     </View>
   );
 }
@@ -74,14 +83,13 @@ export default function VoiceUpdateTranscriptBox({
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    minHeight: 120,
-    padding: Spacing.xl,
+    padding: 14,
     borderRadius: Radii.lg2,
     borderWidth: 0.612,
-    gap: Spacing.md,
+    gap: 8,
   },
   header: {
-    height: 20,
+    minHeight: 20,
     justifyContent: 'center',
   },
   recordingIndicator: {
@@ -99,23 +107,25 @@ const styles = StyleSheet.create({
     color: Colors.primary.activeRedText,
     fontSize: FontSize.sm,
     fontWeight: FontWeight.medium,
-    lineHeight: 16,
+    lineHeight: 21,
+    flexShrink: 1,
   },
   content: {
-    flex: 1,
     justifyContent: 'center',
   },
   transcriptText: {
     fontSize: FontSize.lg,
     fontWeight: FontWeight.regular,
     lineHeight: 24,
-    textAlign: 'center',
+    textAlign: 'left',
   },
   placeholderText: {
     fontSize: FontSize.md,
-    fontStyle: 'italic',
     fontWeight: FontWeight.regular,
     lineHeight: 24,
-    textAlign: 'center',
+    textAlign: 'left',
   },
+  feedback: { gap: 4 },
+  matchText: { fontSize: 13, lineHeight: 20, fontWeight: '500' },
+  matchHint: { fontSize: 13, lineHeight: 20 },
 });

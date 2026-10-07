@@ -1,81 +1,28 @@
-import { Colors, FontFamily, FontSize, FontWeight, Spacing } from '@/src/constants/theme';
-import { useRotatingMessages } from '@/src/hooks/useRotatingMessages';
 import React from 'react';
-import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet } from 'react-native';
+import { BrowseText as Text } from '@/src/components/home/common/BrowseText';
+import { FontFamily, FontSize, FontWeight } from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 
-const SEARCHING_MESSAGES = [
-  '가장 잘 어울리는 소울을 탐색 중입니다...',
-  '관심사 데이터를 분석 중입니다...',
-  '음악 취향 공명 대상 발견',
-  '최적의 매칭 확률 계산 중...',
-  '새로운 페르소나를 확인했습니다',
-];
-
-const PAUSED_MESSAGES = ['매칭이 중단되어 있어요. 다시 시작하면 탐색을 재개합니다.'];
-
-const ERROR_MESSAGES = ['매칭 상태를 불러오지 못했어요. 잠시 후 다시 시도해주세요.'];
-
-const ROTATE_INTERVAL_MS = 4000;
-
-interface AiStatusTickerProps {
-  /** null이면 매칭 상태 조회 전(또는 조회 실패) — isError가 없으면 이 경우도 탐색 중 문구를 기본값으로 보여준다. */
-  isMatchingEnabled?: boolean | null;
-  /** true면 매칭 상태 조회 자체가 실패한 것 — isMatchingEnabled의 null과 구분해 탐색 중으로 오인하지 않게 한다. */
-  isError?: boolean;
-}
-
-/**
- * AiStatusTicker 컴포넌트 (SRP)
- * AI 분석 상태 문구를 점 인디케이터와 함께 순환 표시합니다.
- * 매칭이 꺼져 있으면 탐색 문구 대신 중단 안내로, 상태 조회가 실패했으면 에러 안내로
- * 전환해 실제 상태와 모순되지 않게 한다.
- */
-export default function AiStatusTicker({ isMatchingEnabled, isError }: AiStatusTickerProps) {
+/** matchingEnabled controls recommendation exposure, not an AI analysis job or browsing. */
+export default function AiStatusTicker() {
   const { colors } = useThemeColors();
-  const isPaused = isMatchingEnabled === false;
-  const messages = isError ? ERROR_MESSAGES : isPaused ? PAUSED_MESSAGES : SEARCHING_MESSAGES;
-  const message = useRotatingMessages(messages, ROTATE_INTERVAL_MS);
-
   return (
-    <View style={styles.container}>
-      <View style={[styles.dot, (isPaused || isError) && styles.dotPaused]} />
-      <Animated.View key={message} entering={FadeIn.duration(200)} exiting={FadeOut.duration(150)} style={styles.messageWrapper}>
-        <Text numberOfLines={1} ellipsizeMode="tail" style={[styles.text, { color: colors.text.muted }]}>
-          {message}
-        </Text>
-      </Animated.View>
-    </View>
+    <Text
+      variant="heading"
+      accessibilityRole="header"
+      style={[styles.title, { color: colors.text.primary }]}
+    >
+      추천 프로필
+    </Text>
   );
 }
-
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    paddingHorizontal: Spacing.xxs,
-    minWidth: 0,
-  },
-  dot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: Colors.primary.electricCyan,
-  },
-  dotPaused: {
-    backgroundColor: Colors.neutral.darkGray,
-  },
-  messageWrapper: {
-    flexShrink: 1,
-  },
-  text: {
+  title: {
     flexShrink: 1,
     fontFamily: FontFamily.sans,
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.bold,
-    letterSpacing: -0.13,
+    fontSize: FontSize.xl,
+    fontWeight: FontWeight.semibold,
+    lineHeight: 26,
   },
 });

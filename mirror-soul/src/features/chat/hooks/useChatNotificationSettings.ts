@@ -17,7 +17,7 @@ export const useChatNotificationSettings = (roomId: number, isActive = true) => 
     },
     enabled: isActive && isLoggedIn && !!userUuid,
   });
-  const mutation = useChatNotificationMutation();
+  const mutation = useChatNotificationMutation(false);
   return {
     enabled: query.data?.enabled ?? null,
     handleToggle: () => { if (isActive && query.data) mutation.change(roomId, !query.data.enabled, userUuid); },

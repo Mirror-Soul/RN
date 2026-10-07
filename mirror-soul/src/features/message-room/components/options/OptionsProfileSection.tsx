@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
+import { useRetryableProfileImage } from '@/src/features/profile/photo/useRetryableProfileImage';
 import { Pressable, View, Text, StyleSheet } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -15,8 +16,7 @@ interface OptionsProfileSectionProps {
 /** 채팅방 목록의 요약 정보와 추천 상세 API 진입점을 함께 제공한다. */
 export function OptionsProfileSection({ room, onPress }: OptionsProfileSectionProps) {
   const { partner } = room;
-  const [imageFailed, setImageFailed] = useState(false);
-  useEffect(() => { setImageFailed(false); }, [partner.profileImageUrl]);
+  const photo = useRetryableProfileImage(partner.profileImageUrl);
   const { colors } = useThemeColors();
 
   return (
@@ -30,15 +30,19 @@ export function OptionsProfileSection({ room, onPress }: OptionsProfileSectionPr
       accessibilityLabel={`${partner.name} 상세 프로필 보기`}
     >
       <View style={styles.profileTopRow}>
-        {!imageFailed && partner.profileImageUrl ? (
+        {!photo.failed && partner.profileImageUrl ? (
           <Image
+            key={photo.imageKey}
             source={{ uri: partner.profileImageUrl }}
             style={styles.largeAvatar}
             contentFit="cover"
             cachePolicy="disk"
             transition={150}
-            onError={() => setImageFailed(true)}
+            onError={photo.onError}
           />
+        ) : photo.failed ? (
+          <Pressable style={styles.largeAvatar} accessibilityRole="button" accessibilityLabel={`${partner.name} 프로필 사진 다시 불러오기`}
+            disabled={photo.isReloading} onPress={() => { void photo.retry(); }}><Feather name="refresh-cw" size={20} color={colors.text.secondary} /></Pressable>
         ) : (
           <LinearGradient
             colors={Colors.gradient.voiceStart}

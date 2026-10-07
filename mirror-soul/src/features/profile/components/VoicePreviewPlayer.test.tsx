@@ -68,3 +68,24 @@ it('stops on backgrounding and tolerates an already released player when the URL
   expect(() => screen.rerender(<VoicePreviewPlayer voicePreview={{ ...voicePreview, audioUrl: 'https://signed/new.mp3' }} />)).not.toThrow();
   expect(() => screen.unmount()).not.toThrow();
 });
+
+it('pauses for a call overlay and does not resume automatically when it closes', () => {
+  mockStatus = { ...mockStatus, playing: true };
+  const screen = render(<VoicePreviewPlayer voicePreview={voicePreview} />);
+  screen.rerender(<VoicePreviewPlayer voicePreview={voicePreview} suspended />);
+  expect(mockPlayer.pause).toHaveBeenCalledTimes(1);
+  expect(screen.getByLabelText('음성 미리듣기 일시정지')).toBeDisabled();
+  screen.rerender(<VoicePreviewPlayer voicePreview={voicePreview} />);
+  expect(mockPlayer.play).not.toHaveBeenCalled();
+});
+
+it('does not start a pending playback after the call overlay opens', async () => {
+  const { setAudioModeAsync } = jest.requireMock('expo-audio');
+  let finish!: () => void;
+  setAudioModeAsync.mockImplementationOnce(() => new Promise<void>(resolve => { finish = resolve; }));
+  const screen = render(<VoicePreviewPlayer voicePreview={voicePreview} />);
+  fireEvent.press(screen.getByLabelText('음성 미리듣기 재생'));
+  screen.rerender(<VoicePreviewPlayer voicePreview={voicePreview} suspended />);
+  await act(async () => finish());
+  expect(mockPlayer.play).not.toHaveBeenCalled();
+});

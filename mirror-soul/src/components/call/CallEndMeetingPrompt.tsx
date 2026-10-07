@@ -17,6 +17,7 @@ interface CallEndMeetingPromptProps {
   completedCall: CompletedCall;
   endedByTimeLimit: boolean;
   onClose: () => void;
+  hasReceivedRequest?: boolean;
 }
 
 /**
@@ -30,6 +31,7 @@ export default function CallEndMeetingPrompt({
   completedCall,
   endedByTimeLimit,
   onClose,
+  hasReceivedRequest = false,
 }: CallEndMeetingPromptProps) {
   const insets = useSafeAreaInsets();
   const { colors } = useThemeColors();
@@ -58,6 +60,23 @@ export default function CallEndMeetingPrompt({
       setErrorMessage(getErrorDisplayMessage(error, '만남 신청을 보내지 못했어요. 잠시 후 다시 시도해주세요.'));
     }
   };
+
+  if (hasReceivedRequest) {
+    return (
+      <CallScreenBackground>
+        <ScrollView contentContainerStyle={[styles.container, { paddingTop: insets.top + Spacing.xxl, paddingBottom: insets.bottom + Spacing.xxl }]}>
+          <View style={styles.topSection}>
+            <Text style={[styles.title, { color: colors.text.primary }]}>트윈과 이야기를 나눴어요</Text>
+            <Text style={[styles.description, { color: colors.text.secondary }]}>{partnerName}님에게 이미 받은 신청이 있어요. 기존 신청에서 수락 여부를 정할 수 있어요.</Text>
+          </View>
+          <Text style={[styles.description, { color: colors.text.secondary }]}>정산 기준 시간 · {formatDurationLabel(completedCall.durationSec)}</Text>
+          <TouchableOpacity onPress={onClose} accessibilityRole="button" accessibilityLabel="받은 신청으로 돌아가기" style={[styles.secondaryButton, { borderColor: colors.border.strong, backgroundColor: colors.background.glass }]}>
+            <Text style={[styles.secondaryButtonText, { color: colors.text.primary }]}>받은 신청으로 돌아가기</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </CallScreenBackground>
+    );
+  }
 
   if (isSent) {
     return (
@@ -108,7 +127,7 @@ export default function CallEndMeetingPrompt({
 
           <View style={[styles.summaryCard, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
             <View>
-              <Text style={[styles.summaryLabel, { color: colors.text.muted }]}>함께 대화한 시간</Text>
+              <Text style={[styles.summaryLabel, { color: colors.text.muted }]}>정산 기준 시간</Text>
               <Text style={[styles.summaryValue, { color: colors.text.primary }]}>{formatDurationLabel(completedCall.durationSec)}</Text>
             </View>
             <View style={styles.summaryDivider} />

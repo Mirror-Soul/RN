@@ -1,167 +1,101 @@
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Alert, Keyboard, Platform, StyleSheet, View } from 'react-native';
+import { FlashList, type ListRenderItemInfo } from '@shopify/flash-list';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { BrowseText as Text } from '@/src/components/home/common/BrowseText';
+import { useMatchingDesign } from '@/src/features/match/components/MatchingDesign';
 import type { TalkLogResponse, TalkLogResult } from '@/src/types/api/history';
-import React, { useMemo, useRef, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import { FlashList, FlashListRef, ListRenderItemInfo } from '@shopify/flash-list';
 import ChatBubble from './parts/ChatBubble';
-import { Animation, FontFamily, FontSize, FontWeight, Spacing } from '@/src/constants/theme';
-import { useThemeColors } from '@/src/hooks/useThemeColors';
+import TalkLogEditor from './TalkLogEditor';
 
-interface CallDetailBodyProps {
+interface Props {
   talkLogs: TalkLogResult[];
   partnerName: string;
-  partnerProfileImageUrl?: string | null;
-  onSaveTalkLog: (talkLogId: number, message: string) => Promise<TalkLogResponse>;
+  onSaveTalkLog: (id: number, text: string) => Promise<TalkLogResponse>;
   isSaving: boolean;
+  onEditingChange?: (editing: boolean) => void;
+  summary?: React.ReactElement;
 }
+interface Item { log: TalkLogResult; hideSpeakerLabel: boolean }
+interface Draft { id: number; original: string; text: string }
 
-interface FlattenedTalkLog {
-  log: TalkLogResult;
-  hideAvatar: boolean;
-  enterDelay: number;
-}
-
-// FlashList는 스크롤 중 새 인덱스의 셀을 마운트하며 재사용한다 — 인덱스에 비례해 무제한으로
-// 커지는 딜레이를 주면, 리스트를 한참 내렸을 때 방금 화면에 들어온 말풍선이 그 큰 딜레이만큼
-// 빈 공간으로 있다가 뒤늦게 나타나는 것처럼 보인다. 초기 화면에 보이는 분량 정도로만 stagger를
-// 제한하고 그 이후는 즉시 렌더링한다.
-const STAGGER_ITEM_LIMIT = 12;
-
-/**
- * 통화 메시지 목록 렌더링 및 편집 트리거 (SRP)
- * 메시지 데이터 자체는 react-query 캐시(talkLogs prop)가 단일 진실 공급원이며,
- * 이 컴포넌트는 "현재 편집 중인 말풍선이 어느 것인가"라는 UI 전용 상태만 소유한다.
- * 저장 요청/캐시 갱신/에러 토스트는 useCallDetail 훅(부모)이 책임진다.
- *
- * FlashList를 시간순(비-inverted)으로 사용한다 — message-room의 실시간 채팅과 달리
- * "지난 통화를 처음부터 리뷰"하는 용도라 최신순이 아니라 시간순이 자연스럽다.
- */
-export default function CallDetailBody({
-  talkLogs,
-  partnerName,
-  partnerProfileImageUrl,
-  onSaveTalkLog,
-  isSaving,
-}: CallDetailBodyProps) {
-  const { colors } = useThemeColors();
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [editText, setEditText] = useState('');
-  const listRef = useRef<FlashListRef<FlattenedTalkLog>>(null);
-  // isSaving(mutation.isPending)만으로는 리렌더 사이의 좁은 레이스 윈도우에서 중복 저장이 가능하다 —
-  // 루트 CLAUDE.md 컨벤션대로 동기 락을 병행한다 (TimeRefillBottomSheet.tsx와 동일 패턴).
-  const savingInFlightRef = useRef(false);
-
-  // 연속된 상대방 메시지에서 아바타를 반복 표시하지 않기 위한 그룹핑 + stagger 진입 딜레이.
-  // message-room의 useMessageListFormatter.ts와 동일한 계산이지만, 통화 하나 = 세션 하나라
-  // 날짜 분할은 필요 없다.
-  const items: FlattenedTalkLog[] = useMemo(() => {
-    return talkLogs.map((log, index) => {
-      const isMine = log.speaker === 'ME' || log.speaker === 'MY_TWIN';
-      const prev = talkLogs[index - 1];
-      const prevIsMine = prev ? prev.speaker === 'ME' || prev.speaker === 'MY_TWIN' : null;
-      const hideAvatar = !isMine && prevIsMine === false;
-      const enterDelay = index < STAGGER_ITEM_LIMIT ? index * Animation.staggerDelay : 0;
-      return { log, hideAvatar, enterDelay };
-    });
-  }, [talkLogs]);
-
-  const handleEditStart = (id: number, currentText: string) => {
-    // 다른 메시지가 저장 중일 때 새 편집을 시작하면, 그 저장이 끝나는 시점에 지금 막 시작한
-    // 편집이 저장도 안 된 채 함께 닫혀버린다 — 저장이 끝날 때까지 새 편집 시작을 막는다.
-    if (savingInFlightRef.current) return;
-    setEditingId(id);
-    setEditText(currentText);
-    // 편집 대상이 화면 아래쪽에 있으면 키보드에 가려질 수 있다 — FlashList는 자체 recycler view라
-    // iOS의 TextInput 포커스 자동 스크롤이 그대로 안 먹을 수 있어 직접 스크롤해준다. 이미 화면
-    // 맨 위쪽에 보이는 항목이면(키보드가 떠도 가려질 위험이 낮음) 불필요한 스크롤 애니메이션을
-    // 건너뛴다 — 그 외(아래쪽/애매한 위치)는 안전하게 스크롤한다.
-    const index = items.findIndex((item) => item.log.talkLogId === id);
-    if (index < 0) return;
-    const { startIndex } = listRef.current?.computeVisibleIndices() ?? { startIndex: -1, endIndex: -1 };
-    const isNearTop = startIndex >= 0 && index <= startIndex + 1;
-    if (isNearTop) return;
-    requestAnimationFrame(() => {
-      listRef.current?.scrollToIndex({ index, animated: true, viewPosition: 0.3 });
-    });
+export default function CallDetailBody({ talkLogs, partnerName, onSaveTalkLog, isSaving, onEditingChange, summary }: Props) {
+  const { colors } = useMatchingDesign();
+  const insets = useSafeAreaInsets();
+  const [draft, setDraft] = useState<Draft | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const [closing, setClosing] = useState(false);
+  const closingLock = useRef(false);
+  const savingLock = useRef(false);
+  const mounted = useRef(true);
+  const logsRef = useRef(talkLogs);
+  logsRef.current = talkLogs;
+  const draftRef = useRef(draft);
+  draftRef.current = draft;
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+  const isEditing = draft !== null;
+  useEffect(() => { onEditingChange?.(isEditing); }, [isEditing, onEditingChange]);
+  useEffect(() => () => { onEditingChange?.(false); }, [onEditingChange]);
+  const items = useMemo(() => talkLogs.map((log, index) => ({ log, hideSpeakerLabel: talkLogs[index - 1]?.speaker === log.speaker })), [talkLogs]);
+  const open = useCallback((id: number, text: string) => {
+    if (savingLock.current || closingLock.current || draftRef.current) return;
+    const log = logsRef.current.find(item => item.talkLogId === id);
+    if (!log?.editable || log.speaker !== 'MY_TWIN') return;
+    const next = { id, original: text, text };
+    draftRef.current = next;
+    setDraft(next); setFailed(false);
+  }, []);
+  const finishClose = () => {
+    if (!mounted.current) return;
+    draftRef.current = null;
+    closingLock.current = false;
+    setDraft(null); setClosing(false); setFailed(false);
   };
-
-  const handleEditSave = async (id: number) => {
-    const trimmed = editText.trim();
-    if (!trimmed) {
-      setEditingId(null);
-      return;
-    }
-    if (savingInFlightRef.current) return;
-    savingInFlightRef.current = true;
+  const close = () => {
+    Keyboard.dismiss();
+    // iOS must finish dismissing the editor before a call confirmation can present another Modal.
+    if (Platform.OS === 'ios') { closingLock.current = true; setClosing(true); }
+    else finishClose();
+  };
+  const cancel = () => {
+    if (savingLock.current || closingLock.current || isSaving) return;
+    const current = draftRef.current;
+    if (current && current.text !== current.original) {
+      Alert.alert('수정한 내용을 닫을까요?', '저장하지 않은 변경 내용은 사라져요.', [{ text: '계속 수정', style: 'cancel' }, { text: '닫기', style: 'destructive', onPress: () => { if (mounted.current && !savingLock.current && draftRef.current?.id === current.id) close(); } }]);
+    } else close();
+  };
+  const save = async () => {
+    const current = draftRef.current;
+    if (!current || savingLock.current || closingLock.current || isSaving || !current.text.trim() || current.text.length > 2000) return;
+    const log = logsRef.current.find(item => item.talkLogId === current.id);
+    if (!log?.editable || log.speaker !== 'MY_TWIN') return;
+    if (current.text.trim() === current.original.trim()) { close(); return; }
+    savingLock.current = true; setSaving(true); setFailed(false);
     try {
-      await onSaveTalkLog(id, trimmed);
-      // handleEditStart를 막아뒀어도, id를 클로저로 캡처한 이 함수 자체는 await 도중 editingId가
-      // 바뀌었는지 알 수 없다 — 저장이 끝난 지금 시점의 최신 editingId를 함수형 업데이트로 읽어서,
-      // 저장한 메시지가 여전히 편집 대상일 때만 닫는다.
-      setEditingId((currentId) => (currentId === id ? null : currentId));
-    } catch {
-      // 에러 토스트는 훅에서 이미 표시됨 — 편집 상태를 유지해 재시도할 수 있게 둔다
-    } finally {
-      savingInFlightRef.current = false;
-    }
+      await onSaveTalkLog(current.id, current.text.trim());
+      if (mounted.current && draftRef.current?.id === current.id) close();
+    } catch { if (mounted.current) setFailed(true); }
+    finally { savingLock.current = false; if (mounted.current) setSaving(false); }
   };
-
-  const handleEditCancel = () => {
-    setEditingId(null);
-  };
-
-  if (talkLogs.length === 0) {
-    return (
-      <View style={styles.emptyContainer}>
-        <Text style={[styles.emptyText, { color: colors.text.muted }]}>대화 내용이 없습니다</Text>
-      </View>
-    );
-  }
-
-  const renderItem = ({ item }: ListRenderItemInfo<FlattenedTalkLog>) => (
-    <ChatBubble
-      message={item.log}
-      partnerName={partnerName}
-      partnerProfileImageUrl={partnerProfileImageUrl}
-      hideAvatar={item.hideAvatar}
-      enterDelay={item.enterDelay}
-      editingId={editingId}
-      editText={editText}
-      isSaving={isSaving && editingId === item.log.talkLogId}
-      onEditStart={handleEditStart}
-      onEditSave={handleEditSave}
-      onEditCancel={handleEditCancel}
-      onEditTextChange={setEditText}
-    />
-  );
-
-  return (
-    <FlashList
-      ref={listRef}
-      data={items}
-      renderItem={renderItem}
-      keyExtractor={(item) => String(item.log.talkLogId)}
-      contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}
-      keyboardShouldPersistTaps="handled"
-    />
-  );
+  const renderItem = useCallback(({ item }: ListRenderItemInfo<Item>) => <ChatBubble message={item.log} partnerName={partnerName} hideSpeakerLabel={item.hideSpeakerLabel} onEditStart={open} />, [partnerName, open]);
+  return <View style={styles.container}>
+    <FlashList data={items} renderItem={renderItem} keyExtractor={item => String(item.log.talkLogId)}
+      ListHeaderComponent={summary} ListEmptyComponent={<View style={styles.empty}><Text variant="heading" style={[styles.emptyTitle, { color: colors.text.primary }]}>아직 표시할 대화가 없어요</Text><Text style={[styles.emptyCopy, { color: colors.text.secondary }]}>대화 내용이 준비되면 이곳에서 다시 읽을 수 있어요.</Text></View>}
+      ListFooterComponent={talkLogs.length ? <Text style={[styles.end, { color: colors.text.muted }]}>대화 기록의 끝</Text> : null}
+      contentContainerStyle={{ paddingLeft: 20 + insets.left, paddingRight: 20 + insets.right, paddingBottom: 24 + insets.bottom }}
+      showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" maintainVisibleContentPosition={{ disabled: true }} />
+    {draft && <TalkLogEditor text={draft.text} visible={!closing} onDismiss={() => { if (closingLock.current) finishClose(); }} saving={saving || isSaving || closing} failed={failed} onCancel={cancel} onSave={() => { void save(); }} onChange={text => {
+      if (savingLock.current || closingLock.current || isSaving) return;
+      const current = draftRef.current;
+      if (current) { const next = { ...current, text }; draftRef.current = next; setDraft(next); setFailed(false); }
+    }} />}
+  </View>;
 }
-
 const styles = StyleSheet.create({
-  content: {
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.lg,
-    paddingBottom: Spacing.xl,
-  },
-  emptyContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: Spacing.giant,
-  },
-  emptyText: {
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.medium,
-  },
+  container: { flex: 1, minHeight: 0 },
+  empty: { paddingVertical: 40, gap: 8, alignItems: 'center' },
+  emptyTitle: { fontSize: 18, lineHeight: 28, fontWeight: '600', textAlign: 'center' },
+  emptyCopy: { fontSize: 14, lineHeight: 23, textAlign: 'center' },
+  end: { fontSize: 11, lineHeight: 18, textAlign: 'center', paddingVertical: 16 },
 });

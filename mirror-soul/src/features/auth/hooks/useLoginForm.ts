@@ -1,4 +1,5 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Keyboard } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useLoginMutation } from './useLoginMutation';
 import { isValidEmail } from '@/src/utils/validation';
@@ -42,13 +43,19 @@ const INITIAL_STATE: LoginFormState = {
  * - 이메일/비밀번호 입력 시 관련 에러 자동 초기화
  * - 실제 로그인 API 호출은 useLoginMutation(react-query)에 위임하고, 이 훅은 폼 검증/상태만 소유
  */
-export function useLoginForm(): UseLoginFormReturn {
+export function useLoginForm(initialEmail = ''): UseLoginFormReturn {
   const router = useRouter();
   const loginMutation = useLoginMutation();
-  const [state, setState] = useState<LoginFormState>(INITIAL_STATE);
+  const [state, setState] = useState<LoginFormState>(() => ({ ...INITIAL_STATE, email: initialEmail }));
+  const submitting = useRef(false);
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => { mounted.current = false; };
+  }, []);
 
   const updateState = useCallback((updates: Partial<LoginFormState>) => {
-    setState((prev) => ({ ...prev, ...updates }));
+    if (mounted.current) setState((prev) => ({ ...prev, ...updates }));
   }, []);
 
   const setEmail = useCallback(
@@ -62,15 +69,16 @@ export function useLoginForm(): UseLoginFormReturn {
   );
 
   const handleLogin = useCallback(async () => {
-    if (state.isSubmitting) return;
+    if (submitting.current) return;
+    const email = state.email.trim();
 
     // ── 클라이언트 사이드 유효성 검사 ──────────────────────────
     let hasError = false;
 
-    if (!state.email) {
+    if (!email) {
       updateState({ emailError: '이메일을 입력해주세요.' });
       hasError = true;
-    } else if (!isValidEmail(state.email)) {
+    } else if (!isValidEmail(email)) {
       updateState({ emailError: '올바른 이메일 형식을 입력해주세요.' });
       hasError = true;
     }
@@ -81,25 +89,30 @@ export function useLoginForm(): UseLoginFormReturn {
     }
 
     if (hasError) return;
+    submitting.current = true;
+    Keyboard.dismiss();
 
     // ── API 호출 ───────────────────────────────────────────────
     // Zustand 스토어 업데이트(useLoginMutation.onSuccess)는 _layout.tsx 라우팅 가드가 감지해 자동 이동 (SoC)
     try {
       updateState({ isSubmitting: true, generalError: '' });
-      await loginMutation.mutateAsync({ email: state.email, password: state.password });
+      await loginMutation.mutateAsync({ email, password: state.password });
     } catch (error) {
       logger.warn('useLoginForm: Login failed', error);
       updateState({
         generalError: getErrorDisplayMessage(error, '로그인 처리 중 문제가 발생했습니다.'),
       });
     } finally {
+      submitting.current = false;
       updateState({ isSubmitting: false });
     }
-  }, [state.isSubmitting, state.email, state.password, updateState, loginMutation]);
+  }, [state.email, state.password, updateState, loginMutation]);
 
   const handleForgotPassword = useCallback(() => {
-    router.push('/forgot-password');
-  }, [router]);
+    if (submitting.current) return;
+    Keyboard.dismiss();
+    router.push({ pathname: '/forgot-password', params: { email: state.email.trim() } });
+  }, [router, state.email]);
 
   return {
     state,

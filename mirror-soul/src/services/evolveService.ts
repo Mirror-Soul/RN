@@ -1,6 +1,8 @@
 import apiClient from './apiClient';
 import {
   CompleteVoiceUpdateRequest,
+  CompleteFaceUpdateRequest,
+  FaceUpdateJobResponse,
   TwinSyncResponse,
   ValueBalanceAnswerRequest,
   ValueBalanceAnswerResponse,
@@ -10,6 +12,12 @@ import {
   VoiceUpdateJobResponse,
 } from '../types/api/evolve';
 import { logger } from '../utils/logger';
+
+/** ACTIVE 회원의 새 얼굴 영상으로 재학습 작업을 접수한다. 결과는 학습 완료가 아니다. */
+export const completeFaceUpdate = async (data: CompleteFaceUpdateRequest): Promise<FaceUpdateJobResponse> => {
+  const response = await apiClient.post<FaceUpdateJobResponse>('/evolve/face', data);
+  return response.data;
+};
 
 /**
  * 성장(Evolve) 도메인 API 서비스 (SoC)

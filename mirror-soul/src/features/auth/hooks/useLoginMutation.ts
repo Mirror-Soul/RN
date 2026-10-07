@@ -11,5 +11,5 @@ export const useLoginMutation = () =>
         refreshToken: response.result.refreshToken,
         userUuid: response.result.userUuid,
         userStatus: response.result.userStatus,
-      }),
+      }, { showOnboardingResume: true }),
   });

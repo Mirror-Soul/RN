@@ -20,8 +20,20 @@ export function ProfilePhotoViewer({ uri, previewUri, name, onClose, onChange, o
   const [previewFailed, setPreviewFailed] = useState(false);
   const hasPreview = !!previewUri && !previewFailed;
   const activeAttempt = useRef(0);
+  const currentUri = useRef(uri);
+  currentUri.current = uri;
+  const previousUri = useRef(uri);
   const afterClose = useRef<(() => void) | undefined>(undefined);
   const closed = useRef(false);
+  useEffect(() => {
+    if (previousUri.current === uri) return;
+    previousUri.current = uri;
+    activeAttempt.current += 1;
+    setAttempt(activeAttempt.current);
+    setState('loading');
+    setPreviewFailed(false);
+  }, [uri]);
+  useEffect(() => { setPreviewFailed(false); }, [previewUri]);
   const finishClose = () => {
     if (closed.current) return;
     closed.current = true;
@@ -59,9 +71,9 @@ export function ProfilePhotoViewer({ uri, previewUri, name, onClose, onChange, o
               <Pressable onPress={retry} accessibilityRole="button" accessibilityLabel="등록한 프로필 사진 다시 불러오기" style={[styles.retry, { borderColor: colors.border.primary }]}><Text style={[styles.buttonText, { color: colors.brand.accent }]}>다시 불러오기</Text></Pressable>
             </View> : <>
               {hasPreview && state !== 'loaded' && <Image source={{ uri: previewUri! }} style={StyleSheet.absoluteFill} contentFit="contain" accessibilityLabel={`${name || '내 프로필'}의 등록 직후 사진 미리보기`} onError={() => setPreviewFailed(true)} />}
-              {state !== 'error' && <Image key={attempt} source={{ uri }} style={[StyleSheet.absoluteFill, { opacity: state === 'loaded' ? 1 : 0 }]} contentFit="contain" accessibilityLabel={`${name || '내 프로필'}의 등록한 사진`}
-                onLoad={() => { if (activeAttempt.current === attempt) setState('loaded'); }}
-                onError={() => { if (activeAttempt.current === attempt) { activeAttempt.current += 1; setState('error'); } }} />}
+              {state !== 'error' && <Image key={`${uri}:${attempt}`} source={{ uri }} style={[StyleSheet.absoluteFill, { opacity: state === 'loaded' ? 1 : 0 }]} contentFit="contain" accessibilityLabel={`${name || '내 프로필'}의 등록한 사진`}
+                onLoad={() => { if (currentUri.current === uri && activeAttempt.current === attempt) setState('loaded'); }}
+                onError={() => { if (currentUri.current === uri && activeAttempt.current === attempt) { activeAttempt.current += 1; setState('error'); } }} />}
               {state === 'loading' && !hasPreview && <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.message, { backgroundColor: colors.background.card }]}><ActivityIndicator color={colors.brand.accent} /><Text style={[styles.copy, { color: colors.text.secondary }]}>사진을 불러오고 있어요…</Text></View>}
             </>}
           </View>

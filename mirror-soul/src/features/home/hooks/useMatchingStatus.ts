@@ -1,47 +1,87 @@
-import { useCallback } from 'react';
+import { useRef } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { getMatchingStatus, updateMatchingStatus } from '@/src/services/matchService';
-import type { MatchingStatusResult } from '@/src/types/api/match';
+import {
+  getMatchingStatus,
+  updateMatchingStatus,
+} from '@/src/services/matchService';
 import { useAuthStore } from '@/src/store/useAuthStore';
 import { useToast } from '@/src/components/common/Toast/ToastProvider';
 import { getErrorDisplayMessage } from '@/src/utils/apiErrorCode';
+import { matchQueryKeys } from '@/src/features/match/hooks/matchQueryKeys';
 
-/**
- * 디지털 자아 매칭 On/Off 상태 훅 — GET/PATCH /match/status를 react-query로 감싼다.
- * 발견 탭 헤더 배지와 매칭 탭 토글이 이 훅을 공유해 항상 같은 서버 상태를 본다.
- */
+/** 발견과 매칭 화면에서 같은 추천 노출 상태를 사용한다. */
 export const useMatchingStatus = () => {
-  const queryClient = useQueryClient();
+  const client = useQueryClient();
   const { showToast } = useToast();
+  const userUuid = useAuthStore((s) => s.userUuid);
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
-
+  const lock = useRef(false);
+  const currentSession = () =>
+    !!userUuid &&
+    useAuthStore.getState().isLoggedIn &&
+    useAuthStore.getState().userUuid === userUuid;
   const query = useQuery({
-    queryKey: ['match', 'status'],
-    queryFn: async () => (await getMatchingStatus()).result,
-    enabled: isLoggedIn,
+    queryKey: matchQueryKeys.status(userUuid),
+    queryFn: async ({ signal }) => {
+      if (!currentSession()) throw new Error('다시 로그인해 주세요.');
+      return (await getMatchingStatus(signal)).result;
+    },
+    enabled: isLoggedIn && !!userUuid,
+    staleTime: 30_000,
   });
-
   const mutation = useMutation({
-    mutationFn: (matchingEnabled: boolean) => updateMatchingStatus({ matchingEnabled }),
-    onSuccess: (response) => {
-      queryClient.setQueryData<MatchingStatusResult>(['match', 'status'], response.result);
+    mutationFn: ({
+      matchingEnabled,
+      userUuid,
+    }: {
+      matchingEnabled: boolean;
+      userUuid: string | null;
+    }) => {
+      if (
+        !userUuid ||
+        !useAuthStore.getState().isLoggedIn ||
+        useAuthStore.getState().userUuid !== userUuid
+      )
+        throw new Error('다시 로그인해 주세요.');
+      return updateMatchingStatus({ matchingEnabled });
     },
-    onError: (error) => {
-      showToast(getErrorDisplayMessage(error, '매칭 상태 변경에 실패했습니다.'), 'error');
+    onMutate: ({ userUuid }) =>
+      client.cancelQueries({ queryKey: matchQueryKeys.status(userUuid) }),
+    onSuccess: async (response, { userUuid }) => {
+      const currentSession = () =>
+        !!userUuid &&
+        useAuthStore.getState().isLoggedIn &&
+        useAuthStore.getState().userUuid === userUuid;
+      if (!currentSession()) return;
+      await client.cancelQueries({ queryKey: matchQueryKeys.status(userUuid) });
+      if (currentSession())
+        client.setQueryData(matchQueryKeys.status(userUuid), response.result);
+    },
+    onError: (error, { userUuid }) => {
+      if (
+        useAuthStore.getState().isLoggedIn &&
+        useAuthStore.getState().userUuid === userUuid
+      )
+        showToast(
+          getErrorDisplayMessage(error, '추천 노출 설정을 저장하지 못했어요.'),
+          'error',
+        );
+    },
+    onSettled: () => {
+      lock.current = false;
     },
   });
-
-  const handleToggle = useCallback(() => {
-    if (!query.data) return; // 조회 완료 전에는 변경 자체를 막는다.
-    mutation.mutate(!query.data.matchingEnabled);
-  }, [mutation, query.data]);
-
+  const handleToggle = () => {
+    if (lock.current || !query.data || !currentSession()) return;
+    lock.current = true;
+    mutation.mutate({ matchingEnabled: !query.data.matchingEnabled, userUuid });
+  };
   return {
-    // 조회 전(null)과 실제 false를 구분한다 — 로딩 중 상태를 false로 오인해 보여주지 않기 위함.
     matchingEnabled: query.data?.matchingEnabled ?? null,
     handleToggle,
     isLoading: query.isLoading,
     isError: query.isError,
+    isFetching: query.isFetching,
     refetch: query.refetch,
     isToggling: mutation.isPending,
   };

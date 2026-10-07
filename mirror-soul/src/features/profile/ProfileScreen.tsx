@@ -7,6 +7,7 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ScreenLayout } from '@/src/components/common/ScreenLayout';
+import { MainTabHeader, mainTabTopPadding } from '@/src/components/home/common/MainTabHeader';
 import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { formatCallTime } from '@/src/utils/formatCallTime';
@@ -106,13 +107,10 @@ export const ProfileScreen = () => {
 
   return (
     <>
-      <ScreenLayout withScroll={true} paddingBottomOffset={112}>
-        <View style={[styles.content, { paddingTop: insets.top + Spacing.md }]}>
+      <ScreenLayout withScroll={true} mainTabScrollRoute="profile">
+        <View style={[styles.content, { paddingTop: mainTabTopPadding(insets.top) }]}>
           <Animated.View entering={FadeInDown.duration(360)} style={styles.topBar}>
-            <View>
-              <Text style={[styles.eyebrow, { color: colors.text.muted }]}>MY SPACE</Text>
-              <Text style={[styles.screenTitle, { color: colors.text.primary }]}>프로필</Text>
-            </View>
+            <MainTabHeader title="프로필" description="내 프로필과 남은 통화 시간, 설정을 관리해요." />
           </Animated.View>
 
           <Animated.View
@@ -266,10 +264,6 @@ export const ProfileScreen = () => {
 const styles = StyleSheet.create({
   content: { paddingHorizontal: Spacing.xxl },
   topBar: { marginBottom: Spacing.lg },
-  eyebrow: { fontFamily: FontFamily.sans, fontWeight: FontWeight.bold, fontSize: FontSize.xs, letterSpacing: 1.4 },
-  screenTitle: {
-    fontFamily: FontFamily.sans, fontWeight: FontWeight.bold, fontSize: FontSize.xxxl, lineHeight: 31, letterSpacing: -0.7, marginTop: Spacing.xxs,
-  },
   identityCard: { borderWidth: 1, borderRadius: Radii.xl, padding: Spacing.lg, overflow: 'hidden' },
   identityRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
   identityCopy: { flex: 1, minHeight: 44, justifyContent: 'center' },

@@ -1,10 +1,14 @@
+import { BrowseIcon } from '@/src/components/home/common/BrowseIcon';
 import { Feather } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { BrowseText as Text } from '@/src/components/home/common/BrowseText';
+import { MatchActionButton } from '@/src/features/match/components/MatchActionButton';
+import { useMatchingDesign } from '@/src/features/match/components/MatchingDesign';
+import { useLayout } from '@/src/hooks/useLayout';
 import { BottomSheet } from '@/src/components/common/BottomSheet/BottomSheet';
-import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
-import { useThemeColors } from '@/src/hooks/useThemeColors';
+import { FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
 import { useTimeStatusQuery } from '@/src/features/profile/hooks/useTimeStatusQuery';
 import { formatCallTime } from '@/src/utils/formatCallTime';
 import { isMockRecommendationUuid } from '@/src/components/home/main/Discovery/mockRecommendations';
@@ -16,6 +20,8 @@ export interface CallTarget {
 }
 
 interface CallStartConfirmSheetProps {
+  ownTwin?: boolean;
+  embedded?: boolean;
   target: CallTarget | null;
   isOpen: boolean;
   onClose: () => void;
@@ -31,12 +37,22 @@ interface CallStartConfirmSheetProps {
  * 실제 추천은 최신 잔여 시간을 다시 조회한 뒤에만 진입을 허용한다. 목업 추천은 의도적으로
  * 어떤 API나 권한도 요청하지 않고, 통화 화면의 UI를 검토하는 미리보기 모드로만 진입한다.
  */
-export default function CallStartConfirmSheet({ target, isOpen, onClose, onStart, onRefill }: CallStartConfirmSheetProps) {
-  const { colors } = useThemeColors();
+export default function CallStartConfirmSheet({ target, isOpen, onClose, onStart, onRefill, embedded = false, ownTwin = false }: CallStartConfirmSheetProps) {
+  const { colors, palette } = useMatchingDesign();
+  const insets = useSafeAreaInsets();
+  const { height: screenHeight, fontScale } = useWindowDimensions();
+  const { contentContainerStyle, cardWidth } = useLayout();
+  const [bodyHeight, setBodyHeight] = useState(280);
+  const [footerHeight, setFooterHeight] = useState(80);
+  const maximumHeight = Math.max(0, screenHeight - insets.top - 12);
+  const inlineAction = maximumHeight < 360 || fontScale > 1.8;
+  // The common sheet handle takes 36px. Measure actual wrapped text and actions.
+  const sheetHeight = Math.min(maximumHeight, bodyHeight + (inlineAction ? 0 : footerHeight) + 36);
+  const showHeroIcon = cardWidth >= 320 && fontScale <= 1.3;
   const startInFlightRef = useRef(false);
   const [isStarting, setIsStarting] = useState(false);
   const [hasFreshTimeCheck, setHasFreshTimeCheck] = useState(false);
-  const isPreview = isMockRecommendationUuid(target?.userUuid);
+  const isPreview = !ownTwin && isMockRecommendationUuid(target?.userUuid);
   // 목업 미리보기와 닫힌 시트는 잔액을 확인할 이유가 없다. 실제 통화 확인 단계에서만
   // GET /my-page/buy-time을 활성화해 목업 버튼이 어떤 API도 유발하지 않게 한다.
   const shouldQueryTime = isOpen && !isPreview;
@@ -58,9 +74,8 @@ export default function CallStartConfirmSheet({ target, isOpen, onClose, onStart
 
     let isActive = true;
     setHasFreshTimeCheck(false);
-    refetch().finally(() => {
-      if (isActive) setHasFreshTimeCheck(true);
-    });
+    const finishCheck = () => { if (isActive) setHasFreshTimeCheck(true); };
+    void refetch().then(finishCheck, finishCheck);
     return () => {
       isActive = false;
     };
@@ -80,6 +95,8 @@ export default function CallStartConfirmSheet({ target, isOpen, onClose, onStart
     // 0초일 때는 막힌 버튼을 남기지 않는다. 사용자가 다음에 해야 할 행동(충전)을
     // 같은 주 CTA로 제시해, 시간 카드까지 다시 찾아갈 필요가 없게 한다.
     if (!isPreview && !hasRemainingTime) {
+      startInFlightRef.current = true;
+      setIsStarting(true);
       onRefill();
       return;
     }
@@ -96,204 +113,86 @@ export default function CallStartConfirmSheet({ target, isOpen, onClose, onStart
   const shouldPromptRefill = !isPreview && !isCheckingTime && !isError && !hasRemainingTime;
   const startDisabled = !isPreview && (isCheckingTime || isError);
 
+  const primaryLabel = isPreview ? '통화 화면 미리보기' : shouldPromptRefill ? '대화 시간 충전하기' : ownTwin ? '대화 시작' : '통화 시작';
+  const action = <View testID="call-start-actions" onLayout={event => setFooterHeight(event.nativeEvent.layout.height)}
+    style={[styles.footer, { paddingBottom: Math.max(insets.bottom, Spacing.md), borderTopColor: colors.border.primary }]}>
+    <MatchActionButton label={primaryLabel} onPress={handlePrimaryAction} primary disabled={startDisabled} busy={isStarting} />
+  </View>;
+
   return (
-    <BottomSheet isOpen={isOpen} onClose={onClose} height={420}>
-      <View style={styles.container}>
-        <View style={styles.heroRow}>
-          <View style={styles.avatar}>
-            <Feather name={isPreview ? 'eye' : 'phone-call'} size={22} color={Colors.primary.electricCyan} />
-          </View>
-          <View style={styles.heroCopy}>
-            <Text style={[styles.title, { color: colors.text.primary }]}>
-              {isPreview ? `${target.name}님 통화 화면 미리보기` : `${target.name}님의 AI 트윈과 통화할까요?`}
-            </Text>
-            <Text style={[styles.subtitle, { color: colors.text.secondary }]}>
-              {isPreview ? '서버 연결과 권한 요청 없이 UI만 보여드려요.' : '통화 시간은 연결된 뒤부터 기록됩니다.'}
-            </Text>
-          </View>
-        </View>
-
-        {isPreview ? (
-          <View style={[styles.previewNotice, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
-            <Feather name="info" size={16} color={colors.text.muted} />
-            <Text style={[styles.previewNoticeText, { color: colors.text.secondary }]}>목업 데이터는 실제 통화를 연결하지 않아요.</Text>
-          </View>
-        ) : (
-          <View style={[styles.timeCard, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
-            <View style={styles.timeLabelRow}>
-              <Feather name="clock" size={16} color={Colors.primary.electricCyan} />
-              <Text style={[styles.timeLabel, { color: colors.text.muted }]}>현재 남은 대화 시간</Text>
-            </View>
-            <View style={styles.timeValueRow}>
-              {isCheckingTime ? <ActivityIndicator size="small" color={Colors.primary.electricCyan} /> : null}
-              <Text style={[styles.timeValue, { color: isError || !hasRemainingTime ? colors.state.danger : colors.text.primary }]}>
-                {timeLabel}
-              </Text>
-            </View>
-            {isError ? (
-              <TouchableOpacity onPress={() => refetch()} accessibilityRole="button" accessibilityLabel="남은 대화 시간 다시 확인">
-                <Text style={[styles.timeHint, styles.retryText, { color: colors.state.danger }]}>다시 확인하기</Text>
+    <BottomSheet isOpen={isOpen} onClose={onClose} height={sheetHeight} dragFromHandleOnly embedded={embedded}>
+      <View style={[contentContainerStyle, styles.container, {
+        paddingLeft: Math.max(insets.left, Spacing.lg), paddingRight: Math.max(insets.right, Spacing.lg),
+      }]}>
+        <ScrollView testID="call-start-scroll" style={styles.scroll} showsVerticalScrollIndicator={false}
+          automaticallyAdjustContentInsets={false} contentInsetAdjustmentBehavior="never"
+          onContentSizeChange={(_width, measuredHeight) => setBodyHeight(measuredHeight)}>
+          <View style={styles.body}>
+            <View style={styles.heroRow}>
+              {showHeroIcon && <View style={[styles.avatar, { backgroundColor: palette.coolTint }]}>
+                {isPreview ? <Feather name="eye" size={20} color={palette.cyanInk} /> : <BrowseIcon name="phone-call" size={20} color={palette.cyanInk} />}
+              </View>}
+              <View style={styles.heroCopy}>
+                <Text variant="heading" accessibilityRole="header" style={[styles.title, { color: colors.text.primary }]}>
+                  {ownTwin ? '내 트윈과 대화할까요?' : isPreview ? `${target.name}님 통화 화면 미리보기` : `${target.name}님의 AI 트윈과 통화할까요?`}
+                </Text>
+              </View>
+              <TouchableOpacity onPress={onClose} accessibilityRole="button" accessibilityLabel="통화 확인 닫기" style={styles.close}>
+                <Feather name="x" size={20} color={colors.text.secondary} />
               </TouchableOpacity>
-            ) : !isCheckingTime && !hasRemainingTime ? (
-              <Text style={[styles.timeHint, { color: colors.state.danger }]}>지금 충전하면 바로 AI 트윈과 대화를 시작할 수 있어요.</Text>
-            ) : (
-              <Text style={[styles.timeHint, { color: colors.text.muted }]}>남은 시간이 있을 때만 통화를 시작할 수 있어요.</Text>
-            )}
-            <View style={[styles.timeLimitNotice, { borderTopColor: colors.border.primary }]}>
-              <Feather name="info" size={14} color={Colors.primary.electricCyan} />
-              <Text style={[styles.timeLimitNoticeText, { color: colors.text.secondary }]}>통화는 연결된 순간부터 시간이 차감되며, 남은 시간이 0초가 되면 자동으로 종료돼요.</Text>
             </View>
-          </View>
-        )}
 
-        <TouchableOpacity
-          onPress={handlePrimaryAction}
-          disabled={startDisabled || isStarting}
-          activeOpacity={0.85}
-          accessibilityRole="button"
-          accessibilityLabel={isPreview ? '통화 화면 미리보기 시작' : shouldPromptRefill ? '대화 시간 충전하기' : '통화 시작'}
-          accessibilityState={{ disabled: startDisabled || isStarting }}
-          style={[styles.startButtonWrapper, (startDisabled || isStarting) && styles.startButtonDisabled]}
-        >
-          <LinearGradient
-            colors={[Colors.primary.electricCyan, Colors.primary.vividPurple]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.startButton}
-          >
-            {isStarting ? (
-              <ActivityIndicator size="small" color={Colors.neutral.pureWhite} />
+            {ownTwin && <Text style={[styles.copy, { color: colors.text.secondary }]}>영상통화로 나를 닮은 얼굴과 목소리, 반응을 만나보세요.</Text>}
+
+            {isPreview ? (
+              <View style={[styles.notice, { backgroundColor: palette.tint, borderColor: palette.softBorder }]}>
+                <Text style={[styles.copy, { color: colors.text.secondary }]}>실제 통화 연결과 권한 요청 없이 화면만 확인할 수 있어요.</Text>
+              </View>
             ) : (
-              <Feather name={shouldPromptRefill ? 'credit-card' : 'phone'} size={18} color={Colors.neutral.pureWhite} />
+              <View style={[styles.timeCard, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
+                <View style={styles.timeLabelRow}>
+                  <BrowseIcon name="clock" size={16} color={palette.cyanInk} />
+                  <Text style={[styles.caption, { color: colors.text.secondary }]}>남은 대화 시간</Text>
+                </View>
+                <View style={styles.timeValueRow}>
+                  {isCheckingTime && <ActivityIndicator size="small" color={palette.cyanInk} />}
+                  <Text style={[styles.timeValue, { color: isError || shouldPromptRefill ? colors.state.danger : colors.text.primary }]}>{timeLabel}</Text>
+                </View>
+                {isError ? <TouchableOpacity onPress={() => { void refetch(); }} disabled={isFetching}
+                  accessibilityRole="button" accessibilityLabel="남은 대화 시간 다시 확인" style={styles.retry}>
+                  <Text style={[styles.copy, { color: palette.accentInk }]}>다시 확인하기</Text>
+                </TouchableOpacity> : shouldPromptRefill && <Text style={[styles.copy, { color: colors.text.secondary }]}>대화 시간을 충전하면 통화를 시작할 수 있어요.</Text>}
+                <View style={[styles.timeLimitNotice, { borderTopColor: colors.border.primary }]}>
+                  <Text style={[styles.copy, { color: colors.text.secondary }]}>대화 시간은 종료 후 서버에서 정산돼요. 현재는 연결 대기와 기록 저장 시간도 포함될 수 있어요.</Text>
+                </View>
+              </View>
             )}
-            <Text style={styles.startButtonText}>{isPreview ? '미리보기 시작' : shouldPromptRefill ? '대화 시간 충전하기' : '통화 시작'}</Text>
-          </LinearGradient>
-        </TouchableOpacity>
+          </View>
+          {inlineAction && action}
+        </ScrollView>
+        {!inlineAction && action}
       </View>
     </BottomSheet>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: Spacing.xxl,
-    paddingTop: Spacing.sm,
-    paddingBottom: Spacing.xxxl,
-    gap: Spacing.xl,
-  },
-  heroRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.lg,
-  },
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: Radii.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.glass.cyan10_d3,
-    borderWidth: 1,
-    borderColor: Colors.glass.cyan20_d3,
-  },
-  heroCopy: {
-    flex: 1,
-  },
-  title: {
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.lg,
-    fontWeight: FontWeight.black,
-  },
-  subtitle: {
-    marginTop: Spacing.xs,
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.regular,
-  },
-  timeCard: {
-    borderWidth: 1,
-    borderRadius: Radii.lg,
-    padding: Spacing.lg,
-  },
-  timeLabelRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  timeLabel: {
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.bold,
-  },
-  timeValueRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    marginTop: Spacing.sm,
-  },
-  timeValue: {
-    fontFamily: FontFamily.mono,
-    fontSize: FontSize.xxl,
-    fontWeight: FontWeight.black,
-  },
-  timeHint: {
-    marginTop: Spacing.xs,
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.regular,
-  },
-  retryText: {
-    textDecorationLine: 'underline',
-  },
-  timeLimitNotice: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: Spacing.sm,
-    borderTopWidth: 1,
-    marginTop: Spacing.md,
-    paddingTop: Spacing.md,
-  },
-  timeLimitNoticeText: {
-    flex: 1,
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.regular,
-    lineHeight: 16,
-  },
-  previewNotice: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    borderWidth: 1,
-    borderRadius: Radii.lg,
-    padding: Spacing.lg,
-  },
-  previewNoticeText: {
-    flex: 1,
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.regular,
-  },
-  startButtonWrapper: {
-    overflow: 'hidden',
-    borderRadius: Radii.lg,
-    marginTop: 'auto',
-  },
-  startButtonDisabled: {
-    opacity: 0.45,
-  },
-  startButton: {
-    minHeight: 54,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.sm,
-  },
-  startButtonText: {
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.md,
-    fontWeight: FontWeight.black,
-    color: Colors.neutral.pureWhite,
-  },
+  container: { flex: 1 },
+  scroll: { flex: 1 },
+  body: { paddingTop: Spacing.xs, paddingBottom: Spacing.lg, gap: Spacing.md },
+  heroRow: { flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.sm },
+  avatar: { width: 40, height: 40, borderRadius: Radii.full, alignItems: 'center', justifyContent: 'center', marginTop: Spacing.xs },
+  heroCopy: { flex: 1, minWidth: 0, paddingVertical: Spacing.sm },
+  title: { fontFamily: FontFamily.sans, fontSize: FontSize.xl, fontWeight: FontWeight.medium, lineHeight: 28 },
+  close: { minWidth: 48, minHeight: 48, alignItems: 'center', justifyContent: 'center' },
+  timeCard: { borderWidth: 1, borderRadius: Radii.lg, padding: Spacing.md, gap: Spacing.sm },
+  timeLabelRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
+  caption: { flex: 1, minWidth: 0, fontSize: FontSize.sm, lineHeight: 20 },
+  timeValueRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
+  timeValue: { flexShrink: 1, fontSize: FontSize.xxl, fontWeight: FontWeight.medium, lineHeight: 30 },
+  copy: { fontSize: FontSize.sm, lineHeight: 21 },
+  retry: { minHeight: 48, alignSelf: 'flex-start', justifyContent: 'center', paddingHorizontal: Spacing.sm },
+  timeLimitNotice: { borderTopWidth: StyleSheet.hairlineWidth, paddingTop: Spacing.sm },
+  notice: { borderWidth: 1, borderRadius: Radii.lg, padding: Spacing.md },
+  footer: { borderTopWidth: StyleSheet.hairlineWidth, paddingTop: Spacing.md },
 });

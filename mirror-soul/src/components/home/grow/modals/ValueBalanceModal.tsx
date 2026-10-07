@@ -1,10 +1,9 @@
 import { BottomSheet } from '@/src/components/common/BottomSheet/BottomSheet';
-import FloatingNotice from '@/src/components/home/common/FloatingNotice';
-import { Ionicons } from '@expo/vector-icons';
+import { useToast } from '@/src/components/common/Toast/ToastProvider';
+import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
 import { useValueBalanceQuestionQuery } from '@/src/features/growth/hooks/useValueBalanceQuestionQuery';
 import { useSubmitValueBalanceAnswerMutation } from '@/src/features/growth/hooks/useSubmitValueBalanceAnswerMutation';
-import { useFloatingNotice } from '@/src/hooks/useFloatingNotice';
 import { getErrorDisplayMessage, getErrorCode } from '@/src/utils/apiErrorCode';
 import { VALUE_BALANCE_AXIS_LABELS } from '@/src/constants/valueBalanceAxis';
 import type {
@@ -13,8 +12,12 @@ import type {
   ValueBalanceChosenSide,
   ValueBalanceQuestionResult,
 } from '@/src/types/api/evolve';
-import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { BrowseText as Text } from '@/src/components/home/common/BrowseText';
+import { valueBalanceUnlockLabel } from '../valueBalanceCopy';
+import { useLayout } from '@/src/hooks/useLayout';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ActivityIndicator, ScrollView, StyleSheet, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface ValueBalanceModalProps {
@@ -51,6 +54,12 @@ function isAnswerableQuestion(
  */
 export default function ValueBalanceModal({ isOpen, onClose }: ValueBalanceModalProps) {
   const { colors } = useThemeColors();
+  const insets = useSafeAreaInsets();
+  const { contentContainerStyle } = useLayout();
+  const { height, fontScale } = useWindowDimensions();
+  const selectionLock = useRef(false);
+  const mounted = useRef(true);
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   const { data: question, isLoading, isError, isFetching, refetch } = useValueBalanceQuestionQuery();
   const submitMutation = useSubmitValueBalanceAnswerMutation();
   // 방금 제출한 답변 결과를 잠깐 보관한다 — GET이 무효화→refetch로 최신 카운트를 받아오기
@@ -58,7 +67,7 @@ export default function ValueBalanceModal({ isOpen, onClose }: ValueBalanceModal
   const [lastAnswer, setLastAnswer] = useState<ValueBalanceAnswerResult | null>(null);
   // 방금 탭한 선택지를 잠깐 하이라이트해서 "내가 뭘 눌렀는지" 시각 피드백을 준다.
   const [selectedSide, setSelectedSide] = useState<ValueBalanceChosenSide | null>(null);
-  const { message: noticeMessage, opacity: noticeOpacity, flash: flashNotice } = useFloatingNotice();
+  const { showToast } = useToast();
 
   // 새 질문으로 바뀌면(답변 성공/자동 복구 refetch 등) 이전 질문에 남아있던 하이라이트를 지운다.
   useEffect(() => {
@@ -70,14 +79,16 @@ export default function ValueBalanceModal({ isOpen, onClose }: ValueBalanceModal
 
   const handleSelect = async (chosenSide: ValueBalanceChosenSide) => {
     const questionId = question?.questionId;
-    if (questionId == null || isBusy) return;
+    if (!isOpen || questionId == null || isBusy || selectionLock.current) return;
+    selectionLock.current = true;
     setSelectedSide(chosenSide);
     try {
       const response = await submitMutation.mutateAsync({ questionId, chosenSide });
-      setLastAnswer(response.result);
+      if (mounted.current) setLastAnswer(response.result);
     } catch (error) {
+      if (!mounted.current) return;
       setSelectedSide(null);
-      flashNotice(getErrorDisplayMessage(error, '답변 제출에 실패했습니다. 잠시 후 다시 시도해주세요.'));
+      showToast(getErrorDisplayMessage(error, '답변을 저장하지 못했어요. 다시 선택해주세요.'), 'error');
       // 이미 답한 질문이거나(레이스) 질문이 만료된 경우, 화면엔 여전히 낡은 질문이 남아있어
       // 사용자가 같은 버튼을 다시 눌러도 같은 에러가 반복된다 — 새 질문으로 자동 복구한다.
       const code = getErrorCode(error);
@@ -87,9 +98,9 @@ export default function ValueBalanceModal({ isOpen, onClose }: ValueBalanceModal
         || code === 'VALUE_BALANCE_SET_LOCKED'
         || code === 'VALUE_BALANCE_COMPLETED'
       ) {
-        refetch();
+        void refetch();
       }
-    }
+    } finally { selectionLock.current = false; }
   };
 
   // lastAnswer(방금 제출한 POST 응답)가 있으면 그걸 우선 쓰고, 없으면 GET 응답의
@@ -115,19 +126,26 @@ export default function ValueBalanceModal({ isOpen, onClose }: ValueBalanceModal
   const safeAnsweredInSet = progressStats && Number.isFinite(progressStats.answeredInSet)
     ? Math.min(safeSetSize, Math.max(0, Math.floor(progressStats.answeredInSet)))
     : 0;
-  const progress = progressStats ? (safeAnsweredInSet / safeSetSize) * 100 : 0;
-  const isFinished = !isLoading && !isError && question?.completed === true;
-  const isLocked = !isLoading && !isError && question?.locked === true && !isFinished;
+  const latest = lastAnswer ?? question;
+  const isFinished = !isLoading && !isError && latest?.completed === true;
+  const isLocked = !isLoading && !isError && latest?.locked === true && !isFinished;
+  const displayedAnswered = isLocked || isFinished ? safeSetSize : safeAnsweredInSet;
+  const progress = progressStats ? (displayedAnswered / safeSetSize) * 100 : 0;
+  const unlock = valueBalanceUnlockLabel(latest?.lockedUntil);
+  const close = () => { if (!selectionLock.current && !submitMutation.isPending) onClose(); };
 
   return (
-    <BottomSheet isOpen={isOpen} onClose={onClose} height={460}>
-      <View style={styles.container}>
+    <BottomSheet isOpen={isOpen} onClose={close} height={Math.min(isLocked ? 320 * Math.max(1, fontScale) + insets.bottom : 640, Math.max(0, height - insets.top - 12))} dragFromHandleOnly>
+      <View style={[styles.closeRow, contentContainerStyle]}><TouchableOpacity onPress={close} disabled={submitMutation.isPending} accessibilityRole="button" accessibilityLabel="가치관 게임 닫기" style={styles.closeButton}><Feather name="x" size={22} color={colors.text.secondary} /></TouchableOpacity></View>
+      <ScrollView style={styles.scroll} contentContainerStyle={[styles.container, contentContainerStyle, { paddingLeft: 20 + insets.left, paddingRight: 20 + insets.right, paddingBottom: 24 + insets.bottom }]} keyboardShouldPersistTaps="handled">
         <View
           style={[styles.progressTrack, { backgroundColor: colors.background.glass }]}
+          accessible
+          accessibilityLabel="이번 세트 답변 진행"
           accessibilityRole="progressbar"
           accessibilityValue={
             progressStats
-              ? { min: 0, max: safeSetSize, now: safeAnsweredInSet }
+              ? { min: 0, max: safeSetSize, now: displayedAnswered }
               : { min: 0, max: 1, now: 0 }
           }
         >
@@ -160,30 +178,32 @@ export default function ValueBalanceModal({ isOpen, onClose }: ValueBalanceModal
             <View style={styles.finishingBadge}>
               <Ionicons name="sparkles-outline" size={40} color={Colors.primary.electricCyan} />
             </View>
-            <Text style={[styles.title, { color: colors.text.primary }]}>분석 완료</Text>
+            <Text style={[styles.title, { color: colors.text.primary }]}>답변을 모두 마쳤어요</Text>
             <Text style={[styles.subtitle, { color: colors.text.muted }]}
             >
-              모든 가치관 밸런스 세트를 완료했어요. 트윈이 더 깊이 당신을 이해할 수 있어요.
+              선택한 답변을 모두 저장했어요. 분석 결과가 트윈에 반영되기까지 시간이 걸릴 수 있어요.
             </Text>
           </View>
         ) : isLocked ? (
           <TouchableOpacity
-            style={styles.finishing}
+            style={[styles.finishing, styles.lockedState]}
             onPress={() => refetch()}
             disabled={isFetching}
             accessibilityRole="button"
-            accessibilityLabel="가치관 밸런스 분석 상태 다시 확인"
+            accessibilityLabel="다음 가치관 질문 다시 확인"
+            accessibilityHint={unlock ? `다음 질문 ${unlock}, 한국 시간 기준` : '다음 질문이 열리면 이어서 할 수 있어요.'}
             accessibilityState={{ busy: isFetching }}
           >
             {isFetching ? (
               <ActivityIndicator color={Colors.primary.electricCyan} />
             ) : (
               <>
-                <View style={styles.finishingBadge}>
-                  <Ionicons name="analytics-outline" size={40} color={Colors.primary.electricCyan} />
+                <View style={[styles.finishingBadge, styles.lockedBadge]}>
+                  <MaterialCommunityIcons name="gamepad-variant-outline" size={28} color={Colors.primary.electricCyan} />
                 </View>
-                <Text style={[styles.title, { color: colors.text.primary }]}>이번 세트를 분석 중이에요</Text>
-                <Text style={[styles.subtitle, { color: colors.text.muted }]}>분석이 끝나면 다음 가치관 질문이 열려요. 탭하여 다시 확인할 수 있어요.</Text>
+                <Text style={[styles.title, styles.lockedTitle, { color: colors.text.primary }]}>이번 세트에 답했어요</Text>
+                {unlock ? <View style={styles.unlock}><Text style={[styles.unlockValue, { color: colors.text.primary }]}>다음 질문 {unlock}</Text></View> : <Text style={[styles.subtitle, { color: colors.text.muted }]}>다음 질문을 기다리고 있어요.</Text>}
+                {!!unlock && <Text style={[styles.unlockLabel, { color: colors.text.muted }]}>한국 시간 기준</Text>}
               </>
             )}
           </TouchableOpacity>
@@ -192,7 +212,7 @@ export default function ValueBalanceModal({ isOpen, onClose }: ValueBalanceModal
             <>
               <View style={styles.header}>
                 <View>
-                  <Text style={styles.eyebrow}>미니게임</Text>
+                  <Text style={[styles.eyebrow, { color: colors.text.secondary }]}>정답 없는 선택</Text>
                   <Text style={[styles.title, { color: colors.text.primary }]}>가치관 밸런스</Text>
                 </View>
               </View>
@@ -204,7 +224,7 @@ export default function ValueBalanceModal({ isOpen, onClose }: ValueBalanceModal
                       {VALUE_BALANCE_AXIS_LABELS[question.axis]}
                     </Text>
                   </View>
-                  <Text style={[styles.question, { color: colors.text.primary }]}>당신은 어떤 쪽인가요?</Text>
+                  <Text style={[styles.question, { color: colors.text.primary }]}>평소 나에게 가까운 쪽은?</Text>
                 </View>
 
                 <View style={styles.choices}>
@@ -271,29 +291,31 @@ export default function ValueBalanceModal({ isOpen, onClose }: ValueBalanceModal
               {progressStats && (
                 <Text style={[styles.stepText, { color: colors.text.muted }]}
                 >
-                  세트 {progressStats.currentSet} / {progressStats.totalSets} · 질문 {safeAnsweredInSet + 1} / {safeSetSize}
+                  세트 {progressStats.currentSet} / {progressStats.totalSets} · 답변 {safeAnsweredInSet} / {safeSetSize}
                 </Text>
               )}
             </>
           )
         )}
-      </View>
+      </ScrollView>
 
-      <FloatingNotice message={noticeMessage} opacity={noticeOpacity} bottom={24} />
     </BottomSheet>
   );
 }
 
 const styles = StyleSheet.create({
+  closeRow: { alignItems: 'flex-end', paddingHorizontal: 16 },
+  closeButton: { minWidth: 48, minHeight: 48, alignItems: 'center', justifyContent: 'center' },
+  scroll: { flex: 1 },
   container: {
-    flex: 1,
+    flexGrow: 1,
     paddingHorizontal: Spacing.xxl,
   },
   progressTrack: {
     height: 4,
     borderRadius: Radii.full,
     overflow: 'hidden',
-    marginBottom: Spacing.xxl,
+    marginBottom: Spacing.lg,
   },
   progressFill: {
     height: '100%',
@@ -317,20 +339,20 @@ const styles = StyleSheet.create({
   eyebrow: {
     fontFamily: FontFamily.sans,
     fontSize: FontSize.xs,
-    fontWeight: FontWeight.black,
+    fontWeight: FontWeight.semibold,
     letterSpacing: 1.5,
     color: Colors.glass.cyan30_d3,
   },
   title: {
     fontFamily: FontFamily.sans,
     fontSize: FontSize.xl,
-    fontWeight: FontWeight.black,
+    fontWeight: FontWeight.semibold,
     letterSpacing: -0.5,
     marginTop: 4,
   },
   questionArea: {
     paddingTop: Spacing.xl,
-    gap: Spacing.xxxl,
+    gap: Spacing.lg,
   },
   categoryWrapper: {
     alignItems: 'center',
@@ -345,20 +367,21 @@ const styles = StyleSheet.create({
   categoryText: {
     fontFamily: FontFamily.sans,
     fontSize: FontSize.xs,
-    fontWeight: FontWeight.black,
+    fontWeight: FontWeight.semibold,
     textTransform: 'uppercase',
   },
   question: {
     fontFamily: FontFamily.sans,
     fontSize: FontSize.xxl,
-    fontWeight: FontWeight.black,
+    fontWeight: FontWeight.semibold,
     letterSpacing: -0.3,
   },
   choices: {
     gap: Spacing.md,
   },
   choiceButton: {
-    padding: Spacing.xl,
+    padding: Spacing.lg,
+    minHeight: 52,
     borderRadius: Radii.xxl,
     borderWidth: 1,
   },
@@ -372,7 +395,7 @@ const styles = StyleSheet.create({
   choiceText: {
     fontFamily: FontFamily.sans,
     fontSize: FontSize.lg,
-    fontWeight: FontWeight.black,
+    fontWeight: FontWeight.semibold,
   },
   vsWrapper: {
     alignItems: 'center',
@@ -390,15 +413,15 @@ const styles = StyleSheet.create({
   vsText: {
     fontFamily: FontFamily.sans,
     fontSize: FontSize.xs,
-    fontWeight: FontWeight.black,
+    fontWeight: FontWeight.semibold,
   },
   stepText: {
     fontFamily: FontFamily.sans,
     fontSize: FontSize.xs,
-    fontWeight: FontWeight.black,
-    letterSpacing: 1.1,
+    fontWeight: FontWeight.semibold,
+    lineHeight: 20,
     textAlign: 'center',
-    marginBottom: Spacing.xxl,
+    marginBottom: Spacing.lg,
   },
   finishing: {
     flex: 1,
@@ -406,9 +429,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.lg,
   },
+  lockedState: { flex: 0, gap: 10, paddingVertical: 4 },
+  lockedBadge: { width: 48, height: 48 },
+  lockedTitle: { alignSelf: 'stretch', textAlign: 'center', fontSize: 20, lineHeight: 28, marginTop: 0 },
+  unlock: { alignSelf: 'stretch', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 10, borderRadius: 16, backgroundColor: Colors.glass.cyan10_d3 },
+  unlockLabel: { alignSelf: 'stretch', fontSize: 11, lineHeight: 17, textAlign: 'center' },
+  unlockValue: { alignSelf: 'stretch', fontSize: 16, lineHeight: 25, fontWeight: '600', textAlign: 'center' },
   finishingBadge: {
-    width: 96,
-    height: 96,
+    width: 64,
+    height: 64,
     borderRadius: Radii.full,
     backgroundColor: Colors.glass.cyan20_d3,
     borderWidth: 1,
@@ -417,6 +446,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   subtitle: {
+    alignSelf: 'stretch',
+    lineHeight: 23,
     fontFamily: FontFamily.sans,
     fontSize: FontSize.base,
     fontWeight: FontWeight.medium,

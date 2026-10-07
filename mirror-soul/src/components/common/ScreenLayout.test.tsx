@@ -20,6 +20,7 @@ jest.mock('react-native-reanimated', () => ({
   useSharedValue: (value: number) => ({ value }),
   useAnimatedStyle: (fn: () => unknown) => fn(),
   withTiming: (value: number) => value,
+  cancelAnimation: () => {},
   Easing: { out: () => undefined, inOut: () => undefined },
 }));
 jest.mock('@/src/components/common/Header', () => ({ Header: () => null }));
@@ -58,14 +59,14 @@ it.each([
   const layoutTarget = navbar.findAll((node: { props: { onLayout?: unknown } }) => typeof node.props.onLayout === 'function')[0];
   fireEvent(layoutTarget, 'layout', { nativeEvent: { layout: { height: barHeight, width: 360, x: 0, y: 0 } } });
   const scroll = screen.UNSAFE_getByType(ScrollView);
-  await waitFor(() => expect(StyleSheet.flatten(scroll.props.contentContainerStyle).paddingBottom).toBe(safeBottom + barHeight + 16 + 16));
+  await waitFor(() => expect(StyleSheet.flatten(scroll.props.contentContainerStyle).paddingBottom).toBe(safeBottom + barHeight + 8 + 16));
   fireEvent.press(screen.getByLabelText('마이크 설정 열기'));
   await waitFor(() => expect(open).toHaveBeenCalledTimes(1));
   // 회전/큰 글자 등으로 메뉴 높이나 안전 영역이 달라지면 같은 스크롤도 갱신한다.
   mockInsets = { ...mockInsets, bottom: 0 };
   screen.rerender(<MainLayout />);
   fireEvent(layoutTarget, 'layout', { nativeEvent: { layout: { height: barHeight + 24, width: 640, x: 0, y: 0 } } });
-  await waitFor(() => expect(StyleSheet.flatten(scroll.props.contentContainerStyle).paddingBottom).toBe(barHeight + 24 + 16 + 16));
+  await waitFor(() => expect(StyleSheet.flatten(scroll.props.contentContainerStyle).paddingBottom).toBe(barHeight + 24 + 8 + 16));
 });
 
 it('preserves larger caller padding and leaves screens outside main tabs unchanged', () => {

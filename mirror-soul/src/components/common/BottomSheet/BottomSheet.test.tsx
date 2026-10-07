@@ -54,3 +54,13 @@ it('lets consent content scroll outside the handle gesture target', () => {
   expect(target.findAllByType(Text)).toHaveLength(0);
   expect(screen.getByText('스크롤 본문')).toBeTruthy();
 });
+
+
+it('embeds a sheet into its existing host without adding another native Modal', () => {
+  const screen = render(<BottomSheet embedded isOpen onClose={jest.fn()}><Text>프로필 위의 확인창</Text></BottomSheet>);
+  expect(screen.UNSAFE_queryByType(Modal)).toBeNull();
+  expect(screen.getByText('프로필 위의 확인창')).toBeTruthy();
+  screen.rerender(<BottomSheet embedded isOpen={false} onClose={jest.fn()}><Text>프로필 위의 확인창</Text></BottomSheet>);
+  act(() => mockCompletions[mockCompletions.length - 1](true));
+  expect(screen.queryByText('프로필 위의 확인창')).toBeNull();
+});

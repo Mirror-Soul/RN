@@ -1,62 +1,103 @@
 import React from 'react';
-import { View, Text, StyleSheet, Pressable, ActivityIndicator } from 'react-native';
-import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
-import { useThemeColors } from '@/src/hooks/useThemeColors';
-
-interface MatchingTabStatusProps {
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { BrowseIcon } from '@/src/components/home/common/BrowseIcon';
+import {
+  FontFamily,
+  FontSize,
+  FontWeight,
+  Radii,
+  Spacing,
+} from '@/src/constants/theme';
+import {
+  useMatchingDesign,
+  MatchingText as Text,
+} from '@/src/features/match/components/MatchingDesign';
+import { MatchActionButton } from '@/src/features/match/components/MatchActionButton';
+export default function MatchingTabStatus({
+  message,
+  description,
+  isLoading,
+  onRetry,
+  onExplore,
+  onRequests,
+  kind = 'requests',
+}: {
   message: string;
+  description?: string;
   isLoading?: boolean;
   onRetry?: () => void;
-}
-
-/** Matching 화면의 각 탭(만남 신청/메시지방)에서 로딩·에러·빈 상태를 공통으로 보여준다 */
-export default function MatchingTabStatus({ message, isLoading, onRetry }: MatchingTabStatusProps) {
-  const { colors } = useThemeColors();
-
+  onExplore?: () => void;
+  onRequests?: () => void;
+  kind?: 'requests' | 'messages';
+}) {
+  const { colors, palette } = useMatchingDesign();
   return (
-    <View style={[styles.container, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
-      {isLoading ? (
-        <ActivityIndicator color={Colors.primary.electricCyan} />
-      ) : (
-        <Text style={[styles.message, { color: colors.text.secondary }]}>{message}</Text>
+    <View
+      style={[
+        styles.card,
+        {
+          borderColor: colors.border.primary,
+          backgroundColor: colors.background.card,
+        },
+      ]}
+    >
+      <View style={[styles.symbol, { backgroundColor: palette.tint }]}>
+        {isLoading ? (
+          <ActivityIndicator color={palette.accentInk} />
+        ) : (
+          <BrowseIcon
+            name={onRetry ? 'wifi-slash' : kind === 'messages' ? 'chat-circle-dots' : 'user-plus'}
+            size={24}
+            color={palette.accentInk}
+          />
+        )}
+      </View>
+      <Text style={[styles.title, { color: colors.text.primary }]}>
+        {message}
+      </Text>
+      {description && (
+        <Text style={[styles.copy, { color: colors.text.secondary }]}>
+          {description}
+        </Text>
       )}
       {onRetry && !isLoading && (
-        <Pressable onPress={onRetry} style={styles.retryButton} accessibilityRole="button" accessibilityLabel="다시 시도">
-          <Text style={styles.retryText}>다시 시도</Text>
-        </Pressable>
+        <MatchActionButton label="다시 불러오기" onPress={onRetry} />
+      )}
+      {onExplore && (
+        <MatchActionButton label="상대 둘러보기" onPress={onExplore} primary />
+      )}
+      {onRequests && (
+        <MatchActionButton label="받은 신청 확인하기" onPress={onRequests} />
       )}
     </View>
   );
 }
-
 const styles = StyleSheet.create({
-  container: {
-    marginTop: Spacing.xxl,
+  card: {
     borderWidth: 1,
-    borderRadius: Radii.xxl,
-    paddingVertical: Spacing.giant,
-    paddingHorizontal: Spacing.xxl,
-    alignItems: 'center',
-    gap: Spacing.lg,
+    borderRadius: Radii.lg,
+    padding: Spacing.xl,
+    gap: Spacing.md,
   },
-  message: {
+  symbol: {
+    width: 48,
+    height: 48,
+    borderRadius: Radii.full,
+    justifyContent: 'center',
+    alignItems: 'center',
+    alignSelf: 'center',
+  },
+  title: {
     fontFamily: FontFamily.sans,
-    fontWeight: FontWeight.bold,
-    fontSize: FontSize.base,
+    fontSize: FontSize.xl,
+    fontWeight: FontWeight.semibold,
+    lineHeight: 26,
     textAlign: 'center',
   },
-  retryButton: {
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.xl,
-    borderRadius: Radii.lg,
-    backgroundColor: Colors.primary.electricCyan,
-  },
-  retryText: {
+  copy: {
     fontFamily: FontFamily.sans,
-    fontWeight: FontWeight.black,
-    fontSize: FontSize.xs,
-    letterSpacing: 1.1,
-    textTransform: 'uppercase',
-    color: Colors.primary.soulBlack,
+    fontSize: FontSize.base,
+    lineHeight: 23,
+    textAlign: 'center',
   },
 });

@@ -65,7 +65,7 @@ function CheckPlayer({ volume, onRetry }: { volume: number | null; onRetry: () =
       {!status.isLoaded && !failed ? <ActivityIndicator color={colors.brand.accent} /> : <Feather name={status.playing ? 'square' : 'play'} size={18} color={colors.brand.accent} />}
       <Text style={[styles.copy, { color: colors.brand.accent }]}>{failed ? '다시 시도' : status.playing ? '정지' : '소리 테스트'}</Text>
     </Pressable>
-    <Text style={[styles.copy, { color: colors.text.muted }]}>전체 음량은 기기의 볼륨 버튼으로 조절할 수 있어요.</Text>
+    <Text style={[styles.copy, { color: colors.text.muted }]}>통화는 이 안내 음성과 소리 크기가 다를 수 있어요. 통화 중 볼륨 버튼으로 맞추고, 작다면 ‘작은 통화 음성 키우기’를 사용해 주세요.</Text>
   </View>;
 }
 

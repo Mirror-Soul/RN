@@ -1,6 +1,6 @@
 import { useCountdown } from '@/src/hooks/useCountdown';
 import { sendVerificationCode, verifyCode } from '@/src/services/authService';
-import { getErrorDisplayMessage, isConflictError } from '@/src/utils/apiErrorCode';
+import { getErrorCode, getErrorDisplayMessage } from '@/src/utils/apiErrorCode';
 import { isValidEmail, isValidPassword } from '@/src/utils/validation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert } from 'react-native';
@@ -17,9 +17,9 @@ const MAX_VERIFY_ATTEMPTS = 5;
  * useStep1Form 훅
  * 회원가입 1단계의 모든 폼 로직과 상태를 캡슐화합니다. (SRP)
  */
-export function useStep1Form() {
+export function useStep1Form(initialEmail = '') {
   const [state, setState] = useState<Step1State>({
-    email: '',
+    email: initialEmail,
     isEmailVerified: false,
     password: '',
     passwordConfirm: '',
@@ -60,7 +60,7 @@ export function useStep1Form() {
       ...prev,
       ...updates,
       // 이메일을 다시 수정하면 이전 시도의 인라인 에러(예: 중복 이메일)는 더 이상 유효하지 않다.
-      ...(updates.email !== undefined ? { emailError: undefined, isEmailVerified: false } : null),
+      ...(updates.email !== undefined ? { emailError: undefined, emailExists: false, isEmailVerified: false } : null),
     }));
   }, [resetTimer]);
 
@@ -83,7 +83,7 @@ export function useStep1Form() {
       startTimer();
       setIsModalVisible(true);
       setVerifyAttemptCount(0); // 재발송 시 시도 횟수 초기화
-      updateState({ emailError: undefined }); // 이전 시도의 인라인 에러 초기화
+      updateState({ emailError: undefined, emailExists: false });
       const session = generation.current;
       requestLock.current = true;
       issuedEmail.current = null;
@@ -98,9 +98,9 @@ export function useStep1Form() {
         // 실패: Optimistic UI 롤백
         resetTimer();
         setIsModalVisible(false);
-        if (isConflictError(error)) {
+        if (getErrorCode(error) === 'DUPLICATE_EMAIL') {
           // 이미 가입된 이메일: Alert 대신 입력창 아래 인라인 에러로 표시
-          updateState({ emailError: getErrorDisplayMessage(error, '이미 가입된 이메일입니다.') });
+          updateState({ emailError: getErrorDisplayMessage(error, '이미 가입된 이메일이에요.'), emailExists: true });
         } else {
           Alert.alert(
             '인증 코드 발송 실패',

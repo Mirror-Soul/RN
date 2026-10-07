@@ -1,9 +1,11 @@
+import { PROFILE_PHOTO_MAX_WIDTH } from '@/src/features/profile/photo/profilePhotoPresentation';
 import { Radii } from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import type { Recommendation } from '@/src/types/api/home';
 import * as Haptics from 'expo-haptics';
-import React, { useState } from 'react';
-import { Dimensions, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, useWindowDimensions } from 'react-native';
+import { useLayout } from '@/src/hooks/useLayout';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   useAnimatedStyle,
@@ -12,13 +14,15 @@ import Animated, {
   runOnJS,
   WithSpringConfig,
   SharedValue,
+  useSharedValue,
+  cancelAnimation,
+  ReduceMotion,
 } from 'react-native-reanimated';
 import DiscoveryCardContent from './DiscoveryCardContent';
 import PhotoLightbox from './PhotoLightbox';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
 // DiscoveryStackPeek도 같은 값을 기준으로 "드래그가 얼마나 진행됐는지"를 계산하므로 export한다.
-export const SWIPE_DISTANCE_THRESHOLD = SCREEN_WIDTH * 0.3;
+export const SWIPE_DISTANCE_RATIO = 0.3;
 const SWIPE_VELOCITY_THRESHOLD = 500;
 
 // 헤더 매칭 스위치(MainHeader.tsx)와 동일한 톤 — 기본 스프링보다 감쇠를 늘리고
@@ -27,38 +31,57 @@ const CARD_SPRING_CONFIG: WithSpringConfig = {
   damping: 20,
   stiffness: 100,
   mass: 1,
+  reduceMotion: ReduceMotion.System,
 };
 
 interface DiscoveryMatchCardProps {
   match: Recommendation;
   onOpenDetail?: (match: Recommendation) => void;
-  /** 오른쪽으로 스와이프 — 다음 후보로 (기존 "패스"와 동일하게 서버에 스와이프 기록). */
+  /** 왼쪽으로 스와이프 — 다음 후보로 (PASS 기록). */
   onPass: () => void;
-  /** 왼쪽으로 스와이프 — 이전 후보로 돌아가기. 서버 기록 없이 로컬 위치만 되돌린다. */
+  /** 오른쪽으로 스와이프 — 이전 후보로 돌아가기. 서버 기록 없이 로컬 위치만 되돌린다. */
   onGoBack: () => void;
-  /** false면 이미 첫 번째 후보라 더 되돌아갈 곳이 없다는 뜻 — 왼쪽 스와이프를 커밋하지 않는다. */
+  /** 첫 번째 후보라면 이전 후보 방향(오른쪽) 이동을 막는다. */
   canGoBack: boolean;
   onConnect: () => void;
-  /** 부모(DiscoveryMatchSection)가 소유 — DiscoveryStackPeek도 같은 값을 봐야 드래그
-      진행 정도에 맞춰 뒤 카드가 반응할 수 있어서, 이 카드 안에서 만들지 않고 받는다. */
+  /** 부모가 보관하고, 버튼으로 후보가 바뀔 때도 드래그 위치를 초기화한다. */
   translateX: SharedValue<number>;
+  onReloadPhoto?: () => Promise<unknown>;
 }
 
 /**
  * DiscoveryMatchCard 컴포넌트 (SRP)
  * 발견 탭 추천 카드의 제스처/변환/라이트박스 셸만 담당합니다 — 실제 정보 표시(사진/
  * 이름/메타/한줄소개/칩/버튼)는 DiscoveryCardContent가 맡고, 이 컴포넌트는 그걸
- * 감싸서 인터랙션(콜백)을 연결하기만 합니다(DiscoveryStackPeek과 내용을 공유하기
- * 위한 분리 — DiscoveryCardContent 자체 주석 참고).
- * 패스는 버튼이 아니라 카드를 좌우로 스와이프하는 제스처로 처리한다 — 오른쪽은 다음
- * 후보로, 왼쪽은 이전 후보로 돌아간다(방향에 따라 의미가 다름).
+ * 감싸서 인터랙션(콜백)을 연결합니다. 왼쪽 스와이프는 다음 후보로,
+ * 오른쪽 스와이프는 이전 후보로 이동하며 하단 이전·다음 버튼도 함께 제공합니다.
  */
-export default function DiscoveryMatchCard({ match, onOpenDetail, onPass, onGoBack, canGoBack, onConnect, translateX }: DiscoveryMatchCardProps) {
+export default function DiscoveryMatchCard({
+  match,
+  onOpenDetail,
+  onPass,
+  onGoBack,
+  canGoBack,
+  onConnect,
+  translateX,
+  onReloadPhoto,
+}: DiscoveryMatchCardProps) {
   const { colors } = useThemeColors();
+  const { width } = useWindowDimensions();
+  const { cardWidth } = useLayout();
+  const [measuredWidth, setMeasuredWidth] = useState(cardWidth);
   const [isLightboxVisible, setIsLightboxVisible] = useState(false);
+  const exiting = useSharedValue(false);
+
+  useEffect(() => {
+    cancelAnimation(translateX);
+    translateX.value = 0;
+    exiting.value = false;
+    return () => { cancelAnimation(translateX); };
+  }, [match.userUuid, width, translateX, exiting]);
 
   const triggerSwipeHaptic = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
   };
 
   // 스와이프 제스처 밖(수직 ScrollView)과 충돌하지 않도록 수평 이동이 확실할 때만
@@ -67,62 +90,87 @@ export default function DiscoveryMatchCard({ match, onOpenDetail, onPass, onGoBa
     .activeOffsetX([-10, 10])
     .failOffsetY([-15, 15])
     .onUpdate((event) => {
-      // 첫 번째 카드에는 이전 후보가 없으므로, 왼쪽으로는 드래그 단계부터 이동시키지
-      // 않는다. 기존에는 손가락을 놓을 때만 원위치로 돌아와 "넘어갈 수 있는 것처럼"
-      // 보였는데, 이 제한으로 다음(오른쪽) 방향만 자연스럽게 반응한다.
-      translateX.value = canGoBack ? event.translationX : Math.max(0, event.translationX);
+      if (exiting.value) return;
+      // 첫 번째 카드에서는 오른쪽(이전) 드래그를 막고 왼쪽(다음)만 허용한다.
+      translateX.value = canGoBack
+        ? event.translationX
+        : Math.min(0, event.translationX);
     })
     .onEnd((event) => {
+      if (exiting.value) return;
+      const distance = Math.abs(event.translationX);
+      // A tiny high-velocity flick, or a drag reversing direction, should return home.
+      const intentionalFlick = distance >= 24 &&
+        Math.abs(event.velocityX) > SWIPE_VELOCITY_THRESHOLD &&
+        event.translationX * event.velocityX > 0;
       const passedThreshold =
-        Math.abs(event.translationX) > SWIPE_DISTANCE_THRESHOLD || Math.abs(event.velocityX) > SWIPE_VELOCITY_THRESHOLD;
-      const isRightSwipe = event.translationX > 0;
-      // 왼쪽 스와이프인데 더 돌아갈 후보가 없으면(첫 카드) 커밋하지 않고 원위치로 되돌린다 —
-      // 그대로 날아가게 두면 currentIndex가 안 바뀌어(0에서 클램프) 같은 카드가 다시 안
-      // 마운트되고, 이미 화면 밖으로 이동한 상태로 멈춰 빈 화면처럼 보이게 된다.
-      const canCommit = isRightSwipe || canGoBack;
+        distance > Math.min(120, Math.max(48, measuredWidth * SWIPE_DISTANCE_RATIO)) || intentionalFlick;
+      const isNextSwipe = (event.translationX || event.velocityX) < 0;
+      // 후보가 없는 이전 방향으로 카드를 화면 밖에 보내지 않는다.
+      const canCommit = isNextSwipe || canGoBack;
 
       if (passedThreshold && canCommit) {
-        const direction = isRightSwipe ? 1 : -1;
+        exiting.value = true;
+        const direction = isNextSwipe ? -1 : 1;
         runOnJS(triggerSwipeHaptic)();
-        translateX.value = withTiming(direction * SCREEN_WIDTH * 1.5, { duration: 220 }, (finished) => {
-          if (!finished) return;
-          if (isRightSwipe) {
-            runOnJS(onPass)();
-          } else {
-            runOnJS(onGoBack)();
-          }
-        });
+        translateX.value = withTiming(
+          direction * width,
+          { duration: 200, reduceMotion: ReduceMotion.System },
+          (finished) => {
+            if (!finished) { exiting.value = false; return; }
+            if (isNextSwipe) {
+              runOnJS(onPass)();
+            } else {
+              runOnJS(onGoBack)();
+            }
+          },
+        );
       } else {
         translateX.value = withSpring(0, CARD_SPRING_CONFIG);
       }
+    })
+    .onFinalize((_event, completed) => {
+      if (!completed && !exiting.value) translateX.value = withSpring(0, CARD_SPRING_CONFIG);
     });
 
   const cardAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: translateX.value }, { rotate: `${translateX.value / 20}deg` }],
+    transform: [
+      { translateX: translateX.value },
+    ],
   }));
 
   return (
     <>
-    <GestureDetector gesture={panGesture}>
-    <Animated.View
-      style={[styles.card, cardAnimatedStyle, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}
-    >
-      <DiscoveryCardContent
-        match={match}
-        showPhotoOverlays
-        summaryExpandable
-        onPhotoPress={() => setIsLightboxVisible(true)}
-        onContentPress={() => onOpenDetail?.(match)}
-        onConnectPress={onConnect}
-      />
-    </Animated.View>
-    </GestureDetector>
+      <GestureDetector gesture={panGesture}>
+        <Animated.View
+          onLayout={event => setMeasuredWidth(event.nativeEvent.layout.width)}
+          style={[
+            styles.card,
+            cardAnimatedStyle,
+            {
+              backgroundColor: colors.background.card,
+              borderColor: colors.border.primary,
+            },
+          ]}
+        >
+          <DiscoveryCardContent
+            match={match}
+            showPhotoOverlays
+            summaryExpandable
+            onPhotoPress={() => setIsLightboxVisible(true)}
+            onContentPress={() => onOpenDetail?.(match)}
+            onConnectPress={onConnect}
+            onReloadPhoto={onReloadPhoto}
+          />
+        </Animated.View>
+      </GestureDetector>
 
-    <PhotoLightbox
-      visible={isLightboxVisible}
-      imageUrl={match.profileImageUrl ?? ''}
-      onClose={() => setIsLightboxVisible(false)}
-    />
+      <PhotoLightbox
+        visible={isLightboxVisible}
+        imageUrl={match.profileImageUrl ?? ''}
+        onReload={onReloadPhoto}
+        onClose={() => setIsLightboxVisible(false)}
+      />
     </>
   );
 }
@@ -130,7 +178,9 @@ export default function DiscoveryMatchCard({ match, onOpenDetail, onPass, onGoBa
 const styles = StyleSheet.create({
   card: {
     width: '100%',
-    borderRadius: Radii.xxl,
+    maxWidth: PROFILE_PHOTO_MAX_WIDTH,
+    alignSelf: 'center',
+    borderRadius: Radii.lg,
     overflow: 'hidden',
     borderWidth: 1,
   },

@@ -1,93 +1,28 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import MaskedView from '@react-native-masked-view/masked-view';
-import { LinearGradient } from 'expo-linear-gradient';
-import {Colors, FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
+import { StyleSheet, Text, View } from 'react-native';
+import { FontFamily, FontSize, FontWeight, Spacing } from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
+import MirrorSoulMark from '@/src/components/brand/MirrorSoulMark';
 
-/**
- * LoginHeader 컴포넌트
- * "Mirror Soul" 리니어 그라디언트 로고와 "당신의 영혼을 비추는 거울" 부제를 렌더링.
- */
-export default function LoginHeader() {
+export default function LoginHeader({ compact = false, small = false }: { compact?: boolean; small?: boolean }) {
   const { colors } = useThemeColors();
-
-  return (
-    <View style={styles.container}>
-      {/* Container/Header/Heading1 */}
-      <View style={styles.heading1}>
-        <View style={styles.titleWrapper}>
-          <MaskedView
-            style={StyleSheet.absoluteFill}
-            maskElement={
-              <View style={styles.maskContainer}>
-                <Text style={styles.title}>Mirror Soul</Text>
-              </View>
-            }
-          >
-            <LinearGradient
-              colors={Colors.gradient.cyanToPurple}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={StyleSheet.absoluteFill}
-            />
-          </MaskedView>
-          {/* Layout spacer for absolute MaskedView */}
-          <Text style={[styles.title, { opacity: 0 }]}>Mirror Soul</Text>
-        </View>
-      </View>
-
-      {/* Container/Header/Paragraph */}
-      <View style={styles.paragraph}>
-        <Text style={[styles.subtitle, { color: colors.text.secondary }]}>당신의 영혼을 비추는 거울</Text>
-      </View>
+  return <View style={[styles.container, compact && styles.compact]}>
+    <View style={[styles.brand, compact && styles.compactBrand]}>
+      <MirrorSoulMark size={compact ? 32 : small ? 64 : 76} />
+      <Text accessibilityRole="header" style={[styles.wordmark, small && styles.smallWordmark, compact && styles.compactWordmark, { color: colors.text.primary }]}>MirrorSoul</Text>
     </View>
-  );
+    {!compact && <Text lineBreakStrategyIOS="hangul-word" textBreakStrategy="highQuality" style={[styles.description, { color: colors.text.secondary }]}>
+      나를 닮은 트윈, 새로운 연결.
+    </Text>}
+  </View>;
 }
-
 const styles = StyleSheet.create({
-  container: {
-    width: '100%',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  heading1: {
-    alignSelf: 'stretch',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  paragraph: {
-    alignSelf: 'stretch',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  titleWrapper: {
-    position: 'relative',
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  maskContainer: {
-    backgroundColor: 'transparent',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-  },
-  title: {
-    fontFamily: FontFamily.sans,
-    fontSize: 36,
-    fontWeight: '300',
-    lineHeight: 40,
-    letterSpacing: 0.369,
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.base,
-    fontWeight: FontWeight.regular,
-    lineHeight: 20,
-    textAlign: 'center',
-    letterSpacing: -0.15,
-  },
+  container: { alignItems: 'center', gap: Spacing.sm },
+  compact: { alignItems: 'flex-start' },
+  brand: { alignItems: 'center', gap: Spacing.sm },
+  compactBrand: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
+  wordmark: { fontFamily: FontFamily.sans, fontSize: 30, fontWeight: FontWeight.bold, lineHeight: 38, letterSpacing: -1.1, textAlign: 'center', flexShrink: 1 },
+  smallWordmark: { fontSize: 28, lineHeight: 36 },
+  compactWordmark: { fontSize: FontSize.xxl, lineHeight: 28, letterSpacing: -0.6, textAlign: 'left' },
+  description: { fontFamily: FontFamily.sans, fontSize: FontSize.base, lineHeight: 23, textAlign: 'center' },
 });

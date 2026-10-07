@@ -26,6 +26,7 @@ export function ProfilePhotoManager({ name, signup = false, disabled = false, co
   const stackActions = fontScale > 1.3;
   const { showToast } = useToast();
   const profile = useProfileQuery();
+  const refetchProfile = profile.refetch;
   const registeredPreview = useRegisteredPhotoPreview();
   const mutation = useProfilePhotoMutation();
   const [photo, setPhoto] = useState<EditableProfilePhoto | null>(null);
@@ -41,6 +42,10 @@ export function ProfilePhotoManager({ name, signup = false, disabled = false, co
   const currentUrl = profile.data ? profile.data.profileImageUrl : registeredPreview?.url;
   const previewUri = registeredPhotoPreviewUri(registeredPreview, currentUrl);
   useEffect(() => { if (!currentUrl) setViewerOpen(false); }, [currentUrl]);
+  useEffect(() => {
+    // Fetch a current signed URL on opening, without remounting the native Modal.
+    if ((viewerOpen || photoViewerOpen) && typeof refetchProfile === 'function') void refetchProfile();
+  }, [viewerOpen, photoViewerOpen, refetchProfile]);
   const busy = picking || mutation.isPending || disabled;
   const retryImage = () => { setImageAttempt(value => value + 1); void profile.refetch(); };
   const pick = async (camera: boolean) => {
@@ -156,7 +161,7 @@ export function ProfilePhotoManager({ name, signup = false, disabled = false, co
         </Pressable>}
       </View>}
       {error && <Text accessibilityRole="alert" style={[styles.help, { color: colors.state.danger }]}>{error}</Text>}
-      {!!currentUrl && (viewerOpen || photoViewerOpen) && <ProfilePhotoViewer key={currentUrl} uri={currentUrl} previewUri={previewUri} onRetry={retryImage} name={name} disabled={busy} onClose={closeViewer} onChange={openMenu} onDelete={remove} />}
+      {!!currentUrl && (viewerOpen || photoViewerOpen) && <ProfilePhotoViewer uri={currentUrl} previewUri={previewUri} onRetry={retryImage} name={name} disabled={busy} onClose={closeViewer} onChange={openMenu} onDelete={remove} />}
       {photo && <ProfilePhotoEditor photo={photo} name={name} onClose={() => setPhoto(null)} onSaved={() => showToast('프로필 사진을 등록했어요.', 'success')} />}
     </View>
   );

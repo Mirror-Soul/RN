@@ -1,146 +1,148 @@
-import React, { useRef, useState } from 'react';
-import {FontFamily, FontSize, FontWeight, Spacing} from '@/src/constants/theme';
-
-import { View, Text, StyleSheet } from 'react-native';
-import { BottomSheet } from '../../../components/common/BottomSheet/BottomSheet';
-import { TIME_REFILL_OPTIONS, TimeRefillOptionData } from '../constants/timeRefillOptions';
+import React, { useEffect, useRef, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { BottomSheet } from '@/src/components/common/BottomSheet/BottomSheet';
+import { BrowseText as Text } from '@/src/components/home/common/BrowseText';
+import { BrowseIcon } from '@/src/components/home/common/BrowseIcon';
+import { MatchActionButton } from '@/src/features/match/components/MatchActionButton';
+import { useMatchingDesign } from '@/src/features/match/components/MatchingDesign';
+import { TIME_REFILL_OPTIONS } from '../constants/timeRefillOptions';
 import { TimeRefillOption } from './TimeRefillOption';
-import { useThemeColors } from '@/src/hooks/useThemeColors';
+import { TimeRefillTerms } from './TimeRefillTerms';
 import { useTimeStatusQuery } from '../hooks/useTimeStatusQuery';
 import { useBuyTimeMutation } from '../hooks/useBuyTimeMutation';
 import { formatCallTime } from '@/src/utils/formatCallTime';
 import { getErrorDisplayMessage } from '@/src/utils/apiErrorCode';
 import { useToast } from '@/src/components/common/Toast/ToastProvider';
 
-interface TimeRefillBottomSheetProps {
+export function TimeRefillBottomSheet({ isOpen, onClose, embedded = false }: {
   isOpen: boolean;
   onClose: () => void;
-}
-
-export const TimeRefillBottomSheet = ({ isOpen, onClose }: TimeRefillBottomSheetProps) => {
-  const { colors } = useThemeColors();
-  const { data, isLoading, isError, refetch } = useTimeStatusQuery();
-  const remainingTimeText = isLoading ? '조회 중...' : isError ? '조회 실패' : formatCallTime(data?.remainingTalkTime ?? 0);
+  embedded?: boolean;
+}) {
+  const { colors, palette } = useMatchingDesign();
+  const insets = useSafeAreaInsets();
+  const { height, fontScale } = useWindowDimensions();
+  const { data, isLoading, isError, refetch } = useTimeStatusQuery(isOpen);
+  const remainingTimeText = isError ? '다시 확인' : isLoading || !data ? '확인 중…' : formatCallTime(data.remainingTalkTime);
   const buyTimeMutation = useBuyTimeMutation();
-  const [purchasingId, setPurchasingId] = useState<string | null>(null);
-  const purchaseInFlightRef = useRef(false);
   const { showToast } = useToast();
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [purchasing, setPurchasing] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
+  const purchaseInFlightRef = useRef(false);
+  const mounted = useRef(true);
+  const presentation = useRef(0);
+  const openRef = useRef(isOpen);
+  openRef.current = isOpen;
+  useEffect(() => {
+    mounted.current = true;
+    return () => { mounted.current = false; };
+  }, []);
+  useEffect(() => {
+    presentation.current += 1;
+    if (isOpen) {
+      setShowTerms(false);
+      if (!purchaseInFlightRef.current) setSelectedId(null);
+    }
+  }, [isOpen]);
 
-  const handleSelectOption = async (option: TimeRefillOptionData) => {
-    // purchasingId/isPending은 리렌더 이후에나 반영되므로, 연속 탭에 의한 중복 결제를 막으려면 동기 락이 필요하다.
-    if (purchaseInFlightRef.current) return;
+  const selected = TIME_REFILL_OPTIONS.find(option => option.id === selectedId);
+  const handleConfirm = async () => {
+    // A radio tap only selects. Guard the actual non-idempotent POST synchronously.
+    if (!selected || !openRef.current || purchaseInFlightRef.current) return;
     purchaseInFlightRef.current = true;
-    setPurchasingId(option.id);
+    const currentPresentation = presentation.current;
+    setPurchasing(true);
     try {
-      await buyTimeMutation.mutateAsync(option.seconds);
-      onClose();
+      await buyTimeMutation.mutateAsync(selected.seconds);
+      // A late result must not dismiss a newly reopened sheet or an unmounted profile.
+      if (mounted.current && openRef.current && presentation.current === currentPresentation) {
+        showToast(`${selected.addedTime}을 충전했어요. 결제는 발생하지 않았어요.`, 'success');
+        onClose();
+      }
     } catch (error) {
-      showToast(getErrorDisplayMessage(error, '시간 충전에 실패했습니다. 잠시 후 다시 시도해주세요.'), 'error');
+      if (mounted.current && openRef.current && presentation.current === currentPresentation) {
+        showToast(getErrorDisplayMessage(error, '시간 충전에 실패했어요. 남은 시간을 확인한 뒤 다시 시도해주세요.'), 'error');
+        void refetch();
+      }
     } finally {
       purchaseInFlightRef.current = false;
-      setPurchasingId(null);
+      if (mounted.current) setPurchasing(false);
     }
   };
 
-  return (
-    <BottomSheet isOpen={isOpen} onClose={onClose} height={580}>
-      <View style={styles.container}>
-        
-        {/* Handle mark indicator (optional extra styling, the main one is in BottomSheet) */}
-        
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={[styles.title, { color: colors.text.primary }]}>대화 시간 채우기</Text>
-          {isError ? (
-            <Text
-              style={[styles.subtitle, styles.subtitleError, { color: colors.state.danger }]}
-              onPress={() => refetch()}
-              accessibilityRole="button"
-              accessibilityLabel="남은 시간 다시 조회"
-            >
-              현재 남은 시간: {remainingTimeText} · 재시도
-            </Text>
-          ) : (
-            <Text style={[styles.subtitle, { color: colors.text.secondary }]}>현재 남은 시간: {remainingTimeText}</Text>
-          )}
-        </View>
+  const availableHeight = Math.max(1, height - insets.top - 12);
+  const inlineFooter = availableHeight < 400 || fontScale > 1.6;
+  const horizontalInsets = { paddingLeft: 20 + insets.left, paddingRight: 20 + insets.right };
+  const footer = <View testID="refill-confirmation" style={[styles.footer, !inlineFooter && horizontalInsets, { borderTopColor: colors.border.primary, paddingBottom: Math.max(insets.bottom, 12) }]}>
+    <MatchActionButton primary label={selected ? `${selected.addedTime} 테스트 충전하기` : '시간을 선택해주세요'}
+      onPress={handleConfirm} busy={purchasing} disabled={!selected} icon={color => <BrowseIcon name="plus-circle" color={color} />} />
+    <Text style={[styles.footerNote, { color: colors.text.secondary }]}>돈이 청구되지 않아요</Text>
+  </View>;
 
-        {/* Options */}
-        <View style={styles.optionsContainer}>
-          {TIME_REFILL_OPTIONS.map((option, index) => (
-            <TimeRefillOption
-              key={option.id}
-              option={option}
-              delay={index * 100} // Staggered entrance
-              onPress={() => handleSelectOption(option)}
-              isLoading={purchasingId === option.id}
-              disabled={purchasingId !== null && purchasingId !== option.id}
-            />
-          ))}
-        </View>
-
-        {/* Terms footer */}
-        <View style={styles.footer}>
-          <Text style={[styles.footerText, { color: colors.text.muted }]}>
-            구매 시 앱스토어 계정으로 결제되며, 충전된 시간의 유효기간 및 환불 정책은{' '}
-            <Text style={[styles.linkText, { color: colors.text.secondary }]} onPress={() => console.log('약관 클릭')}>
-              이용 약관
-            </Text>
-            을 확인해 주세요.
-          </Text>
-        </View>
-        
+  return <BottomSheet isOpen={isOpen} onClose={onClose} embedded={embedded} dragFromHandleOnly height={Math.min(720, availableHeight)}>
+    <ScrollView key={showTerms ? 'terms' : 'options'} style={styles.scroll}
+      contentContainerStyle={[styles.content, horizontalInsets, { paddingBottom: showTerms ? Math.max(insets.bottom, 20) : 16 }]}>
+      <View style={styles.header}>
+        <Text variant="heading" accessibilityRole="header" style={[styles.title, { color: colors.text.primary }]}>
+          {showTerms ? '충전 이용약관' : '대화 시간 채우기'}
+        </Text>
+        <Pressable onPress={onClose} accessibilityRole="button" accessibilityLabel="충전 창 닫기" style={styles.close}>
+          <BrowseIcon name="x" size={22} color={colors.text.secondary} />
+        </Pressable>
       </View>
-    </BottomSheet>
-  );
-};
+      {showTerms ? <>
+        <Pressable accessibilityRole="button" accessibilityLabel="충전으로 돌아가기" onPress={() => setShowTerms(false)} style={styles.back}>
+          <BrowseIcon name="caret-left" color={palette.cyanInk} />
+          <Text style={[styles.backLabel, { color: palette.cyanInk }]}>충전으로 돌아가기</Text>
+        </Pressable>
+        <TimeRefillTerms />
+      </> : <>
+        <Pressable disabled={!isError} onPress={() => { void refetch(); }} accessibilityRole={isError ? 'button' : undefined}
+          accessibilityLabel={isError ? '남은 시간 다시 조회' : `남은 시간 ${remainingTimeText}`} style={styles.balance}>
+          <BrowseIcon name={isError ? 'arrows-clockwise' : 'clock'} color={palette.cyanInk} />
+          <Text style={[styles.balanceLabel, { color: colors.text.secondary }]}>남은 시간</Text>
+          <Text style={[styles.balanceValue, { color: isError ? colors.state.danger : palette.cyanInk }]}>{remainingTimeText}</Text>
+        </Pressable>
+        <View style={[styles.notice, { backgroundColor: palette.coolTint }]}>
+          <BrowseIcon name="info" color={palette.cyanInk} />
+          <Text style={[styles.noticeText, { color: colors.text.primary }]}>현재는 결제 없이 시간을 채우는 테스트 기능이에요. 표시 가격은 예시입니다.</Text>
+        </View>
+        <View accessibilityRole="radiogroup" style={styles.options}>
+          {TIME_REFILL_OPTIONS.map(option => <TimeRefillOption key={option.id} option={option} selected={option.id === selectedId}
+            disabled={purchasing} onPress={() => setSelectedId(option.id)} />)}
+        </View>
+        <Text style={[styles.comparisonNote, { color: colors.text.muted }]}>취소선은 같은 시간을 30분 예시 상품으로 채웠을 때의 비교 가격이에요. 과거 판매가가 아니며, 절약률은 반올림한 값입니다.</Text>
+        <Pressable accessibilityRole="button" accessibilityLabel="충전 이용약관 보기" onPress={() => setShowTerms(true)} style={[styles.termsLink, { borderColor: colors.border.primary }]}>
+          <BrowseIcon name="file-text" color={palette.accentInk} />
+          <Text style={[styles.termsLabel, { color: colors.text.secondary }]}>충전 이용약관 · 검토용 초안</Text>
+          <BrowseIcon name="caret-right" size={18} color={colors.text.muted} />
+        </Pressable>
+        {inlineFooter && footer}
+      </>}
+    </ScrollView>
+    {!showTerms && !inlineFooter && footer}
+  </BottomSheet>;
+}
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: Spacing.xxl,
-    paddingTop: Spacing.sm,
-  },
-  header: {
-    marginBottom: Spacing.xl,
-  },
-  title: {
-    fontFamily: FontFamily.sans,
-    fontWeight: FontWeight.medium,
-    fontSize: FontSize.xl,
-    lineHeight: 28,
-    letterSpacing: -0.44,
-  },
-  subtitle: {
-    fontFamily: FontFamily.sans,
-    fontWeight: FontWeight.regular,
-    fontSize: FontSize.sm,
-    lineHeight: 16,
-    marginTop: Spacing.xs,
-  },
-  subtitleError: {
-    textDecorationLine: 'underline',
-  },
-  optionsContainer: {
-    flex: 1,
-  },
-  footer: {
-    paddingTop: Spacing.xxl,
-    paddingBottom: Spacing.xxxl, // extra padding for safe area
-  },
-  footerText: {
-    fontFamily: FontFamily.sans,
-    fontWeight: FontWeight.regular,
-    fontSize: FontSize.sm,
-    lineHeight: 20,
-    textAlign: 'center',
-  },
-  linkText: {
-    fontFamily: FontFamily.sans,
-    fontWeight: FontWeight.medium,
-    fontSize: FontSize.sm, // match text size but underlined
-    lineHeight: 24,
-    letterSpacing: -0.31,
-    textDecorationLine: 'underline',
-  },
+  scroll: { flex: 1 },
+  content: { paddingTop: 0, gap: 12 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+  title: { flex: 1, minWidth: 0, fontSize: 22, lineHeight: 30, fontWeight: '600' },
+  close: { minWidth: 48, minHeight: 48, alignItems: 'center', justifyContent: 'center' },
+  balance: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8, minHeight: 36 },
+  balanceLabel: { fontSize: 13, lineHeight: 20 },
+  balanceValue: { fontSize: 15, lineHeight: 22, fontWeight: '600', fontVariant: ['tabular-nums'] },
+  notice: { padding: 12, borderRadius: 14, flexDirection: 'row', gap: 10, alignItems: 'flex-start' },
+  noticeText: { flex: 1, minWidth: 0, fontSize: 13, lineHeight: 20 },
+  options: { gap: 10 },
+  comparisonNote: { fontSize: 12, lineHeight: 19 },
+  termsLink: { minHeight: 48, borderWidth: 1, borderRadius: 14, flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12 },
+  termsLabel: { flex: 1, minWidth: 0, fontSize: 13, lineHeight: 20 },
+  footer: { paddingTop: 12, gap: 6, borderTopWidth: StyleSheet.hairlineWidth },
+  footerNote: { fontSize: 12, lineHeight: 18, textAlign: 'center' },
+  back: { flexDirection: 'row', alignItems: 'center', minHeight: 48, gap: 6 },
+  backLabel: { flex: 1, fontSize: 14, lineHeight: 22 },
 });

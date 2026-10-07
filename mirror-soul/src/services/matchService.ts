@@ -20,10 +20,10 @@ export const getTwins = async (): Promise<TwinListResponse> => {
 };
 
 /** 디지털 자아 매칭 상태 조회 */
-export const getMatchingStatus = async (): Promise<MatchingStatusResponse> => {
+export const getMatchingStatus = async (signal?: AbortSignal): Promise<MatchingStatusResponse> => {
   logger.debug('getMatchingStatus');
   try {
-    const response = await apiClient.get<MatchingStatusResponse>('/match/status');
+    const response = await apiClient.get<MatchingStatusResponse>('/match/status', { signal });
     logger.info('getMatchingStatus SUCCESS:', response.data);
     return response.data;
   } catch (error: unknown) {

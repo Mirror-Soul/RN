@@ -1,118 +1,92 @@
-import { Feather } from '@expo/vector-icons';
-import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { Feather } from '@expo/vector-icons';
+import {
+  FontFamily,
+  FontSize,
+  FontWeight,
+  Radii,
+  Spacing,
+} from '@/src/constants/theme';
+import { BrowseText as Text } from '@/src/components/home/common/BrowseText';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { useTimeStatusQuery } from '@/src/features/profile/hooks/useTimeStatusQuery';
 import { formatCallTime } from '@/src/utils/formatCallTime';
+import { useMatchingDesign } from '@/src/features/match/components/MatchingDesign';
 
-interface AvailableTimeCardProps {
-  /** 지정하지 않으면 서버에서 조회한 남은 시간을 사용합니다. */
-  timeDisplay?: string;
-  onRefillPress?: () => void;
-}
-
-/**
- * AvailableTimeCard 컴포넌트 (SRP)
- * 잔여 대화 시간 표시와 "Refill" 트리거 버튼만 담당합니다.
- * 충전 바텀시트의 열림 상태는 부모(index.tsx)가 소유합니다.
- */
 export default function AvailableTimeCard({
   timeDisplay,
   onRefillPress,
-}: AvailableTimeCardProps) {
+}: {
+  timeDisplay?: string;
+  onRefillPress?: () => void;
+}) {
   const { colors } = useThemeColors();
+  const { fontScale } = useWindowDimensions();
+  const stack = fontScale > 1.3;
+  const { palette } = useMatchingDesign();
   const { data, isLoading, isError, refetch } = useTimeStatusQuery();
-  const displayValue =
-    timeDisplay ?? (isLoading ? '--:--:--' : isError ? '조회 실패 · 재시도' : formatCallTime(data?.remainingTalkTime ?? 0));
-
+  const failed = isError && !timeDisplay;
+  const display =
+    timeDisplay ??
+    (failed
+      ? '다시 확인'
+      : isLoading || !data
+        ? '--:--:--'
+        : formatCallTime(data.remainingTalkTime));
   return (
-    <LinearGradient
-      colors={Colors.gradient.twinCardHeader}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 0 }}
-      style={[styles.container, { borderColor: Colors.glass.cyan20_d3 }]}
+    <Pressable
+      onPress={
+        failed
+          ? () => {
+              void refetch();
+            }
+          : onRefillPress
+      }
+      accessibilityRole="button"
+      accessibilityLabel={failed ? '남은 시간 다시 조회' : '시간 충전하기'}
+      style={({ pressed }) => [
+        styles.card,
+        stack && styles.stacked,
+        {
+          backgroundColor: colors.background.card,
+          borderColor: colors.border.primary,
+        },
+        pressed && { opacity: 0.8 },
+      ]}
     >
-      <View style={styles.left}>
-        <View style={styles.iconWrapper}>
-          <Feather name="clock" size={20} color={Colors.primary.electricCyan} />
-        </View>
-        <View>
-          <Text style={[styles.label, { color: colors.text.muted }]}>남은 시간</Text>
-          {isError && !timeDisplay ? (
-            <TouchableOpacity onPress={() => refetch()} accessibilityRole="button" accessibilityLabel="남은 시간 다시 조회">
-              <Text style={[styles.value, styles.valueError, { color: colors.state.danger }]}>{displayValue}</Text>
-            </TouchableOpacity>
-          ) : (
-            <Text style={[styles.value, { color: colors.text.primary }]}>{displayValue}</Text>
-          )}
-        </View>
+      <View style={styles.icon}>
+        <Feather name="clock" size={18} color={palette.cyanInk} />
       </View>
-
-      <TouchableOpacity
-        style={styles.refillButton}
-        onPress={onRefillPress}
-        activeOpacity={0.8}
-        accessibilityRole="button"
-        accessibilityLabel="시간 충전하기"
-      >
-        <Text style={styles.refillText}>충전</Text>
-      </TouchableOpacity>
-    </LinearGradient>
+      <View style={styles.copy}>
+        <Text style={[styles.label, { color: colors.text.secondary }]}>
+          남은 시간
+        </Text>
+        <Text
+          variant="heading"
+          style={[
+            styles.value,
+            { color: failed ? colors.state.danger : palette.cyanInk },
+          ]}
+        >
+          {display}
+        </Text>
+      </View>
+      <View style={[styles.action, stack && styles.stackedAction]}>
+        <Feather name={failed ? 'refresh-cw' : 'plus'} size={16} color={colors.text.secondary} />
+        <Text style={[styles.actionLabel, { color: colors.text.secondary }]}>{failed ? '재시도' : '충전'}</Text>
+      </View>
+    </Pressable>
   );
 }
-
 const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.xl,
-    paddingVertical: Spacing.lg,
-    borderRadius: Radii.xxl,
-    borderWidth: 1,
-  },
-  left: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.lg,
-  },
-  iconWrapper: {
-    width: 40,
-    height: 40,
-    borderRadius: Radii.md2,
-    backgroundColor: Colors.glass.cyan10_d3,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  label: {
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.black,
-    marginBottom: 6,
-  },
-  value: {
-    fontFamily: FontFamily.mono,
-    fontSize: FontSize.xxl,
-    fontWeight: FontWeight.black,
-    letterSpacing: -0.45,
-  },
-  valueError: {
-    fontSize: FontSize.sm,
-    textDecorationLine: 'underline',
-  },
-  refillButton: {
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.sm,
-    borderRadius: Radii.md2,
-    backgroundColor: Colors.primary.electricCyan,
-  },
-  refillText: {
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.black,
-    color: Colors.primary.soulBlack,
-  },
+  card: { minHeight: 80, borderRadius: Radii.md, flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: Spacing.lg, paddingVertical: 12 },
+  stacked: { flexWrap: 'wrap' },
+  icon: { width: 24, alignItems: 'center' },
+  copy: { flex: 1, minWidth: 0, gap: 2 },
+  label: { fontFamily: FontFamily.sans, fontSize: 13, fontWeight: FontWeight.medium, lineHeight: 19 },
+  value: { fontFamily: FontFamily.sans, fontSize: 22, fontWeight: FontWeight.semibold, lineHeight: 29, fontVariant: ['tabular-nums'] },
+  action: { minHeight: 44, paddingHorizontal: 4, paddingVertical: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4 },
+  stackedAction: { width: '100%', justifyContent: 'flex-end' },
+  actionLabel: { fontFamily: FontFamily.sans, fontSize: FontSize.base, fontWeight: FontWeight.medium, lineHeight: 21, flexShrink: 1 },
 });

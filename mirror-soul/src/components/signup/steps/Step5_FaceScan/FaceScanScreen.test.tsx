@@ -1,8 +1,9 @@
 import React from 'react';
 import { act, fireEvent, render } from '@testing-library/react-native';
+import FaceCaptureScreen from './FaceCaptureScreen';
 import FaceScanScreen from '@/app/signup/face-scan';
 
-const mockRouter = { replace: jest.fn() };
+const mockRouter = { replace: jest.fn(), back: jest.fn(), dismissTo: jest.fn(), canGoBack: jest.fn(() => true) };
 const mockScan = {
   cameraRef: { current: null }, phase: 'idle', videoUri: null as string | null, error: null,
   cameraReady: false, matching: false, feedback: '얼굴을 맞춰주세요.', countdown: 3, stageProgress: 0,
@@ -21,9 +22,10 @@ jest.mock('@/src/components/signup/steps/Step5_FaceScan/hooks/useFaceScan', () =
 jest.mock('@/src/components/signup/steps/Step5_FaceScan/hooks/useFaceProcessor', () => ({ useFaceProcessor: () => ({ frameProcessor: undefined }) }));
 jest.mock('@/src/components/signup/steps/Step5_FaceScan/hooks/useFaceScanUpload', () => ({ useFaceScanUpload: () => mockUpload }));
 jest.mock('@/src/store/useAuthStore', () => ({ useAuthStore: { getState: () => mockAuth, subscribe: () => jest.fn() } }));
-jest.mock('@/src/hooks/useThemeColors', () => ({ useThemeColors: () => ({ colors: { background: { primary: '#000', card: '#111' }, text: { primary: '#fff', secondary: '#ccc', danger: '#f44' } } }) }));
+jest.mock('@/src/hooks/useThemeColors', () => ({ useThemeColors: () => ({ colors: jest.requireActual('@/src/constants/theme').lightTheme }) }));
+jest.mock('@expo/vector-icons', () => ({ Feather: () => null }));
 beforeEach(() => {
-  jest.clearAllMocks(); mockScan.phase = 'idle'; mockScan.videoUri = null;
+  jest.clearAllMocks(); mockRouter.canGoBack.mockReturnValue(true); mockScan.phase = 'idle'; mockScan.videoUri = null;
   mockUpload.error = null; mockUpload.isUploading = false; mockUpload.requiresLogin = false;
   mockAuth.userUuid = 'me'; mockAuth.isLoggedIn = true;
   mockUpload.uploadFaceVideo.mockResolvedValue(true);
@@ -70,4 +72,43 @@ it('offers login recovery instead of treating a forbidden response as completion
   expect(mockAuth.logout).toHaveBeenCalledTimes(1);
   expect(mockRouter.replace).toHaveBeenCalledWith('/login');
   expect(mockAuth.updateUserStatus).not.toHaveBeenCalled();
+});
+
+it('reuses signup capture for a face update, waits for consent, and reports job submission only', async () => {
+  mockScan.phase = 'completed'; mockScan.videoUri = 'file:///recording.mp4';
+  const registered = jest.fn();
+  const view = render(<FaceCaptureScreen mode="update" onRegistered={registered} />);
+  expect(view.getByText('트윈의 얼굴 다시 담기')).toBeTruthy();
+  expect(mockUpload.uploadFaceVideo).not.toHaveBeenCalled();
+  await act(async () => fireEvent.press(view.getByText('얼굴 학습 요청하기')));
+  expect(mockUpload.uploadFaceVideo).toHaveBeenCalledWith('file:///recording.mp4');
+  expect(view.getByText('얼굴 영상을 보냈어요')).toBeTruthy();
+  expect(view.queryByText('학습 완료')).toBeNull();
+  expect(registered).toHaveBeenCalledTimes(1);
+  await act(async () => fireEvent.press(view.getByText('성장으로 돌아가기')));
+  expect(mockAuth.updateUserStatus).not.toHaveBeenCalled();
+  expect(mockRouter.back).toHaveBeenCalledTimes(1);
+  expect(mockRouter.replace).not.toHaveBeenCalled();
+});
+
+it('returns from face update to the existing growth screen once despite repeated back taps', () => {
+  const view = render(<FaceCaptureScreen mode="update" />);
+  fireEvent.press(view.getByLabelText('뒤로가기'));
+  fireEvent.press(view.getByLabelText('뒤로가기'));
+  expect(mockRouter.back).toHaveBeenCalledTimes(1);
+  expect(mockRouter.replace).not.toHaveBeenCalled();
+});
+it('recovers a face update opened directly without a previous screen', () => {
+  mockRouter.canGoBack.mockReturnValue(false);
+  const view = render(<FaceCaptureScreen mode="update" />);
+  fireEvent.press(view.getByLabelText('뒤로가기'));
+  expect(mockRouter.dismissTo).toHaveBeenCalledWith('/(main)/grow');
+  expect(mockRouter.back).not.toHaveBeenCalled();
+});
+it('keeps the face back button inactive during upload', () => {
+  mockUpload.isUploading = true;
+  const view = render(<FaceCaptureScreen mode="update" />);
+  expect(view.getByLabelText('뒤로가기')).toBeDisabled();
+  fireEvent.press(view.getByLabelText('뒤로가기'));
+  expect(mockRouter.back).not.toHaveBeenCalled();
 });

@@ -1,18 +1,29 @@
+import { BrowseIcon } from '@/src/components/home/common/BrowseIcon';
 import { Feather } from '@expo/vector-icons';
 import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
+import { BrowseText as Text } from '@/src/components/home/common/BrowseText';
+import { MatchActionButton } from '@/src/features/match/components/MatchActionButton';
+import CallStartConfirmSheet, { CallTarget } from '@/src/components/call/CallStartConfirmSheet';
+import { TimeRefillBottomSheet } from '@/src/features/profile/components/TimeRefillBottomSheet';
+import { useMatchingDesign } from '@/src/features/match/components/MatchingDesign';
+import { useLayout } from '@/src/hooks/useLayout';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { useRecommendationDetailQuery } from '@/src/features/home/hooks/useRecommendationDetailQuery';
+import { useCachedRecommendationPhoto } from '@/src/features/home/hooks/useCachedRecommendationPhoto';
+import { sameProfileImageObject, selectProfileImageUrl, shouldRefreshProfileImage } from '@/src/features/profile/photo/profileImageUrl';
+import { refreshRecommendationPhoto } from '@/src/features/home/refreshRecommendationPhoto';
+import { queryClient } from '@/src/services/queryClient';
 import { getErrorCode, getErrorDisplayMessage } from '@/src/utils/apiErrorCode';
 import { formatRegion } from '@/src/utils/formatRegion';
 import { VoicePreviewPlayer } from '@/src/features/profile/components/VoicePreviewPlayer';
-import { jobCategories } from '@/src/components/signup/steps/Step2_BasicProfile/Professional/jobData';
-import { MBTI_AXES } from './mbtiAxes';
+import { ProfileJobBadge } from '@/src/features/profile/components/ProfileJobBadge';
+import { MbtiBalance } from './MbtiBalance';
+import { ProfilePhotoImage } from '@/src/features/profile/photo/ProfilePhotoImage';
+import { DetailPhotoOverlay } from '@/src/features/profile/photo/ProfilePhotoOverlays';
+import { PROFILE_PHOTO_ASPECT, PROFILE_PHOTO_MAX_WIDTH } from '@/src/features/profile/photo/profilePhotoPresentation';
 import { getMockRecommendationDetail, isMockRecommendationUuid } from './mockRecommendations';
 import type { Recommendation, RecommendationDetailResult } from '@/src/types/api/home';
-import { BlurView } from 'expo-blur';
-import { Image } from 'expo-image';
-import { LinearGradient } from 'expo-linear-gradient';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Animated,
@@ -20,19 +31,20 @@ import {
   Modal,
   ScrollView,
   StyleSheet,
-  Text,
   TouchableOpacity,
   View,
+  useWindowDimensions,
 } from 'react-native';
 import ReAnimated, { FadeInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface PartnerProfileModalProps {
+  source?: 'recommendation' | 'history';
   match: Recommendation | null;
   onClose: () => void;
   /** 닫힘 애니메이션 완료 뒤 호출 — 다음 native Modal을 이어 열 때 전환 겹침을 막는다. */
   onDismiss?: () => void;
-  onConnectNow?: (match: Recommendation) => void;
+  onStartCall?: (target: CallTarget, isPreview: boolean, remainingSeconds?: number) => void;
   /** 본인 데이터로 공개 레이아웃만 보여준다. 추천 API 조회/통화 버튼은 제공하지 않는다. */
   previewDetail?: RecommendationDetailResult;
   ownPreview?: boolean;
@@ -49,21 +61,50 @@ interface PartnerProfileModalProps {
  * SelectDropdownModal.tsx와 동일한 Modal(transparent)+Animated.View 진입 애니메이션 패턴을
  * 세로 슬라이드(하단→전체 화면)로 응용합니다.
  */
-export default function PartnerProfileModal({ match, onClose, onDismiss, onConnectNow, previewDetail, ownPreview = false, embedded = false, previewImageUri, onPreviewReload, isPreviewReloading = false }: PartnerProfileModalProps) {
+export default function PartnerProfileModal({ match, onClose, onDismiss, onStartCall, previewDetail, ownPreview = false, embedded = false, previewImageUri, onPreviewReload, isPreviewReloading = false, source = 'recommendation' }: PartnerProfileModalProps) {
   const { colors } = useThemeColors();
+  const { palette } = useMatchingDesign();
   const insets = useSafeAreaInsets();
+  const { height, fontScale } = useWindowDimensions();
+  const { contentContainerStyle, contentWidth } = useLayout();
+  const inlineAction = height < 500 || fontScale > 1.5;
+  // Keep the agreed 4:5 crop while avoiding an oversized photo on tablets.
+  const photoWidth = Math.min(PROFILE_PHOTO_MAX_WIDTH, Math.max(0, contentWidth - insets.left - insets.right - 32), Math.max(0, height - insets.top - insets.bottom) * 0.65 * PROFILE_PHOTO_ASPECT);
   const progress = useRef(new Animated.Value(0)).current;
   const [imageFailed, setImageFailed] = useState(false);
   const [previewFailed, setPreviewFailed] = useState(false);
   const [imageAttempt, setImageAttempt] = useState(0);
   const imageIdentity = useRef('');
+  const autoRecovery = useRef<{ userUuid: string; uri: string } | null>(null);
+  const photoRequests = useRef(new Map<string, Promise<void>>());
+  const [refreshingPhotoTarget, setRefreshingPhotoTarget] = useState<string | null>(null);
+  const mounted = useRef(true);
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+  const reloadRecommendationPhoto = useCallback((target: string) => {
+    const existing = photoRequests.current.get(target);
+    if (existing) return existing;
+    setRefreshingPhotoTarget(target);
+    const operation = refreshRecommendationPhoto(queryClient, target).finally(() => {
+      photoRequests.current.delete(target);
+      if (mounted.current) setRefreshingPhotoTarget(current => current === target ? null : current);
+    });
+    photoRequests.current.set(target, operation);
+    return operation;
+  }, []);
   // match가 null이 되어도 닫힘 애니메이션이 끝날 때까지 마지막 match를 계속 렌더링하기 위한 상태
   const [displayedMatch, setDisplayedMatch] = useState<Recommendation | null>(null);
+  const [activeSheet, setActiveSheet] = useState<'call' | 'refill' | null>(null);
+  useEffect(() => { setActiveSheet(null); }, [match?.userUuid]);
+  const closeTopLayer = () => {
+    if (activeSheet) setActiveSheet(null);
+    else onClose();
+  };
   // displayedMatch(닫힘 애니메이션 동안에도 유지되는 값)를 키로 써야, match prop이 먼저 null이
   // 되어도 애니메이션이 끝나기 전에 상세 전용 섹션이 먼저 비어버리지 않는다.
   // 목업 UUID는 백엔드 UUID가 아니며 실제 추천 노출 이력도 없다. 따라서 API 요청을 완전히
   // 건너뛰고, 실제 상세 API 응답과 같은 타입의 fixture로 UI를 렌더링한다.
   const displayedUserUuid = displayedMatch?.userUuid;
+  const cachedPhoto = useCachedRecommendationPhoto(ownPreview ? null : displayedUserUuid);
   const isMockMatch = isMockRecommendationUuid(displayedUserUuid);
   const mockDetail = getMockRecommendationDetail(displayedUserUuid);
   const {
@@ -74,8 +115,17 @@ export default function PartnerProfileModal({ match, onClose, onDismiss, onConne
     refetch: refetchDetail,
   } = useRecommendationDetailQuery(ownPreview || isMockMatch ? null : (displayedUserUuid ?? null));
   const detail = ownPreview ? previewDetail : (mockDetail ?? apiDetail);
+  const availablePhoto = detail
+    ? selectProfileImageUrl(detail.profileImageUrl, cachedPhoto === undefined ? displayedMatch?.profileImageUrl : cachedPhoto)
+    : null;
+  useEffect(() => {
+    if (ownPreview || isMockMatch || source !== 'recommendation' || isDetailError || isDetailFetching || !displayedUserUuid || !availablePhoto || !shouldRefreshProfileImage(availablePhoto)) return;
+    if (autoRecovery.current?.userUuid === displayedUserUuid && sameProfileImageObject(autoRecovery.current.uri, availablePhoto)) return;
+    autoRecovery.current = { userUuid: displayedUserUuid, uri: availablePhoto };
+    void reloadRecommendationPhoto(displayedUserUuid).catch(() => {});
+  }, [availablePhoto, displayedUserUuid, isDetailError, isDetailFetching, isMockMatch, ownPreview, reloadRecommendationPhoto, source]);
 
-  useEffect(() => { setImageFailed(false); setPreviewFailed(false); }, [displayedMatch?.profileImageUrl, detail?.profileImageUrl, previewImageUri]);
+  useEffect(() => { setImageFailed(false); setPreviewFailed(false); }, [displayedMatch?.profileImageUrl, detail?.profileImageUrl, previewImageUri, cachedPhoto]);
 
   useEffect(() => {
     if (match) {
@@ -114,13 +164,18 @@ export default function PartnerProfileModal({ match, onClose, onDismiss, onConne
   // 단, 상세 API가 null을 명시한 필드는 목록의 오래된 값으로 되살리지 않고 빈 상태를 보여준다.
   const profileName = detail?.name ?? displayedMatch.name;
   const profileAge = detail ? detail.age : displayedMatch.age;
-  const profileImageUrl = detail ? detail.profileImageUrl : displayedMatch.profileImageUrl;
+  const listPhoto = cachedPhoto === undefined ? displayedMatch.profileImageUrl : cachedPhoto;
+  const profileImageUrl = detail
+    ? selectProfileImageUrl(detail.profileImageUrl, listPhoto)
+    : selectProfileImageUrl(listPhoto, displayedMatch.profileImageUrl);
   const photoUri = imageFailed && ownPreview && previewImageUri && !previewFailed ? previewImageUri : profileImageUrl;
   const imageKey = `${displayedUserUuid}:${photoUri}:${imageAttempt}`;
   imageIdentity.current = imageKey;
   const showPhoto = !!photoUri && (!imageFailed || photoUri === previewImageUri);
-  const refreshProfile = ownPreview ? onPreviewReload : isMockMatch ? undefined : () => refetchDetail({ throwOnError: true });
-  const refreshing = ownPreview ? isPreviewReloading : isDetailFetching;
+  const refreshProfile = ownPreview ? onPreviewReload : isMockMatch ? undefined
+    : source === 'recommendation' && detail ? () => reloadRecommendationPhoto(displayedMatch.userUuid)
+      : () => refetchDetail({ throwOnError: true });
+  const refreshing = ownPreview ? isPreviewReloading : isDetailFetching || refreshingPhotoTarget === displayedUserUuid;
   const retryPhoto = () => {
     setImageAttempt(value => value + 1);
     setImageFailed(false);
@@ -129,254 +184,99 @@ export default function PartnerProfileModal({ match, onClose, onDismiss, onConne
   };
   const profileRegion = detail ? detail.region : displayedMatch.residence;
   const profileJob = detail ? detail.job : displayedMatch.job;
-  const jobCertificationSubmitted = detail ? detail.jobCertificationSubmitted : displayedMatch.jobCertificationSubmitted;
   const profileMbti = detail ? detail.mbti : displayedMatch.mbti;
+  const hasMbtiScores = !!detail?.mbtiAxisScores && Object.values(detail.mbtiAxisScores).some(Number.isFinite);
   const profileIntroduction = detail ? detail.selfIntroduction : displayedMatch.selfIntroduction;
   const personalityTags = detail ? detail.personalityTags : displayedMatch.personalityTags;
   const isRecommendationUnavailable = getErrorCode(detailError) === 'RECOMMENDATION_TARGET_NOT_FOUND';
   const detailErrorMessage = isRecommendationUnavailable
-    ? '이 추천은 더 이상 상세 정보를 확인할 수 없어요.'
+    ? source === 'history' ? '현재 이 사용자의 상세 프로필을 확인할 수 없어요.' : '이 추천은 더 이상 상세 정보를 확인할 수 없어요.'
     : getErrorDisplayMessage(detailError, '상세 정보를 불러오지 못했어요. 잠시 후 다시 시도해주세요.');
 
+
+  const callFooter = ownPreview ? null : <View style={[contentContainerStyle, styles.callFooter, { paddingBottom: Math.max(insets.bottom, Spacing.md), borderTopColor: colors.border.primary, backgroundColor: colors.background.primary }]}>
+    <MatchActionButton label={isRecommendationUnavailable ? '통화할 수 없어요' : '트윈과 통화하기'}
+      primary icon={color => <BrowseIcon name="phone-call" color={color} />} disabled={isRecommendationUnavailable || !onStartCall} onPress={() => setActiveSheet('call')} />
+  </View>;
   return (
-    <ProfileModalContainer embedded={embedded} onClose={onClose}>
-      <Animated.View
-        style={[
-          styles.container,
-          { backgroundColor: colors.background.primary },
-          {
-            transform: [
-              {
-                translateY: embedded ? 0 : progress.interpolate({ inputRange: [0, 1], outputRange: [600, 0] }),
-              },
-            ],
-          },
-        ]}
-      >
-        <ScrollView showsVerticalScrollIndicator={false} bounces={false}>
-          <View style={[styles.hero, { aspectRatio: 4 / 5 }]}>
-            {!showPhoto ? (
-              <LinearGradient colors={Colors.gradient.avatarPlaceholder} style={styles.heroImage}>
-                <View style={styles.heroImageFallbackContent} accessible accessibilityLabel={profileImageUrl ? '사진을 불러올 수 없습니다' : '프로필 사진이 없습니다'}>
-                  <View style={styles.heroImageFallbackAvatar}>
-                    <Feather name="user" size={46} color={Colors.neutral.pureWhite} />
-                  </View>
-                  <Text style={styles.heroImageFallbackText}>{profileImageUrl ? '사진을 불러올 수 없어요' : '프로필 사진이 없어요'}</Text>
-                </View>
-              </LinearGradient>
-            ) : (
-              <Image
-                key={imageKey}
-                source={{ uri: photoUri! }}
-                style={styles.heroImage}
-                contentFit="cover"
-                cachePolicy="disk"
-                transition={150}
-                onError={() => { if (imageIdentity.current !== imageKey) return; if (photoUri === previewImageUri) setPreviewFailed(true); else setImageFailed(true); }}
-              />
-            )}
-            {/* heroInfo는 항상 흰 텍스트이므로 다크/라이트 테마 모두 Hero 하단을 어둡게 마감한다.
-                콘텐츠 배경색으로 끝내면 라이트 모드에서 이름·위치·직업 텍스트가 묻힌다. */}
-            <LinearGradient
-              colors={['transparent', 'rgba(5,5,5,0.4)', 'rgba(5,5,5,0.82)', Colors.primary.cardBlack]}
-              locations={[0, 0.45, 0.85, 1]}
-              style={StyleSheet.absoluteFill}
-            />
-
-            <TouchableOpacity
-              style={[styles.closeButtonWrapper, { top: insets.top + Spacing.md, right: insets.right + Spacing.xl }]}
-              onPress={onClose}
-              activeOpacity={0.8}
-              accessibilityRole="button"
-              accessibilityLabel="닫기"
-            >
-              <BlurView intensity={40} tint="dark" style={styles.closeButton}>
-                <Feather name="x" size={20} color={Colors.neutral.pureWhite} />
-              </BlurView>
-            </TouchableOpacity>
-
-            {ownPreview && <View style={{ position: 'absolute', top: insets.top + Spacing.md, left: Spacing.xl, right: insets.right + Spacing.xl + 56, padding: Spacing.md, borderRadius: Radii.md, backgroundColor: 'rgba(0,0,0,0.65)' }}><Text style={{ color: Colors.neutral.pureWhite }}>상대에게 보이는 내 프로필</Text></View>}
-
-            <View style={styles.heroInfo}>
-              <View style={styles.badgeRow}>
-                {detail?.syncRate != null ? (
-                  <LinearGradient
-                    colors={[Colors.primary.electricCyan, Colors.primary.vividPurple]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={styles.compatBadge}
-                  >
-                    <Feather name="radio" size={10} color={Colors.neutral.pureWhite} />
-                    <Text style={styles.compatBadgeText}>트윈 싱크로율 {detail.syncRate}%</Text>
-                  </LinearGradient>
-                ) : null}
-                {profileMbti ? (
-                  <View style={styles.mbtiBadge}>
-                    <Text style={styles.mbtiBadgeText}>{profileMbti}</Text>
-                  </View>
-                ) : null}
-              </View>
-              <Text style={styles.nameText}>
-                {profileName}
-                {profileAge != null ? <Text style={styles.ageText}> {profileAge}</Text> : null}
-              </Text>
+    <ProfileModalContainer embedded={embedded} onClose={closeTopLayer}>
+      <View style={styles.container}>
+      <Animated.View accessibilityElementsHidden={activeSheet !== null} importantForAccessibility={activeSheet ? 'no-hide-descendants' : 'auto'} style={[styles.container, { backgroundColor: colors.background.primary, paddingTop: insets.top, paddingLeft: insets.left, paddingRight: insets.right,
+        transform: [{ translateY: embedded ? 0 : progress.interpolate({ inputRange: [0, 1], outputRange: [height, 0] }) }] }]}>
+        <View style={[contentContainerStyle, styles.header]}>
+          <Text variant="heading" accessibilityRole="header" style={[styles.headerTitle, { color: colors.text.primary }]}>{ownPreview ? '내 프로필 미리보기' : source === 'history' ? '사용자 상세' : '추천 프로필'}</Text>
+          <TouchableOpacity onPress={onClose} accessibilityRole="button" accessibilityLabel="닫기" style={styles.close}>
+            <Feather name="x" size={22} color={colors.text.primary} />
+          </TouchableOpacity>
+        </View>
+        <ScrollView style={styles.scroll} automaticallyAdjustContentInsets={false} contentInsetAdjustmentBehavior="never"
+          showsVerticalScrollIndicator={false} contentContainerStyle={[contentContainerStyle, { paddingBottom: ownPreview ? Math.max(insets.bottom, Spacing.lg) : 0 }]}>
+          <View style={[styles.hero, { width: photoWidth }]}>
+            {showPhoto ? <ProfilePhotoImage key={imageKey} source={{ uri: photoUri! }} style={StyleSheet.absoluteFill}
+              cachePolicy="disk" transition={150}
+              onError={() => { if (imageIdentity.current !== imageKey) return; if (photoUri === previewImageUri) setPreviewFailed(true); else setImageFailed(true); }} />
+              : <View style={styles.fallback} accessible accessibilityLabel={profileImageUrl ? '사진을 불러올 수 없습니다' : '프로필 사진이 없습니다'}>
+                <BrowseIcon name="user-circle" size={48} color={Colors.neutral.softWhite} />
+              </View>}
+            <DetailPhotoOverlay name={profileName} width={photoWidth} height={photoWidth / PROFILE_PHOTO_ASPECT} />
+          </View>
+          <View style={styles.content}>
+            {ownPreview && <Text style={[styles.caption, { color: colors.text.secondary }]}>상대에게 보이는 내 프로필이에요.</Text>}
+            <View style={styles.identity}>
               <View style={styles.metaRow}>
-                <View style={styles.metaItem}>
-                  <Feather name="map-pin" size={14} color={Colors.neutral.lightGray} />
-                  <Text style={styles.metaText}>{profileRegion ? formatRegion(profileRegion) : '활동 지역 미설정'}</Text>
-                </View>
-                <View style={styles.metaItem}>
-                  <Feather name="briefcase" size={14} color={Colors.neutral.lightGray} />
-                  <Text style={styles.metaText}>
-                    {profileJob ? jobCategories.find((c) => c.value === profileJob)?.label ?? profileJob : '직업 정보 미등록'}
-                  </Text>
-                  {profileJob && jobCertificationSubmitted ? (
-                    <View style={styles.documentSubmittedBadge} accessible accessibilityLabel="직업 인증 서류 제출">
-                      <Feather name="shield" size={12} color={Colors.neutral.pureWhite} />
-                      <Text style={styles.documentSubmittedText}>서류 제출</Text>
-                    </View>
-                  ) : null}
-                </View>
+                {profileAge != null && <Text style={[styles.metaText, { color: colors.text.secondary }]}>{profileAge}세</Text>}
+                <Text style={[styles.metaText, { color: colors.text.secondary }]}>{profileRegion ? formatRegion(profileRegion) : detail ? '활동 지역 미설정' : '활동 지역 확인 중'}</Text>
+                {profileJob && <ProfileJobBadge job={profileJob} />}
               </View>
             </View>
-          </View>
-
-          <View style={styles.content}>
-            {imageFailed && profileImageUrl && <View style={{ gap: Spacing.sm }}>
-              <Text style={[styles.emptyText, { color: colors.text.secondary }]}>{showPhoto ? '방금 등록한 사진을 보여드리고 있어요. 서버 사진은 다시 확인해 주세요.' : '사진은 등록되어 있지만 불러오지 못했어요.'}</Text>
-              <TouchableOpacity onPress={retryPhoto} disabled={refreshing} accessibilityRole="button" accessibilityLabel="프로필 사진 다시 불러오기" style={{ minHeight: 48, justifyContent: 'center' }}><Text style={[styles.emptyText, { color: colors.brand.accent }]}>사진 다시 불러오기</Text></TouchableOpacity>
+            {!showPhoto && !profileImageUrl && <Text style={[styles.caption, { color: colors.text.secondary }]}>프로필 사진은 아직 등록하지 않았어요.</Text>}
+            {imageFailed && profileImageUrl && <View style={styles.section}>
+              <Text style={[styles.caption, { color: colors.text.secondary }]}>{showPhoto ? '방금 등록한 사진을 보여드리고 있어요. 서버 사진은 다시 확인해주세요.' : '사진을 불러오지 못했어요.'}</Text>
+              <TouchableOpacity onPress={retryPhoto} disabled={refreshing} accessibilityRole="button" accessibilityLabel="프로필 사진 다시 불러오기" style={styles.retry}>
+                <Text style={[styles.copy, { color: palette.accentInk }]}>사진 다시 불러오기</Text>
+              </TouchableOpacity>
             </View>}
-            {isDetailError && !isMockMatch && !ownPreview ? (
-              <DetailLoadError
-                message={detailErrorMessage}
-                unavailable={isRecommendationUnavailable}
-                isRetrying={isDetailFetching}
-                onClose={onClose}
-                onRetry={() => refetchDetail()}
-              />
-            ) : (
-              <>
-                <Section title="AI 페르소나 분석" index={0}>
-                  <Text style={[styles.insightText, { color: colors.text.secondary }]}>
-                    {detail?.syncRate != null ? (
-                      <>
-                        AI 트윈이 {profileName}님의 목소리와 성격을{' '}
-                        <Text style={styles.insightHighlight}>{detail.syncRate}%</Text>까지 재현했어요. 대화에서는 이런
-                        성향이 느껴져요.
-                      </>
-                    ) : detail ? (
-                      '아직 표시할 트윈 분석 정보가 없어요.'
-                    ) : (
-                      'AI 트윈 분석 정보를 불러오는 중이에요.'
-                    )}
-                  </Text>
-                  {personalityTags.length > 0 ? (
-                    <View style={styles.tagRow}>
-                      {personalityTags.map((tag) => (
-                        <View key={tag} style={styles.aiTag}>
-                          <Text style={styles.aiTagText}># {tag}</Text>
-                        </View>
-                      ))}
-                    </View>
-                  ) : (
-                    <Text style={[styles.emptyText, { color: colors.text.muted }]}>아직 표시할 트윈 성향이 없어요.</Text>
-                  )}
-                </Section>
-
-                <Section title="MBTI 성향 밸런스" index={1}>
-                  <View
-                    style={[styles.balanceCard, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}
-                    accessible
-                    accessibilityLabel={
-                      detail?.mbtiAxisScores
-                        ? `MBTI 성향 밸런스: ${MBTI_AXES.map(
-                            ([field, left, right]) =>
-                              `${left} ${detail.mbtiAxisScores?.[field] ?? 0}%, ${right} ${100 - (detail.mbtiAxisScores?.[field] ?? 0)}%`,
-                          ).join(', ')}`
-                        : detail
-                          ? 'MBTI 성향 밸런스 정보 없음'
-                          : 'MBTI 성향 밸런스 불러오는 중'
-                    }
-                  >
-                    {detail?.mbtiAxisScores ? (
-                      MBTI_AXES.map(([field, left, right]) => (
-                        <MbtiAxisBar
-                          key={field}
-                          leftLabel={left}
-                          rightLabel={right}
-                          value={detail.mbtiAxisScores?.[field] ?? 0}
-                          mutedColor={colors.text.muted}
-                          trackColor={colors.border.strong}
-                        />
-                      ))
-                    ) : detail ? (
-                      <Text style={[styles.emptyText, { color: colors.text.muted }]}>MBTI 결과를 준비 중이에요.</Text>
-                    ) : (
-                      <ActivityIndicator color={colors.text.muted} />
-                    )}
-                  </View>
-                </Section>
-
-                <Section title="목소리 미리듣기" index={2}>
-                  <View style={[styles.voiceCard, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
-                    {detail?.voicePreview ? (
-                      <VoicePreviewPlayer
-                        key={detail.voicePreview.audioUrl}
-                        voicePreview={detail.voicePreview}
-                        isReloading={refreshing}
-                        onReload={refreshProfile}
-                      />
-                    ) : detail ? (
-                      <View style={{ gap: Spacing.sm }}><Text style={[styles.voiceStyleText, { color: colors.text.muted }]}>아직 재생할 수 있는 미리듣기 음성이 없어요.</Text>{refreshProfile && <TouchableOpacity onPress={() => { void refreshProfile().catch(() => {}); }} disabled={refreshing} accessibilityRole="button" accessibilityLabel="음성 미리듣기 다시 확인" style={{ minHeight: 48, justifyContent: 'center' }}><Text style={[styles.voiceStyleText, { color: colors.brand.accent }]}>다시 확인</Text></TouchableOpacity>}</View>
-                    ) : (
-                      <ActivityIndicator color={colors.text.muted} />
-                    )}
-                  </View>
-                </Section>
-
-                <Section title="이 사람의 이야기" index={3}>
-                  <View style={[styles.bioCard, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
-                    <Text style={[styles.bioText, { color: colors.text.secondary }]}>
-                      {profileIntroduction ? `“${profileIntroduction}”` : '아직 자기소개를 준비 중이에요.'}
-                    </Text>
-                  </View>
-                </Section>
-              </>
-            )}
+            {isDetailError && !isMockMatch && !ownPreview ? <DetailLoadError message={detailErrorMessage} unavailable={isRecommendationUnavailable} returnLabel={source === 'history' ? '통화 기록으로 돌아가기' : '추천 목록으로 돌아가기'}
+              isRetrying={isDetailFetching} onClose={onClose} onRetry={() => refetchDetail()} /> : <>
+              <Section title="소개" index={0}>
+                <Text style={[styles.bioText, { color: colors.text.secondary }]}>{profileIntroduction || (detail ? '아직 등록한 소개가 없어요.' : '소개를 불러오고 있어요.')}</Text>
+              </Section>
+              <Section title="목소리 미리듣기" index={1}>
+                <View style={[styles.voiceCard, { backgroundColor: colors.background.card, borderColor: colors.border.primary }]}>
+                  {detail?.voicePreview ? <VoicePreviewPlayer key={detail.voicePreview.audioUrl} voicePreview={detail.voicePreview} suspended={activeSheet !== null || !match} isReloading={refreshing} onReload={refreshProfile} />
+                    : detail ? <View style={styles.section}>
+                      <Text style={[styles.copy, { color: colors.text.secondary }]}>아직 재생할 수 있는 미리듣기 음성이 없어요.</Text>
+                      {refreshProfile && <TouchableOpacity onPress={() => { void refreshProfile().catch(() => {}); }} disabled={refreshing} accessibilityRole="button" accessibilityLabel="음성 미리듣기 다시 확인" style={styles.retry}>
+                        <Text style={[styles.copy, { color: palette.accentInk }]}>다시 확인</Text>
+                      </TouchableOpacity>}
+                    </View> : <ActivityIndicator color={colors.text.secondary} />}
+                </View>
+              </Section>
+              {(detail?.syncRate != null || personalityTags.length > 0) && <Section title="트윈의 성향" index={2}>
+                {detail?.syncRate != null && <Text style={[styles.copy, { color: colors.text.secondary }]}>트윈 싱크로율 {detail.syncRate}%</Text>}
+                {personalityTags.length > 0 && <View style={styles.tags}>
+                  {personalityTags.map((tag, index) => <View key={`${index}:${tag}`} style={[styles.tag, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
+                    <Text style={[styles.caption, { color: colors.text.secondary }]}>{tag}</Text>
+                  </View>)}
+                </View>}
+              </Section>}
+              {(profileMbti || hasMbtiScores) && <Section title={hasMbtiScores ? 'MBTI 성향 밸런스' : 'MBTI'} index={3}
+                accessory={profileMbti ? <View style={[styles.mbti, { backgroundColor: palette.coolTint }]}>
+                  <Text style={[styles.caption, { color: palette.cyanInk }]}>{profileMbti}</Text>
+                </View> : undefined}>
+                {hasMbtiScores && <MbtiBalance scores={detail!.mbtiAxisScores!} />}
+              </Section>}
+            </>}
           </View>
+          {inlineAction && callFooter}
         </ScrollView>
-
-        {!ownPreview && <View
-          style={[styles.floatingBar, { paddingBottom: Math.max(insets.bottom, Spacing.xxl) }]}
-          pointerEvents="box-none"
-        >
-          <LinearGradient
-            colors={['transparent', colors.background.primary, colors.background.primary]}
-            locations={[0, 0.5, 1]}
-            style={StyleSheet.absoluteFill}
-            pointerEvents="none"
-          />
-          <TouchableOpacity
-            onPress={() => onConnectNow?.(displayedMatch)}
-            disabled={isRecommendationUnavailable}
-            activeOpacity={0.85}
-            accessibilityRole="button"
-            accessibilityLabel={isRecommendationUnavailable ? '통화할 수 없음' : '통화하기'}
-            accessibilityState={{ disabled: isRecommendationUnavailable }}
-            style={[styles.connectNowWrapper, isRecommendationUnavailable && styles.connectNowDisabled]}
-          >
-            <LinearGradient
-              colors={[Colors.primary.electricCyan, Colors.primary.vividPurple]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.connectNowButton}
-            >
-              <Feather name="phone" size={20} color={Colors.neutral.pureWhite} />
-              <Text style={styles.connectNowText}>{isRecommendationUnavailable ? '통화할 수 없어요' : '통화하기'}</Text>
-            </LinearGradient>
-          </TouchableOpacity>
-        </View>}
+        {!inlineAction && callFooter}
       </Animated.View>
+      {activeSheet === 'call' && <CallStartConfirmSheet embedded target={{ userUuid: displayedMatch.userUuid, name: profileName }} isOpen
+        onClose={() => setActiveSheet(null)} onRefill={() => setActiveSheet('refill')}
+        onStart={(target, isPreview, remainingSeconds) => { setActiveSheet(null); onStartCall?.(target, isPreview, remainingSeconds); }} />}
+      {activeSheet === 'refill' && <TimeRefillBottomSheet embedded isOpen onClose={() => setActiveSheet(null)} />}
+      </View>
     </ProfileModalContainer>
   );
 }
@@ -385,73 +285,23 @@ function ProfileModalContainer({ embedded, onClose, children }: { embedded: bool
   return embedded ? <>{children}</> : <Modal visible transparent animationType="none" statusBarTranslucent onRequestClose={onClose}>{children}</Modal>;
 }
 
-/**
- * MbtiAxisBar 컴포넌트
- * value(0~100)는 왼쪽 글자 쪽으로 얼마나 기울었는지를 나타낸다.
- */
-function MbtiAxisBar({
-  leftLabel,
-  rightLabel,
-  value,
-  mutedColor,
-  trackColor,
-}: {
-  leftLabel: string;
-  rightLabel: string;
-  value: number;
-  mutedColor: string;
-  trackColor: string;
-}) {
-  const leftDominant = value >= 50;
-  // 50%에 가까울수록(성향이 애매할수록) 글자 강조를 흐리게, 극단적일수록 진하게 표시한다.
-  // 막대 채우기 자체는 항상 또렷한 브랜드 컬러로 — 흐릿해서 안 보이는 문제를 방지한다.
-  const intensity = Math.min(Math.abs(value - 50) / 50, 1);
-  const letterActiveColor = withAlpha(Colors.primary.electricCyan, 0.6 + intensity * 0.4);
-
-  return (
-    <View
-      style={styles.axisRow}
-      accessibilityRole="progressbar"
-      accessibilityLabel={`${leftLabel} 대 ${rightLabel}`}
-      accessibilityValue={{ min: 0, max: 100, now: value }}
-    >
-      <Text style={[styles.axisLetter, { color: leftDominant ? letterActiveColor : mutedColor }]}>{leftLabel}</Text>
-      <View style={[styles.axisTrack, { backgroundColor: trackColor }]}>
-        <LinearGradient
-          colors={[Colors.primary.electricCyan, Colors.primary.vividPurple]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={[styles.axisFill, { width: `${value}%` }]}
-        />
-      </View>
-      <Text style={[styles.axisLetter, { color: !leftDominant ? letterActiveColor : mutedColor }]}>{rightLabel}</Text>
-    </View>
-  );
-}
-
-/** hexColor는 반드시 `#rrggbb` 6자리 hex 형식이어야 한다(rgba 문자열 등은 지원 안 함). */
-function withAlpha(hexColor: string, alpha: number): string {
-  const r = parseInt(hexColor.slice(1, 3), 16);
-  const g = parseInt(hexColor.slice(3, 5), 16);
-  const b = parseInt(hexColor.slice(5, 7), 16);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
-
 function DetailLoadError({
   message,
   unavailable,
   isRetrying,
   onClose,
   onRetry,
+  returnLabel,
 }: {
   message: string;
   unavailable: boolean;
   isRetrying: boolean;
   onClose: () => void;
   onRetry: () => void;
+  returnLabel: string;
 }) {
   const { colors } = useThemeColors();
-  const actionLabel = unavailable ? '추천 목록으로 돌아가기' : '다시 시도';
+  const actionLabel = unavailable ? returnLabel : '다시 시도';
 
   return (
     <View style={[styles.detailErrorCard, { backgroundColor: colors.background.glass, borderColor: colors.border.primary }]}>
@@ -473,354 +323,47 @@ function DetailLoadError({
   );
 }
 
-function Section({ title, index, children }: { title: string; index: number; children: React.ReactNode }) {
+function Section({ title, index, children, accessory }: { title: string; index: number; children: React.ReactNode; accessory?: React.ReactNode }) {
   const { colors } = useThemeColors();
 
   return (
     <ReAnimated.View entering={FadeInUp.delay(index * 60).duration(400)}>
-      <Text style={[styles.sectionTitle, { color: colors.text.muted }]}>{title}</Text>
+      <View style={styles.sectionHeading}>
+        <Text variant="heading" accessibilityRole="header" style={[styles.sectionTitle, { color: colors.text.primary }]}>{title}</Text>
+        {accessory}
+      </View>
       {children}
     </ReAnimated.View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  hero: {
-    width: '100%',
-    backgroundColor: Colors.primary.cardBlack,
-  },
-  heroImage: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center',
-    alignItems: 'center',
-    // 반투명 기본 아바타 그라디언트가 라이트 콘텐츠 배경을 비치지 않게 해
-    // 기본 상태의 흰 아이콘/안내 문구 대비를 유지한다.
-    backgroundColor: Colors.primary.cardBlack,
-  },
-  heroImageFallbackContent: {
-    alignItems: 'center',
-    gap: Spacing.md,
-  },
-  heroImageFallbackAvatar: {
-    width: 92,
-    height: 92,
-    borderRadius: Radii.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.glass.white10,
-    borderWidth: 1,
-    borderColor: Colors.glass.white20,
-  },
-  heroImageFallbackText: {
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.base,
-    fontWeight: FontWeight.semibold,
-    color: Colors.neutral.pureWhite,
-  },
-  closeButtonWrapper: {
-    position: 'absolute',
-    right: Spacing.xl,
-  },
-  closeButton: {
-    width: 44,
-    height: 44,
-    borderRadius: Radii.lg,
-    borderWidth: 1,
-    borderColor: Colors.glass.white10,
-    justifyContent: 'center',
-    alignItems: 'center',
-    overflow: 'hidden',
-  },
-  heroInfo: {
-    position: 'absolute',
-    left: Spacing.xl,
-    right: Spacing.xl,
-    bottom: Spacing.lg,
-  },
-  badgeRow: {
-    flexDirection: 'row',
-    gap: Spacing.sm,
-    marginBottom: Spacing.md,
-  },
-  compatBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xxs,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xxs,
-    borderRadius: Radii.full,
-  },
-  compatBadgeText: {
-    fontFamily: FontFamily.sans,
-    fontSize: 9,
-    fontWeight: FontWeight.black,
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
-    color: Colors.neutral.pureWhite,
-  },
-  mbtiBadge: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xxs,
-    borderRadius: Radii.full,
-    backgroundColor: Colors.glass.white5,
-    borderWidth: 1,
-    borderColor: Colors.glass.white10,
-  },
-  mbtiBadgeText: {
-    fontFamily: FontFamily.sans,
-    fontSize: 9,
-    fontWeight: FontWeight.black,
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
-    color: Colors.neutral.lightGray,
-  },
-  nameText: {
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.giant,
-    fontWeight: FontWeight.black,
-    letterSpacing: -1.4,
-    color: Colors.neutral.pureWhite,
-    marginBottom: Spacing.sm,
-  },
-  ageText: {
-    fontFamily: FontFamily.sans,
-    fontWeight: FontWeight.regular,
-    color: Colors.neutral.darkGray,
-  },
-  metaRow: {
-    flexDirection: 'row',
-    gap: Spacing.xl,
-  },
-  metaItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-    flexShrink: 1,
-  },
-  metaText: {
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.base,
-    color: Colors.neutral.lightGray,
-  },
-  documentSubmittedBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-    paddingHorizontal: Spacing.xs,
-    paddingVertical: 2,
-    borderRadius: Radii.full,
-    backgroundColor: Colors.glass.white10,
-  },
-  documentSubmittedText: {
-    fontFamily: FontFamily.sans,
-    fontSize: 9,
-    fontWeight: FontWeight.bold,
-    color: Colors.neutral.pureWhite,
-  },
-  content: {
-    paddingHorizontal: Spacing.xl,
-    paddingTop: Spacing.md,
-    paddingBottom: 140,
-    gap: Spacing.xxl,
-  },
-  sectionTitle: {
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.black,
-    letterSpacing: 1.5,
-    textTransform: 'uppercase',
-    marginBottom: Spacing.md,
-  },
-  insightText: {
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.medium,
-    lineHeight: 20,
-    marginBottom: Spacing.md,
-  },
-  insightHighlight: {
-    fontWeight: FontWeight.black,
-    color: Colors.primary.electricCyan,
-  },
-  tagRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.sm,
-  },
-  aiTag: {
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.sm,
-    borderRadius: Radii.xl,
-    backgroundColor: Colors.glass.cyan10_d3,
-    borderWidth: 1,
-    borderColor: Colors.glass.cyan20_d3,
-  },
-  aiTagText: {
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.bold,
-    color: Colors.primary.electricCyan,
-  },
-  emptyText: {
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.medium,
-    lineHeight: 20,
-  },
-  voiceCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.lg,
-    padding: Spacing.xl,
-    borderRadius: Radii.xxl,
-    borderWidth: 1,
-  },
-  playButton: {
-    width: 56,
-    height: 56,
-    borderRadius: Radii.full,
-    backgroundColor: Colors.primary.electricCyan,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  voiceInfo: {
-    flex: 1,
-    gap: Spacing.sm,
-  },
-  voiceStyleText: {
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.base,
-    fontWeight: FontWeight.bold,
-  },
-  voiceReloadButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    gap: Spacing.xxs,
-  },
-  voiceReloadText: {
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.bold,
-    color: Colors.primary.electricCyan,
-  },
-  balanceCard: {
-    padding: Spacing.xl,
-    borderRadius: Radii.xxl,
-    borderWidth: 1,
-    gap: Spacing.lg,
-  },
-  axisRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-  },
-  axisLetter: {
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.black,
-    width: 16,
-    textAlign: 'center',
-  },
-  axisTrack: {
-    flex: 1,
-    height: 6,
-    borderRadius: Radii.full,
-    overflow: 'hidden',
-  },
-  axisFill: {
-    height: '100%',
-    borderRadius: Radii.full,
-  },
-  bioCard: {
-    padding: Spacing.xxl,
-    borderRadius: Radii.xxl,
-    borderWidth: 1,
-  },
-  bioText: {
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.lg,
-    fontWeight: FontWeight.medium,
-    lineHeight: 22,
-  },
-  detailErrorCard: {
-    alignItems: 'center',
-    borderWidth: 1,
-    borderRadius: Radii.xxl,
-    padding: Spacing.xxxl,
-    gap: Spacing.md,
-  },
-  detailErrorTitle: {
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.lg,
-    fontWeight: FontWeight.black,
-  },
-  detailErrorMessage: {
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.medium,
-    lineHeight: 20,
-    textAlign: 'center',
-  },
-  detailErrorAction: {
-    minHeight: 40,
-    paddingHorizontal: Spacing.lg,
-    borderWidth: 1,
-    borderRadius: Radii.lg,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.xs,
-  },
-  detailErrorActionText: {
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.bold,
-  },
-  floatingBar: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-    paddingHorizontal: Spacing.xl,
-    paddingTop: Spacing.giant,
-    paddingBottom: Spacing.xxl,
-  },
-  connectNowWrapper: {
-    flex: 1,
-    borderRadius: Radii.xl,
-    // 버튼 색을 그대로 번지게 하는 glow 대신, 아래로 살짝 떨어지는 중립 그림자를
-    // 사용한다. 라이트/다크 배경 모두에서 하단 고정 바와 자연스럽게 분리된다.
-    shadowColor: Colors.primary.soulBlack,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
-    elevation: 5,
-  },
-  connectNowDisabled: {
-    opacity: 0.45,
-  },
-  connectNowButton: {
-    height: 56,
-    borderRadius: Radii.xl,
-    borderWidth: 1,
-    borderColor: Colors.glass.white20,
-    overflow: 'hidden',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: Spacing.md,
-  },
-  connectNowText: {
-    fontFamily: FontFamily.sans,
-    fontSize: FontSize.lg,
-    fontWeight: FontWeight.black,
-    color: Colors.neutral.pureWhite,
-  },
+  container: { flex: 1 },
+  header: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, paddingLeft: Spacing.xl, paddingRight: Spacing.sm, paddingVertical: Spacing.xs },
+  headerTitle: { flex: 1, minWidth: 0, fontFamily: FontFamily.sans, fontSize: FontSize.lg, fontWeight: FontWeight.semibold, lineHeight: 24 },
+  close: { minWidth: 48, minHeight: 48, alignItems: 'center', justifyContent: 'center' },
+  scroll: { flex: 1 },
+  hero: { aspectRatio: PROFILE_PHOTO_ASPECT, alignSelf: 'center', backgroundColor: Colors.primary.cardBlack, borderRadius: Radii.lg, overflow: 'hidden' },
+  fallback: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  content: { padding: Spacing.lg, gap: Spacing.lg },
+  identity: { gap: Spacing.sm },
+  metaRow: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm, alignItems: 'center' },
+  metaText: { flexShrink: 1, fontFamily: FontFamily.sans, fontSize: FontSize.base, lineHeight: 23 },
+  mbti: { alignSelf: 'flex-start', maxWidth: '100%', borderRadius: Radii.sm, paddingHorizontal: Spacing.sm, paddingVertical: Spacing.xs },
+  section: { gap: Spacing.sm },
+  sectionHeading: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: Spacing.sm, marginBottom: Spacing.sm },
+  sectionTitle: { flexShrink: 1, fontFamily: FontFamily.sans, fontSize: FontSize.base, fontWeight: FontWeight.medium, lineHeight: 24 },
+  bioText: { fontFamily: FontFamily.sans, fontSize: FontSize.base, lineHeight: 24 },
+  copy: { fontFamily: FontFamily.sans, fontSize: FontSize.base, lineHeight: 23 },
+  caption: { flexShrink: 1, fontFamily: FontFamily.sans, fontSize: FontSize.sm, lineHeight: 21 },
+  tags: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm, marginTop: Spacing.sm },
+  tag: { maxWidth: '100%', borderWidth: StyleSheet.hairlineWidth, borderRadius: Radii.sm, paddingVertical: Spacing.xs, paddingHorizontal: Spacing.sm },
+  voiceCard: { padding: Spacing.md, borderWidth: 1, borderRadius: Radii.lg },
+  retry: { minHeight: 48, alignSelf: 'flex-start', justifyContent: 'center', paddingHorizontal: Spacing.sm },
+  detailErrorCard: { borderWidth: 1, borderRadius: Radii.lg, padding: Spacing.lg, gap: Spacing.md, alignItems: 'center' },
+  detailErrorTitle: { fontFamily: FontFamily.sans, fontSize: FontSize.lg, fontWeight: FontWeight.semibold, lineHeight: 25, textAlign: 'center' },
+  detailErrorMessage: { fontFamily: FontFamily.sans, fontSize: FontSize.base, lineHeight: 23, textAlign: 'center' },
+  detailErrorAction: { minHeight: 48, borderWidth: 1, borderRadius: Radii.md, paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.sm },
+  detailErrorActionText: { flexShrink: 1, fontFamily: FontFamily.sans, fontSize: FontSize.base, fontWeight: FontWeight.medium, lineHeight: 23 },
+  callFooter: { borderTopWidth: StyleSheet.hairlineWidth, paddingHorizontal: Spacing.xl, paddingTop: Spacing.md, flexShrink: 0 },
 });

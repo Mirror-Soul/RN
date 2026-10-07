@@ -1,18 +1,17 @@
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useCallback, useEffect, useState } from 'react';
-import { StyleSheet } from 'react-native';
+import { useCallback, useLayoutEffect, useState } from 'react';
+import { StyleSheet, useWindowDimensions } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, { runOnJS, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import type { MediaStream } from 'react-native-webrtc';
 import { RTCView } from 'react-native-webrtc';
 import { Colors, Radii } from '@/src/constants/theme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
+import { BrowseText as Text } from '@/src/components/home/common/BrowseText';
+import { fitCallPreview, previewCorner } from './callPreviewGeometry';
 
-const SMALL_SIZE = { width: 96, height: 128 };
-const LARGE_SIZE = { width: 144, height: 192 };
-const EDGE_MARGIN = 16;
 
 type CornerId = 'topLeft' | 'topRight' | 'bottomLeft' | 'bottomRight';
 
@@ -42,10 +41,7 @@ function cornerPosition(
   'worklet';
   const isLeft = corner === 'topLeft' || corner === 'bottomLeft';
   const isTop = corner === 'topLeft' || corner === 'topRight';
-  return {
-    x: isLeft ? safeArea.left + EDGE_MARGIN : safeArea.right - size.width - EDGE_MARGIN,
-    y: isTop ? safeArea.top + EDGE_MARGIN : safeArea.bottom - size.height - EDGE_MARGIN,
-  };
+  return previewCorner(isLeft, isTop, size, safeArea);
 }
 
 /** 박스 중심 좌표를 기준으로 safeArea를 4분할해서 가장 가까운 모서리를 고른다. */
@@ -69,10 +65,11 @@ function nearestCorner(centerX: number, centerY: number, safeArea: CallLocalPrev
  */
 export default function CallLocalPreview({ isCameraOn, localStream, safeArea }: CallLocalPreviewProps) {
   const { colors, isDark } = useThemeColors();
+  const { fontScale } = useWindowDimensions();
   const [corner, setCorner] = useState<CornerId>('topRight');
   const [isEnlarged, setIsEnlarged] = useState(false);
 
-  const size = isEnlarged ? LARGE_SIZE : SMALL_SIZE;
+  const size = fitCallPreview(safeArea, isEnlarged);
 
   const translateX = useSharedValue(cornerPosition(corner, size, safeArea).x);
   const translateY = useSharedValue(cornerPosition(corner, size, safeArea).y);
@@ -80,16 +77,16 @@ export default function CallLocalPreview({ isCameraOn, localStream, safeArea }: 
   const boxHeight = useSharedValue(size.height);
 
   // corner(드래그 종료 스냅)나 isEnlarged(탭 토글), safeArea(레이아웃 변화)가 바뀔 때마다
-  // 목표 위치/크기로 애니메이션한다. 드래그 도중엔 이 effect가 아니라 pan의 onUpdate가
+  // 목표 위치/크기를 즉시 적용한다. 드래그 도중엔 이 effect가 아니라 pan의 onUpdate가
   // 손가락을 직접 따라가므로 여기서 건드리지 않는다.
-  useEffect(() => {
+  useLayoutEffect(() => {
     const target = cornerPosition(corner, size, safeArea);
-    translateX.value = withSpring(target.x, { damping: 18, stiffness: 180 });
-    translateY.value = withSpring(target.y, { damping: 18, stiffness: 180 });
-    boxWidth.value = withTiming(size.width, { duration: 220 });
-    boxHeight.value = withTiming(size.height, { duration: 220 });
+    translateX.value = target.x;
+    translateY.value = target.y;
+    boxWidth.value = size.width;
+    boxHeight.value = size.height;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [corner, isEnlarged, safeArea.top, safeArea.bottom, safeArea.left, safeArea.right]);
+  }, [corner, isEnlarged, safeArea.top, safeArea.bottom, safeArea.left, safeArea.right, size.width, size.height]);
 
   const toggleEnlarged = useCallback(() => setIsEnlarged((prev) => !prev), []);
 
@@ -114,6 +111,10 @@ export default function CallLocalPreview({ isCameraOn, localStream, safeArea }: 
       const centerX = translateX.value + boxWidth.value / 2;
       const centerY = translateY.value + boxHeight.value / 2;
       const next = nearestCorner(centerX, centerY, safeArea);
+      // Snap immediately even if the chosen corner did not change in React state.
+      const target = cornerPosition(next, { width: boxWidth.value, height: boxHeight.value }, safeArea);
+      translateX.value = target.x;
+      translateY.value = target.y;
       runOnJS(setCorner)(next);
     });
 
@@ -133,15 +134,18 @@ export default function CallLocalPreview({ isCameraOn, localStream, safeArea }: 
     height: boxHeight.value,
   }));
 
+  if (!isCameraOn || size.width < 48 || size.height < 64) return null;
   return (
     <GestureDetector gesture={composedGesture}>
-      <Animated.View style={[styles.container, animatedContainerStyle]}>
+      <Animated.View accessible accessibilityRole="button" accessibilityLabel={isEnlarged ? '내 모습 작게 보기' : '내 모습 크게 보기'} accessibilityHint="나에게만 보이는 카메라 화면이에요. 드래그로 위치를 바꿀 수 있어요."
+        accessibilityActions={[{ name: 'activate' }]} onAccessibilityAction={event => { if (event.nativeEvent.actionName === 'activate') toggleEnlarged(); }} style={[styles.container, animatedContainerStyle]}>
         {isCameraOn && localStream ? (
           <RTCView
             streamURL={localStream.toURL()}
             style={styles.placeholder}
             objectFit="cover"
             mirror // 전면 카메라 셀프뷰는 좌우 반전이 자연스럽다(실제 거울처럼 보이도록)
+            zOrder={1}
           />
         ) : isCameraOn ? (
           <LinearGradient
@@ -158,6 +162,7 @@ export default function CallLocalPreview({ isCameraOn, localStream, safeArea }: 
             <Ionicons name="videocam-off" size={20} color={colors.text.muted} />
           </BlurView>
         )}
+        {fontScale <= 1.4 && <Text style={styles.privateLabel}>나에게만</Text>}
       </Animated.View>
     </GestureDetector>
   );
@@ -175,4 +180,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  privateLabel: { position: 'absolute', bottom: 5, left: 4, right: 4, paddingVertical: 2, borderRadius: 5, fontSize: 10, lineHeight: 16, textAlign: 'center', color: Colors.neutral.pureWhite, backgroundColor: 'rgba(0,0,0,0.55)' },
 });

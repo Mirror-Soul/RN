@@ -10,7 +10,7 @@ import { notificationQueryKeys } from './notificationQueryKeys';
 type Change = { roomId: number; enabled: boolean; userUuid: string };
 
 /** 목록 화면과 대화방 옵션에서 같은 저장·캐시 갱신을 사용한다. */
-export function useChatNotificationMutation() {
+export function useChatNotificationMutation(notifyOnError = true) {
   const client = useQueryClient();
   const { showToast } = useToast();
   const lock = useRef(false);
@@ -35,7 +35,7 @@ export function useChatNotificationMutation() {
       client.setQueryData<ChatRoomListResult>(['chat', 'rooms'], update);
     },
     onError: (error, { userUuid }) => {
-      if (useAuthStore.getState().isLoggedIn && useAuthStore.getState().userUuid === userUuid) showToast(getErrorDisplayMessage(error, '메시지 알림 설정을 저장하지 못했어요.'), 'error');
+      if (notifyOnError && useAuthStore.getState().isLoggedIn && useAuthStore.getState().userUuid === userUuid) showToast(getErrorDisplayMessage(error, '메시지 알림 설정을 저장하지 못했어요.'), 'error');
     },
     onSettled: () => { lock.current = false; },
   });
