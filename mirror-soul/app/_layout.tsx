@@ -110,6 +110,7 @@ function RootLayout() {
               <Stack.Screen name="discovery-region-settings" />
               <Stack.Screen name="call-detail" />
               <Stack.Screen name="voice-update" />
+              <Stack.Screen name="job-verifications" />
               <Stack.Screen name="forgot-password" />
               <Stack.Screen
                 name="chat/[id]"
