@@ -13,12 +13,13 @@ interface Props {
   isLoading: boolean;
   isError: boolean;
   onRetry?: () => void;
-  jobSubmitted: boolean | null;
+  jobStatusLabel?: string;
+  jobSubmitted?: boolean | null;
   jobLoading: boolean;
   jobError: boolean;
   onVerifyPress: () => void;
 }
-export default function GrowthHeroSection({ similarityPercent, isLoading, isError, onRetry, jobSubmitted, jobLoading, jobError, onVerifyPress }: Props) {
+export default function GrowthHeroSection({ similarityPercent, isLoading, isError, onRetry, jobSubmitted, jobStatusLabel, jobLoading, jobError, onVerifyPress }: Props) {
   const { colors, palette } = useMatchingDesign();
   const { cardWidth } = useLayout();
   const { fontScale } = useWindowDimensions();
@@ -28,7 +29,7 @@ export default function GrowthHeroSection({ similarityPercent, isLoading, isErro
   const copy = getSyncCopy(percent);
   const headline = isLoading ? '트윈을 확인하고 있어요.' : hasValue ? copy.headline : '나를 닮은 트윈을 준비하고 있어요.';
   const value = isLoading ? '확인 중' : isError ? '다시 확인' : hasValue ? `${percent}%` : '준비 중';
-  const jobHint = jobLoading ? '서류 제출 여부 확인 중' : jobError ? '제출 여부를 다시 확인해 주세요' : jobSubmitted ? '가입 때 추가한 서류가 있어요. 심사 결과와는 별개예요.' : '직업 확인 서류 안내와 사진 선택';
+  const jobHint = jobStatusLabel ?? (jobLoading ? '서류 제출 여부 확인 중' : jobError ? '제출 여부를 다시 확인해 주세요' : jobSubmitted ? '가입 때 추가한 서류가 있어요. 심사 결과와는 별개예요.' : '직업 확인 서류 안내와 사진 선택');
   return <View style={styles.container}>
     <View style={[styles.headlineRow, compact && styles.compactRow]}>
       <View style={[styles.headlineCopy, compact && styles.compactCopy]}>
@@ -36,9 +37,9 @@ export default function GrowthHeroSection({ similarityPercent, isLoading, isErro
       <Text variant="heading" style={[styles.headline, { color: colors.text.primary }]}>트윈 정보를 불러오지 못했어요</Text><Text style={[styles.copy, { color: palette.cyanInk }]}>눌러서 다시 확인해 주세요.</Text>
     </Pressable> : <Text variant="heading" style={[styles.headline, { color: colors.text.primary }]}>{headline}</Text>}
       </View>
-      <Pressable onPress={onVerifyPress} accessibilityRole="button" accessibilityLabel="직업 인증하기" accessibilityHint={jobHint} style={({ pressed }) => [styles.job, compact && styles.compactJob, { borderColor: colors.border.primary, backgroundColor: pressed ? palette.coolTint : colors.background.card }]}>
+      <Pressable onPress={onVerifyPress} accessibilityRole="button" accessibilityLabel="직업 서류 확인하기" accessibilityHint={jobHint} style={({ pressed }) => [styles.job, compact && styles.compactJob, { borderColor: colors.border.primary, backgroundColor: pressed ? palette.coolTint : colors.background.card }]}>
         <Feather name="briefcase" size={16} color={palette.cyanInk} />
-        <Text style={[styles.jobTitle, { color: colors.text.primary }]}>직업 인증</Text>
+        <Text style={[styles.jobTitle, { color: colors.text.primary }]}>직업 서류</Text>
       </Pressable>
     </View>
     {!isError && <Text style={[styles.copy, { color: colors.text.secondary }]}>{isLoading ? '잠시만 기다려 주세요.' : hasValue ? copy.subCopy : '학습이 반영되면 준비도를 확인할 수 있어요.'}</Text>}

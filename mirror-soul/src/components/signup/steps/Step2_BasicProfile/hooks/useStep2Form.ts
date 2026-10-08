@@ -2,8 +2,6 @@ import { useState, useCallback, useRef } from 'react';
 import { Alert } from 'react-native';
 import { Step2State } from '../types/step2';
 import { checkNicknameDuplicate } from '@/src/services/onboardingService';
-import { getPresignedUrl } from '@/src/services/fileService';
-import { uploadFileToS3 } from '@/src/services/s3Service';
 import { jobCategories } from '../Professional/jobData';
 
 
@@ -21,9 +19,6 @@ export function useStep2Form() {
     eupmyeondongName: '',
     jobCategory: '',
     jobTitle: '',
-    isJobVerifying: false,
-    isJobVerified: false,
-    jobCertificationObjectKey: null,
   });
 
   // 지역 데이터 캐시 (성능 최적화: 드롭다운이 닫혀도 유지)
@@ -61,45 +56,6 @@ export function useStep2Form() {
     }
   }, [state.nickname, state.isNicknameChecking, updateState]);
 
-  // 직업 인증 처리 (S3 업로드 로직 포함)
-  const handleJobVerify = useCallback(async (fileUri: string, contentType: string, fileName: string) => {
-    if (state.isJobVerifying) return;
-
-    try {
-      updateState({ isJobVerifying: true });
-
-      // 1. Presigned URL 발급
-      const presignedResponse = await getPresignedUrl({
-        fileName,
-        contentType,
-        directory: 'job-certifications',
-      });
-
-      if (!presignedResponse.isSuccess) {
-        const errorMsg = presignedResponse.message || '업로드 주소 발급에 실패했습니다.';
-        const errorCode = presignedResponse.code ? ` (${presignedResponse.code})` : '';
-        throw new Error(`${errorMsg}${errorCode}`);
-      }
-
-      const { presignedUrl, objectKey } = presignedResponse.result;
-
-      // 2. S3 직접 업로드
-      await uploadFileToS3(presignedUrl, fileUri, contentType);
-
-      // 3. 상태 업데이트
-      updateState({ 
-        isJobVerified: true,
-        jobCertificationObjectKey: objectKey 
-      });
-      
-      Alert.alert('서류를 올렸어요', '프로필을 저장하면 선택한 직군에 서류가 함께 등록돼요.');
-    } catch (error: any) {
-      Alert.alert('업로드 실패', error?.message || '파일 업로드 중 오류가 발생했습니다.');
-    } finally {
-      updateState({ isJobVerifying: false });
-    }
-  }, [state.isJobVerifying, updateState]);
-
   // 다음 단계 이동 가능 여부 체크 (SoC: 도메인 검증 로직 통합)
   // 조건: 닉네임 중복 확인 완료, 지역 선택 완료, 유효한 직군 선택 완료
   const isFormValid = 
@@ -113,7 +69,6 @@ export function useStep2Form() {
     state,
     updateState,
     handleNicknameCheck,
-    handleJobVerify,
     isFormValid,
     sigunguCache,
     eupmyeondongCache,

@@ -87,7 +87,7 @@ export default function DiscoveryCardContent({
         </View>}
         <View style={styles.metaRow}>
           <Text style={[styles.meta, { color: colors.text.secondary }]}>{match.residence ? formatRegion(match.residence) : '활동 지역 미설정'}</Text>
-          {match.job && <ProfileJobBadge job={match.job} />}
+          {match.job && <ProfileJobBadge job={match.job} documentReviewed={match.jobDocumentReviewCompleted === true} />}
         </View>
       </TouchableOpacity>
 

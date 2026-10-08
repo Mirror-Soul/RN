@@ -25,7 +25,7 @@ jest.mock('@/src/features/profile/components/TimeRefillOption', () => ({ TimeRef
 jest.mock('react-native-gesture-handler', () => ({
   GestureHandlerRootView: jest.requireActual('react-native').View,
   GestureDetector: ({ children }: { children: React.ReactNode }) => children,
-  Gesture: { Pan: () => { const pan = { onUpdate: () => pan, onEnd: () => pan }; return pan; } },
+  Gesture: { Pan: () => { const pan = { enabled: () => pan, onUpdate: () => pan, onEnd: () => pan }; return pan; } },
 }));
 jest.mock('@/src/features/home/hooks/useRecommendationDetailQuery', () => ({
   useRecommendationDetailQuery: () => ({ data: mockDetail, error: mockError, isError: !!mockError, isFetching: false, refetch: jest.fn() }),
