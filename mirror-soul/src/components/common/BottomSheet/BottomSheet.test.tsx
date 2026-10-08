@@ -22,7 +22,7 @@ jest.mock('react-native-gesture-handler', () => ({
     const { View } = jest.requireActual('react-native');
     return <View testID="gesture-target">{children}</View>;
   },
-  Gesture: { Pan: () => { const pan = { onUpdate: () => pan, onEnd: () => pan }; return pan; } },
+  Gesture: { Pan: () => { const pan = { enabled: () => pan, onUpdate: () => pan, onEnd: () => pan }; return pan; } },
 }));
 beforeEach(() => { mockHeight = 852; mockCompletions.length = 0; });
 
@@ -46,6 +46,15 @@ it('handles the Android back request only after the closing animation completes'
   expect(onClose).not.toHaveBeenCalled();
   act(() => completion(true));
   expect(onClose).toHaveBeenCalledTimes(1);
+});
+
+it('keeps an active submission sheet open on Android back', () => {
+  const onClose = jest.fn();
+  const screen = render(<BottomSheet isOpen dismissible={false} onClose={onClose}><Text>서류 보내는 중</Text></BottomSheet>);
+  fireEvent(screen.UNSAFE_getByType(Modal), 'requestClose');
+  expect(mockCompletions).toHaveLength(0);
+  expect(onClose).not.toHaveBeenCalled();
+  expect(screen.UNSAFE_getByType(Modal).props.visible).toBe(true);
 });
 
 it('lets consent content scroll outside the handle gesture target', () => {

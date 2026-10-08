@@ -226,9 +226,10 @@ export default function PartnerProfileModal({ match, onClose, onDismiss, onStart
               <View style={styles.metaRow}>
                 {profileAge != null && <Text style={[styles.metaText, { color: colors.text.secondary }]}>{profileAge}세</Text>}
                 <Text style={[styles.metaText, { color: colors.text.secondary }]}>{profileRegion ? formatRegion(profileRegion) : detail ? '활동 지역 미설정' : '활동 지역 확인 중'}</Text>
-                {profileJob && <ProfileJobBadge job={profileJob} />}
+                {profileJob && <ProfileJobBadge job={profileJob} documentReviewed={detail?.jobDocumentReviewCompleted === true} />}
               </View>
             </View>
+            {detail?.jobDocumentReviewCompleted === true && <Text style={[styles.caption, { color: colors.text.secondary }]}>직업 서류 확인은 담당자가 제출 자료를 확인했다는 뜻이에요. PASS 본인확인과 서류 명의 대조까지 완료된 인증은 아니에요.</Text>}
             {!showPhoto && !profileImageUrl && <Text style={[styles.caption, { color: colors.text.secondary }]}>프로필 사진은 아직 등록하지 않았어요.</Text>}
             {imageFailed && profileImageUrl && <View style={styles.section}>
               <Text style={[styles.caption, { color: colors.text.secondary }]}>{showPhoto ? '방금 등록한 사진을 보여드리고 있어요. 서버 사진은 다시 확인해주세요.' : '사진을 불러오지 못했어요.'}</Text>

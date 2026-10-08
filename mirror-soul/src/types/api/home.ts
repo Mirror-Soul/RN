@@ -58,6 +58,8 @@ export interface Recommendation {
   age: number | null;
   job: JobEnum | null;
   jobCertificationSubmitted: boolean;
+  /** 서류 심사 완료이며 PASS 기반 본인 직업 인증과는 다르다. */
+  jobDocumentReviewCompleted?: boolean;
   residence: Residence | null;
   selfIntroduction: string | null;
   mbti: MbtiEnum | null;
@@ -103,6 +105,7 @@ export interface RecommendationDetailResult {
   region: Region | null;
   job: JobEnum | null;
   jobCertificationSubmitted: boolean;
+  jobDocumentReviewCompleted?: boolean;
   selfIntroduction: string | null;
   mbti: MbtiEnum | null;
   mbtiAxisScores: MbtiAxisScores | null;

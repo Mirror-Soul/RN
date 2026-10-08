@@ -14,9 +14,6 @@ export interface Step2State {
 
   jobCategory: string; // JobEnum과 매칭됨
   jobTitle: string; // jobDescription에 해당
-  isJobVerifying: boolean; // S3 업로드 로딩 상태 추가
-  isJobVerified: boolean;
-  jobCertificationObjectKey: string | null; // S3에서 받은 키 저장
 }
 
 /**
