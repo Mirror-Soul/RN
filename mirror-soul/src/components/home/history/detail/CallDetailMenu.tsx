@@ -6,6 +6,7 @@ import { Feather } from '@expo/vector-icons';
 import { useMatchingDesign } from '@/src/features/match/components/MatchingDesign';
 import { MatchAvatar } from '@/src/features/match/components/MatchAvatar';
 import { useLayout } from '@/src/hooks/useLayout';
+import { SELF_CALL_DESCRIPTION, SELF_TWIN_LABEL, canEditTalkLog } from '@/src/features/history/talkLogSpeaker';
 import type { TalkLogListResult } from '@/src/types/api/history';
 import { historyMenuLayout, type HistoryMenuAnchor } from './historyMenuLayout';
 import { SUPPORT_EMAIL } from '@/src/features/customer-center/constants/faqData';
@@ -14,9 +15,10 @@ type MenuPage = 'actions' | 'info' | 'guide' | 'report';
 export const REPORT_REASONS = ['부적절한 대화', '사칭·허위 프로필', '스팸·광고', '괴롭힘·위협', '기타'] as const;
 
 /** Button-anchored popover; subpages share the same surface and Android back behavior. */
-export default function CallDetailMenu({ isOpen, data, headerBottom, anchor, onClose, onRefresh, onProfile, onBlock, onReport, editing, refreshing, userActionsDisabled, reporting }: {
+export default function CallDetailMenu({ isOpen, data, selfCall = false, headerBottom, anchor, onClose, onRefresh, onProfile, onBlock, onReport, editing, refreshing, userActionsDisabled, reporting }: {
   isOpen: boolean;
   data: TalkLogListResult;
+  selfCall?: boolean;
   headerBottom: number;
   anchor: HistoryMenuAnchor | null;
   onClose: () => void;
@@ -52,7 +54,7 @@ export default function CallDetailMenu({ isOpen, data, headerBottom, anchor, onC
   if (!isOpen) return null;
 
   const { above, connectorLeft, ...layout } = historyMenuLayout({ width, height, fontScale, contentWidth, insets, anchor, headerBottom });
-  const editableCount = data.talkLogs.filter(log => log.editable).length;
+  const editableCount = data.talkLogs.filter(log => canEditTalkLog(log, selfCall)).length;
   const date = new Date(data.startedAt);
   const dateLabel = Number.isFinite(date.getTime())
     ? `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')} · ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
@@ -84,13 +86,13 @@ export default function CallDetailMenu({ isOpen, data, headerBottom, anchor, onC
           <View style={styles.person}>
             <MatchAvatar name={data.partner.name} url={data.partner.profileImageUrl} size={48} />
             <View style={styles.personCopy}>
-              <Text variant="heading" style={[styles.name, { color: colors.text.primary }]}>{data.partner.name || '상대방'}님</Text>
-              {data.partner.age != null && <Text style={[styles.note, { color: colors.text.secondary }]}>{data.partner.age}세</Text>}
+              <Text variant="heading" style={[styles.name, { color: colors.text.primary }]}>{selfCall ? SELF_TWIN_LABEL : `${data.partner.name || '상대방'}님`}</Text>
+              {!selfCall && data.partner.age != null && <Text style={[styles.note, { color: colors.text.secondary }]}>{data.partner.age}세</Text>}
             </View>
           </View>
-          <Text style={[styles.body, { color: colors.text.primary }]}>{data.description}</Text>
+          <Text style={[styles.body, { color: colors.text.primary }]}>{selfCall ? SELF_CALL_DESCRIPTION : data.description}</Text>
           <InfoRow label="통화 일시" value={dateLabel} />
-          {data.callNumber > 0 && <InfoRow label="상대와의 통화" value={`${data.callNumber}번째`} />}
+          {data.callNumber > 0 && <InfoRow label={selfCall ? '내 트윈과의 통화' : '상대와의 통화'} value={`${data.callNumber}번째`} />}
           <InfoRow label="수정 가능한 답변" value={`${editableCount}개`} />
         </View> : page === 'report' ? <View style={styles.details}>
           <Text style={[styles.body, { color: colors.text.primary }]}>어떤 문제가 있었나요?</Text>
@@ -111,9 +113,9 @@ export default function CallDetailMenu({ isOpen, data, headerBottom, anchor, onC
         </View> : <View style={styles.details}>
           {[
             ['지난 대화를 다시 읽어요', '이 화면은 통화에서 나눈 대화의 텍스트 기록이에요. 실시간 메시지방과는 별개입니다.'],
-            ['내 트윈의 답변만 수정해요', '내 트윈이 응답한 기록 중 수정 가능한 답변에만 수정 버튼이 표시돼요. 다른 사람이나 상대 트윈의 답변은 바꿀 수 없어요.'],
+            ['내 트윈의 답변만 수정해요', selfCall ? '수정 가능한 내 AI 트윈의 답변에만 수정 버튼이 표시돼요. 내 말은 바꿀 수 없어요.' : '내 트윈이 응답한 기록 중 수정 가능한 답변에만 수정 버튼이 표시돼요. 다른 사람이나 상대 트윈의 답변은 바꿀 수 없어요.'],
             ['수정한 문장은 기록에 저장돼요', '답변 수정은 이 대화 기록에 반영돼요. 즉시 트윈이 재학습된다는 뜻은 아닙니다.'],
-            ['전화 버튼으로 새 대화를 시작해요', '상대의 AI 트윈과 새 통화를 시작해요. 실제 상대방에게 전화를 거는 기능은 아니에요. 남은 시간은 통화 전에 다시 확인합니다.'],
+            ['전화 버튼으로 새 대화를 시작해요', (selfCall ? '내 AI 트윈과 새 통화를 시작해요.' : '상대의 AI 트윈과 새 통화를 시작해요. 실제 상대방에게 전화를 거는 기능은 아니에요.') + ' 남은 시간은 통화 전에 다시 확인합니다.'],
           ].map(([title, body]) => <View key={title} style={styles.guideItem}>
             <Text style={[styles.guideTitle, { color: palette.accentInk }]}>{title}</Text>
             <Text style={[styles.body, { color: colors.text.secondary }]}>{body}</Text>

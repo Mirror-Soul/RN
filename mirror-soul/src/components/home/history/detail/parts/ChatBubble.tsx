@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { BrowseText as Text } from '@/src/components/home/common/BrowseText';
 import { useMatchingDesign } from '@/src/features/match/components/MatchingDesign';
+import { canEditTalkLog, speakerLabel } from '@/src/features/history/talkLogSpeaker';
 import type { TalkLogResult } from '@/src/types/api/history';
 import { toTimeLabel } from '@/src/utils/formatHistoryDate';
 
@@ -11,22 +12,15 @@ interface ChatBubbleProps {
   partnerName: string;
   hideSpeakerLabel: boolean;
   onEditStart: (id: number, text: string) => void;
+  selfCall?: boolean;
 }
-export function speakerLabel(speaker: TalkLogResult['speaker'], name: string) {
-  switch (speaker) {
-    case 'ME': return '나';
-    case 'MY_TWIN': return '내 AI 트윈';
-    case 'PARTNER': return name || '상대방';
-    case 'PARTNER_TWIN': return `${name || '상대방'}의 AI 트윈`;
-  }
-}
-function ChatBubble({ message, partnerName, hideSpeakerLabel, onEditStart }: ChatBubbleProps) {
+function ChatBubble({ message, partnerName, hideSpeakerLabel, onEditStart, selfCall = false }: ChatBubbleProps) {
   const { colors, palette } = useMatchingDesign();
   const { fontScale, width } = useWindowDimensions();
   const mine = message.speaker === 'ME' || message.speaker === 'MY_TWIN';
-  const label = speakerLabel(message.speaker, partnerName);
+  const label = speakerLabel(message.speaker, partnerName, selfCall);
   const time = Number.isFinite(new Date(message.startedAt).getTime()) ? toTimeLabel(message.startedAt) : null;
-  const editable = message.editable && message.speaker === 'MY_TWIN';
+  const editable = canEditTalkLog(message, selfCall);
   const fullWidth = width < 360 || fontScale > 1.3;
   return <View style={[styles.row, { alignSelf: mine ? 'flex-end' : 'flex-start', maxWidth: fullWidth ? '100%' : '90%' }]}>
     {!hideSpeakerLabel && <Text style={[styles.speaker, { color: mine ? palette.cyanInk : colors.text.secondary }]}>{label}</Text>}

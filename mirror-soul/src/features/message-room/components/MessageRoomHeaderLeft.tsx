@@ -53,10 +53,15 @@ export function MessageRoomHeaderLeft({ room }: MessageRoomHeaderLeftProps) {
           {partner.name}
         </Text>
         <View style={styles.headerMeta}>
-          <Text style={[styles.headerMetaText, { color: colors.text.secondary }]}>
-            {partner.twinSimilarity !== null ? `유사도 ${partner.twinSimilarity}%` : '유사도 분석 중'}
-          </Text>
-          <View style={[styles.metaDot, { backgroundColor: colors.text.muted }]} />
+          {/* 통화 분석 결과를 만드는 곳이 아직 없어 값이 없으면 '분석 중'으로 가장하지 않고 숨긴다. */}
+          {partner.twinSimilarity !== null && (
+            <>
+              <Text style={[styles.headerMetaText, { color: colors.text.secondary }]}>
+                {`유사도 ${partner.twinSimilarity}%`}
+              </Text>
+              <View style={[styles.metaDot, { backgroundColor: colors.text.muted }]} />
+            </>
+          )}
           <Text style={[styles.headerMetaText, { color: colors.text.secondary }]}>
             {partner.lastActiveAt ? formatRelativeTime(partner.lastActiveAt) : '활동 정보 없음'}
           </Text>

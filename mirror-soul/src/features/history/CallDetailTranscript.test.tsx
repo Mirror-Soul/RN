@@ -184,3 +184,62 @@ it.each([
   }
   expect(screen.UNSAFE_getAllByType(View).length).toBeGreaterThan(0);
 });
+
+it('names the user’s own twin in a call with their own clone and lets them correct it', () => {
+  const edit = jest.fn();
+  const screen = render(<ChatBubble message={log({ speaker: 'PARTNER_TWIN' })} partnerName="홍길동" hideSpeakerLabel={false} onEditStart={edit} selfCall />);
+  expect(screen.getByText('내 AI 트윈')).toBeTruthy();
+  expect(screen.queryByText(/홍길동/)).toBeNull();
+  fireEvent.press(screen.getByLabelText('내 AI 트윈 답변 수정'));
+  expect(edit).toHaveBeenCalledWith(1, log().message);
+});
+
+it('saves a correction to the user’s own twin in a self-call transcript', async () => {
+  const save = jest.fn().mockResolvedValue(response());
+  const screen = render(<CallDetailBody talkLogs={[log({ speaker: 'ME', editable: false }), log({ talkLogId: 2, speaker: 'PARTNER_TWIN' })]} partnerName="홍길동" selfCall onSaveTalkLog={save} isSaving={false} />);
+  expect(screen.getByText('나')).toBeTruthy();
+  fireEvent.press(screen.getByLabelText('내 AI 트윈 답변 수정'));
+  fireEvent.changeText(editorInput(screen), '고친 답변');
+  fireEvent.press(screen.getByLabelText('수정한 답변 저장'));
+  await waitFor(() => expect(save).toHaveBeenCalledWith(2, '고친 답변'));
+});
+
+it('never opens the editor for the other side’s twin in a call with someone else, even if the server flag is set', () => {
+  const screen = render(<CallDetailBody talkLogs={[log({ speaker: 'PARTNER_TWIN' })]} partnerName="지수" onSaveTalkLog={jest.fn()} isSaving={false} />);
+  expect(screen.queryByLabelText('내 AI 트윈 답변 수정')).toBeNull();
+});
+
+it('describes a self-call without the user’s own name and advertises correction for their twin', () => {
+  const data = { ...context([log({ speaker: 'PARTNER_TWIN' })]), description: '홍길동의 Twin과 대화' };
+  const screen = render(<CallDetailSummary selfCall data={data} />);
+  expect(screen.getByText('나와 내 AI 트윈의 대화')).toBeTruthy();
+  expect(screen.queryByText(/홍길동/)).toBeNull();
+  expect(screen.getByText('내 AI 트윈의 답변은 수정할 수 있어요. 수정한 문장은 이 기록에 저장돼요.')).toBeTruthy();
+});
+
+describe('transcript still arriving after the call', () => {
+  const props = { partnerName: '지수', onSaveTalkLog: jest.fn(), isSaving: false };
+
+  it('says the transcript is being prepared right after the call instead of claiming nothing exists', () => {
+    const screen = render(<CallDetailBody talkLogs={[]} transcriptSettling {...props} />);
+    expect(screen.getByText('대화 내용을 정리하고 있어요')).toBeTruthy();
+    expect(screen.queryByText('아직 표시할 대화가 없어요')).toBeNull();
+  });
+
+  it('explains why nothing was saved once the settling period is over', () => {
+    const screen = render(<CallDetailBody talkLogs={[]} {...props} />);
+    expect(screen.getByText('아직 표시할 대화가 없어요')).toBeTruthy();
+    expect(screen.getByText(/통화가 아주 짧았거나 대화가 인식되지 않으면/)).toBeTruthy();
+    expect(screen.queryByText('대화 내용을 정리하고 있어요')).toBeNull();
+  });
+
+  it('keeps what has arrived readable while the last turns are still loading', () => {
+    const screen = render(<CallDetailBody talkLogs={[log()]} transcriptSettling {...props} />);
+    expect(screen.getByText('주말에는 산책하는 걸 좋아해요.')).toBeTruthy();
+    expect(screen.getByText('남은 대화가 있는지 확인하고 있어요')).toBeTruthy();
+    expect(screen.queryByText('대화 기록의 끝')).toBeNull();
+    screen.rerender(<CallDetailBody talkLogs={[log()]} transcriptSettling={false} {...props} />);
+    expect(screen.getByText('대화 기록의 끝')).toBeTruthy();
+    expect(screen.queryByText('남은 대화가 있는지 확인하고 있어요')).toBeNull();
+  });
+});

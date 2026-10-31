@@ -6,6 +6,8 @@ import { initiateCall, endCall, setCallInProgress } from '../services/callServic
 import { getPresignedUrl } from '../services/fileService';
 import { uploadFileToS3 } from '../services/s3Service';
 import { useAICallFlow } from './useAICallFlow';
+import { queryClient } from '../services/queryClient';
+import { transcriptSettleRemainingMs } from '@/src/features/history/callTranscriptSettle';
 
 const mockRecorder = { prepareToRecordAsync: jest.fn(), record: jest.fn(), stop: jest.fn(), pause: jest.fn(), uri: null as string | null };
 const mockRTC = { remoteStream: null, localCameraStream: null, iceConnectionState: 'new', onLocalIceCandidateCb: { current: null }, initialize: jest.fn(), enableCamera: jest.fn(), disableCamera: jest.fn(), createOffer: jest.fn(), createAnswer: jest.fn(), applyAnswer: jest.fn(), applyOffer: jest.fn(), applyIceCandidate: jest.fn(), close: jest.fn(), setMicrophoneMuted: jest.fn() };
@@ -227,4 +229,23 @@ it('finalizes a room that never completes signaling JOIN', async () => {
   hook.unmount();
   act(() => jest.runAllTicks());
   jest.useRealTimers();
+});
+
+it('treats a completed call as just ended so its transcript is awaited, and refreshes the history caches', async () => {
+  const hook = await connect();
+  await act(async () => { await hook.result.current.hangUp(); });
+  expect(transcriptSettleRemainingMs(1)).toBeGreaterThan(0);
+  expect(queryClient.invalidateQueries).toHaveBeenCalledWith({ queryKey: ['history', 'calls'] });
+  expect(queryClient.invalidateQueries).toHaveBeenCalledWith({ queryKey: ['history', 'weeklySummary'] });
+  hook.unmount();
+});
+
+it('does not await a transcript for a call the server did not complete', async () => {
+  (initiateCall as jest.Mock).mockResolvedValueOnce({ isSuccess: true, result: { callId: 7, roomId: 'room', callerSignalId: 'caller', aiSignalId: 'ai', mediaType: 'VIDEO' } });
+  (endCall as jest.Mock).mockResolvedValue({ isSuccess: true, result: { callId: 7, status: 'CANCELLED', durationSec: 0, remainingTalkTime: 100 } });
+  const hook = await connect();
+  await act(async () => { await hook.result.current.hangUp(); });
+  expect(endCall).toHaveBeenCalledWith(7, expect.any(String));
+  expect(transcriptSettleRemainingMs(7)).toBe(0);
+  hook.unmount();
 });
