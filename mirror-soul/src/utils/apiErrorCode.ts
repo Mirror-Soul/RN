@@ -15,7 +15,8 @@
  */
 
 /**
- * 백엔드 GeneralErrorCode 전수(60개, GeneralErrorCode.java 기준 2026-08-19 확인).
+ * 백엔드 GeneralErrorCode 전수(60개, GeneralErrorCode.java 기준 2026-08-19 확인) + 이후 추가된 PAYMENT_* 3개.
+ * 그 밖에 백엔드에 새로 생긴 코드는 아직 등록되지 않아 getErrorCode()가 undefined를 돌려준다.
  * 카테고리 구분은 백엔드 파일의 주석 그룹과 동일한 순서를 유지한다 — 새 코드가 추가되면
  * 백엔드 파일과 나란히 놓고 diff하기 쉽도록.
  */
@@ -102,10 +103,22 @@ export type BackendErrorCode =
   | 'VALUE_BALANCE_COMPLETED'
   | 'VALUE_BALANCE_ANALYSIS_JOB_NOT_FOUND'
   // 목소리 정밀 학습 관련 오류
-  | 'VOICE_TRAINING_TOO_FREQUENT';
+  | 'VOICE_TRAINING_TOO_FREQUENT'
+  // 결제/통화 시간 관련 오류
+  | 'PAYMENT_INVALID'
+  | 'PAYMENT_CONFLICT'
+  | 'PAYMENT_UNAVAILABLE';
 
-/** apiClient.ts 응답 인터셉터가 전송 계층 실패에 대해 자체적으로 합성하는 코드 (이미 최종 형태라 별도 역매핑 불필요) */
-export type ClientSyntheticErrorCode = 'AUTH_FAILED' | 'TIMEOUT' | 'NETWORK_ERROR' | 'UNKNOWN_ERROR';
+/**
+ * 클라이언트가 자체적으로 합성하는 코드 (이미 최종 형태라 별도 역매핑 불필요).
+ * AUTH_FAILED/TIMEOUT/NETWORK_ERROR/UNKNOWN_ERROR는 apiClient.ts 인터셉터가, CALL_ALREADY_IN_PROGRESS는 callService가 만든다.
+ */
+export type ClientSyntheticErrorCode =
+  | 'AUTH_FAILED'
+  | 'TIMEOUT'
+  | 'NETWORK_ERROR'
+  | 'UNKNOWN_ERROR'
+  | 'CALL_ALREADY_IN_PROGRESS';
 
 export type ApiErrorCode = BackendErrorCode | ClientSyntheticErrorCode;
 
@@ -114,6 +127,7 @@ const CLIENT_SYNTHETIC_CODES: readonly ClientSyntheticErrorCode[] = [
   'TIMEOUT',
   'NETWORK_ERROR',
   'UNKNOWN_ERROR',
+  'CALL_ALREADY_IN_PROGRESS',
 ];
 
 /**
@@ -204,6 +218,10 @@ const BACKEND_WIRE_CODE: Record<BackendErrorCode, string> = {
   VALUE_BALANCE_ANALYSIS_JOB_NOT_FOUND: 'VALUE_BALANCE_4041',
 
   VOICE_TRAINING_TOO_FREQUENT: 'VOICE_TRAINING_4290',
+
+  PAYMENT_INVALID: 'PAYMENT_4000',
+  PAYMENT_CONFLICT: 'PAYMENT_4090',
+  PAYMENT_UNAVAILABLE: 'PAYMENT_5030',
 };
 
 /** wire 코드 → BackendErrorCode 역매핑. BACKEND_WIRE_CODE에서 한 번만 파생시켜 두 표가 어긋날 일이 없다. */
@@ -233,6 +251,7 @@ const CODE_MESSAGE_OVERRIDES: Partial<Record<ApiErrorCode, string>> = {
   VALUE_BALANCE_SET_LOCKED: '이번 세트를 분석하고 있어요. 잠시 후 다시 확인해주세요.',
   VALUE_BALANCE_COMPLETED: '모든 가치관 밸런스 세트를 완료했습니다.',
   VOICE_TRAINING_TOO_FREQUENT: '목소리 학습은 2분에 한 번만 가능합니다.',
+  CALL_ALREADY_IN_PROGRESS: '이전 통화가 아직 정리되지 않아 새 통화를 시작할 수 없어요. 잠시 후 다시 시도해도 같다면 문의해 주세요.',
 };
 
 /**

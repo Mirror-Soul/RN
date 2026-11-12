@@ -11,6 +11,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import * as Sentry from '@sentry/react-native';
 import { ToastProvider } from '@/src/components/common/Toast/ToastProvider';
 import { useProactiveTokenRefresh } from '@/src/hooks/useProactiveTokenRefresh';
+import { useReconcilePendingCall } from '@/src/hooks/useReconcilePendingCall';
 import { usePushNotificationSetup } from '@/src/features/push/hooks/usePushNotificationSetup';
 import { useChatRealtimeConnection } from '@/src/features/chat/hooks/useChatRealtimeConnection';
 import { getAuthRedirect } from '@/src/features/auth/onboardingResume';
@@ -64,6 +65,9 @@ function RootLayout() {
 
   // access token 만료 전 사전 갱신 (hydration 이후에만 의미 있음 — 훅 내부에서 isLoggedIn/accessToken 가드)
   useProactiveTokenRefresh();
+
+  // 이전 실행이 통화 중 종료되어 서버에 남긴 통화 정리 (남아 있으면 새 통화가 거절된다)
+  useReconcilePendingCall();
 
   // Font failures fall back to the original typeface and still allow app startup.
   useEffect(() => {
