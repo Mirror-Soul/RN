@@ -3,6 +3,7 @@ import CallDetailSummary from '@/src/components/home/history/detail/CallDetailSu
 import CallDetailHeader from '@/src/components/home/history/detail/CallDetailHeader';
 import { Colors, FontFamily, FontSize, FontWeight, Spacing } from '@/src/constants/theme';
 import { useCallDetail } from '@/src/features/history/hooks/useCallDetail';
+import { SELF_CALL_DESCRIPTION, isSelfCall } from '@/src/features/history/talkLogSpeaker';
 import { ProfileImageReloadContext } from '@/src/features/profile/photo/useRetryableProfileImage';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -37,7 +38,7 @@ export default function CallDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const callId = Number(id);
   const isValidCallId = Number.isSafeInteger(callId) && callId > 0;
-  const { data, isLoading, isFetching, isError, refetch, updateTalkLog, isSaving } = useCallDetail(callId);
+  const { data, isLoading, isFetching, isError, refetch, updateTalkLog, isSaving, transcriptSettling } = useCallDetail(callId);
 
   const { showToast } = useToast();
   const userUuid = useAuthStore(state => state.userUuid);
@@ -67,8 +68,9 @@ export default function CallDetailScreen() {
   const target: CallTarget | null = data && UUID_PATTERN.test(data.partner.userUuid)
     ? { userUuid: data.partner.userUuid, name: data.partner.name || '상대방' }
     : null;
+  const selfCall = !!data && isSelfCall(data.partner.userUuid, userUuid);
   const callDisabled = !target || editing || isSaving || isFetching || refreshing || navigating || blockMutation.isPending || reporting;
-  const userActionsDisabled = callDisabled || target?.userUuid === userUuid;
+  const userActionsDisabled = callDisabled || selfCall;
   const measureMenuAnchor = useCallback((anchor: HistoryMenuAnchor) => {
     rootRef.current?.measureInWindow((x, y) => {
       if (mounted.current) setMenuAnchor({ ...anchor, x: anchor.x - x, y: anchor.y - y });
@@ -144,11 +146,10 @@ export default function CallDetailScreen() {
     navigationTimer.current = setTimeout(() => {
       navigationTimer.current = null;
       if (!mounted.current || !focused.current || recordId.current !== sourceCallId) return;
-      router.push({ pathname: '/ai-call', params: {
-        targetUuid: callTarget.userUuid,
-        targetName: callTarget.name,
-        remainingSeconds: String(remainingSeconds),
-      } });
+      // 내 클론과의 기록은 트윈 시뮬레이션과 같은 경로(targetUuid 없음)로 다시 건다 — 통화 후 만남 신청 화면이 나오지 않는다.
+      router.push({ pathname: '/ai-call', params: selfCall
+        ? { targetName: '내 트윈', remainingSeconds: String(remainingSeconds) }
+        : { targetUuid: callTarget.userUuid, targetName: callTarget.name, remainingSeconds: String(remainingSeconds) } });
     }, 280);
   };
   const handleProfile = () => {
@@ -276,8 +277,9 @@ export default function CallDetailScreen() {
           <CallDetailHeader
             name={data.partner.name}
             profileImageUrl={data.partner.profileImageUrl}
-            description={data.description}
+            description={selfCall ? SELF_CALL_DESCRIPTION : data.description}
             callNumber={data.callNumber}
+            selfCall={selfCall}
             onCallPress={handleCallPress}
             onMorePress={handleMorePress}
             onBack={handleSafeBack}
@@ -289,20 +291,22 @@ export default function CallDetailScreen() {
         </View>
         <CallDetailBody
           key={data.callId}
-          summary={<CallDetailSummary data={data} refreshFailed={isError} />}
+          summary={<CallDetailSummary data={data} refreshFailed={isError} selfCall={selfCall} />}
           talkLogs={data.talkLogs}
           partnerName={data.partner.name}
           onSaveTalkLog={updateTalkLog}
           isSaving={isSaving}
           onEditingChange={setEditing}
+          selfCall={selfCall}
+          transcriptSettling={transcriptSettling}
         />
       </View>
-      <CallDetailMenu isOpen={menuOpen} data={data} anchor={menuAnchor} headerBottom={headerBottom} onClose={() => setMenuOpen(false)}
+      <CallDetailMenu isOpen={menuOpen} data={data} selfCall={selfCall} anchor={menuAnchor} headerBottom={headerBottom} onClose={() => setMenuOpen(false)}
         onRefresh={handleRefresh} onProfile={handleProfile} onBlock={handleBlock} onReport={handleReport} userActionsDisabled={userActionsDisabled} reporting={reporting}
         editing={editing || isSaving} refreshing={refreshing || isFetching} />
       <PartnerProfileModal source="history" match={profileCandidate} onClose={() => setProfileCandidate(null)} onStartCall={handleStartCall} />
       <Modal visible={activeSheet !== null} transparent animationType="none" statusBarTranslucent onRequestClose={() => setActiveSheet(null)}>
-        {activeSheet === 'call' && <CallStartConfirmSheet embedded target={target} isOpen
+        {activeSheet === 'call' && <CallStartConfirmSheet embedded ownTwin={selfCall} target={target} isOpen
           onClose={() => setActiveSheet(null)} onStart={handleStartCall} onRefill={() => setActiveSheet('refill')} />}
         {activeSheet === 'refill' && <TimeRefillBottomSheet embedded isOpen onClose={() => setActiveSheet(null)} />}
       </Modal>

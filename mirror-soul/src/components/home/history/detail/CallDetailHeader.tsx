@@ -12,6 +12,7 @@ interface CallDetailHeaderProps {
   profileImageUrl?: string | null;
   description: string;
   callNumber?: number | null;
+  selfCall?: boolean;
   onBack: () => void;
   onCallPress: () => void;
   onMorePress: () => void;
@@ -20,13 +21,13 @@ interface CallDetailHeaderProps {
   menuExpanded?: boolean;
   onMenuAnchorChange?: (anchor: HistoryMenuAnchor) => void;
 }
-export default function CallDetailHeader({ name, profileImageUrl, description, callNumber, onBack, onCallPress, onMorePress, callDisabled, callBusy, menuExpanded, onMenuAnchorChange }: CallDetailHeaderProps) {
+export default function CallDetailHeader({ name, profileImageUrl, description, callNumber, selfCall, onBack, onCallPress, onMorePress, callDisabled, callBusy, menuExpanded, onMenuAnchorChange }: CallDetailHeaderProps) {
   const { colors } = useMatchingDesign();
   const insets = useSafeAreaInsets();
   return <View style={[styles.header, { paddingTop: insets.top + 8, borderColor: colors.border.primary, backgroundColor: colors.background.primary }]}>
     <Pressable accessibilityRole="button" accessibilityLabel="기록으로 돌아가기" onPress={onBack} style={({ pressed }) => [styles.back, { backgroundColor: pressed ? colors.background.glass : 'transparent' }]}><Feather name="chevron-left" size={24} color={colors.text.primary} /></Pressable>
-    <CallDetailHeaderLeft name={name} profileImageUrl={profileImageUrl} description={description} callNumber={callNumber} />
-    <CallDetailHeaderRight onCallPress={onCallPress} onMorePress={onMorePress} callDisabled={callDisabled} callBusy={callBusy} menuExpanded={menuExpanded} onMenuAnchorChange={onMenuAnchorChange} />
+    <CallDetailHeaderLeft name={name} profileImageUrl={profileImageUrl} description={description} callNumber={callNumber} selfCall={selfCall} />
+    <CallDetailHeaderRight onCallPress={onCallPress} onMorePress={onMorePress} callDisabled={callDisabled} callBusy={callBusy} menuExpanded={menuExpanded} onMenuAnchorChange={onMenuAnchorChange} selfCall={selfCall} />
   </View>;
 }
 const styles = StyleSheet.create({

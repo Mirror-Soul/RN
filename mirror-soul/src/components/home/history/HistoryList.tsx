@@ -5,6 +5,8 @@ import { ActivityIndicator, SectionList, StyleSheet, Text, TouchableOpacity, Vie
 import { useMainTabBottomPadding } from '@/src/hooks/useMainTabBottomPadding';
 import { useMainTabScroll } from '@/src/hooks/useMainTabScroll';
 import { ProfileImageReloadContext } from '@/src/features/profile/photo/useRetryableProfileImage';
+import { SELF_TWIN_LABEL, isSelfCall } from '@/src/features/history/talkLogSpeaker';
+import { useAuthStore } from '@/src/store/useAuthStore';
 import { HistoryFilterType } from './HistoryFilterRow';
 import HistoryCallCard from './parts/HistoryCallCard';
 import HistoryDateSectionHeader from './parts/HistoryDateSectionHeader';
@@ -41,6 +43,7 @@ export default function HistoryList({ filter, searchQuery, ListHeaderComponent }
   const scrollCallbacks = useMainTabScroll('history');
   const { colors } = useThemeColors();
   const { data, isLoading, isError, refetch } = useHistoryCallsQuery();
+  const userUuid = useAuthStore((s) => s.userUuid);
 
   const sections: HistorySection[] = useMemo(() => {
     if (!data) return [];
@@ -50,16 +53,18 @@ export default function HistoryList({ filter, searchQuery, ListHeaderComponent }
       .map((group) => {
         const histories = group.histories.filter((item) => {
           const matchesFilter = filter === 'ALL' || item.type === filter;
+          // 카드에 보이는 이름(내 클론과의 통화는 '내 AI 트윈')으로 검색한다.
+          const shownName = isSelfCall(item.partner.userUuid, userUuid) ? SELF_TWIN_LABEL : item.partner.name;
           const matchesQuery =
             !query ||
-            item.partner.name.toLowerCase().includes(query) ||
+            shownName.toLowerCase().includes(query) ||
             item.topics.some((topic) => topic.toLowerCase().includes(query));
           return matchesFilter && matchesQuery;
         });
         return { title: toRelativeDateLabel(group.date), data: histories };
       })
       .filter((section) => section.data.length > 0);
-  }, [data, filter, searchQuery]);
+  }, [data, filter, searchQuery, userUuid]);
 
   const renderEmpty = () => {
     if (isLoading) {

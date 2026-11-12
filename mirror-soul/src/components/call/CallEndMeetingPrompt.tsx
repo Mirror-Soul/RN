@@ -1,7 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, FontFamily, FontSize, FontWeight, Radii, Spacing } from '@/src/constants/theme';
 import { useCreateMeetingRequestMutation } from '@/src/features/match/hooks/useCreateMeetingRequestMutation';
@@ -18,6 +18,8 @@ interface CallEndMeetingPromptProps {
   endedByTimeLimit: boolean;
   onClose: () => void;
   hasReceivedRequest?: boolean;
+  /** 방금 끝난 통화의 기록 화면으로 이동한다. 대화 내용이 아직 정리 중이면 상세 화면이 알아서 기다린다. */
+  onViewHistory?: () => void;
 }
 
 /**
@@ -32,6 +34,7 @@ export default function CallEndMeetingPrompt({
   endedByTimeLimit,
   onClose,
   hasReceivedRequest = false,
+  onViewHistory,
 }: CallEndMeetingPromptProps) {
   const insets = useSafeAreaInsets();
   const { colors } = useThemeColors();
@@ -44,6 +47,24 @@ export default function CallEndMeetingPrompt({
   const [isSent, setIsSent] = useState(false);
   const trimmedMessage = message.trim();
   const messagePlaceholder = `${partnerName}님, 트윈과 이야기해 보니 더 알아가고 싶어요. 괜찮다면 메시지로 대화해요!`;
+  const historyLink = onViewHistory ? (
+    <View style={styles.historyBlock}>
+      <TouchableOpacity
+        onPress={() => { Keyboard.dismiss(); onViewHistory(); }}
+        disabled={createRequest.isPending}
+        activeOpacity={0.85}
+        accessibilityRole="button"
+        accessibilityLabel="통화 기록 보기"
+        accessibilityHint="방금 나눈 대화를 확인해요. 대화 내용이 정리되는 데 몇 초 걸릴 수 있어요."
+        accessibilityState={{ disabled: createRequest.isPending }}
+        style={[styles.historyButton, { borderColor: colors.border.primary, backgroundColor: colors.background.glass }, createRequest.isPending && styles.primaryButtonDisabled]}
+      >
+        <Feather name="file-text" size={16} color={colors.text.primary} />
+        <Text style={[styles.historyButtonText, { color: colors.text.primary }]}>통화 기록 보기</Text>
+      </TouchableOpacity>
+      <Text style={[styles.historyHint, { color: colors.text.muted }]}>방금 나눈 대화는 정리되는 데 몇 초 걸릴 수 있어요.</Text>
+    </View>
+  ) : null;
 
   const handleSend = async () => {
     if (!trimmedMessage || createRequest.isPending) return;
@@ -70,6 +91,7 @@ export default function CallEndMeetingPrompt({
             <Text style={[styles.description, { color: colors.text.secondary }]}>{partnerName}님에게 이미 받은 신청이 있어요. 기존 신청에서 수락 여부를 정할 수 있어요.</Text>
           </View>
           <Text style={[styles.description, { color: colors.text.secondary }]}>정산 기준 시간 · {formatDurationLabel(completedCall.durationSec)}</Text>
+          {historyLink}
           <TouchableOpacity onPress={onClose} accessibilityRole="button" accessibilityLabel="받은 신청으로 돌아가기" style={[styles.secondaryButton, { borderColor: colors.border.strong, backgroundColor: colors.background.glass }]}>
             <Text style={[styles.secondaryButtonText, { color: colors.text.primary }]}>받은 신청으로 돌아가기</Text>
           </TouchableOpacity>
@@ -87,6 +109,7 @@ export default function CallEndMeetingPrompt({
           </View>
           <Text style={[styles.title, { color: colors.text.primary }]}>만남 신청을 보냈어요</Text>
           <Text style={[styles.successCopy, { color: colors.text.secondary }]}>상대가 수락하면 두 분의 메시지방이 자동으로 열려요.</Text>
+          {historyLink}
           <TouchableOpacity
             style={[styles.secondaryButton, { borderColor: colors.border.primary, backgroundColor: colors.background.glass }]}
             onPress={onClose}
@@ -136,6 +159,7 @@ export default function CallEndMeetingPrompt({
               <Text style={[styles.summaryValue, { color: colors.text.primary }]}>{formatCallTime(completedCall.remainingTalkTime)}</Text>
             </View>
           </View>
+          {historyLink}
 
           <View style={styles.requestSection}>
             <Text style={[styles.requestTitle, { color: colors.text.primary }]}>상대에게 남길 첫 메시지</Text>
@@ -345,6 +369,32 @@ const styles = StyleSheet.create({
     fontSize: FontSize.base,
     fontWeight: FontWeight.regular,
     lineHeight: 22,
+    textAlign: 'center',
+  },
+  historyBlock: {
+    width: '100%',
+    marginTop: Spacing.xl,
+    gap: Spacing.sm,
+  },
+  historyButton: {
+    minHeight: 48,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.sm,
+    borderRadius: Radii.lg,
+    borderWidth: 1,
+  },
+  historyButtonText: {
+    fontFamily: FontFamily.sans,
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.bold,
+  },
+  historyHint: {
+    fontFamily: FontFamily.sans,
+    fontSize: FontSize.xs,
+    fontWeight: FontWeight.regular,
+    lineHeight: 18,
     textAlign: 'center',
   },
   secondaryButton: {

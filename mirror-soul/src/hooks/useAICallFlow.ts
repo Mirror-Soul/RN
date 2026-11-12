@@ -5,6 +5,7 @@ import { AudioModule, setAudioModeAsync } from 'expo-audio';
 import { useAuthStore } from '../store/useAuthStore';
 import { initiateCall, setCallInProgress, endCall } from '../services/callService';
 import { useRemoteAudioVolume } from '@/src/features/voice-audio/hooks/useRemoteAudioVolume';
+import { markCallEnded } from '@/src/features/history/callTranscriptSettle';
 import { useWebRTCCall } from './useWebRTCCall';
 import { useCallRecording } from './useCallRecording';
 import { logger } from '../utils/logger';
@@ -114,12 +115,14 @@ export function useAICallFlow(targetUserUuid?: string) {
         const response = await endCall(active.callId, recordingUrl.current ?? '');
         if (!response.isSuccess) throw new Error(response.message);
         session.current = null;
+        if (response.result.status === 'COMPLETED') markCallEnded(active.callId);
         if (mounted.current) {
           if (!failure) setIssue(null);
           if (wasConnected && response.result.status === 'COMPLETED') setCompletedCall(response.result);
         }
         void queryClient.invalidateQueries({ queryKey: ['profile', 'time'] });
         void queryClient.invalidateQueries({ queryKey: ['history', 'calls'] });
+        void queryClient.invalidateQueries({ queryKey: ['history', 'weeklySummary'] });
       } catch (error) {
         if (getErrorCode(error) === 'CALL_ALREADY_ENDED') {
           session.current = null;

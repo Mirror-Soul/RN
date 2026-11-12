@@ -11,10 +11,11 @@ interface CallDetailHeaderRightProps {
   callBusy?: boolean;
   menuExpanded?: boolean;
   onMenuAnchorChange?: (anchor: HistoryMenuAnchor) => void;
+  selfCall?: boolean;
 }
 
 /** Target and native call lifecycle remain in the screen; each control has its own touch area. */
-export default function CallDetailHeaderRight({ onCallPress, onMorePress, callDisabled = false, callBusy = false, menuExpanded = false, onMenuAnchorChange }: CallDetailHeaderRightProps) {
+export default function CallDetailHeaderRight({ onCallPress, onMorePress, callDisabled = false, callBusy = false, menuExpanded = false, onMenuAnchorChange, selfCall = false }: CallDetailHeaderRightProps) {
   const { colors, palette } = useMatchingDesign();
   const menuRef = useRef<View>(null);
   const { width, height, fontScale } = useWindowDimensions();
@@ -29,7 +30,7 @@ export default function CallDetailHeaderRight({ onCallPress, onMorePress, callDi
   return <View style={styles.container}>
     <TouchableOpacity style={[styles.iconButton, { ...sharedStyle, opacity: callDisabled || callBusy ? 0.45 : 1 }]}
       onPress={onCallPress} disabled={callDisabled || callBusy} activeOpacity={0.7}
-      accessibilityRole="button" accessibilityLabel="상대의 AI 트윈과 통화" accessibilityState={{ disabled: callDisabled || callBusy, busy: callBusy }}>
+      accessibilityRole="button" accessibilityLabel={selfCall ? '내 AI 트윈과 통화' : '상대의 AI 트윈과 통화'} accessibilityState={{ disabled: callDisabled || callBusy, busy: callBusy }}>
       {callBusy ? <ActivityIndicator size="small" color={palette.cyanInk} /> : <Feather name="phone" size={20} color={colors.text.primary} />}
     </TouchableOpacity>
     <View ref={menuRef} collapsable={false} onLayout={measureMenu}><TouchableOpacity style={[styles.iconButton, sharedStyle, menuExpanded && { backgroundColor: palette.coolTint, borderColor: palette.softBorder }]} onPress={onMorePress} activeOpacity={0.7}
