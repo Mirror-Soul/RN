@@ -1,7 +1,6 @@
 import React from 'react';
 import { Alert, Modal, ScrollView, View, StyleSheet } from 'react-native';
 import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
-import VerificationModal from './modals/VerificationModal';
 import ValueBalanceModal from './modals/ValueBalanceModal';
 import VoiceMissionCard from './VoiceMissionCard';
 import VoiceUpdateButton from './voice-update/VoiceUpdateButton';
@@ -56,7 +55,6 @@ jest.mock('@/src/components/common/BottomSheet/BottomSheet', () => {
   return { BottomSheet: ({ isOpen, children, ...props }: { isOpen: boolean; children: React.ReactNode }) => isOpen ? <SheetView testID="sheet" {...props}>{children}</SheetView> : null };
 });
 
-const props = { isOpen: true, onClose: jest.fn(), submitted: false, job: 'IT_TECH' as const, loading: false, error: false, onRetry: mockRetry };
 beforeEach(() => {
   jest.clearAllMocks();
   mockTimeRefetch.mockResolvedValue({ isSuccess: true });
@@ -68,58 +66,6 @@ beforeEach(() => {
   mockQuestion = { questionId: 7, axis: 'PRIORITY', leftLabel: '관계 우선', rightLabel: '내 시간 우선', currentSet: 1, answeredInSet: 3, setSize: 8, totalSets: 13, totalAnswered: 3, locked: false, lockedUntil: null, completed: false };
 });
 afterEach(() => jest.restoreAllMocks());
-
-it('selects a real image and previews it without inventing submission or verification', async () => {
-  const screen = render(<VerificationModal {...props} />);
-  fireEvent.press(screen.getByLabelText('사진첩에서 직업 서류 선택'));
-  await waitFor(() => expect(screen.getByText('재직증명서.jpg')).toBeTruthy());
-  expect(screen.getByLabelText('선택한 직업 확인 서류 사진').props.source.uri).toBe('file:///document.jpg');
-  expect(screen.getByLabelText('직업 인증 서류 제출 준비 중')).toBeDisabled();
-  expect(mockUpload).not.toHaveBeenCalled();
-  fireEvent.press(screen.getByLabelText('첨부 사진 삭제'));
-  expect(screen.queryByLabelText('선택한 직업 확인 서류 사진')).toBeNull();
-});
-
-it('retains the existing image when a replacement is cancelled', async () => {
-  const screen = render(<VerificationModal {...props} />);
-  fireEvent.press(screen.getByLabelText('사진첩에서 직업 서류 선택'));
-  await waitFor(() => expect(screen.getByText('재직증명서.jpg')).toBeTruthy());
-  mockPick.mockResolvedValueOnce({ canceled: true });
-  fireEvent.press(screen.getByLabelText('사진첩에서 직업 서류 선택'));
-  await waitFor(() => expect(screen.queryByLabelText('사진 선택 중')).toBeNull());
-  expect(screen.getByText('재직증명서.jpg')).toBeTruthy();
-});
-
-it('does not launch a camera without permission and preserves the photo-picker alternative', async () => {
-  jest.spyOn(Alert, 'alert').mockImplementation(() => {});
-  const screen = render(<VerificationModal {...props} />);
-  fireEvent.press(screen.getByLabelText('직업 서류 촬영'));
-  await waitFor(() => expect(Alert.alert).toHaveBeenCalledWith('카메라 접근을 허용해 주세요', expect.any(String), expect.any(Array)));
-  expect(mockCamera).not.toHaveBeenCalled();
-  fireEvent.press(screen.getByLabelText('사진첩에서 직업 서류 선택'));
-  await waitFor(() => expect(screen.getByText('재직증명서.jpg')).toBeTruthy());
-});
-
-it('clears private previews on close and ignores a picker result from a prior session', async () => {
-  let finish!: (value: unknown) => void;
-  mockPick.mockImplementationOnce(() => new Promise(resolve => { finish = resolve; }));
-  const screen = render(<View><VerificationModal key="one" {...props} /></View>);
-  fireEvent.press(screen.getByLabelText('사진첩에서 직업 서류 선택'));
-  screen.rerender(<View><VerificationModal key="two" {...props} /></View>);
-  await act(async () => { finish({ canceled: false, assets: [{ uri: 'file:///old.jpg', fileName: '이전 계정.jpg' }] }); });
-  expect(screen.queryByText('이전 계정.jpg')).toBeNull();
-  fireEvent.press(screen.getByLabelText('사진첩에서 직업 서류 선택'));
-  await waitFor(() => expect(screen.getByText('재직증명서.jpg')).toBeTruthy());
-  screen.rerender(<View><VerificationModal key="two" {...props} isOpen={false} /></View>);
-  screen.rerender(<View><VerificationModal key="two" {...props} /></View>);
-  expect(screen.queryByText('재직증명서.jpg')).toBeNull();
-});
-
-it('distinguishes submitted documents from approved job verification', () => {
-  const screen = render(<VerificationModal {...props} submitted />);
-  expect(screen.getByText('가입 때 서류를 추가했어요. 제출 여부만 확인할 수 있으며, 인증 결과는 아직 표시되지 않아요.')).toBeTruthy();
-  expect(screen.queryByText('인증 완료')).toBeNull();
-});
 
 it('calls voice counts submissions and does not claim that pending or failed jobs completed learning', () => {
   const screen = render(<VoiceMissionCard />);
@@ -257,9 +203,9 @@ it('keeps waiting copy usable when the server has no valid unlock time', () => {
 it('returns job verification to the hero and permits accessible text to wrap', () => {
   const press = jest.fn();
   const screen = render(<GrowthHeroSection similarityPercent={72} isLoading={false} isError={false} jobSubmitted jobLoading={false} jobError={false} onVerifyPress={press} />);
-  fireEvent.press(screen.getByLabelText('직업 인증하기'));
+  fireEvent.press(screen.getByLabelText('직업 서류 확인하기'));
   expect(press).toHaveBeenCalledTimes(1);
-  expect(screen.getByLabelText('직업 인증하기').props.accessibilityHint).toContain('심사 결과와는 별개');
+  expect(screen.getByLabelText('직업 서류 확인하기').props.accessibilityHint).toContain('심사 결과와는 별개');
 });
 
 it('places status in the heading and stacks it when the actual text area becomes narrow', () => {
@@ -269,15 +215,6 @@ it('places status in the heading and stacks it when the actual text area becomes
   fireEvent(screen.getByText('안내').parent!, 'layout', { nativeEvent: { layout: { width: 140 } } });
   heading = screen.getByTestId('growth-mission-heading');
   expect(StyleSheet.flatten(heading.props.style).flexDirection).toBe('column');
-});
-
-it.each([[320, 568, 2], [393, 852, 1], [740, 360, 2], [1024, 1366, 1.5]])('keeps document actions and long content scrollable at %sx%s, font %s', (width, height, fontScale) => {
-  mockDimensions = { width, height, fontScale, scale: 3 };
-  const screen = render(<VerificationModal {...props} />);
-  const scroll = screen.UNSAFE_getByType(ScrollView);
-  expect(scroll.findByProps({ accessibilityLabel: '직업 인증 나중에 하기' })).toBeTruthy();
-  expect(screen.getByTestId('sheet').props.dragFromHandleOnly).toBe(true);
-  expect(screen.getByTestId('sheet').props.height).toBeLessThanOrEqual(height - 44);
 });
 
 it('handles invalid lock dates and never promises a perfect twin score', () => {

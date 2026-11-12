@@ -82,7 +82,8 @@ export interface TalkLogResult {
   speaker: TalkLogSpeaker;
   message: string;
   startedAt: string;
-  endedAt: string;
+  /** AI가 재생 길이를 알 수 없었던 클론 발화는 종료 시각 없이 저장될 수 있다. */
+  endedAt: string | null;
   editable: boolean;
   edited: boolean;
   editedAt: string | null;

@@ -119,6 +119,7 @@ export default function AICallScreen() {
       retryLabel={canRetryEnd ? '종료 확인 다시 시도' : '다시 연결'} onSettings={errorKind === 'microphone' ? openSettings : undefined} secondaryMessage={retryError ?? notice} />;
   } else if (partnerCall && callStatus === 'ended' && completedCall && !exitRequested.current) {
     content = <CallEndMeetingPrompt hasReceivedRequest={!!params.receivedRequestId} partnerName={targetName} partnerUserUuid={targetUuid!} completedCall={completedCall} endedByTimeLimit={endedByTimeLimit}
+      onViewHistory={() => router.push({ pathname: '/call-detail', params: { id: String(completedCall.callId) } })}
       onClose={() => params.receivedRequestId ? router.replace({ pathname: '/(main)/match', params: { receivedRequestId: params.receivedRequestId, receivedRequestReturnToken: String(completedCall.callId) } }) : goBack()} />;
   } else if (!isPreview && (['idle', 'initiating', 'joining', 'inviting', 'connecting'].includes(callStatus) || (!hasConnected.current && ['ending', 'ended'].includes(callStatus)))) {
     content = <CallConnectingView callStatus={callStatus} targetName={targetName} onCancel={() => { exitRequested.current = true; void hangUp(); }} />;

@@ -16,6 +16,7 @@ let mockUserUuid = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
 let mockBlur: (() => void) | undefined;
 let mockId = '41';
 let mockSaving = false;
+let mockSettling = false;
 let mockRemainingTime = 180;
 let mockTimeError = false;
 let mockData: TalkLogListResult;
@@ -32,7 +33,7 @@ jest.mock('expo-router', () => ({
 }));
 jest.mock('react-native/Libraries/Utilities/useWindowDimensions', () => ({ __esModule: true, default: () => mockDimensions }));
 jest.mock('@/src/features/history/hooks/useCallDetail', () => ({ useCallDetail: () => ({
-  data: mockData, isLoading: false, isError: mockError, isFetching: false, isSaving: mockSaving,
+  data: mockData, isLoading: false, isError: mockError, isFetching: false, isSaving: mockSaving, transcriptSettling: mockSettling,
   refetch: mockRefetch, updateTalkLog: jest.fn(),
 }) }));
 jest.mock('@/src/features/history/hooks/useCallDetailGlow', () => ({ useCallDetailGlow: () => ({}) }));
@@ -56,8 +57,9 @@ jest.mock('@/src/components/home/history/detail/CallDetailAlert', () => ({ __esM
 jest.mock('@/src/components/home/history/detail/CallDetailFooter', () => ({ __esModule: true, default: () => null }));
 jest.mock('@/src/components/home/history/detail/CallDetailBody', () => {
   const { Pressable, Text } = jest.requireActual('react-native');
-  return { __esModule: true, default: ({ onEditingChange, summary }: { onEditingChange: (value: boolean) => void; summary: React.ReactElement }) => <>
+  return { __esModule: true, default: ({ onEditingChange, summary, selfCall, transcriptSettling }: { onEditingChange: (value: boolean) => void; summary: React.ReactElement; selfCall?: boolean; transcriptSettling?: boolean }) => <>
     {summary}
+    <Text testID="body-flags">{`self:${!!selfCall} settling:${!!transcriptSettling}`}</Text>
     <Pressable accessibilityLabel="답변 수정 테스트" onPress={() => onEditingChange(true)}><Text>답변 수정</Text></Pressable>
     <Pressable accessibilityLabel="답변 수정 취소 테스트" onPress={() => onEditingChange(false)}><Text>수정 취소</Text></Pressable>
   </> };
@@ -65,7 +67,7 @@ jest.mock('@/src/components/home/history/detail/CallDetailBody', () => {
 jest.mock('react-native-gesture-handler', () => ({
   GestureHandlerRootView: jest.requireActual('react-native').View,
   GestureDetector: ({ children }: { children: React.ReactNode }) => children,
-  Gesture: { Pan: () => { const pan = { onUpdate: () => pan, onEnd: () => pan }; return pan; } },
+  Gesture: { Pan: () => { const pan = { enabled: () => pan, onUpdate: () => pan, onEnd: () => pan }; return pan; } },
 }));
 jest.mock('react-native-reanimated', () => {
   const chain = { delay: () => chain, duration: () => chain, springify: () => chain };
@@ -81,7 +83,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   mockBlocking = false; mockUserUuid = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
   mockBlock.mockReset().mockResolvedValue({});
-  mockId = '41'; mockError = false; mockSaving = false; mockRemainingTime = 180; mockTimeError = false;
+  mockId = '41'; mockError = false; mockSaving = false; mockSettling = false; mockRemainingTime = 180; mockTimeError = false;
   mockDimensions = { width: 393, height: 852, fontScale: 1, scale: 3 };
   mockRefetch.mockReset().mockResolvedValue({ isError: false }); mockTimeRefetch.mockResolvedValue({});
   mockData = { callId: 41, callNumber: 3, startedAt: '2026-10-05T14:30:00', description: '지수의 Twin과 대화',
@@ -348,4 +350,41 @@ it('keeps a cached transcript readable when a background refresh fails', () => {
   expect(screen.getByText('지수의 Twin과 대화')).toBeTruthy();
   expect(screen.getByText('새로고침하지 못했어요. 이전에 불러온 기록을 보여드려요. 더보기에서 다시 시도할 수 있어요.')).toBeTruthy();
   expect(screen.queryByText('통화 기록을 불러오지 못했습니다.')).toBeNull();
+});
+
+it('presents a call with the user’s own clone as their AI twin and calls it again like a twin simulation', async () => {
+  mockData.partner.userUuid = mockUserUuid;
+  mockData.partner.name = '홍길동';
+  mockData.description = '홍길동의 Twin과 대화';
+  const screen = render(<CallDetailScreen />);
+  expect(screen.getByLabelText('내 AI 트윈')).toBeTruthy();
+  expect(screen.getByText('나와 내 AI 트윈의 대화')).toBeTruthy();
+  expect(screen.queryByText(/홍길동/)).toBeNull();
+  fireEvent.press(screen.getByLabelText('내 AI 트윈과 통화'));
+  await waitFor(() => expect(screen.getByLabelText('대화 시작')).toBeEnabled());
+  fireEvent.press(screen.getByLabelText('대화 시작'));
+  act(() => jest.advanceTimersByTime(300));
+  expect(mockPush).toHaveBeenCalledTimes(1);
+  expect(mockPush).toHaveBeenCalledWith({ pathname: '/ai-call', params: { targetName: '내 트윈', remainingSeconds: '180' } });
+});
+
+it('hands the just-ended-call state to the transcript so it waits instead of showing an empty record', () => {
+  mockSettling = true;
+  const screen = render(<CallDetailScreen />);
+  expect(screen.getByTestId('body-flags').props.children).toBe('self:false settling:true');
+});
+
+it('tells the transcript when the record is a call with the user’s own clone', () => {
+  mockData.partner.userUuid = mockUserUuid;
+  const screen = render(<CallDetailScreen />);
+  expect(screen.getByTestId('body-flags').props.children).toBe('self:true settling:false');
+});
+
+it('explains editing in a self-call without claiming the counterpart twin cannot be changed', () => {
+  mockData.partner.userUuid = mockUserUuid;
+  const screen = render(<CallDetailScreen />);
+  fireEvent.press(screen.getByLabelText('통화 기록 메뉴'));
+  fireEvent.press(screen.getByLabelText('기록 안내'));
+  expect(screen.getByText('수정 가능한 내 AI 트윈의 답변에만 수정 버튼이 표시돼요. 내 말은 바꿀 수 없어요.')).toBeTruthy();
+  expect(screen.queryByText(/상대 트윈의 답변은 바꿀 수 없어요/)).toBeNull();
 });

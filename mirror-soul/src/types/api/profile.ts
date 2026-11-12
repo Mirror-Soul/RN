@@ -68,6 +68,7 @@ export interface MyIntroductionResult {
   job: JobEnum | null;
   jobDescription: string | null;
   jobCertificationSubmitted: boolean;
+  jobDocumentReviewCompleted?: boolean;
   selfIntroduction: string | null;
   mbti: MbtiEnum | null;
   mbtiAxisScores: MbtiAxisScores | null;

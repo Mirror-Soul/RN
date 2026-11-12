@@ -1,11 +1,14 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { AppState, Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
-import { router, useRootNavigationState } from 'expo-router';
+import { router, useRootNavigationState, type Href } from 'expo-router';
 import { useAuthStore } from '@/src/store/useAuthStore';
 import { getOrCreateInstallationId } from '@/src/utils/installationIdStorage';
 import { logger } from '@/src/utils/logger';
 import { useRegisterPushDeviceMutation } from './useRegisterPushDeviceMutation';
+import { queryClient } from '@/src/services/queryClient';
+import { resetEvidenceDraft, useEvidenceDraft } from '@/src/features/job-verification/evidenceDraft';
+import { jobReviewKey } from '@/src/features/job-verification/useJobReviewQuery';
 
 /** 백엔드 FIREBASE_ANDROID_CHANNEL_ID 기본값(chat_messages)과 반드시 일치해야 한다. */
 const ANDROID_CHANNEL_ID = 'chat_messages';
@@ -38,7 +41,7 @@ Notifications.setNotificationHandler({
 async function ensureNotificationChannel() {
   if (Platform.OS !== 'android') return;
   await Notifications.setNotificationChannelAsync(ANDROID_CHANNEL_ID, {
-    name: '채팅 메시지',
+    name: '메시지와 서류 확인',
     importance: Notifications.AndroidImportance.HIGH,
     sound: 'default',
   });
@@ -47,8 +50,28 @@ async function ensureNotificationChannel() {
 export function usePushNotificationSetup() {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const userUuid = useAuthStore(state => state.userUuid);
+  const userStatus = useAuthStore(state => state.userStatus);
   const registerMutation = useRegisterPushDeviceMutation();
   const rootNavigationState = useRootNavigationState();
+  const handled = useRef<string | null>(null);
+  const pendingReview = useRef<{ id: string; owner: string | null } | null>(null);
+
+  useEffect(() => {
+    const draft = useEvidenceDraft.getState();
+    if (!isLoggedIn || draft.owner !== userUuid) resetEvidenceDraft(isLoggedIn ? userUuid : null);
+  }, [isLoggedIn, userUuid]);
+
+  useEffect(() => {
+    const subscription = Notifications.addNotificationReceivedListener(notification => {
+      if (notification.request.content.data?.type !== 'JOB_VERIFICATION_REVIEWED') return;
+      const session = useAuthStore.getState();
+      if (session.isLoggedIn && session.userUuid) {
+        void queryClient.invalidateQueries({ queryKey: jobReviewKey(session.userUuid) });
+        void queryClient.invalidateQueries({ queryKey: ['profile', 'introduction', session.userUuid] });
+      }
+    });
+    return () => subscription.remove();
+  }, []);
 
   // 알림 채널은 로그인 여부와 무관하게 앱 시작 시 한 번만 있으면 된다.
   useEffect(() => {
@@ -124,17 +147,27 @@ export function usePushNotificationSetup() {
   const lastNotificationResponse = Notifications.useLastNotificationResponse();
   useEffect(() => {
     if (!rootNavigationState?.key) return;
-    const route = lastNotificationResponse?.notification.request.content.data?.route;
-    if (typeof route !== 'string') return;
-
-    // _layout.tsx의 인증 리다이렉트 effect가 같은 rootNavigationState.key 준비 시점에
-    // setTimeout(fn, 0)으로 router.replace('/(main)' 또는 '/login')을 예약한다. 이 effect가
-    // 먼저 동기 실행되어 router.push를 호출해도, 뒤이어 실행되는 그 replace가 곧바로
-    // 덮어써버린다 — 그래서 딜레이를 그 setTimeout(0)보다 길게 줘서 인증 리다이렉트가 먼저
-    // 끝난 뒤에 딥링크를 push하도록 순서를 보장한다.
-    const timer = setTimeout(() => {
-      router.push(route as any);
-    }, 100);
+    const request = lastNotificationResponse?.notification.request;
+    const data = request?.content.data;
+    const id = request?.identifier;
+    if (typeof id !== 'string') return;
+    const isReview = data?.type === 'JOB_VERIFICATION_REVIEWED' || data?.route === '/job-verifications';
+    if (isReview && handled.current !== id && !pendingReview.current) pendingReview.current = { id, owner: isLoggedIn ? userUuid : null };
+    if (isReview) {
+      const pending = pendingReview.current;
+      if (!pending || !isLoggedIn || !userUuid || userStatus !== 'ACTIVE') return;
+      if (pending.owner && pending.owner !== userUuid) { pendingReview.current = null; handled.current = id; return; }
+      const timer = setTimeout(() => {
+        if (!useAuthStore.getState().isLoggedIn || useAuthStore.getState().userUuid !== userUuid || useAuthStore.getState().userStatus !== 'ACTIVE') return;
+        handled.current = id; pendingReview.current = null;
+        void queryClient.invalidateQueries({ queryKey: jobReviewKey(userUuid) });
+        router.push('/job-verifications' as Href);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+    const route = data?.route;
+    if (typeof route !== 'string' || !route.startsWith('/') || handled.current === id) return;
+    const timer = setTimeout(() => { handled.current = id; router.push(route as never); }, 100);
     return () => clearTimeout(timer);
-  }, [lastNotificationResponse, rootNavigationState?.key]);
+  }, [lastNotificationResponse, rootNavigationState?.key, isLoggedIn, userUuid, userStatus]);
 }

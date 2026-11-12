@@ -61,12 +61,14 @@ export function OptionsProfileSection({ room, onPress }: OptionsProfileSectionPr
         </View>
         <Feather name="chevron-right" size={20} color={colors.text.muted} />
       </View>
-      <View style={[styles.similarityPill, { backgroundColor: Colors.glass.purple10 }]}>
-        <Feather name="star" size={13} color={Colors.primary.vividPurple} />
-        <Text style={[styles.similarityText, { color: colors.text.secondary }]}>
-          {partner.twinSimilarity !== null ? `트윈 유사도 ${partner.twinSimilarity}%` : '트윈 유사도 분석 중'}
-        </Text>
-      </View>
+      {partner.twinSimilarity !== null && (
+        <View style={[styles.similarityPill, { backgroundColor: Colors.glass.purple10 }]}>
+          <Feather name="star" size={13} color={Colors.primary.vividPurple} />
+          <Text style={[styles.similarityText, { color: colors.text.secondary }]}>
+            {`트윈 유사도 ${partner.twinSimilarity}%`}
+          </Text>
+        </View>
+      )}
     </Pressable>
   );
 }

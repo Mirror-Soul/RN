@@ -1,5 +1,32 @@
 # 프로필 이미지 조회 점검 및 백엔드 요청
 
+## 최신 확인 — 2026-10-08, 백엔드 `a89a8cf`
+
+백엔드 로컬 `main`을 `origin/main`과 동일한 `a89a8cf38e4e615d1ad3c985866aed5b47b8a461`로 fast-forward했다. 로컬 미추적 `docs/value-balance-game-spec.md`는 보존했고 백엔드 소스는 직접 편집하지 않았다. 아래 10월 7일의 미적용 목록은 이번 수정으로 해결됐다.
+
+| 조회 화면 | 현재 코드 연결 |
+| --- | --- |
+| 상대 상세 | `RecommendationDetailService` → `ProfileImageUrlService.resolve(target)` |
+| 받은 신청·신청 상세 | `MeetingService` → 공통 resolver |
+| 메시지 목록·채팅방 헤더·더보기 | `ChatService` → 공통 resolver |
+| 기록 목록·상세·더보기 | `HistoryService`의 두 응답 매핑 → 공통 resolver |
+| 트윈 매칭 프로필 사진 | `MatchService` → 공통 resolver |
+| 내 프로필·내 공개 미리보기·사진 수정 응답·추천 목록 | 기존 `FileService.createPresignedDownloadUrlOrFallback()` 연결 유지 |
+
+공통 resolver는 저장된 objectKey로 GET 다운로드 서명을 생성한다. 응답 필드 `profileImageUrl`은 그대로이며 RN의 이미지 컴포넌트·재조회·같은 사진의 서명 유지 처리와 호환된다. 상세 API가 정상 서명을 반환하므로 RN의 추천 페이지 추가 조회는 일반적인 경우 실행되지 않는다.
+
+검증 결과:
+
+- [해당 커밋 배포 작업](https://github.com/Mirror-Soul/Mirror-Soul-Backend/actions/runs/37722910655)의 빌드·파일 복사·EC2 배포 단계 성공을 확인했다.
+- 운영 `https://api.mirrorsoul64.com/v3/api-docs` HTTP 200. 위 이미지 조회 경로와 신규 `/evolve/sync-detail` 경로, `profileImageUrl` 문자열 응답 필드가 등록돼 있다. OpenAPI 등록은 실제 회원 사진의 S3 다운로드 성공 검증과 구분한다.
+- 토큰 없는 추천 API 읽기 요청은 HTTP 403으로 거절됐다. 서버가 접근 가능하고 해당 요청이 인증 없이 허용되지 않는다는 확인이며, 인증된 회원 조회 성공으로 해석하지 않는다.
+- RN 관련 기존 테스트 8개 묶음·57개 통과. 이번 점검에서 RN 앱 코드는 수정하지 않았다.
+- 백엔드 관련 기존 테스트 49개 중 48개 통과. `ProfileServiceTest.getMyProfileReturnsProfileImageUrl()` 1개 실패: 실제 서비스가 새 `FileService.createPresignedDownloadUrlOrFallback()`을 호출하지만 이 테스트의 FileService mock 반환값이 설정되지 않아 `null`이 반환된다. 해당 mock 설정/실제 fallback 사례를 보완할 필요가 있다. 백엔드 테스트를 직접 수정하지 않았다.
+- objectKey가 없거나 빈 이전 사진은 공통 helper가 여전히 원본 주소를 반환한다. 비공개 파일이라면 데이터 복구가 필요하며, 삭제된 S3 객체·키/버킷 권한 문제도 URL 서명만으로 해결되지는 않는다.
+- 새 `/evolve/sync-detail`은 얼굴·목소리·프로필·데이터 신뢰도·감점·계산 버전의 세부 유사도 값을 제공한다. 현재 RN은 기존 `/evolve`의 전체 싱크로율만 사용하며 새 세부 조회는 아직 연동하지 않는다.
+
+확인 범위는 소스·배포 작업·공개 운영 API 문서·기존 단위 테스트다. 실제 로그인된 회원의 API 응답과 사진 다운로드는 기기에서 확인해야 한다. 부모 RN 저장소의 백엔드 submodule 포인터는 커밋하지 않았다.
+
 ## 최신 요약 — 2026-10-07, 백엔드 `0f45c02`
 
 아래 이전 점검 기록보다 이 요약을 우선한다. 내 프로필·내 상세·사진 수정 응답·추천 목록에는 다운로드 서명이 적용됐다. 다음 응답은 아직 저장된 영구 S3 URL을 그대로 반환하므로 비공개 사진을 안정적으로 표시하려면 서버 처리가 필요하다.

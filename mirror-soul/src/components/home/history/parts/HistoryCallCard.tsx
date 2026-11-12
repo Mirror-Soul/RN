@@ -7,6 +7,8 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import CallAvatar from './HistoryCallCard/CallProfile';
 import CallMeta from './HistoryCallCard/CallSubInfo';
+import { SELF_TWIN_LABEL, isSelfCall } from '@/src/features/history/talkLogSpeaker';
+import { useAuthStore } from '@/src/store/useAuthStore';
 import type { CallHistoryResult } from '@/src/types/api/history';
 import { formatDurationLabel } from '@/src/utils/formatCallTime';
 import { toTimeLabel } from '@/src/utils/formatHistoryDate';
@@ -29,15 +31,18 @@ interface HistoryCallCardProps {
  */
 export default function HistoryCallCard({ data, index = 0, onPress }: HistoryCallCardProps) {
   const { colors } = useThemeColors();
+  const userUuid = useAuthStore((s) => s.userUuid);
 
   // 목록 아이템의 type은 백엔드에서 항상 SENT/RECEIVED만 내려준다 (ALL은 쿼리 파라미터 전용)
   const direction = data.type as 'SENT' | 'RECEIVED';
-  // matchScore가 null이면 이 통화의 CallMatchAnalysis가 아직 완료되지 않은 상태(topics도 항상 빈 배열)
-  const isAnalyzing = data.matchScore === null;
+  // 트윈 시뮬레이션처럼 내 클론과 한 통화는 상대가 나 자신이라, 내 이름·나이 대신 '내 AI 트윈'으로 보여준다.
+  const selfCall = isSelfCall(data.partner.userUuid, userUuid);
+  const displayName = selfCall ? SELF_TWIN_LABEL : data.partner.name;
+  const displayAge = selfCall ? null : data.partner.age;
   const durationLabel = formatDurationLabel(data.durationSec);
-  const ageLabel = data.partner.age !== null ? `${data.partner.age}세, ` : '';
+  const ageLabel = displayAge !== null ? `${displayAge}세, ` : '';
   const directionLabel = direction === 'SENT' ? '내가 건 통화' : '받은 통화';
-  const accessibilityLabel = `${data.partner.name}, ${ageLabel}${directionLabel}, ${durationLabel}${data.isNew ? ', 새 기록' : ''}`;
+  const accessibilityLabel = `${displayName}, ${ageLabel}${directionLabel}, ${durationLabel}${data.isNew ? ', 새 기록' : ''}`;
 
   const borderColor = data.isNew
     ? Colors.primary.electricCyan
@@ -58,20 +63,19 @@ export default function HistoryCallCard({ data, index = 0, onPress }: HistoryCal
       >
         {/* 아바타 + 방향 배지 */}
         <CallAvatar
-          name={data.partner.name}
+          name={displayName}
           profileImageUrl={data.partner.profileImageUrl ?? undefined}
           direction={direction}
         />
 
         {/* 이름 / 일치도 / 시간 / 태그 */}
         <CallMeta
-          name={data.partner.name}
-          age={data.partner.age}
+          name={displayName}
+          age={displayAge}
           consistencyPercent={data.partner.twinSyncRate}
           timeStr={toTimeLabel(data.startedAt)}
           durationLabel={durationLabel}
           tags={data.topics}
-          isAnalyzing={isAnalyzing}
         />
 
         {/* ChevronRight */}

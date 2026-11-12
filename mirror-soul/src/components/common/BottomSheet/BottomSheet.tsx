@@ -23,9 +23,10 @@ interface BottomSheetProps {
   dragFromHandleOnly?: boolean;
   /** Render inside an existing full-screen Modal; never present a second native Modal. */
   embedded?: boolean;
+  dismissible?: boolean;
 }
 
-export const BottomSheet = ({ isOpen, onClose, children, height: requestedHeight, dragFromHandleOnly = false, embedded = false }: BottomSheetProps) => {
+export const BottomSheet = ({ isOpen, onClose, children, height: requestedHeight, dragFromHandleOnly = false, embedded = false, dismissible = true }: BottomSheetProps) => {
   const { colors } = useThemeColors();
   const { height: screenHeight } = useWindowDimensions();
   const height = Math.min(requestedHeight ?? screenHeight * 0.8, screenHeight);
@@ -35,6 +36,7 @@ export const BottomSheet = ({ isOpen, onClose, children, height: requestedHeight
   
   const closeSheet = () => {
     'worklet';
+    if (!dismissible) return;
     translateY.value = withSpring(screenHeight, springConfig);
     opacity.value = withTiming(0, { duration: 250 }, finished => {
       if (finished) runOnJS(onClose)();
@@ -55,6 +57,7 @@ export const BottomSheet = ({ isOpen, onClose, children, height: requestedHeight
   }, [isOpen, screenHeight, opacity, translateY]);
 
   const panGesture = Gesture.Pan()
+    .enabled(dismissible)
     .onUpdate((event) => {
       if (event.translationY > 0) {
         translateY.value = event.translationY;

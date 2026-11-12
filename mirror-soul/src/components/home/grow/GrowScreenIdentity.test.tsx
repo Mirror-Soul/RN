@@ -4,7 +4,9 @@ import GrowScreen from '@/app/(main)/grow';
 
 let mockOwner = 'same-member';
 jest.mock('@/src/store/useAuthStore', () => ({ useAuthStore: (select: (state: unknown) => unknown) => select({ userUuid: mockOwner }) }));
+jest.mock('@/src/features/profile/hooks/useProfileRefresh', () => ({ useProfileRefresh: jest.fn() }));
 jest.mock('@/src/features/growth/hooks/useTwinSyncQuery', () => ({ useTwinSyncQuery: () => ({ data: { syncRate: 72 }, isLoading: false, isError: false, refetch: jest.fn() }) }));
+jest.mock('@/src/features/job-verification/useJobReviewQuery', () => ({ useJobReviewQuery: () => ({ data: undefined, isLoading: false, isError: false, refetch: jest.fn() }) }));
 jest.mock('@/src/features/profile/hooks/useIntroductionQuery', () => ({ useIntroductionQuery: () => ({ data: { job: 'IT_TECH', jobCertificationSubmitted: false }, isLoading: false, isError: false, refetch: jest.fn() }) }));
 jest.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({ top: 44, bottom: 34, left: 0, right: 0 }) }));
 jest.mock('@/src/hooks/useLayout', () => ({ useLayout: () => ({ contentContainerStyle: {}, screenPadding: 24 }) }));

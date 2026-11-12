@@ -16,6 +16,16 @@ describe('getErrorCode', () => {
     expect(getErrorCode({ code: 'AUTH_FAILED' })).toBe('AUTH_FAILED');
   });
 
+  it('maps the payment wire codes the backend returns for billing conflicts', () => {
+    expect(getErrorCode({ code: 'PAYMENT_4000' })).toBe('PAYMENT_INVALID');
+    expect(getErrorCode({ code: 'PAYMENT_4090' })).toBe('PAYMENT_CONFLICT');
+    expect(getErrorCode({ code: 'PAYMENT_5030' })).toBe('PAYMENT_UNAVAILABLE');
+  });
+
+  it('passes the call-in-progress code synthesized by callService through unchanged', () => {
+    expect(getErrorCode({ code: 'CALL_ALREADY_IN_PROGRESS' })).toBe('CALL_ALREADY_IN_PROGRESS');
+  });
+
   it('returns undefined for a wire code with no known mapping', () => {
     expect(getErrorCode({ code: 'SOME_FUTURE_BACKEND_CODE' })).toBeUndefined();
   });
@@ -44,6 +54,12 @@ describe('getErrorDisplayMessage', () => {
     expect(
       getErrorDisplayMessage({ code: 'VALUE_BALANCE_4090', message: 'This question was already answered today.' })
     ).toBe('오늘 이미 답변한 질문입니다.');
+  });
+
+  it('shows an explanation instead of the generic payment text when a call is blocked by an unfinished one', () => {
+    const message = getErrorDisplayMessage({ code: 'CALL_ALREADY_IN_PROGRESS', message: '결제 또는 멱등키 상태가 요청과 일치하지 않습니다.' });
+    expect(message).toContain('이전 통화');
+    expect(message).not.toContain('결제');
   });
 
   it('falls back to the backend-provided message when no override exists', () => {

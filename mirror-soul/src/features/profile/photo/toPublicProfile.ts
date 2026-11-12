@@ -6,13 +6,13 @@ export function toPublicProfilePreview(profile: MyIntroductionResult): { match: 
   const detail: RecommendationDetailResult = {
     userUuid: profile.userUuid, name: profile.name ?? '내 프로필', age: profile.age,
     profileImageUrl: profile.profileImageUrl, syncRate: profile.syncRate, region: profile.region,
-    job: profile.job, jobCertificationSubmitted: profile.jobCertificationSubmitted,
+    job: profile.job, jobCertificationSubmitted: false, jobDocumentReviewCompleted: profile.jobDocumentReviewCompleted === true,
     selfIntroduction: profile.selfIntroduction, mbti: profile.mbti, mbtiAxisScores: profile.mbtiAxisScores,
     personalityTags: profile.personalityTags, voicePreview: profile.voicePreview,
   };
   const match: Recommendation = {
     userUuid: detail.userUuid, name: detail.name, age: detail.age, job: detail.job,
-    jobCertificationSubmitted: detail.jobCertificationSubmitted, residence: detail.region,
+    jobCertificationSubmitted: false, jobDocumentReviewCompleted: detail.jobDocumentReviewCompleted, residence: detail.region,
     selfIntroduction: detail.selfIntroduction, mbti: detail.mbti, personalityTags: detail.personalityTags,
     profileImageUrl: detail.profileImageUrl,
     // 상대별 추천 점수는 본인 미리보기에서 표시하지 않는다.

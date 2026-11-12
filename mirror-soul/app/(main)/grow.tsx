@@ -9,10 +9,12 @@ import VoiceMissionCard from '@/src/components/home/grow/VoiceMissionCard';
 import ValueBalanceModal from '@/src/components/home/grow/modals/ValueBalanceModal';
 import VerificationModal from '@/src/components/home/grow/modals/VerificationModal';
 import { Layout, Spacing } from '@/src/constants/theme';
-import { useIntroductionQuery } from '@/src/features/profile/hooks/useIntroductionQuery';
+import { useJobReviewQuery } from '@/src/features/job-verification/useJobReviewQuery';
+import { jobReviewCopy } from '@/src/features/job-verification/jobReviewState';
+import { useProfileRefresh } from '@/src/features/profile/hooks/useProfileRefresh';
 import { useAuthStore } from '@/src/store/useAuthStore';
 import { useTwinSyncQuery } from '@/src/features/growth/hooks/useTwinSyncQuery';
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLayout } from '@/src/hooks/useLayout';
@@ -37,7 +39,9 @@ export default function GrowScreen() {
 
   const twinSyncQuery = useTwinSyncQuery();
 
-  const introduction = useIntroductionQuery();
+  const review = useJobReviewQuery();
+  const { refetch: refetchReview } = review;
+  useProfileRefresh(useCallback(() => refetchReview(), [refetchReview]), review.data?.status === 'PENDING');
   const userUuid = useAuthStore(state => state.userUuid);
 
   const [showVerifyModal, setShowVerifyModal] = useState(false);
@@ -61,9 +65,9 @@ export default function GrowScreen() {
           isLoading={twinSyncQuery.isLoading}
           isError={twinSyncQuery.isError}
           onRetry={() => twinSyncQuery.refetch()}
-          jobSubmitted={introduction.data?.jobCertificationSubmitted ?? null}
-          jobLoading={introduction.isLoading}
-          jobError={introduction.isError}
+          jobStatusLabel={review.isError ? '다시 확인' : review.data ? jobReviewCopy(review.data).title : '신청 상태 확인 중'}
+          jobLoading={review.isLoading}
+          jobError={review.isError}
           onVerifyPress={() => setShowVerifyModal(true)}
         />
 
@@ -88,11 +92,6 @@ export default function GrowScreen() {
         isOpen={showVerifyModal}
         onClose={() => setShowVerifyModal(false)}
         key={`job-verification-${userUuid ?? 'guest'}`}
-        submitted={introduction.data?.jobCertificationSubmitted ?? null}
-        job={introduction.data?.job ?? null}
-        loading={introduction.isLoading}
-        error={introduction.isError}
-        onRetry={() => { void introduction.refetch(); }}
       />
 
       {/*
