@@ -30,6 +30,7 @@ export function useFaceScan() {
   const mounted = useRef(true);
   const run = useRef(0);
   const opening = useRef(false);
+  const pendingPreviewId = useRef<number | null>(null);
   const recording = useRef(false);
   const size = useRef<PreviewSize>({ width: 0, height: 0 });
   const latest = useRef<{ at: number; matching: boolean } | null>(null);
@@ -47,6 +48,7 @@ export function useFaceScan() {
   const cancelScan = useCallback((message?: string) => {
     run.current += 1;
     opening.current = false;
+    pendingPreviewId.current = null;
     if (finishTimer.current) clearTimeout(finishTimer.current);
     finishTimer.current = null;
     if (recording.current) {
@@ -68,6 +70,21 @@ export function useFaceScan() {
     }
   }, [transition]);
 
+  const openPreview = useCallback((token: number) => {
+    pendingPreviewId.current = null;
+    discard(videoRef.current);
+    videoRef.current = null;
+    setVideoUri(null);
+    setError(null);
+    setIndex(0); indexRef.current = 0;
+    elapsed.current = 0; previous.current = null; latest.current = null;
+    setStageProgress(0); setMatching(false); setCountdown(3);
+    setCameraReady(false); readyRef.current = false;
+    setCaptureId(token);
+    setFeedback('얼굴과 어깨를 가이드에 맞춰주세요.');
+    transition('positioning');
+  }, [transition]);
+
   const startScan = useCallback(async () => {
     if (opening.current || !['idle', 'completed'].includes(phaseRef.current)) return;
     const owner = useAuthStore.getState().userUuid;
@@ -75,23 +92,21 @@ export function useFaceScan() {
     opening.current = true;
     const token = ++run.current;
     try {
-      const permission = await Camera.requestCameraPermission();
-      if (!mounted.current || token !== run.current || useAuthStore.getState().userUuid !== owner || AppState.currentState === 'background') return;
+      const permission = Camera.getCameraPermissionStatus() === 'granted'
+        ? 'granted'
+        : await Camera.requestCameraPermission();
+      if (!mounted.current || token !== run.current || useAuthStore.getState().userUuid !== owner) return;
       if (permission !== 'granted') { setError('카메라 권한이 필요해요. 기기 설정에서 허용해주세요.'); return; }
-      discard(videoRef.current);
-      videoRef.current = null;
-      setVideoUri(null);
-      setError(null);
-      setIndex(0); indexRef.current = 0;
-      elapsed.current = 0; previous.current = null; latest.current = null;
-      setStageProgress(0); setMatching(false); setCountdown(3);
-      setCameraReady(false); readyRef.current = false;
-      setCaptureId(token);
-      setFeedback('얼굴과 어깨를 가이드에 맞춰주세요.');
-      transition('positioning');
+
+      // Android의 권한 화면은 앱을 잠시 백그라운드로 보낼 수 있다.
+      if (AppState.currentState === 'active') {
+        openPreview(token);
+      } else {
+        pendingPreviewId.current = token;
+      }
     } catch { if (mounted.current && token === run.current) setError('카메라를 열지 못했어요. 다시 시도해주세요.'); }
     finally { if (token === run.current) opening.current = false; }
-  }, [transition]);
+  }, [openPreview]);
 
   const beginRecording = useCallback(() => {
     const camera = cameraRef.current;
@@ -193,8 +208,11 @@ export function useFaceScan() {
       if (phaseRef.current === 'scanning' && now - startedAt.current >= MAX_CAPTURE_DURATION) cancelScan('촬영이 길어졌어요. 밝은 곳에서 구도를 맞추고 다시 시도해주세요.');
     }, 100);
     const app = AppState.addEventListener('change', state => {
-      // iOS 권한 팝업의 inactive는 정상이다. 실제 촬영의 인터럽트는 폐기한다.
-      if ((state === 'background' && opening.current) || (state !== 'active' && ['positioning', 'countdown', 'scanning', 'finalizing'].includes(phaseRef.current))) cancelScan('촬영이 중단됐어요. 준비되면 다시 시작해주세요.');
+      if (state === 'active' && pendingPreviewId.current !== null) {
+        openPreview(pendingPreviewId.current);
+      } else if (state !== 'active' && ['positioning', 'countdown', 'scanning', 'finalizing'].includes(phaseRef.current)) {
+        cancelScan('촬영이 중단됐어요. 준비되면 다시 시작해주세요.');
+      }
     });
     let owner = useAuthStore.getState().userUuid;
     const unsubscribe = useAuthStore.subscribe(state => {
@@ -205,7 +223,7 @@ export function useFaceScan() {
       mounted.current = false;
       clearInterval(timer); app.remove(); unsubscribe(); cancelScan();
     };
-  }, [beginRecording, cancelScan, transition]);
+  }, [beginRecording, cancelScan, openPreview, transition]);
 
   return {
     cameraRef, phase, videoUri, error, cameraReady, matching, feedback, countdown, stageProgress, captureId,
