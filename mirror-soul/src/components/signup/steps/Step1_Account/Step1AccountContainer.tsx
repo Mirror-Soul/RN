@@ -16,6 +16,7 @@ import PasswordSection from './components/PasswordSection';
 import Step1Header from './components/Step1Header';
 import { useStep1Form } from './hooks/useStep1Form';
 import { useCreateAccountMutation } from './hooks/useCreateAccountMutation';
+import { TEMPORARY_SIGNUP_IDENTITY } from './temporarySignupIdentity';
 
 export default function Step1AccountContainer() {
   const router = useRouter();
@@ -40,7 +41,7 @@ export default function Step1AccountContainer() {
     try {
       await createAccountMutation.mutateAsync({
         email: state.email, password: state.password,
-        gender: null, birthDate: null,
+        ...TEMPORARY_SIGNUP_IDENTITY, // [임시] PASS 연동 전까지 (#208)
         termsAgreed: state.agreedToTerms && state.agreedToPrivacy,
       });
       router.replace(SIGNUP_ROUTES.PROFILE);
