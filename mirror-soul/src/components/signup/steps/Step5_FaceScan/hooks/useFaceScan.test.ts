@@ -1,14 +1,20 @@
 import { act, renderHook } from '@testing-library/react-native';
 import { AppState, type AppStateStatus } from 'react-native';
-import type { Camera, RecordVideoOptions, VideoFile } from 'react-native-vision-camera';
+import { Camera, type RecordVideoOptions, type VideoFile } from 'react-native-vision-camera';
 import type { Face } from 'react-native-vision-camera-face-detector';
 import * as FileSystem from 'expo-file-system/legacy';
 import { useAuthStore } from '@/src/store/useAuthStore';
 import { useFaceScan } from './useFaceScan';
 
-jest.mock('react-native-vision-camera', () => ({ Camera: { requestCameraPermission: jest.fn(async () => 'granted') } }));
+jest.mock('react-native-vision-camera', () => ({
+  Camera: {
+    getCameraPermissionStatus: jest.fn(() => 'granted'),
+    requestCameraPermission: jest.fn(async () => 'granted'),
+  },
+}));
 jest.mock('expo-file-system/legacy', () => ({ deleteAsync: jest.fn(async () => {}) }));
 jest.mock('@/src/store/useAuthStore', () => ({ useAuthStore: { getState: jest.fn(), subscribe: jest.fn() } }));
+const initialAppState = AppState.currentState;
 let options: RecordVideoOptions;
 let appChange: (state: AppStateStatus) => void;
 let sessionChange: (state: { userUuid: string | null; isLoggedIn: boolean }) => void;
@@ -16,6 +22,7 @@ const camera = { startRecording: jest.fn(), stopRecording: jest.fn(), cancelReco
 const face = { bounds: { x: 90, y: 62, width: 120, height: 163 }, yawAngle: 0, pitchAngle: 0, rollAngle: 0 } as Face;
 beforeEach(() => {
   jest.clearAllMocks(); jest.useFakeTimers();
+  AppState.currentState = 'active';
   jest.spyOn(AppState, 'addEventListener').mockImplementation((_, listener) => { appChange = listener; return { remove: jest.fn() }; });
   (useAuthStore.getState as jest.Mock).mockReturnValue({ userUuid: 'me', isLoggedIn: true });
   (useAuthStore.subscribe as jest.Mock).mockImplementation(fn => { sessionChange = fn; return jest.fn(); });
@@ -23,7 +30,11 @@ beforeEach(() => {
   camera.stopRecording.mockResolvedValue(undefined);
   camera.cancelRecording.mockResolvedValue(undefined);
 });
-afterEach(() => { jest.restoreAllMocks(); jest.useRealTimers(); });
+afterEach(() => {
+  AppState.currentState = initialAppState;
+  jest.restoreAllMocks();
+  jest.useRealTimers();
+});
 function setup() {
   const hook = renderHook(() => useFaceScan());
   // Native ref attachment is simulated, not a device recording.
@@ -45,6 +56,37 @@ async function record(hook: ReturnType<typeof setup>) {
   frames(hook, 3000);
   expect(hook.result.current.phase).toBe('scanning');
 }
+it('opens the preview directly when the camera permission is already granted', async () => {
+  const hook = setup();
+
+  await act(async () => { await hook.result.current.startScan(); });
+
+  expect(Camera.requestCameraPermission).not.toHaveBeenCalled();
+  expect(hook.result.current.phase).toBe('positioning');
+});
+
+it('opens the preview when the app resumes after the camera permission prompt', async () => {
+  const hook = setup();
+  jest.mocked(Camera.getCameraPermissionStatus).mockReturnValueOnce('not-determined');
+  jest.mocked(Camera.requestCameraPermission).mockImplementationOnce(async () => {
+    AppState.currentState = 'background';
+    appChange('background');
+    return 'granted';
+  });
+
+  await act(async () => { await hook.result.current.startScan(); });
+
+  expect(hook.result.current.phase).toBe('idle');
+  expect(hook.result.current.error).toBeNull();
+
+  act(() => {
+    AppState.currentState = 'active';
+    appChange('active');
+  });
+
+  expect(hook.result.current.phase).toBe('positioning');
+});
+
 it('previews before recording and cancels the countdown when the face disappears', async () => {
   const hook = setup(); await prepare(hook);
   expect(hook.result.current.phase).toBe('positioning');
